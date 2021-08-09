@@ -3,7 +3,8 @@ pro fhd_versions_mac
   !except=0
   heap_gc
 
-  version = 'rlb_model_GLEAM_Aug2021'
+  version = 'rlb_test_run_Jul2021'
+  output_directory = '/Users/ruby/Astro'
   
   case version of
     
@@ -16,7 +17,7 @@ pro fhd_versions_mac
     'rlb_model_GLEAM_Aug2021': begin
       obs_id = '1061316296'
       vis_file_list = '/Users/ruby/Astro/1061316296.uvfits'
-      recalculate_all = 1
+      recalculate_all = 0
       return_cal_visibilities = 0
       catalog_file_path = 0
       diffuse_calibrate = 0
