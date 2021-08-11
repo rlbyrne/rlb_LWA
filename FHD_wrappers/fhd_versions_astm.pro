@@ -10,7 +10,7 @@ pro fhd_versions_astm
 
   case version of
 
-    'rlb_test_run_Jul2021': begin
+    'rlb_test_run_Aug2021': begin
       catalog_file_path = filepath('GLEAM_v2_plus_rlb2019.sav',root=rootdir('FHD'),subdir='catalog_data')
     end
 
