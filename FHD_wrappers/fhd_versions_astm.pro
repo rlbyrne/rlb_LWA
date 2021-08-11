@@ -3,14 +3,15 @@ pro fhd_versions_astm
   !except=0
   heap_gc
 
-  version = 'rlb_test_run_Jul2021'
-  output_directory = '/lustre/rbyrne/fhd_outputs'
+  args = Command_Line_Args(count=nargs)
+  output_directory = args[0]
+  version = args[1]
+  vis_file_list = args[2]
 
   case version of
 
     'rlb_test_run_Jul2021': begin
-      obs_id = '1061316296'
-      vis_file_list = '/lustre/rbyrne/MWA_data/'+obs_id+'.uvfits'
+      catalog_file_path = filepath('GLEAM_v2_plus_rlb2019.sav',root=rootdir('FHD'),subdir='catalog_data')
     end
 
   endcase
