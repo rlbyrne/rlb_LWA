@@ -1,5 +1,6 @@
 import subprocess
 import shlex
+import os
 
 obsid = '1061316296'
 version = 'rlb_model_GLEAM_Aug2021'
@@ -14,6 +15,12 @@ eppsilon_script = 'ps_single_obs_astm'
 # Set eppsilon options
 refresh_ps = 0
 uvf_input = 0
+
+# Create directories
+if not os.path.isdir(f'{outdir}/fhd_{version}'):
+    os.mkdir(f'{outdir}/fhd_{version}')
+if not os.path.isdir(f'{outdir}/fhd_{version}/logs'):
+    os.mkdir(f'{outdir}/fhd_{version}/logs')
 
 # Run FHD
 with open(
