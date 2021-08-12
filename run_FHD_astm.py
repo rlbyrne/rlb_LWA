@@ -1,11 +1,39 @@
 import subprocess
 import shlex
 
-version = 'rlb_test_run_Aug2021'
-uvfits_path = '/lustre/rbyrne/MWA_data/1061316296.uvfits'
+obsid = '1061316296'
+version = 'rlb_model_GLEAM_Aug2021'
+uvfits_path = '/lustre/rbyrne/MWA_data'
 outdir = '/lustre/rbyrne/fhd_outputs'
-versions_script = 'fhd_versions_astm'
+run_eppsilon = True
 
-with open(f'{outdir}/fhd_{version}/stdout.txt', 'wb') as out, open(f'{outdir}/fhd_{version}/stderr.txt', 'wb') as err:
-	process = subprocess.Popen(shlex.split(f'/opt/astro/devel/harris/idl87/bin/idl -e {versions_script} -args {outdir} {version} {uvfits_path}'), stdout=out, stderr=err)
+# Define wrappers
+fhd_versions_script = 'fhd_versions_astm'
+eppsilon_script = 'ps_single_obs_astm'
+
+# Set eppsilon options
+refresh_ps = 0
+uvf_input = 0
+
+# Run FHD
+with open(
+    f'{outdir}/fhd_{version}/logs/fhd_stdout.txt', 'wb'
+) as out, open(
+    f'{outdir}/fhd_{version}/logs/fhd_stderr.txt', 'wb'
+) as err:
+    process = subprocess.Popen(shlex.split(
+        f'/opt/astro/devel/harris/idl87/bin/idl -e {fhd_versions_script} -args {outdir} {version} {uvfits_path}/{obsid}.uvfits'
+    ), stdout=out, stderr=err)
 stdout, stderr = process.communicate()
+
+# Run eppsilon
+if run_eppsilon:
+    with open(
+        f'{outdir}/fhd_{version}/logs/eppsilon_stdout.txt', 'wb'
+    ) as out, open(
+        f'{outdir}/fhd_{version}/logs/eppsilon_stderr.txt', 'wb'
+    ) as err:
+        process = subprocess.Popen(shlex.split(
+            f'/opt/astro/devel/harris/idl87/bin/idl -e {eppsilon_script} -args {obsid} {outdir} {version} {refresh_ps} {uvf_input}'
+        ), stdout=out, stderr=err)
+    stdout, stderr = process.communicate()
