@@ -4,8 +4,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 import scipy
+import scipy.optimize
 sys.path.append('/Users/ruby/Astro/pyuvdata')
 import pyuvdata
+import time
 
 
 def get_test_data():
@@ -48,166 +50,218 @@ def get_test_data():
 
     # For testing, use one time only
     use_time = data.time_array[200000]
-    data.select(times=use_time)
-    model.select(times=use_time)
+    use_frequencies = data.freq_array[0, 100:102]
+    data.select(times=use_time, frequencies=use_frequencies)
+    model.select(times=use_time, frequencies=use_frequencies)
 
     # Need to check that the baseline ordering agrees between model and data
 
     return data, model
 
 
-def calc_negloglikelihood_sky_cal(
-    gains, data_visibilities, model_visibilities,
-    gains_exp_mat_1, gains_exp_mat_2,
-    data_stddev
+def initialize_cal(data):
+
+    cal = pyuvdata.UVCal()
+    cal.Nants_data = data.Nants_data
+    cal.Nants_telescope = data.Nants_telescope
+    cal.Nfreqs = data.Nfreqs
+    cal.Njones = 1
+    cal.Nspws = 1
+    cal.Ntimes = 1
+    cal.ant_array = np.intersect1d(data.ant_1_array, data.ant_2_array)
+    cal.antenna_names = data.antenna_names
+    cal.antenna_numbers = data.antenna_numbers
+    cal.cal_style = 'sky'
+    cal.cal_type = 'gain'
+    cal.channel_width = data.channel_width
+    cal.freq_array = data.freq_array
+    cal.gain_convention = 'divide'
+    cal.history = ''
+    cal.integration_time = np.mean(data.integration_time)
+    cal.jones_array = np.array([-5])
+    cal.spw_array = data.spw_array
+    cal.telescope_name = data.telescope_name
+    cal.time_array = np.array([np.mean(data.time_array)])
+    cal.x_orientation = 'east'
+    cal.gain_array = np.full((
+        cal.Nants_data, cal.Nspws, cal.Nfreqs, cal.Ntimes, cal.Njones
+    ), 1, dtype=complex)
+    cal.flag_array = np.full((
+        cal.Nants_data, cal.Nspws, cal.Nfreqs, cal.Ntimes, cal.Njones
+    ), False, dtype=bool)
+    cal.quality_array = np.full((
+        cal.Nants_data, cal.Nspws, cal.Nfreqs, cal.Ntimes, cal.Njones
+    ), 1., dtype=float)
+    cal.ref_antenna_name = ''
+    cal.sky_catalog = 'GLEAM_bright_sources'
+    cal.sky_field = 'phase center (RA, Dec): ({}, {})'.format(
+        np.degrees(np.mean(data.phase_center_app_ra)),
+        np.degrees(np.mean(data.phase_center_app_dec))
+    )
+
+    if not cal.check():
+        print('ERROR: UVCal check failed.')
+        sys.exit(1)
+
+    return cal
+
+
+def cost_function_dw_cal(
+    x,
+    Nants,
+    Nfreqs,
+    Nblts,
+    model_visibilities,
+    gains_exp_mat_1,
+    gains_exp_mat_2,
+    cov_mat,
+    data_visibilities
 ):
+
+    gains = np.reshape(x, (2, Nants, Nfreqs,))
+    gains = gains[0, ] + 1.j*gains[1, ]
 
     gains_expanded = (
         np.matmul(gains_exp_mat_1, gains)
         * np.matmul(gains_exp_mat_2, np.conj(gains))
     )
-    prob = np.sum(np.abs(
-        data_visibilities - gains_expanded*model_visibilities
-    )**2)
+    res_vec = data_visibilities - gains_expanded*model_visibilities
+    print(res_vec.shape)
+    print(cov_mat.shape)
+    weighted_part2 = np.squeeze(np.matmul(res_vec[:, np.newaxis, :], cov_mat))
+    cost = np.real(np.sum(np.conj(res_vec)*weighted_part2))
 
-    return (prob/data_stddev**2.)
+    print('Cost func. eval.')
+
+    return cost
+
+
+def grad_function_dw_cal(
+    x,
+    Nants,
+    Nfreqs,
+    Nblts,
+    model_visibilities,
+    gains_exp_mat_1,
+    gains_exp_mat_2,
+    cov_mat,
+    data_visibilities
+):
+
+    gains = np.reshape(x, (2, Nants, Nfreqs))
+    gains = gains[0, ] + 1.j*gains[1, ]
+
+    gains1_expanded = np.matmul(gains_exp_mat_1, gains)
+    gains2_expanded = np.matmul(gains_exp_mat_2, gains)
+    term1_part1 = gains1_expanded*model_visibilities
+    term2_part1 = gains2_expanded*np.conj(model_visibilities)
+    cost_term = data_visibilities - gains1_expanded*np.conj(gains2_expanded)*model_visibilities
+    weighted_part2 = np.squeeze(np.matmul(cost_term[:, np.newaxis, :], cov_mat))
+    term1 = np.matmul(gains_exp_mat_2.T, term1_part1*np.conj(weighted_part2))
+    term2 = np.matmul(gains_exp_mat_1.T, term2_part1*weighted_part2)
+    grad = -2*(term1 + term2)
+    grad = np.stack((np.real(grad), np.imag(grad)), axis=0).flatten()
+
+    return grad
 
 
 def cost_function_sky_cal(
     x,
-    N_ants,
+    Nants,
+    Nfreqs,
+    Nblts,
     model_visibilities,
     gains_exp_mat_1,
     gains_exp_mat_2,
-    data_visibilities,
-    data_stddev
+    cov_mat,
+    data_visibilities
 ):
 
-    gains = x[:N_ants]+1j*x[N_ants:2*N_ants]
+    gains = np.reshape(x, (2, Nants, Nfreqs))
+    gains = gains[0, ] + 1.j*gains[1, ]
 
-    cost = calc_negloglikelihood_sky_cal(
-        gains, data_visibilities, model_visibilities,
-        gains_exp_mat_1, gains_exp_mat_2,
-        data_stddev
+    gains_expanded = (
+        np.matmul(gains_exp_mat_1, gains)
+        * np.matmul(gains_exp_mat_2, np.conj(gains))
     )
+    res_vec = data_visibilities - gains_expanded*model_visibilities
+
+    cost = np.sum(np.abs(res_vec)**2)
+
     return cost
-
-
-def calc_gains_grad(
-    gains, model_visibilities, data_visibilities,
-    gains_exp_mat_1, gains_exp_mat_2,
-    data_stddev
-):
-
-    gains1_expanded = np.matmul(gains_exp_mat_1, gains)
-    gains2_expanded = np.matmul(gains_exp_mat_2, gains)
-
-    gains_grad_term_1 = (
-        np.abs(gains1_expanded*model_visibilities)**2.*gains2_expanded
-        - np.conj(data_visibilities)*gains1_expanded*model_visibilities
-    )
-    gains_grad_term_2 = (
-        np.abs(np.conj(gains2_expanded)*model_visibilities)**2.*gains1_expanded
-        - data_visibilities*gains2_expanded*np.conj(model_visibilities)
-    )
-    gains_grad = (2./data_stddev**2.)*(
-        np.matmul(gains_exp_mat_2.T, gains_grad_term_1)
-        + np.matmul(gains_exp_mat_1.T, gains_grad_term_2)
-    )
-
-    return gains_grad
-
-
-def jac_function_sky_cal(
-    x,
-    N_ants,
-    model_visibilities,
-    gains_exp_mat_1,
-    gains_exp_mat_2,
-    data_visibilities,
-    data_stddev
-):
-
-    gains = x[:N_ants]+1j*x[N_ants:2*N_ants]
-
-    gains_grad = calc_gains_grad(
-        gains, model_visibilities, data_visibilities,
-        gains_exp_mat_1, gains_exp_mat_2,
-        data_stddev
-    )
-
-    grads = np.zeros(N_ants*2)
-    grads[:N_ants] = np.real(gains_grad)
-    grads[N_ants:2*N_ants] = np.imag(gains_grad)
-    return grads
-
-
-def calc_calibration_components(data):
-
-    # Create gains expand matrices
-    gains_exp_mat_1 = np.zeros((data.Nbls, data.Nants_data), dtype=np.int)
-    gains_exp_mat_2 = np.zeros((data.Nbls, data.Nants_data), dtype=np.int)
-    for baseline in range(data.Nbls):
-        gains_exp_mat_1[baseline, data.ant_1_array[baseline]] = 1
-        gains_exp_mat_2[baseline, data.ant_2_array[baseline]] = 1
-
-    return gains_exp_mat_1, gains_exp_mat_2,
-
-
-def optimize_sky_cal(
-    data_visibilities, model_visibilities,
-    gains_exp_mat_1, gains_exp_mat_2,
-    N_ants, data_stddev,
-    gains_init=None, quiet=False
-):
-
-    method = 'CG'
-    maxiter = 100000
-
-    if gains_init is None:  # Initialize the gains to 1
-        gains_init = np.full(N_ants, 1.+0.j)
-    # Expand the initialized values
-    x0 = np.concatenate((
-        np.real(gains_init), np.imag(gains_init)
-    ))
-
-    # Minimize the cost function
-    result = scipy.optimize.minimize(
-        cost_function_sky_cal, x0, jac=jac_function_sky_cal,
-        args=(
-            N_ants, model_visibilities,
-            gains_exp_mat_1, gains_exp_mat_2,
-            data_visibilities, data_stddev
-        ),
-        method=method, options={'disp': True, 'maxiter': maxiter}
-    )
-    if not quiet:
-        print(result.message)
-
-    gains_fit = result.x[:N_ants]+1j*result.x[N_ants:2*N_ants]
-    # Ensure that the angle of the gains is mean-zero
-    avg_angle = np.arctan2(
-        np.mean(np.sin(np.angle(gains_fit))),
-        np.mean(np.cos(np.angle(gains_fit)))
-    )
-    gains_fit *= np.cos(avg_angle) - 1j*np.sin(avg_angle)
-
-    return gains_fit
 
 
 def calibrate():
 
     data, model = get_test_data()
-    gains_exp_mat_1, gains_exp_mat_2 = calc_calibration_components(data)
 
-    data_stddev = 1.
+    cal = initialize_cal(data)
 
-    optimize_function_name = optimize_sky_cal
-    gains_fit = optimize_function_name(
-        data.data_array, model.data_array,
-        gains_exp_mat_1, gains_exp_mat_2,
-        data.Nants_data, data_stddev, gains_init
+    # Create gains expand matrices
+    gains_exp_mat_1 = np.zeros((data.Nblts, cal.Nants_data), dtype=int)
+    gains_exp_mat_2 = np.zeros((data.Nblts, cal.Nants_data), dtype=int)
+    antenna_list = np.unique([data.ant_1_array, data.ant_2_array])
+    for baseline in range(data.Nblts):
+        gains_exp_mat_1[
+            baseline, np.where(antenna_list == data.ant_1_array[baseline])
+        ] = 1
+        gains_exp_mat_2[
+            baseline, np.where(antenna_list == data.ant_2_array[baseline])
+        ] = 1
+
+    method = 'CG'
+    #maxiter = 100000
+
+    # Initialize gains
+    gain_init_noise = .1
+    gains_init = (np.random.normal(
+        1., gain_init_noise, size=(cal.Nants_data, cal.Nfreqs)
+    ) + 1.j*np.random.normal(
+        0., gain_init_noise, size=(cal.Nants_data, cal.Nfreqs)
+    ))
+    # Expand the initialized values
+    x0 = np.stack((
+        np.real(gains_init), np.imag(gains_init)
+    ), axis=0).flatten()
+
+    # Define covariance matrix
+    cov_mat = np.identity(cal.Nfreqs)
+    cov_mat = np.repeat(cov_mat[np.newaxis, :, :], data.Nblts, axis=0)
+    cov_mat.reshape((cal.Nfreqs, cal.Nfreqs, data.Nblts))
+
+    # Minimize the cost function
+    print('Beginning optimization')
+    result = scipy.optimize.minimize(
+        cost_function_dw_cal, x0, jac=grad_function_dw_cal,
+        args=(
+            cal.Nants_data,
+            cal.Nfreqs,
+            data.Nblts,
+            np.squeeze(model.data_array),
+            gains_exp_mat_1,
+            gains_exp_mat_2,
+            cov_mat,
+            np.squeeze(data.data_array)
+        ),
+        options={'disp': True}
     )
+    print(result.message)
+
+    gains_fit = np.reshape(result.x, (2, cal.Nants_data, cal.Nfreqs))
+    gains_fit = gains_fit[0, ] + 1.j*gains_fit[1, ]
+    # Ensure that the angle of the gains is mean-zero for each frequency
+    avg_angle = np.arctan2(
+        np.mean(np.sin(np.angle(gains_fit)), axis=0),
+        np.mean(np.cos(np.angle(gains_fit)), axis=0)
+    )
+    gains_fit *= np.cos(avg_angle) - 1j*np.sin(avg_angle)
+
+    print(np.min(np.real(gains_fit)))
+    print(np.max(np.real(gains_fit)))
+    print(np.min(np.imag(gains_fit)))
+    print(np.max(np.imag(gains_fit)))
+    print(np.mean(np.real(gains_fit)))
+    print(np.mean(np.imag(gains_fit)))
 
 
 def get_calibration_reference():
@@ -216,16 +270,11 @@ def get_calibration_reference():
     obs_file_path = '/Users/ruby/Astro/fhd_rlb_perfreq_cal_Feb2021/metadata/1061316296_obs.sav'
     cal_obj = pyuvdata.UVCal()
     cal_obj.read_fhd_cal(cal_file_path, obs_file_path)
-
-    # Change parameters
-    cal_obj.Nsources = None
-    cal_obj.ref_antenna_name = None
-    old_gains = np.copy(cal_obj.gain_array)
-    cal_obj.gain_array = None
-    cal_obj.baseline_range = [0., cal_obj.baseline_range[1]]
-    # Clear flags
-    cal_obj.flag_array = None
+    gains = np.copy(cal_obj.gain_array)
 
 
 if __name__=='__main__':
-    get_calibration_reference()
+    start = time.time()
+    calibrate()
+    end = time.time()
+    print(f"Runtime {(end - start)/60.} minutes.")
