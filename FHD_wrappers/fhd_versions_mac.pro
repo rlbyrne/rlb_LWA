@@ -3,8 +3,8 @@ pro fhd_versions_mac
   !except=0
   heap_gc
 
-  version = 'rlb_test_run_Jul2021'
-  output_directory = '/Users/ruby/Astro'
+  version = 'rlb_test_LWA_beam'
+  output_directory = '/Users/ruby/Astro/FHD_outputs'
   
   case version of
     
@@ -37,6 +37,25 @@ pro fhd_versions_mac
       unflag_all = 1  ; unflag for simulation
       beam_nfreq_avg = 384 ; use one beam for all frequencies
       save_uvf = 1
+    end
+    
+    'rlb_test_HERA_beam': begin
+      obs_id = '1061316296'
+      vis_file_list = '/Users/ruby/Astro/1061316296.uvfits'
+      instrument = 'hera'
+      beam_model_version = 4
+      unflag_all = 1
+      calibrate_visibilities = 0
+    end
+    
+    'rlb_test_LWA_beam': begin
+      obs_id = '1061316296_small'
+      vis_file_list = '/Users/ruby/Astro/'+obs_id+'.uvfits'
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/Users/ruby/Astro/LWA_beams/LWAbeam_2015.fits'
+      beam_model_version = 0
+      unflag_all = 1
+      calibrate_visibilities = 0
     end
     
   endcase
