@@ -50,7 +50,7 @@ def get_test_data():
 
     # For testing, use one time only
     use_time = data.time_array[200000]
-    use_frequencies = data.freq_array[0, 100:102]
+    use_frequencies = data.freq_array[0, 100]
     data.select(times=use_time, frequencies=use_frequencies)
     model.select(times=use_time, frequencies=use_frequencies)
 
@@ -121,13 +121,18 @@ def cost_function_dw_cal(
     gains = np.reshape(x, (2, Nants, Nfreqs,))
     gains = gains[0, ] + 1.j*gains[1, ]
 
+    print(f'model_vis: {np.shape(model_visibilities)}')
+    print(f'data_vis: {np.shape(data_visibilities)}')
+    print(f'gain_exp_mat1: {np.shape(gains_exp_mat_1)}')
+    print(f'gain_exp_mat2: {np.shape(gains_exp_mat_2)}')
+    print(f'cov_mat: {np.shape(cov_mat)}')
+    print(f'gains: {np.shape(gains)}')
+
     gains_expanded = (
         np.matmul(gains_exp_mat_1, gains)
         * np.matmul(gains_exp_mat_2, np.conj(gains))
     )
     res_vec = data_visibilities - gains_expanded*model_visibilities
-    print(res_vec.shape)
-    print(cov_mat.shape)
     weighted_part2 = np.squeeze(np.matmul(res_vec[:, np.newaxis, :], cov_mat))
     cost = np.real(np.sum(np.conj(res_vec)*weighted_part2))
 
@@ -209,11 +214,12 @@ def calibrate():
             baseline, np.where(antenna_list == data.ant_2_array[baseline])
         ] = 1
 
-    method = 'CG'
+    #method = 'CG'
+    method = 'Newton-CG'
     #maxiter = 100000
 
     # Initialize gains
-    gain_init_noise = .1
+    gain_init_noise = .001
     gains_init = (np.random.normal(
         1., gain_init_noise, size=(cal.Nants_data, cal.Nfreqs)
     ) + 1.j*np.random.normal(
@@ -237,11 +243,11 @@ def calibrate():
             cal.Nants_data,
             cal.Nfreqs,
             data.Nblts,
-            np.squeeze(model.data_array),
+            np.squeeze(model.data_array, axis=(1, 3)),
             gains_exp_mat_1,
             gains_exp_mat_2,
             cov_mat,
-            np.squeeze(data.data_array)
+            np.squeeze(data.data_array, axis=(1, 3))
         ),
         options={'disp': True}
     )
@@ -262,6 +268,7 @@ def calibrate():
     print(np.max(np.imag(gains_fit)))
     print(np.mean(np.real(gains_fit)))
     print(np.mean(np.imag(gains_fit)))
+    print('Nfreqs: {}'.format(cal.Nfreqs))
 
 
 def get_calibration_reference():
