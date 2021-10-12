@@ -60,6 +60,15 @@ pro fhd_versions_astm
       beam_nfreq_avg = 384 ; use one beam for all frequencies
       save_uvf = 1
     end
+    
+    'rlb_test_LWA_beam': begin
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/opt/astro/devel/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      beam_model_version = 0
+      unflag_all = 1
+      calibrate_visibilities = 0
+      model_visibilities = 0
+    end
 
   endcase
 
