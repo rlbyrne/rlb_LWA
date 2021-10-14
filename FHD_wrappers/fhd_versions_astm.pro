@@ -68,6 +68,7 @@ pro fhd_versions_astm
       unflag_all = 1
       calibrate_visibilities = 0
       model_visibilities = 0
+      snapshot_healpix_export = 0
     end
 
   endcase

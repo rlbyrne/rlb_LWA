@@ -2,11 +2,11 @@ import subprocess
 import shlex
 import os
 
-obsid = '1061316296'
-version = 'rlb_model_GLEAM_Aug2021'
-uvfits_path = '/lustre/rbyrne/MWA_data'
+obsid = '07_2019-11-21T23:00:08'
+version = 'rlb_test_LWA_beam'
+uvfits_path = '/lustre/rbyrne'
 outdir = '/lustre/rbyrne/fhd_outputs'
-run_eppsilon = True
+run_eppsilon = False
 
 # Define wrappers
 fhd_versions_script = 'fhd_versions_astm'
