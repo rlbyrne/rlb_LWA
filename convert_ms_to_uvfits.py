@@ -10,6 +10,9 @@ for chan_ind, chan in enumerate(freq_channels):
 		uv = uv_new
 	else:
 		uv = uv + uv_new
+uv.instrument = 'OVRO-LWA'
+uv.telescope_name = 'OVRO-LWA'
+uv.set_telescope_params()
 print('Saving file to {}'.format(outfile_name))
 uv.write_uvfits(outfile_name, spoof_nonessential=True)
 
