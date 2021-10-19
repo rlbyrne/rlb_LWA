@@ -3,7 +3,7 @@ pro fhd_versions_mac
   !except=0
   heap_gc
 
-  version = 'rlb_test_LWA_beam'
+  version = 'rlb_test_LWA_data'
   output_directory = '/Users/ruby/Astro/FHD_outputs'
   
   case version of
@@ -56,6 +56,34 @@ pro fhd_versions_mac
       beam_model_version = 0
       unflag_all = 1
       calibrate_visibilities = 0
+    end
+    
+    'rlb_test_LWA_data_one_beam': begin
+      recalculate_all = 1
+      obs_id = '2019-11-21T23:00:08'
+      vis_file_list = '/Users/ruby/Astro/LWA_data/'+obs_id+'.uvfits'
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/Users/ruby/Astro/LWA_beams/LWAbeam_2015_new.fits'
+      beam_model_version = 0
+      unflag_all = 1
+      calibrate_visibilities = 0
+      beam_nfreq_avg = 384
+      psf_resolution = 8
+      snapshot_healpix_export = 0
+    end
+    
+    'rlb_test_LWA_data': begin
+      recalculate_all = 1
+      obs_id = '2019-11-21T23:00:08'
+      vis_file_list = '/Users/ruby/Astro/LWA_data/'+obs_id+'.uvfits'
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/Users/ruby/Astro/LWA_beams/LWAbeam_2015_new.fits'
+      beam_model_version = 0
+      unflag_all = 1
+      calibrate_visibilities = 0
+      ;beam_nfreq_avg = 384
+      psf_resolution = 8
+      snapshot_healpix_export = 0
     end
     
   endcase
