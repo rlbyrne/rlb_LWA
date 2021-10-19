@@ -70,6 +70,18 @@ pro fhd_versions_astm
       model_visibilities = 0
       snapshot_healpix_export = 0
     end
+    
+    'rlb_test_LWA_increase_uv_resolution': begin
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/opt/astro/devel/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      beam_model_version = 0
+      unflag_all = 1
+      calibrate_visibilities = 0
+      model_visibilities = 0
+      snapshot_healpix_export = 0
+      dimension = 10000
+      kbinsize = 0.05
+    end
 
   endcase
 
