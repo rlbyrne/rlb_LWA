@@ -2,8 +2,8 @@ import subprocess
 import shlex
 import os
 
-obsid = '07_2019-11-21T23:00:08'
-version = 'rlb_test_LWA_beam'
+obsid = '2019-11-21T23:00:08'
+version = 'rlb_test_LWA_increase_uv_resolution'
 uvfits_path = '/lustre/rbyrne'
 outdir = '/lustre/rbyrne/fhd_outputs'
 run_eppsilon = False
@@ -24,9 +24,9 @@ if not os.path.isdir(f'{outdir}/fhd_{version}/logs'):
 
 # Run FHD
 with open(
-    f'{outdir}/fhd_{version}/logs/fhd_stdout.txt', 'wb'
+    f'{outdir}/fhd_{version}/logs/{obsid}_fhd_stdout.txt', 'wb'
 ) as out, open(
-    f'{outdir}/fhd_{version}/logs/fhd_stderr.txt', 'wb'
+    f'{outdir}/fhd_{version}/logs/{obsid}_fhd_stderr.txt', 'wb'
 ) as err:
     process = subprocess.Popen(shlex.split(
         f'/opt/astro/devel/harris/idl87/bin/idl -e {fhd_versions_script} -args {outdir} {version} {uvfits_path}/{obsid}.uvfits'
@@ -36,9 +36,9 @@ stdout, stderr = process.communicate()
 # Run eppsilon
 if run_eppsilon:
     with open(
-        f'{outdir}/fhd_{version}/logs/eppsilon_stdout.txt', 'wb'
+        f'{outdir}/fhd_{version}/logs/{obsid}_eppsilon_stdout.txt', 'wb'
     ) as out, open(
-        f'{outdir}/fhd_{version}/logs/eppsilon_stderr.txt', 'wb'
+        f'{outdir}/fhd_{version}/logs/{obsid}_eppsilon_stderr.txt', 'wb'
     ) as err:
         process = subprocess.Popen(shlex.split(
             f'/opt/astro/devel/harris/idl87/bin/idl -e {eppsilon_script} -args {obsid} {outdir} {version} {refresh_ps} {uvf_input}'
