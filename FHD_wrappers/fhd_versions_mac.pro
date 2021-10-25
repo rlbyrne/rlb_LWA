@@ -93,7 +93,7 @@ pro fhd_versions_mac
       instrument = 'lwa'
       import_pyuvdata_beam_filepath = '/Users/ruby/Astro/LWA_beams/LWAbeam_2015_new.fits'
       beam_model_version = 0
-      unflag_all = 1
+      unflag_all = 0
       calibrate_visibilities = 0
       ;beam_nfreq_avg = 384
       ;psf_resolution = 8
