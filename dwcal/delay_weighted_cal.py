@@ -165,6 +165,7 @@ def grad_function_dw_cal(
     term1 = np.matmul(gains_exp_mat_2.T, term1_part1*np.conj(weighted_part2))
     term2 = np.matmul(gains_exp_mat_1.T, term2_part1*weighted_part2)
     grad = -2*(term1 + term2)
+
     grad = np.stack((np.real(grad), np.imag(grad)), axis=0).flatten()
 
     return grad
