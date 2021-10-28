@@ -13,9 +13,9 @@ import time
 
 def get_test_data(use_autos=True):
 
-    model_path = "/Users/ruby/Astro/fhd_rlb_model_GLEAM_Aug2021"
+    model_path = "/Users/ruby/Astro/FHD_outputs/fhd_rlb_model_GLEAM_Aug2021"
     model_use_model = True
-    data_path = "/Users/ruby/Astro/fhd_rlb_model_GLEAM_Aug2021"
+    data_path = "/Users/ruby/Astro/FHD_outputs/fhd_rlb_model_GLEAM_Aug2021"
     data_use_model = True
     obsid = "1061316296"
     pol = "XX"
@@ -49,7 +49,7 @@ def get_test_data(use_autos=True):
 
     # For testing, use one time and a few frequencies only
     use_time = model.time_array[200000]
-    use_frequencies = model.freq_array[0, 100:200]
+    use_frequencies = model.freq_array[0, 100:201]
     model.select(times=use_time, frequencies=use_frequencies)
 
     if not use_autos:  # Remove autocorrelations
@@ -70,12 +70,6 @@ def get_test_data(use_autos=True):
     else:
         print("Using model for data")
         data = model.copy()
-
-    # For testing, use one time only
-    use_time = data.time_array[200000]
-    use_frequencies = data.freq_array[0, 100]
-    data.select(times=use_time, frequencies=use_frequencies)
-    model.select(times=use_time, frequencies=use_frequencies)
 
     # Need to check that the baseline ordering agrees between model and data
 
@@ -151,13 +145,6 @@ def cost_function_dw_cal(
     gains = (
         gains[0,] + 1.0j * gains[1,]
     )
-
-    print(f"model_vis: {np.shape(model_visibilities)}")
-    print(f"data_vis: {np.shape(data_visibilities)}")
-    print(f"gain_exp_mat1: {np.shape(gains_exp_mat_1)}")
-    print(f"gain_exp_mat2: {np.shape(gains_exp_mat_2)}")
-    print(f"cov_mat: {np.shape(cov_mat)}")
-    print(f"gains: {np.shape(gains)}")
 
     gains_expanded = np.matmul(gains_exp_mat_1, gains) * np.matmul(
         gains_exp_mat_2, np.conj(gains)
@@ -375,15 +362,13 @@ def calibrate():
     # Define covariance matrix
     cov_mat = np.identity(cal.Nfreqs)
     cov_mat = np.repeat(cov_mat[np.newaxis, :, :], data.Nblts, axis=0)
-    cov_mat = cov_mat.reshape((cal.Nfreqs, cal.Nfreqs, data.Nblts))
+    cov_mat = cov_mat.reshape((data.Nblts, cal.Nfreqs, cal.Nfreqs))
 
     # Minimize the cost function
     print("Beginning optimization")
     result = scipy.optimize.minimize(
         cost_function_dw_cal,
         x0,
-        jac=jac_dw_cal,
-        hess=hess_dw_cal,
         args=(
             cal.Nants_data,
             cal.Nfreqs,
@@ -394,6 +379,9 @@ def calibrate():
             cov_mat,
             np.squeeze(data.data_array, axis=(1, 3)),
         ),
+        method=method,
+        jac=jac_dw_cal,
+        hess=hess_dw_cal,
         options={"disp": True},
     )
     print(result.message)
@@ -421,10 +409,10 @@ def calibrate():
 def get_calibration_reference():
 
     cal_file_path = (
-        "/Users/ruby/Astro/fhd_rlb_perfreq_cal_Feb2021/calibration/1061316296_cal.sav"
+        "/Users/ruby/Astro/FHD_outputs/fhd_rlb_perfreq_cal_Feb2021/calibration/1061316296_cal.sav"
     )
     obs_file_path = (
-        "/Users/ruby/Astro/fhd_rlb_perfreq_cal_Feb2021/metadata/1061316296_obs.sav"
+        "/Users/ruby/Astro/FHD_outputs/fhd_rlb_perfreq_cal_Feb2021/metadata/1061316296_obs.sav"
     )
     cal_obj = pyuvdata.UVCal()
     cal_obj.read_fhd_cal(cal_file_path, obs_file_path)
