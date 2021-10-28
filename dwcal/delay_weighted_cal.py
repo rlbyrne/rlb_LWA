@@ -10,7 +10,7 @@ import pyuvdata
 import time
 
 
-def get_test_data():
+def get_test_data(use_autos=True):
 
     model_path = '/Users/ruby/Astro/fhd_rlb_model_GLEAM_Aug2021'
     model_use_model = True
@@ -39,11 +39,27 @@ def get_test_data():
     model = pyuvdata.UVData()
     print('Reading model...')
     model.read_fhd(model_filelist, use_model=model_use_model)
+
+    # For testing, use one time and a few frequencies only
+    use_time = model.time_array[200000]
+    use_frequencies = model.freq_array[0, 100:200]
+    model.select(times=use_time, frequencies=use_frequencies)
+
+    if not use_autos:  # Remove autocorrelations
+        bl_lengths = np.sqrt(np.sum(model.uvw_array**2., axis=1))
+        non_autos = np.where(bl_lengths > 0.01)[0]
+        model.select(blt_inds=non_autos)
+
     if data_path != model_path or model_use_model != data_use_model:
         data = pyuvdata.UVData()
         print('Reading data...')
         data.read_fhd(data_filelist, use_model=data_use_model)
         print('Done.')
+        data.select(times=use_time, frequencies=use_frequencies)
+        if not use_autos:  # Remove autocorrelations
+            bl_lengths = np.sqrt(np.sum(data.uvw_array**2., axis=1))
+            non_autos = np.where(bl_lengths > 0.01)[0]
+            data.select(blt_inds=non_autos)
     else:
         print('Using model for data')
         data = model.copy()
