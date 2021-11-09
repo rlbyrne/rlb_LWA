@@ -297,22 +297,22 @@ def hess_dw_cal(
     terms3and4 = -2 * (term3 + term4)
     for freq in range(Nfreqs):
         hess[:, :, freq, freq, 0] += np.real(terms3and4[:, :, freq])
-        hess[:, :, freq, freq, 1] += np.imag(terms3and4[:, :, freq])
+        hess[:, :, freq, freq, 1] -= np.imag(terms3and4[:, :, freq])
         hess[:, :, freq, freq, 2] += np.real(terms3and4[:, :, freq])
 
-    hess_reformatted = np.zeros((2, 2, Nants * Nfreqs, Nants * Nfreqs), dtype=float)
-    hess_reformatted[0, 0, :, :] = hess[:, :, :, :, 0].reshape(
-        Nants * Nfreqs, Nants * Nfreqs
-    )
-    hess_reformatted[0, 1, :, :] = hess[:, :, :, :, 1].reshape(
-        Nants * Nfreqs, Nants * Nfreqs
-    )
-    hess_reformatted[1, 0, :, :] = (
-        hess[:, :, :, :, 1].reshape(Nants * Nfreqs, Nants * Nfreqs)
-    ).T
-    hess_reformatted[1, 1, :, :] = hess[:, :, :, :, 2].reshape(
-        Nants * Nfreqs, Nants * Nfreqs
-    )
+    hess_reformatted = np.zeros((2, Nants * Nfreqs, 2, Nants * Nfreqs), dtype=float)
+    hess_reformatted[0, :, 0, :] = np.transpose(
+        hess[:, :, :, :, 0], (0, 2, 1, 3)
+    ).reshape(Nants * Nfreqs, Nants * Nfreqs)
+    hess_reformatted[0, :, 1, :] = np.transpose(
+        hess[:, :, :, :, 1], (0, 2, 1, 3)
+    ).reshape(Nants * Nfreqs, Nants * Nfreqs)
+    hess_reformatted[1, :, 0, :] = np.transpose(
+        hess[:, :, :, :, 1], (1, 3, 0, 2)
+    ).reshape(Nants * Nfreqs, Nants * Nfreqs)
+    hess_reformatted[1, :, 1, :] = np.transpose(
+        hess[:, :, :, :, 2], (0, 2, 1, 3)
+    ).reshape(Nants * Nfreqs, Nants * Nfreqs)
     del hess
     hess_reformatted = hess_reformatted.reshape(2 * Nants * Nfreqs, 2 * Nants * Nfreqs)
 
@@ -398,13 +398,19 @@ def calibrate():
     # Initialize gains
     gain_init_noise = 0.01
     gains_init = np.random.normal(
-        1.0, gain_init_noise, size=(cal.Nants_data, cal.Nfreqs)
-    ) + 1.0j * np.random.normal(0.0, gain_init_noise, size=(cal.Nants_data, cal.Nfreqs))
+        1.0,
+        gain_init_noise,
+        size=(metadata_reference.Nants_data, metadata_reference.Nfreqs),
+    ) + 1.0j * np.random.normal(
+        0.0,
+        gain_init_noise,
+        size=(metadata_reference.Nants_data, metadata_reference.Nfreqs),
+    )
     # Expand the initialized values
     x0 = np.stack((np.real(gains_init), np.imag(gains_init)), axis=0).flatten()
 
     # Define covariance matrix
-    cov_mat = np.identity(cal.Nfreqs)
+    cov_mat = np.identity(metadata_reference.Nfreqs)
     cov_mat = np.repeat(cov_mat[np.newaxis, :, :], metadata_reference.Nbls, axis=0)
     cov_mat = cov_mat.reshape(
         (metadata_reference.Nbls, metadata_reference.Nfreqs, metadata_reference.Nfreqs)
@@ -416,8 +422,8 @@ def calibrate():
         cost_function_dw_cal,
         x0,
         args=(
-            cal.Nants_data,
-            cal.Nfreqs,
+            metadata_reference.Nants_data,
+            metadata_reference.Nfreqs,
             metadata_reference.Nbls,
             model_visibilities,
             gains_exp_mat_1,
@@ -432,7 +438,9 @@ def calibrate():
     )
     print(result.message)
 
-    gains_fit = np.reshape(result.x, (2, cal.Nants_data, cal.Nfreqs))
+    gains_fit = np.reshape(
+        result.x, (2, metadata_reference.Nants_data, metadata_reference.Nfreqs)
+    )
     gains_fit = (
         gains_fit[0,] + 1.0j * gains_fit[1,]
     )
@@ -449,7 +457,7 @@ def calibrate():
     print(np.max(np.imag(gains_fit)))
     print(np.mean(np.real(gains_fit)))
     print(np.mean(np.imag(gains_fit)))
-    print("Nfreqs: {}".format(cal.Nfreqs))
+    print("Nfreqs: {}".format(metadata_reference.Nfreqs))
 
 
 def get_calibration_reference():
