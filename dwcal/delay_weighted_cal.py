@@ -49,7 +49,7 @@ def get_test_data(use_autos=False):
 
     # For testing, use one time and a few frequencies only
     all_times = np.unique(model.time_array)
-    use_times = all_times[int(model.Ntimes/2):int(model.Ntimes/2+3)]
+    use_times = all_times[int(model.Ntimes / 2) : int(model.Ntimes / 2 + 3)]
     use_frequencies = model.freq_array[0, 100:110]
     model.select(times=use_times, frequencies=use_frequencies)
 
@@ -251,7 +251,7 @@ def hess_dw_cal(
         gains1_times_model[:, :, np.newaxis, :]
         * gains2_times_conj_model[:, :, :, np.newaxis]
         * np.conj(cov_mat[np.newaxis, :, :, :]),
-        axis=0
+        axis=0,
     )
     term1 = reformat_baselines_to_antenna_matrix(
         term1, gains_exp_mat_1, gains_exp_mat_2
@@ -262,7 +262,7 @@ def hess_dw_cal(
         gains2_times_conj_model[:, :, np.newaxis, :]
         * gains1_times_model[:, :, :, np.newaxis]
         * cov_mat[np.newaxis, :, :, :],
-        axis=0
+        axis=0,
     )
     term2 = reformat_baselines_to_antenna_matrix(
         term2, gains_exp_mat_1, gains_exp_mat_2
@@ -374,9 +374,15 @@ def calibrate():
         )
 
     # Create gains expand matrices
-    gains_exp_mat_1 = np.zeros((metadata_reference.Nbls, metadata_reference.Nants_data), dtype=int)
-    gains_exp_mat_2 = np.zeros((metadata_reference.Nbls, metadata_reference.Nants_data), dtype=int)
-    antenna_list = np.unique([metadata_reference.ant_1_array, metadata_reference.ant_2_array])
+    gains_exp_mat_1 = np.zeros(
+        (metadata_reference.Nbls, metadata_reference.Nants_data), dtype=int
+    )
+    gains_exp_mat_2 = np.zeros(
+        (metadata_reference.Nbls, metadata_reference.Nants_data), dtype=int
+    )
+    antenna_list = np.unique(
+        [metadata_reference.ant_1_array, metadata_reference.ant_2_array]
+    )
     for baseline in range(metadata_reference.Nbls):
         gains_exp_mat_1[
             baseline, np.where(antenna_list == metadata_reference.ant_1_array[baseline])
@@ -400,7 +406,9 @@ def calibrate():
     # Define covariance matrix
     cov_mat = np.identity(cal.Nfreqs)
     cov_mat = np.repeat(cov_mat[np.newaxis, :, :], metadata_reference.Nbls, axis=0)
-    cov_mat = cov_mat.reshape((metadata_reference.Nbls, metadata_reference.Nfreqs, metadata_reference.Nfreqs))
+    cov_mat = cov_mat.reshape(
+        (metadata_reference.Nbls, metadata_reference.Nfreqs, metadata_reference.Nfreqs)
+    )
 
     # Minimize the cost function
     print("Beginning optimization")
