@@ -11,7 +11,7 @@ sys.path.append("/Users/ruby/Astro/pyuvdata")
 import pyuvdata
 
 
-def get_test_data(use_autos=True):
+def get_test_data(use_autos=False):
 
     model_path = "/Users/ruby/Astro/FHD_outputs/fhd_rlb_model_GLEAM_Aug2021"
     model_use_model = True
@@ -353,8 +353,8 @@ def calibrate():
     cal = initialize_cal(data)
 
     # Format visibilities
-    data_visibilities = np.zeros((data.Ntimes, data.Nbls, cal.Nfreqs), dtype=complex)
-    model_visibilities = np.zeros((data.Ntimes, data.Nbls, cal.Nfreqs), dtype=complex)
+    data_visibilities = np.zeros((data.Ntimes, data.Nbls, data.Nfreqs), dtype=complex)
+    model_visibilities = np.zeros((data.Ntimes, data.Nbls, data.Nfreqs), dtype=complex)
     for time_ind, time_val in enumerate(np.unique(data.time_array)):
         data_copy = data.copy()
         model_copy = model.copy()
@@ -374,8 +374,8 @@ def calibrate():
         )
 
     # Create gains expand matrices
-    gains_exp_mat_1 = np.zeros((metadata_reference.Nbls, cal.Nants_data), dtype=int)
-    gains_exp_mat_2 = np.zeros((metadata_reference.Nbls, cal.Nants_data), dtype=int)
+    gains_exp_mat_1 = np.zeros((metadata_reference.Nbls, metadata_reference.Nants_data), dtype=int)
+    gains_exp_mat_2 = np.zeros((metadata_reference.Nbls, metadata_reference.Nants_data), dtype=int)
     antenna_list = np.unique([metadata_reference.ant_1_array, metadata_reference.ant_2_array])
     for baseline in range(metadata_reference.Nbls):
         gains_exp_mat_1[
@@ -400,7 +400,7 @@ def calibrate():
     # Define covariance matrix
     cov_mat = np.identity(cal.Nfreqs)
     cov_mat = np.repeat(cov_mat[np.newaxis, :, :], metadata_reference.Nbls, axis=0)
-    cov_mat = cov_mat.reshape((metadata_reference.Nbls, cal.Nfreqs, cal.Nfreqs))
+    cov_mat = cov_mat.reshape((metadata_reference.Nbls, metadata_reference.Nfreqs, metadata_reference.Nfreqs))
 
     # Minimize the cost function
     print("Beginning optimization")
