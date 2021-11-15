@@ -49,8 +49,9 @@ def get_test_data(use_autos=False):
 
     # For testing, use one time and a few frequencies only
     all_times = np.unique(model.time_array)
-    use_times = all_times[int(model.Ntimes / 2) : int(model.Ntimes / 2 + 3)]
-    use_frequencies = model.freq_array[0, 100:110]
+    #use_times = all_times[int(model.Ntimes / 2) : int(model.Ntimes / 2 + 5)]
+    use_times = all_times
+    use_frequencies = model.freq_array[0, 100:150]
     model.select(times=use_times, frequencies=use_frequencies)
 
     if not use_autos:  # Remove autocorrelations
@@ -393,10 +394,11 @@ def calibrate():
 
     # method = 'CG'
     method = "Newton-CG"
-    xtol = 1e-10  # Defaults to 1e-05
+    #xtol = 1e-10  # Defaults to 1e-05
+    xtol = 1e-8
 
     # Initialize gains
-    gain_init_noise = 0.01
+    gain_init_noise = 0.001
     gains_init = np.random.normal(
         1.0,
         gain_init_noise,
