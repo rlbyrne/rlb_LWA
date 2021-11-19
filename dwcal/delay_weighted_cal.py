@@ -49,8 +49,8 @@ def get_test_data(use_autos=False):
 
     # For testing, use one time and a few frequencies only
     all_times = np.unique(model.time_array)
-    #use_times = all_times[int(model.Ntimes / 2) : int(model.Ntimes / 2 + 5)]
-    use_times = all_times
+    use_times = all_times[int(model.Ntimes / 2) : int(model.Ntimes / 2 + 5)]
+    # use_times = all_times
     use_frequencies = model.freq_array[0, 100:150]
     model.select(times=use_times, frequencies=use_frequencies)
 
@@ -347,15 +347,65 @@ def cost_function_sky_cal(
     return cost
 
 
+def get_cov_mat_identity(Nfreqs, Nbls):
+
+    cov_mat = np.identity(Nfreqs)
+    cov_mat = np.repeat(cov_mat[np.newaxis, :, :], Nbls, axis=0)
+    cov_mat = cov_mat.reshape((Nbls, Nfreqs, Nfreqs))
+    return cov_mat
+
+
+def get_cov_mat_no_wedge(
+    Nfreqs, Nbls, uvw_array, freq_array, wedge_buffer_factor=1.2, min_baselines=100
+):
+
+    c = 3.0 * 10 ** 8  # Speed of light
+    bl_lengths = np.sqrt(np.sum(uvw_array ** 2.0, axis=1))
+    freq_step = (np.max(freq_array) - np.min(freq_array)) / (Nfreqs-1)
+    delay_step = 1/(2*(np.max(freq_array) - np.min(freq_array)))
+    delay_array = np.arange(-(Nfreqs-1)*delay_step, Nfreqs*delay_step, delay_step, dtype=float)
+    delay_weighting = np.zeros((Nbls, 2*Nfreqs-1))
+    for delay_ind, delay_val in enumerate(delay_array):
+        window_bls = np.where(wedge_buffer_factor * bl_lengths / c < np.abs(delay_val))[0]
+        if len(window_bls) >= min_baselines:
+            delay_weighting[window_bls, delay_ind] = 1
+        else:
+            # Use all baselines
+            delay_weighting[:, delay_ind] = 1
+
+    # Shift delay zero point to the start
+    delay_weighting = np.fft.ifftshift(delay_weighting, axes=1)
+    # Fourier transform
+    freq_weighting = np.fft.fft(delay_weighting, axis=1)
+    # Result is symmetric and real, so keep half the values and real part only
+    freq_weighting = freq_weighting[:, 0:Nfreqs]
+
+    cov_mat = np.zeros((Nbls, Nfreqs, Nfreqs))
+    # Set off-diagonals
+    for freq_diff in range(1, Nfreqs):
+        for start_freq in range(Nfreqs-freq_diff):
+            cov_mat[:, start_freq, start_freq+freq_diff] = freq_weighting[:, freq_diff]
+    cov_mat += np.transpose(cov_mat, axes=(0,2,1))
+    # Set diagonals
+    for freq_ind in range(Nfreqs):
+        cov_mat[:, freq_ind, freq_ind] = freq_weighting[:, 0]
+    return cov_mat
+
+
 def calibrate():
 
     data, model = get_test_data(use_autos=False)
 
+    Nants = data.Nants_data
+    Nbls = data.Nbls
+    Ntimes = data.Ntimes
+    Nfreqs = data.Nfreqs
+
     cal = initialize_cal(data)
 
     # Format visibilities
-    data_visibilities = np.zeros((data.Ntimes, data.Nbls, data.Nfreqs), dtype=complex)
-    model_visibilities = np.zeros((data.Ntimes, data.Nbls, data.Nfreqs), dtype=complex)
+    data_visibilities = np.zeros((Ntimes, Nbls, Nfreqs), dtype=complex)
+    model_visibilities = np.zeros((Ntimes, Nbls, Nfreqs), dtype=complex)
     for time_ind, time_val in enumerate(np.unique(data.time_array)):
         data_copy = data.copy()
         model_copy = model.copy()
@@ -375,12 +425,8 @@ def calibrate():
         )
 
     # Create gains expand matrices
-    gains_exp_mat_1 = np.zeros(
-        (metadata_reference.Nbls, metadata_reference.Nants_data), dtype=int
-    )
-    gains_exp_mat_2 = np.zeros(
-        (metadata_reference.Nbls, metadata_reference.Nants_data), dtype=int
-    )
+    gains_exp_mat_1 = np.zeros((Nbls, Nants), dtype=int)
+    gains_exp_mat_2 = np.zeros((Nbls, Nants), dtype=int)
     antenna_list = np.unique(
         [metadata_reference.ant_1_array, metadata_reference.ant_2_array]
     )
@@ -394,29 +440,18 @@ def calibrate():
 
     # method = 'CG'
     method = "Newton-CG"
-    #xtol = 1e-10  # Defaults to 1e-05
+    # xtol = 1e-10  # Defaults to 1e-05
     xtol = 1e-8
 
     # Initialize gains
     gain_init_noise = 0.001
     gains_init = np.random.normal(
-        1.0,
-        gain_init_noise,
-        size=(metadata_reference.Nants_data, metadata_reference.Nfreqs),
-    ) + 1.0j * np.random.normal(
-        0.0,
-        gain_init_noise,
-        size=(metadata_reference.Nants_data, metadata_reference.Nfreqs),
-    )
+        1.0, gain_init_noise, size=(Nants, Nfreqs),
+    ) + 1.0j * np.random.normal(0.0, gain_init_noise, size=(Nants, Nfreqs),)
     # Expand the initialized values
     x0 = np.stack((np.real(gains_init), np.imag(gains_init)), axis=0).flatten()
 
-    # Define covariance matrix
-    cov_mat = np.identity(metadata_reference.Nfreqs)
-    cov_mat = np.repeat(cov_mat[np.newaxis, :, :], metadata_reference.Nbls, axis=0)
-    cov_mat = cov_mat.reshape(
-        (metadata_reference.Nbls, metadata_reference.Nfreqs, metadata_reference.Nfreqs)
-    )
+    cov_mat = get_cov_mat_identity(Nfreqs, Nbls)
 
     # Minimize the cost function
     print("Beginning optimization")
@@ -424,9 +459,9 @@ def calibrate():
         cost_function_dw_cal,
         x0,
         args=(
-            metadata_reference.Nants_data,
-            metadata_reference.Nfreqs,
-            metadata_reference.Nbls,
+            Nants,
+            Nfreqs,
+            Nbls,
             model_visibilities,
             gains_exp_mat_1,
             gains_exp_mat_2,
@@ -440,9 +475,7 @@ def calibrate():
     )
     print(result.message)
 
-    gains_fit = np.reshape(
-        result.x, (2, metadata_reference.Nants_data, metadata_reference.Nfreqs)
-    )
+    gains_fit = np.reshape(result.x, (2, Nants, Nfreqs))
     gains_fit = (
         gains_fit[0,] + 1.0j * gains_fit[1,]
     )
@@ -459,7 +492,7 @@ def calibrate():
     print(np.max(np.imag(gains_fit)))
     print(np.mean(np.real(gains_fit)))
     print(np.mean(np.imag(gains_fit)))
-    print("Nfreqs: {}".format(metadata_reference.Nfreqs))
+    print("Nfreqs: {}".format(Nfreqs))
 
 
 def get_calibration_reference():
