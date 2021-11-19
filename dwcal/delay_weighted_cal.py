@@ -11,14 +11,15 @@ sys.path.append("/Users/ruby/Astro/pyuvdata")
 import pyuvdata
 
 
-def get_test_data(use_autos=False):
-
-    model_path = "/Users/ruby/Astro/FHD_outputs/fhd_rlb_model_GLEAM_Aug2021"
-    model_use_model = True
-    data_path = "/Users/ruby/Astro/FHD_outputs/fhd_rlb_model_GLEAM_Aug2021"
-    data_use_model = True
-    obsid = "1061316296"
-    pol = "XX"
+def get_test_data(
+    model_path="/Users/ruby/Astro/FHD_outputs/fhd_rlb_model_GLEAM_Aug2021",
+    model_use_model=True,
+    data_path="/Users/ruby/Astro/FHD_outputs/fhd_rlb_model_GLEAM_Aug2021",
+    data_use_model=True,
+    obsid="1061316296",
+    pol="XX",
+    use_autos=False,
+):
 
     model_filelist = [
         "{}/{}".format(model_path, file)
@@ -44,15 +45,14 @@ def get_test_data(use_autos=False):
     ]
 
     model = pyuvdata.UVData()
-    print("Reading model...")
     model.read_fhd(model_filelist, use_model=model_use_model)
 
-    # For testing, use one time and a few frequencies only
-    all_times = np.unique(model.time_array)
-    use_times = all_times[int(model.Ntimes / 2) : int(model.Ntimes / 2 + 5)]
-    # use_times = all_times
-    use_frequencies = model.freq_array[0, 100:150]
-    model.select(times=use_times, frequencies=use_frequencies)
+    # Average across time
+    model.downsample_in_time(n_times_to_avg=model.Ntimes)
+
+    use_frequencies = model.freq_array[0, :]
+    # use_frequencies = model.freq_array[0, 100:150]
+    model.select(frequencies=use_frequencies)
 
     if not use_autos:  # Remove autocorrelations
         bl_lengths = np.sqrt(np.sum(model.uvw_array ** 2.0, axis=1))
@@ -61,10 +61,9 @@ def get_test_data(use_autos=False):
 
     if data_path != model_path or model_use_model != data_use_model:
         data = pyuvdata.UVData()
-        print("Reading data...")
         data.read_fhd(data_filelist, use_model=data_use_model)
-        print("Done.")
-        data.select(times=use_times, frequencies=use_frequencies)
+        data.downsample_in_time(n_times_to_avg=data.Ntimes)
+        data.select(frequencies=use_frequencies)
         if not use_autos:  # Remove autocorrelations
             bl_lengths = np.sqrt(np.sum(data.uvw_array ** 2.0, axis=1))
             non_autos = np.where(bl_lengths > 0.01)[0]
@@ -84,7 +83,7 @@ def get_test_data(use_autos=False):
     return data, model
 
 
-def initialize_cal(data):
+def initialize_cal(data, antenna_list, gains=None):
 
     cal = pyuvdata.UVCal()
     cal.Nants_data = data.Nants_data
@@ -93,7 +92,7 @@ def initialize_cal(data):
     cal.Njones = 1
     cal.Nspws = 1
     cal.Ntimes = 1
-    cal.ant_array = np.unique(np.concatenate((data.ant_1_array, data.ant_2_array)))
+    cal.ant_array = antenna_list
     cal.antenna_names = data.antenna_names
     cal.antenna_numbers = data.antenna_numbers
     cal.cal_style = "sky"
@@ -108,16 +107,19 @@ def initialize_cal(data):
     cal.telescope_name = data.telescope_name
     cal.time_array = np.array([np.mean(data.time_array)])
     cal.x_orientation = "east"
-    cal.gain_array = np.full(
-        (cal.Nants_data, cal.Nspws, cal.Nfreqs, cal.Ntimes, cal.Njones),
-        1,
-        dtype=complex,
-    )
+    if gains is None:  # Set all gains to 1
+        cal.gain_array = np.full(
+            (cal.Nants_data, cal.Nspws, cal.Nfreqs, cal.Ntimes, cal.Njones),
+            1,
+            dtype=complex,
+        )
+    else:
+        cal.gain_array = gains[:, np.newaxis, :, np.newaxis, np.newaxis]
     cal.flag_array = np.full(
         (cal.Nants_data, cal.Nspws, cal.Nfreqs, cal.Ntimes, cal.Njones),
         False,
         dtype=bool,
-    )
+    )  # Does not yet support flags
     cal.quality_array = np.full(
         (cal.Nants_data, cal.Nspws, cal.Nfreqs, cal.Ntimes, cal.Njones),
         1.0,
@@ -361,12 +363,16 @@ def get_cov_mat_no_wedge(
 
     c = 3.0 * 10 ** 8  # Speed of light
     bl_lengths = np.sqrt(np.sum(uvw_array ** 2.0, axis=1))
-    freq_step = (np.max(freq_array) - np.min(freq_array)) / (Nfreqs-1)
-    delay_step = 1/(2*(np.max(freq_array) - np.min(freq_array)))
-    delay_array = np.arange(-(Nfreqs-1)*delay_step, Nfreqs*delay_step, delay_step, dtype=float)
-    delay_weighting = np.zeros((Nbls, 2*Nfreqs-1))
+    freq_step = (np.max(freq_array) - np.min(freq_array)) / (Nfreqs - 1)
+    delay_step = 1 / (2 * (np.max(freq_array) - np.min(freq_array)))
+    delay_array = np.arange(
+        -(Nfreqs - 1) * delay_step, Nfreqs * delay_step, delay_step, dtype=float
+    )
+    delay_weighting = np.zeros((Nbls, 2 * Nfreqs - 1))
     for delay_ind, delay_val in enumerate(delay_array):
-        window_bls = np.where(wedge_buffer_factor * bl_lengths / c < np.abs(delay_val))[0]
+        window_bls = np.where(wedge_buffer_factor * bl_lengths / c < np.abs(delay_val))[
+            0
+        ]
         if len(window_bls) >= min_baselines:
             delay_weighting[window_bls, delay_ind] = 1
         else:
@@ -378,30 +384,82 @@ def get_cov_mat_no_wedge(
     # Fourier transform
     freq_weighting = np.fft.fft(delay_weighting, axis=1)
     # Result is symmetric and real, so keep half the values and real part only
-    freq_weighting = freq_weighting[:, 0:Nfreqs]
+    freq_weighting = np.real(freq_weighting[:, 0:Nfreqs])
 
-    cov_mat = np.zeros((Nbls, Nfreqs, Nfreqs))
+    cov_mat = np.zeros((Nbls, Nfreqs, Nfreqs), dtype=float)
     # Set off-diagonals
     for freq_diff in range(1, Nfreqs):
-        for start_freq in range(Nfreqs-freq_diff):
-            cov_mat[:, start_freq, start_freq+freq_diff] = freq_weighting[:, freq_diff]
-    cov_mat += np.transpose(cov_mat, axes=(0,2,1))
+        for start_freq in range(Nfreqs - freq_diff):
+            cov_mat[:, start_freq, start_freq + freq_diff] = freq_weighting[
+                :, freq_diff
+            ]
+    cov_mat += np.transpose(cov_mat, axes=(0, 2, 1))
     # Set diagonals
     for freq_ind in range(Nfreqs):
         cov_mat[:, freq_ind, freq_ind] = freq_weighting[:, 0]
     return cov_mat
 
 
-def calibrate():
+def apply_calibration(
+    cal,
+    calibrated_data_savefile,
+    data_path="/Users/ruby/Astro/FHD_outputs/fhd_rlb_model_GLEAM_Aug2021",
+    data_use_model=True,
+    obsid="1061316296",
+    pol="XX",
+):
 
-    data, model = get_test_data(use_autos=False)
+    data_filelist = [
+        "{}/{}".format(data_path, file)
+        for file in [
+            "vis_data/{}_vis_{}.sav".format(obsid, pol),
+            "vis_data/{}_vis_model_{}.sav".format(obsid, pol),
+            "vis_data/{}_flags.sav".format(obsid),
+            "metadata/{}_params.sav".format(obsid),
+            "metadata/{}_settings.txt".format(obsid),
+            "metadata/{}_layout.sav".format(obsid),
+        ]
+    ]
+
+    data = pyuvdata.UVData()
+    data.read_fhd(data_filelist, use_model=data_use_model)
+
+    data_calibrated = pyuvdata.utils.uvcalibrate(data, cal, inplace=False)
+    return data_calibrated
+
+
+def calibrate(
+    model_path="/Users/ruby/Astro/FHD_outputs/fhd_rlb_model_GLEAM_Aug2021",
+    model_use_model=True,
+    data_path="/Users/ruby/Astro/FHD_outputs/fhd_rlb_model_GLEAM_Aug2021",
+    data_use_model=True,
+    obsid="1061316296",
+    pol="XX",
+    use_autos=False,
+    use_wedge_exclusion=False,
+    cal_savefile=None,
+    calibrated_data_savefile=None,
+):
+
+    start = time.time()
+
+    start_read_data = time.time()
+    data, model = get_test_data(
+        model_path=model_path,
+        model_use_model=model_use_model,
+        data_path=data_path,
+        data_use_model=data_use_model,
+        obsid=obsid,
+        pol=pol,
+        use_autos=use_autos,
+    )
+    end_read_data = time.time()
+    print(f"Time reading data: {(end_read_data - start_read_data)/60.} minutes")
 
     Nants = data.Nants_data
     Nbls = data.Nbls
     Ntimes = data.Ntimes
     Nfreqs = data.Nfreqs
-
-    cal = initialize_cal(data)
 
     # Format visibilities
     data_visibilities = np.zeros((Ntimes, Nbls, Nfreqs), dtype=complex)
@@ -451,10 +509,20 @@ def calibrate():
     # Expand the initialized values
     x0 = np.stack((np.real(gains_init), np.imag(gains_init)), axis=0).flatten()
 
-    cov_mat = get_cov_mat_identity(Nfreqs, Nbls)
+    start_cov_mat = time.time()
+    if use_wedge_exclusion:
+        cov_mat = get_cov_mat_no_wedge(
+            Nfreqs, Nbls, metadata_reference.uvw_array, metadata_reference.freq_array
+        )
+    else:
+        cov_mat = get_cov_mat_identity(Nfreqs, Nbls)
+    end_cov_mat = time.time()
+    print(
+        f"Time generating covariance matrix: {(end_cov_mat - start_cov_mat)/60.} minutes"
+    )
 
     # Minimize the cost function
-    print("Beginning optimization")
+    start_optimize = time.time()
     result = scipy.optimize.minimize(
         cost_function_dw_cal,
         x0,
@@ -474,6 +542,8 @@ def calibrate():
         options={"disp": True, "xtol": xtol},
     )
     print(result.message)
+    end_optimize = time.time()
+    print(f"Optimization time: {(end_optimize - start_optimize)/60.} minutes")
 
     gains_fit = np.reshape(result.x, (2, Nants, Nfreqs))
     gains_fit = (
@@ -486,13 +556,26 @@ def calibrate():
     )
     gains_fit *= np.cos(avg_angle) - 1j * np.sin(avg_angle)
 
-    print(np.min(np.real(gains_fit)))
-    print(np.max(np.real(gains_fit)))
-    print(np.min(np.imag(gains_fit)))
-    print(np.max(np.imag(gains_fit)))
-    print(np.mean(np.real(gains_fit)))
-    print(np.mean(np.imag(gains_fit)))
-    print("Nfreqs: {}".format(Nfreqs))
+    # Create cal object
+    cal = initialize_cal(data, antenna_list, gains=gains_fit)
+    if cal_savefile is not None:
+        print(f"Saving calibration solutions to {cal_savefile}")
+        cal.write_calfits(cal_savefile)
+
+    # Apply calibration
+    if calibrated_data_savefile is not None:
+        calibrated_data = apply_calibration(
+            cal,
+            calibrated_data_savefile,
+            data_path=data_path,
+            data_use_model=data_use_model,
+            obsid=obsid,
+            pol=pol,
+        )
+        calibrated_data.write_uvfits(calibrated_data_savefile)
+
+    end = time.time()
+    print(f"Total runtime: {(end - start)/60.} minutes")
 
 
 def get_calibration_reference():
