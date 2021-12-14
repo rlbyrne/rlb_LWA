@@ -10,7 +10,7 @@ run_eppsilon = False
 
 # Define wrappers
 fhd_versions_script = 'fhd_versions_astm'
-eppsilon_script = 'ps_single_obs_astm'
+eppsilon_script = 'ps_single_obs_wrapper'
 
 # Set eppsilon options
 refresh_ps = 0
