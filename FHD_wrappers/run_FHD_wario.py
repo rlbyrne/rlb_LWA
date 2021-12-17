@@ -4,7 +4,6 @@ import os
 
 obsids_list = ['1061316296']
 versions_list = [
-    'rlb_model_GLEAM_Dec2021',
     'rlb_model_GLEAM_bright_sources_Dec2021'
 ]
 uvfits_path = '/safepool/rbyrne/mwa_data'

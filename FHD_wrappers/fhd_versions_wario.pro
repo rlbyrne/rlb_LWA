@@ -35,7 +35,7 @@ pro fhd_versions_wario
 
     'rlb_model_GLEAM_bright_sources_Dec2021': begin
       recalculate_all = 0
-      in_situ_sim_input = '/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_Aug2021/vis_data'
+      in_situ_sim_input = '/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_Dec2021/vis_data'
       return_cal_visibilities = 0
       catalog_file_path = 0
       diffuse_calibrate = 0
