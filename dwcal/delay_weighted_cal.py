@@ -6,8 +6,6 @@ import sys
 import scipy
 import scipy.optimize
 import time
-
-sys.path.append("/Users/ruby/Astro/pyuvdata")
 import pyuvdata
 
 
@@ -19,6 +17,7 @@ def get_test_data(
     obsid="1061316296",
     pol="XX",
     use_autos=False,
+    log_file=None,
 ):
 
     model_filelist = [
@@ -45,6 +44,16 @@ def get_test_data(
     ]
 
     model = pyuvdata.UVData()
+    if model_use_model:
+        print(
+            f"Loading model from {model_path}, using the FHD run's model visibilities.",
+            file=log_file,
+        )
+    else:
+        print(
+            f"Loading model from {model_path}, using the FHD run's data visibilities.",
+            file=log_file,
+        )
     model.read_fhd(model_filelist, use_model=model_use_model)
 
     # Average across time
@@ -61,6 +70,16 @@ def get_test_data(
 
     if data_path != model_path or model_use_model != data_use_model:
         data = pyuvdata.UVData()
+        if data_use_model:
+            print(
+                f"Loading data from {data_path}, using the FHD run's model visibilities.",
+                file=log_file,
+            )
+        else:
+            print(
+                f"Loading data from {data_path}, using the FHD run's data visibilities.",
+                file=log_file,
+            )
         data.read_fhd(data_filelist, use_model=data_use_model)
         data.downsample_in_time(n_times_to_avg=data.Ntimes)
         data.select(frequencies=use_frequencies)
@@ -69,7 +88,7 @@ def get_test_data(
             non_autos = np.where(bl_lengths > 0.01)[0]
             data.select(blt_inds=non_autos)
     else:
-        print("Using model for data")
+        print("Using model for data", file=log_file)
         data = model.copy()
 
     # Ensure ordering matches between the data and model
@@ -439,7 +458,13 @@ def calibrate(
     use_wedge_exclusion=False,
     cal_savefile=None,
     calibrated_data_savefile=None,
+    log_file_path=None,
 ):
+
+    if log_file_path is not None:
+        log_file = open(log_file_path, "w")
+    else:
+        log_file = None
 
     start = time.time()
 
@@ -452,9 +477,13 @@ def calibrate(
         obsid=obsid,
         pol=pol,
         use_autos=use_autos,
+        log_file=log_file,
     )
     end_read_data = time.time()
-    print(f"Time reading data: {(end_read_data - start_read_data)/60.} minutes")
+    print(
+        f"Time reading data: {(end_read_data - start_read_data)/60.} minutes",
+        file=log_file,
+    )
 
     Nants = data.Nants_data
     Nbls = data.Nbls
@@ -511,14 +540,23 @@ def calibrate(
 
     start_cov_mat = time.time()
     if use_wedge_exclusion:
+        print(
+            f"use_wedge_exclusion=True: Generating wedge excluding covariance matrix",
+            file=log_file,
+        )
         cov_mat = get_cov_mat_no_wedge(
             Nfreqs, Nbls, metadata_reference.uvw_array, metadata_reference.freq_array
         )
     else:
+        print(
+            f"use_wedge_exclusion=False: Covariance matrix is the identity",
+            file=log_file,
+        )
         cov_mat = get_cov_mat_identity(Nfreqs, Nbls)
     end_cov_mat = time.time()
     print(
-        f"Time generating covariance matrix: {(end_cov_mat - start_cov_mat)/60.} minutes"
+        f"Time generating covariance matrix: {(end_cov_mat - start_cov_mat)/60.} minutes",
+        file=log_file,
     )
 
     # Minimize the cost function
@@ -541,9 +579,12 @@ def calibrate(
         hess=hess_dw_cal,
         options={"disp": True, "xtol": xtol},
     )
-    print(result.message)
+    print(result.message, file=log_file)
     end_optimize = time.time()
-    print(f"Optimization time: {(end_optimize - start_optimize)/60.} minutes")
+    print(
+        f"Optimization time: {(end_optimize - start_optimize)/60.} minutes",
+        file=log_file,
+    )
 
     gains_fit = np.reshape(result.x, (2, Nants, Nfreqs))
     gains_fit = (
@@ -559,7 +600,7 @@ def calibrate(
     # Create cal object
     cal = initialize_cal(data, antenna_list, gains=gains_fit)
     if cal_savefile is not None:
-        print(f"Saving calibration solutions to {cal_savefile}")
+        print(f"Saving calibration solutions to {cal_savefile}", file=log_file)
         cal.write_calfits(cal_savefile)
 
     # Apply calibration
@@ -572,10 +613,14 @@ def calibrate(
             obsid=obsid,
             pol=pol,
         )
+        print(f"Saving calibrated data to {calibrated_data_savefile}", file=log_file)
         calibrated_data.write_uvfits(calibrated_data_savefile)
 
     end = time.time()
-    print(f"Total runtime: {(end - start)/60.} minutes")
+    print(f"Total runtime: {(end - start)/60.} minutes", file=log_file)
+
+    if log_file_path is not None:
+        log_file.close()
 
 
 def get_calibration_reference():
