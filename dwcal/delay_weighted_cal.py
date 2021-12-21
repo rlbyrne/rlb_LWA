@@ -16,7 +16,8 @@ def get_test_data(
     data_use_model=True,
     obsid="1061316296",
     pol="XX",
-    use_autos=False
+    use_autos=False,
+    debug_limit_freqs=None,
 ):
 
     model_filelist = [
@@ -56,9 +57,12 @@ def get_test_data(
     # Average across time
     model.downsample_in_time(n_times_to_avg=model.Ntimes)
 
-    use_frequencies = model.freq_array[0, :]
-    #use_frequencies = model.freq_array[0, 100:110]
-    model.select(frequencies=use_frequencies)
+    if debug_limit_freqs is not None:  # Limit frequency axis for debugging
+        min_freq_channel = round(model.Nfreqs / 2 - debug_limit_freqs / 2)
+        use_frequencies = model.freq_array[
+            0, min_freq_channel : round(min_freq_channel + debug_limit_freqs)
+        ]
+        model.select(frequencies=use_frequencies)
 
     if not use_autos:  # Remove autocorrelations
         bl_lengths = np.sqrt(np.sum(model.uvw_array ** 2.0, axis=1))
@@ -77,7 +81,8 @@ def get_test_data(
             )
         data.read_fhd(data_filelist, use_model=data_use_model)
         data.downsample_in_time(n_times_to_avg=data.Ntimes)
-        data.select(frequencies=use_frequencies)
+        if debug_limit_freqs is not None:
+            data.select(frequencies=use_frequencies)
         if not use_autos:  # Remove autocorrelations
             bl_lengths = np.sqrt(np.sum(data.uvw_array ** 2.0, axis=1))
             non_autos = np.where(bl_lengths > 0.01)[0]
@@ -120,9 +125,7 @@ def initialize_cal(data, antenna_list, gains=None):
     cal.spw_array = data.spw_array
     cal.telescope_name = data.telescope_name
     cal.time_array = np.array([np.mean(data.time_array)])
-    cal.time_range = np.array(
-        [np.min(data.time_array), np.max(data.time_array)]
-    )
+    cal.time_range = np.array([np.min(data.time_array), np.max(data.time_array)])
     cal.x_orientation = "east"
     if gains is None:  # Set all gains to 1
         cal.gain_array = np.full(
@@ -424,6 +427,7 @@ def apply_calibration(
     data_use_model=True,
     obsid="1061316296",
     pol="XX",
+    debug_limit_freqs=None,
 ):
 
     data_filelist = [
@@ -440,6 +444,13 @@ def apply_calibration(
 
     data = pyuvdata.UVData()
     data.read_fhd(data_filelist, use_model=data_use_model)
+
+    if debug_limit_freqs is not None:
+        min_freq_channel = round(data.Nfreqs / 2 - debug_limit_freqs / 2)
+        use_frequencies = data.freq_array[
+            0, min_freq_channel : round(min_freq_channel + debug_limit_freqs)
+        ]
+        data.select(frequencies=use_frequencies)
 
     data_calibrated = pyuvdata.utils.uvcalibrate(
         data, cal, inplace=False, time_check=False
@@ -459,10 +470,12 @@ def calibrate(
     cal_savefile=None,
     calibrated_data_savefile=None,
     log_file_path=None,
+    debug_limit_freqs=None,  # Set to number of freq channels to use
 ):
 
     if log_file_path is not None:
-        sys.stdout = open(log_file_path, 'w')
+        sys.stdout = open(log_file_path, "w")
+        sys.stderr = sys.stdout
 
     start = time.time()
 
@@ -475,11 +488,11 @@ def calibrate(
         obsid=obsid,
         pol=pol,
         use_autos=use_autos,
+        debug_limit_freqs=debug_limit_freqs,
     )
     end_read_data = time.time()
-    print(
-        f"Time reading data: {(end_read_data - start_read_data)/60.} minutes"
-    )
+    print(f"Time reading data: {(end_read_data - start_read_data)/60.} minutes")
+    sys.stdout.flush()
 
     Nants = data.Nants_data
     Nbls = data.Nbls
@@ -536,21 +549,20 @@ def calibrate(
 
     start_cov_mat = time.time()
     if use_wedge_exclusion:
-        print(
-            f"use_wedge_exclusion=True: Generating wedge excluding covariance matrix"
-        )
+        print(f"use_wedge_exclusion=True: Generating wedge excluding covariance matrix")
+        sys.stdout.flush()
         cov_mat = get_cov_mat_no_wedge(
             Nfreqs, Nbls, metadata_reference.uvw_array, metadata_reference.freq_array
         )
     else:
-        print(
-            f"use_wedge_exclusion=False: Covariance matrix is the identity"
-        )
+        print(f"use_wedge_exclusion=False: Covariance matrix is the identity")
+        sys.stdout.flush()
         cov_mat = get_cov_mat_identity(Nfreqs, Nbls)
     end_cov_mat = time.time()
     print(
         f"Time generating covariance matrix: {(end_cov_mat - start_cov_mat)/60.} minutes"
     )
+    sys.stdout.flush()
 
     # Minimize the cost function
     start_optimize = time.time()
@@ -574,9 +586,8 @@ def calibrate(
     )
     print(result.message)
     end_optimize = time.time()
-    print(
-        f"Optimization time: {(end_optimize - start_optimize)/60.} minutes"
-    )
+    print(f"Optimization time: {(end_optimize - start_optimize)/60.} minutes")
+    sys.stdout.flush()
 
     gains_fit = np.reshape(result.x, (2, Nants, Nfreqs))
     gains_fit = (
@@ -593,6 +604,7 @@ def calibrate(
     cal = initialize_cal(data, antenna_list, gains=gains_fit)
     if cal_savefile is not None:
         print(f"Saving calibration solutions to {cal_savefile}")
+        sys.stdout.flush()
         cal.write_calfits(cal_savefile, clobber=True)
 
     # Apply calibration
@@ -604,8 +616,10 @@ def calibrate(
             data_use_model=data_use_model,
             obsid=obsid,
             pol=pol,
+            debug_limit_freqs=debug_limit_freqs,
         )
         print(f"Saving calibrated data to {calibrated_data_savefile}")
+        sys.stdout.flush()
         calibrated_data.write_uvfits(calibrated_data_savefile)
 
     end = time.time()
@@ -627,8 +641,10 @@ def get_calibration_reference():
 if __name__ == "__main__":
     start = time.time()
     calibrate(
-        cal_savefile='/Users/ruby/Astro/FHD_outputs/test_cal_savefile.calfits',
-        calibrated_data_savefile='/Users/ruby/Astro/FHD_outputs/test_cal_data.uvfits'
+        cal_savefile="/Users/ruby/Astro/test_calibration/test_cal_savefile.calfits",
+        calibrated_data_savefile="/Users/ruby/Astro/test_calibration/test_cal_data.uvfits",
+        log_file_path="/Users/ruby/Astro/test_calibration/test_cal_log.txt",
+        debug_limit_freqs=10,
     )
     end = time.time()
     print(f"Runtime {(end - start)/60.} minutes.")
