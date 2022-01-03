@@ -538,7 +538,7 @@ def calibrate(
     # method = 'CG'
     method = "Newton-CG"
     # xtol = 1e-10  # Defaults to 1e-05
-    xtol = 1e-8
+    xtol = 1e-5
 
     # Initialize gains
     gain_init_noise = 0.001
