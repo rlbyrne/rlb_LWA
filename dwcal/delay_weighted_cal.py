@@ -184,6 +184,7 @@ def cost_function_dw_cal(
     cost = np.real(np.sum(np.conj(np.squeeze(res_vec)) * weighted_part2))
 
     print("Cost func. eval.")
+    sys.stdout.flush()
 
     return cost
 
@@ -644,7 +645,8 @@ if __name__ == "__main__":
         cal_savefile="/Users/ruby/Astro/test_calibration/test_cal_savefile.calfits",
         calibrated_data_savefile="/Users/ruby/Astro/test_calibration/test_cal_data.uvfits",
         log_file_path="/Users/ruby/Astro/test_calibration/test_cal_log.txt",
-        debug_limit_freqs=10,
+        debug_limit_freqs=None,
+        use_wedge_exclusion=True
     )
     end = time.time()
     print(f"Runtime {(end - start)/60.} minutes.")
