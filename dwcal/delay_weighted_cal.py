@@ -18,6 +18,7 @@ def get_test_data(
     pol="XX",
     use_autos=False,
     debug_limit_freqs=None,
+    use_antenna_list=None,
 ):
 
     model_filelist = [
@@ -64,6 +65,9 @@ def get_test_data(
         ]
         model.select(frequencies=use_frequencies)
 
+    if use_antenna_list is not None:  # Use a subset of antennas
+        model.select(antenna_nums=use_antenna_list)
+
     if not use_autos:  # Remove autocorrelations
         bl_lengths = np.sqrt(np.sum(model.uvw_array ** 2.0, axis=1))
         non_autos = np.where(bl_lengths > 0.01)[0]
@@ -83,6 +87,8 @@ def get_test_data(
         data.downsample_in_time(n_times_to_avg=data.Ntimes)
         if debug_limit_freqs is not None:
             data.select(frequencies=use_frequencies)
+        if use_antenna_list is not None:
+            data.select(antenna_nums=use_antenna_list)
         if not use_autos:  # Remove autocorrelations
             bl_lengths = np.sqrt(np.sum(data.uvw_array ** 2.0, axis=1))
             non_autos = np.where(bl_lengths > 0.01)[0]
@@ -379,7 +385,13 @@ def get_cov_mat_identity(Nfreqs, Nbls):
 
 
 def get_cov_mat_no_wedge(
-    Nfreqs, Nbls, uvw_array, freq_array, wedge_buffer_factor=1.2, min_baselines=100
+    Nfreqs,
+    Nbls,
+    uvw_array,
+    freq_array,
+    wedge_buffer_factor=1.2,
+    min_baselines=100,
+    min_baseline_len=0,
 ):
 
     c = 3.0 * 10 ** 8  # Speed of light
@@ -391,14 +403,18 @@ def get_cov_mat_no_wedge(
     )
     delay_weighting = np.zeros((Nbls, 2 * Nfreqs - 1))
     for delay_ind, delay_val in enumerate(delay_array):
-        window_bls = np.where(wedge_buffer_factor * bl_lengths / c < np.abs(delay_val))[
-            0
-        ]
-        if len(window_bls) >= min_baselines:
-            delay_weighting[window_bls, delay_ind] = 1
-        else:
+        if np.abs(delay_val) < min_baseline_len / c:
             # Use all baselines
             delay_weighting[:, delay_ind] = 1
+        else:
+            window_bls = np.where(
+                wedge_buffer_factor * bl_lengths / c < np.abs(delay_val)
+            )[0]
+            if len(window_bls) >= min_baselines:
+                delay_weighting[window_bls, delay_ind] = 1
+            else:
+                # Use all baselines
+                delay_weighting[:, delay_ind] = 1
 
     # Shift delay zero point to the start
     delay_weighting = np.fft.ifftshift(delay_weighting, axes=1)
@@ -472,6 +488,7 @@ def calibrate(
     calibrated_data_savefile=None,
     log_file_path=None,
     debug_limit_freqs=None,  # Set to number of freq channels to use
+    use_antenna_list=None,
 ):
 
     if log_file_path is not None:
@@ -490,6 +507,7 @@ def calibrate(
         pol=pol,
         use_autos=use_autos,
         debug_limit_freqs=debug_limit_freqs,
+        use_antenna_list=use_antenna_list,
     )
     end_read_data = time.time()
     print(f"Time reading data: {(end_read_data - start_read_data)/60.} minutes")
@@ -503,6 +521,7 @@ def calibrate(
     # Format visibilities
     data_visibilities = np.zeros((Ntimes, Nbls, Nfreqs), dtype=complex)
     model_visibilities = np.zeros((Ntimes, Nbls, Nfreqs), dtype=complex)
+    flag_array = np.zeros((Ntimes, Nbls, Nfreqs), dtype=bool)
     for time_ind, time_val in enumerate(np.unique(data.time_array)):
         data_copy = data.copy()
         model_copy = model.copy()
@@ -519,6 +538,15 @@ def calibrate(
         )
         data_visibilities[time_ind, :, :] = np.squeeze(
             data_copy.data_array, axis=(1, 3)
+        )
+        flag_array[time_ind, :, :] = np.max(
+            np.stack(
+                [
+                    np.squeeze(model_copy.flag_array, axis=(1, 3)),
+                    np.squeeze(data_copy.flag_array, axis=(1, 3)),
+                ]
+            ),
+            axis=0,
         )
 
     # Create gains expand matrices
@@ -564,6 +592,20 @@ def calibrate(
         f"Time generating covariance matrix: {(end_cov_mat - start_cov_mat)/60.} minutes"
     )
     sys.stdout.flush()
+
+    # Apply flagging
+    print(f"Applying flags to the covariance matrix")
+    sys.stdout.flush()
+    # Currently does not support flagging individual times
+    flag_array_time_averaged = np.max(flag_array, axis=0)
+    frac_flagged = float(np.sum(flag_array_time_averaged)) / float(
+        np.prod(np.shape(flag_array_time_averaged))
+    )
+    print(f"Fraction of the data flagged: {frac_flagged}")
+    flag_array_inverted = np.invert(flag_array_time_averaged)
+    cov_mat *= (
+        flag_array_inverted[:, :, np.newaxis] * flag_array_inverted[:, np.newaxis, :]
+    )
 
     # Minimize the cost function
     start_optimize = time.time()
@@ -640,13 +682,15 @@ def get_calibration_reference():
 
 
 if __name__ == "__main__":
-    start = time.time()
     calibrate(
-        cal_savefile="/Users/ruby/Astro/test_calibration/test_cal_savefile.calfits",
-        calibrated_data_savefile="/Users/ruby/Astro/test_calibration/test_cal_data.uvfits",
-        log_file_path="/Users/ruby/Astro/test_calibration/test_cal_log.txt",
-        debug_limit_freqs=None,
-        use_wedge_exclusion=True
+        model_path="/Users/ruby/Astro/dwcal_tests_Jan2022/fhd_rlb_model_GLEAM_bright_sources_Dec2021",
+        model_use_model=True,
+        data_path="/Users/ruby/Astro/dwcal_tests_Jan2022/fhd_rlb_model_GLEAM_bright_sources_Dec2021",
+        data_use_model=False,
+        obsid="1061316296",
+        pol="XX",
+        use_autos=False,
+        cal_savefile="/Users/ruby/Astro/dwcal_tests_Jan2022/wedge_excluded_limited_antennas.calfits",
+        use_wedge_exclusion=True,
+        use_antenna_list=[3, 4, 57, 70, 92, 110],
     )
-    end = time.time()
-    print(f"Runtime {(end - start)/60.} minutes.")
