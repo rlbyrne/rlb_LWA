@@ -19,6 +19,7 @@ def get_test_data(
     use_autos=False,
     debug_limit_freqs=None,
     use_antenna_list=None,
+    use_flagged_baselines=False,
 ):
 
     model_filelist = [
@@ -49,10 +50,12 @@ def get_test_data(
         print(
             f"Loading model from {model_path}, using the FHD run's model visibilities."
         )
+        sys.stdout.flush()
     else:
         print(
             f"Loading model from {model_path}, using the FHD run's data visibilities."
         )
+        sys.stdout.flush()
     model.read_fhd(model_filelist, use_model=model_use_model)
 
     # Average across time
@@ -79,10 +82,12 @@ def get_test_data(
             print(
                 f"Loading data from {data_path}, using the FHD run's model visibilities."
             )
+            sys.stdout.flush()
         else:
             print(
                 f"Loading data from {data_path}, using the FHD run's data visibilities."
             )
+            sys.stdout.flush()
         data.read_fhd(data_filelist, use_model=data_use_model)
         data.downsample_in_time(n_times_to_avg=data.Ntimes)
         if debug_limit_freqs is not None:
@@ -95,6 +100,7 @@ def get_test_data(
             data.select(blt_inds=non_autos)
     else:
         print("Using model for data")
+        sys.stdout.flush()
         data = model.copy()
 
     # Ensure ordering matches between the data and model
@@ -104,6 +110,20 @@ def get_test_data(
     if np.max(np.abs(data.freq_array - model.freq_array)) > 0.0:
         data.reorder_freqs(channel_order="freq")
         model.reorder_freqs(channel_order="freq")
+
+    if not use_flagged_baselines:
+        # Remove baselines with any flagged frequencies
+        # This does not work if more that one time channel is used and flags are time-dependent
+        flag_arr_combined = np.stack((model.flag_array, data.flag_array), axis=4)
+        bl_flags = np.max(flag_arr_combined, axis=(1, 2, 3, 4))
+        bl_inds_use = np.where(np.invert(bl_flags))[0]
+        if len(bl_inds_use) < data.Nblts:
+            print("use_flagged_baselines=False. Removing baselines with flags.")
+            frac_data_removed = 1 - float(len(bl_inds_use)) / float(data.Nblts)
+            print(f"Fraction of data removed: {frac_data_removed}")
+            sys.stdout.flush()
+            model.select(blt_inds=bl_inds_use)
+            data.select(blt_inds=bl_inds_use)
 
     return data, model
 
@@ -124,7 +144,7 @@ def initialize_cal(data, antenna_list, gains=None):
     cal.cal_type = "gain"
     cal.channel_width = data.channel_width
     cal.freq_array = data.freq_array
-    cal.gain_convention = "divide"
+    cal.gain_convention = "multiply"
     cal.history = ""
     cal.integration_time = np.mean(data.integration_time)
     cal.jones_array = np.array([-5])
@@ -185,7 +205,7 @@ def cost_function_dw_cal(
     gains_expanded = np.matmul(gains_exp_mat_1, gains) * np.matmul(
         gains_exp_mat_2, np.conj(gains)
     )
-    res_vec = data_visibilities - gains_expanded[np.newaxis, :, :] * model_visibilities
+    res_vec = model_visibilities - gains_expanded[np.newaxis, :, :] * data_visibilities
     weighted_part2 = np.squeeze(np.matmul(res_vec[:, :, np.newaxis, :], cov_mat))
     cost = np.real(np.sum(np.conj(np.squeeze(res_vec)) * weighted_part2))
 
@@ -214,11 +234,11 @@ def jac_dw_cal(
 
     gains1_expanded = np.matmul(gains_exp_mat_1, gains)
     gains2_expanded = np.matmul(gains_exp_mat_2, gains)
-    term1_part1 = gains1_expanded[np.newaxis, :, :] * model_visibilities
-    term2_part1 = gains2_expanded[np.newaxis, :, :] * np.conj(model_visibilities)
+    term1_part1 = gains1_expanded[np.newaxis, :, :] * data_visibilities
+    term2_part1 = gains2_expanded[np.newaxis, :, :] * np.conj(data_visibilities)
     cost_term = (
-        data_visibilities
-        - gains1_expanded * np.conj(gains2_expanded) * model_visibilities
+        model_visibilities
+        - gains1_expanded * np.conj(gains2_expanded) * data_visibilities
     )
     weighted_part2 = np.squeeze(np.matmul(cost_term[:, :, np.newaxis, :], cov_mat))
     term1 = np.sum(
@@ -272,14 +292,14 @@ def hess_dw_cal(
     gains1_expanded = np.matmul(gains_exp_mat_1, gains)
     gains2_expanded = np.matmul(gains_exp_mat_2, gains)
 
-    gains1_times_model = gains1_expanded[np.newaxis, :, :] * model_visibilities
-    gains2_times_conj_model = gains2_expanded[np.newaxis, :, :] * np.conj(
-        model_visibilities
+    gains1_times_data = gains1_expanded[np.newaxis, :, :] * data_visibilities
+    gains2_times_conj_data = gains2_expanded[np.newaxis, :, :] * np.conj(
+        data_visibilities
     )
 
     term1 = np.sum(
-        gains1_times_model[:, :, np.newaxis, :]
-        * gains2_times_conj_model[:, :, :, np.newaxis]
+        gains1_times_data[:, :, np.newaxis, :]
+        * gains2_times_conj_data[:, :, :, np.newaxis]
         * np.conj(cov_mat[np.newaxis, :, :, :]),
         axis=0,
     )
@@ -289,8 +309,8 @@ def hess_dw_cal(
     term1 = np.transpose(term1, (1, 0, 2, 3))
 
     term2 = np.sum(
-        gains2_times_conj_model[:, :, np.newaxis, :]
-        * gains1_times_model[:, :, :, np.newaxis]
+        gains2_times_conj_data[:, :, np.newaxis, :]
+        * gains1_times_data[:, :, :, np.newaxis]
         * cov_mat[np.newaxis, :, :, :],
         axis=0,
     )
@@ -307,14 +327,14 @@ def hess_dw_cal(
     hess[:, :, :, :, 2] = -np.real(terms1and2)
 
     term3 = np.sum(
-        np.conj(model_visibilities)
+        np.conj(data_visibilities)
         * np.sum(
             cov_mat[np.newaxis, :, :, :]
             * (
-                data_visibilities
+                model_visibilities
                 - gains1_expanded[np.newaxis, :, :]
                 * np.conj(gains2_expanded[np.newaxis, :, :])
-                * model_visibilities
+                * data_visibilities
             )[:, :, :, np.newaxis],
             axis=3,
         ),
@@ -369,7 +389,7 @@ def cost_function_sky_cal(
     gains_expanded = np.matmul(gains_exp_mat_1, gains) * np.matmul(
         gains_exp_mat_2, np.conj(gains)
     )
-    res_vec = data_visibilities - gains_expanded[np.newaxis, :, :] * model_visibilities
+    res_vec = model_visibilities - gains_expanded[np.newaxis, :, :] * data_visibilities
 
     cost = np.sum(np.abs(res_vec) ** 2)
 
@@ -384,14 +404,64 @@ def get_cov_mat_identity(Nfreqs, Nbls):
     return cov_mat
 
 
+def get_cov_mat_freq_avg(Nfreqs, Nbls):
+
+    cov_mat = np.ones((Nbls, Nfreqs, Nfreqs), dtype=float)
+    return cov_mat
+
+
+def get_weighted_cov_mat(
+    Nfreqs,
+    Nbls,
+    uvw_array,
+    freq_array,
+    wedge_buffer_factor=1.2,
+    downweight_frac=0.01,
+):
+
+    c = 3.0 * 10 ** 8  # Speed of light
+    bl_lengths = np.sqrt(np.sum(uvw_array ** 2.0, axis=1))
+    freq_step = (np.max(freq_array) - np.min(freq_array)) / (Nfreqs - 1)
+    delay_step = 1 / (2 * (np.max(freq_array) - np.min(freq_array)))
+    delay_array = np.arange(
+        -(Nfreqs - 1) * delay_step, Nfreqs * delay_step, delay_step, dtype=float
+    )
+    delay_weighting = np.full((Nbls, 2 * Nfreqs - 1), downweight_frac)
+    for delay_ind, delay_val in enumerate(delay_array):
+        window_bls = np.where(
+            wedge_buffer_factor * bl_lengths / c < np.abs(delay_val)
+        )[0]
+        delay_weighting[window_bls, delay_ind] = 1.
+
+    # Shift delay zero point to the start
+    delay_weighting = np.fft.ifftshift(delay_weighting, axes=1)
+    # Fourier transform
+    freq_weighting = np.fft.fft(delay_weighting, axis=1)
+    # Result is symmetric and real, so keep half the values and real part only
+    freq_weighting = np.real(freq_weighting[:, 0:Nfreqs])
+
+    cov_mat = np.zeros((Nbls, Nfreqs, Nfreqs), dtype=float)
+    # Set off-diagonals
+    for freq_diff in range(1, Nfreqs):
+        for start_freq in range(Nfreqs - freq_diff):
+            cov_mat[:, start_freq, start_freq + freq_diff] = freq_weighting[
+                :, freq_diff
+            ]
+    cov_mat += np.transpose(cov_mat, axes=(0, 2, 1))
+    # Set diagonals
+    for freq_ind in range(Nfreqs):
+        cov_mat[:, freq_ind, freq_ind] = freq_weighting[:, 0]
+    return cov_mat
+
+
 def get_cov_mat_no_wedge(
     Nfreqs,
     Nbls,
     uvw_array,
     freq_array,
     wedge_buffer_factor=1.2,
-    min_baselines=100,
-    min_baseline_len=0,
+    min_baselines=0,
+    min_baseline_len=20.,
 ):
 
     c = 3.0 * 10 ** 8  # Speed of light
@@ -484,11 +554,14 @@ def calibrate(
     pol="XX",
     use_autos=False,
     use_wedge_exclusion=False,
+    calculate_freq_averaged_gains=False,
     cal_savefile=None,
     calibrated_data_savefile=None,
     log_file_path=None,
     debug_limit_freqs=None,  # Set to number of freq channels to use
     use_antenna_list=None,
+    use_flagged_baselines=False,
+    apply_flags=False,
 ):
 
     if log_file_path is not None:
@@ -508,6 +581,7 @@ def calibrate(
         use_autos=use_autos,
         debug_limit_freqs=debug_limit_freqs,
         use_antenna_list=use_antenna_list,
+        use_flagged_baselines=use_flagged_baselines,
     )
     end_read_data = time.time()
     print(f"Time reading data: {(end_read_data - start_read_data)/60.} minutes")
@@ -549,6 +623,9 @@ def calibrate(
             axis=0,
         )
 
+    if not np.max(flag_array):  # Check for flags
+        apply_flags = False
+
     # Create gains expand matrices
     gains_exp_mat_1 = np.zeros((Nbls, Nants), dtype=int)
     gains_exp_mat_2 = np.zeros((Nbls, Nants), dtype=int)
@@ -566,7 +643,7 @@ def calibrate(
     # method = 'CG'
     method = "Newton-CG"
     # xtol = 1e-10  # Defaults to 1e-05
-    xtol = 1e-5
+    xtol = 1e-10
 
     # Initialize gains
     gain_init_noise = 0.001
@@ -580,9 +657,16 @@ def calibrate(
     if use_wedge_exclusion:
         print(f"use_wedge_exclusion=True: Generating wedge excluding covariance matrix")
         sys.stdout.flush()
-        cov_mat = get_cov_mat_no_wedge(
+        #cov_mat = get_cov_mat_no_wedge(
+        #    Nfreqs, Nbls, metadata_reference.uvw_array, metadata_reference.freq_array
+        #)
+        cov_mat = get_weighted_cov_mat(
             Nfreqs, Nbls, metadata_reference.uvw_array, metadata_reference.freq_array
         )
+    elif calculate_freq_averaged_gains:
+        print(f"calculate_freq_averaged_gains=True: Covariance matrix is all ones")
+        sys.stdout.flush()
+        cov_mat = get_cov_mat_freq_avg(Nfreqs, Nbls)
     else:
         print(f"use_wedge_exclusion=False: Covariance matrix is the identity")
         sys.stdout.flush()
@@ -593,19 +677,25 @@ def calibrate(
     )
     sys.stdout.flush()
 
-    # Apply flagging
-    print(f"Applying flags to the covariance matrix")
-    sys.stdout.flush()
-    # Currently does not support flagging individual times
-    flag_array_time_averaged = np.max(flag_array, axis=0)
-    frac_flagged = float(np.sum(flag_array_time_averaged)) / float(
-        np.prod(np.shape(flag_array_time_averaged))
-    )
-    print(f"Fraction of the data flagged: {frac_flagged}")
-    flag_array_inverted = np.invert(flag_array_time_averaged)
-    cov_mat *= (
-        flag_array_inverted[:, :, np.newaxis] * flag_array_inverted[:, np.newaxis, :]
-    )
+    if use_flagged_baselines:
+        if apply_flags:
+            # Apply flagging
+            print(f"Applying flags to the covariance matrix")
+            sys.stdout.flush()
+            # Flagging individual times is currently not supported
+            flag_array_time_averaged = np.max(flag_array, axis=0)
+            frac_flagged = float(np.sum(flag_array_time_averaged)) / float(
+                np.prod(np.shape(flag_array_time_averaged))
+            )
+            print(f"Fraction of the data flagged: {frac_flagged}")
+            sys.stdout.flush()
+            flag_array_inverted = np.invert(flag_array_time_averaged)
+            cov_mat *= (
+                flag_array_inverted[:, :, np.newaxis] * flag_array_inverted[:, np.newaxis, :]
+            )
+        else:
+            print(f"Warning: apply_flags is False. No flags are applied. Data and model may include zeroed visibilities")
+            sys.stdout.flush()
 
     # Minimize the cost function
     start_optimize = time.time()
@@ -690,7 +780,32 @@ if __name__ == "__main__":
         obsid="1061316296",
         pol="XX",
         use_autos=False,
+        cal_savefile="/Users/ruby/Astro/dwcal_tests_Jan2022/vanilla_limited_antennas.calfits",
+        use_wedge_exclusion=False,
+        use_antenna_list=[3, 4, 57, 70, 92, 110],
+    )
+    calibrate(
+        model_path="/Users/ruby/Astro/dwcal_tests_Jan2022/fhd_rlb_model_GLEAM_bright_sources_Dec2021",
+        model_use_model=True,
+        data_path="/Users/ruby/Astro/dwcal_tests_Jan2022/fhd_rlb_model_GLEAM_bright_sources_Dec2021",
+        data_use_model=False,
+        obsid="1061316296",
+        pol="XX",
+        use_autos=False,
         cal_savefile="/Users/ruby/Astro/dwcal_tests_Jan2022/wedge_excluded_limited_antennas.calfits",
         use_wedge_exclusion=True,
         use_antenna_list=[3, 4, 57, 70, 92, 110],
     )
+    """calibrate(
+        model_path="/Users/ruby/Astro/dwcal_tests_Jan2022/fhd_rlb_model_GLEAM_bright_sources_Dec2021",
+        model_use_model=True,
+        data_path="/Users/ruby/Astro/dwcal_tests_Jan2022/fhd_rlb_model_GLEAM_bright_sources_Dec2021",
+        data_use_model=False,
+        obsid="1061316296",
+        pol="XX",
+        use_autos=False,
+        cal_savefile="/Users/ruby/Astro/dwcal_tests_Jan2022/freq_averaging_limited_antennas.calfits",
+        use_wedge_exclusion=False,
+        calculate_freq_averaged_gains=True,
+        use_antenna_list=[3, 4, 57, 70, 92, 110],
+    )"""
