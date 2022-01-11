@@ -22,41 +22,41 @@ def get_test_data(
     use_flagged_baselines=False,
 ):
 
-    model_filelist = [
-        "{}/{}".format(model_path, file)
-        for file in [
-            "vis_data/{}_vis_{}.sav".format(obsid, pol),
-            "vis_data/{}_vis_model_{}.sav".format(obsid, pol),
-            "vis_data/{}_flags.sav".format(obsid),
-            "metadata/{}_params.sav".format(obsid),
-            "metadata/{}_settings.txt".format(obsid),
-            "metadata/{}_layout.sav".format(obsid),
-        ]
-    ]
-    data_filelist = [
-        "{}/{}".format(data_path, file)
-        for file in [
-            "vis_data/{}_vis_{}.sav".format(obsid, pol),
-            "vis_data/{}_vis_model_{}.sav".format(obsid, pol),
-            "vis_data/{}_flags.sav".format(obsid),
-            "metadata/{}_params.sav".format(obsid),
-            "metadata/{}_settings.txt".format(obsid),
-            "metadata/{}_layout.sav".format(obsid),
-        ]
-    ]
-
     model = pyuvdata.UVData()
-    if model_use_model:
-        print(
-            f"Loading model from {model_path}, using the FHD run's model visibilities."
-        )
+    if model_path.endswith(".uvfits"):
+        if pol == "XX":
+            pol_int = -5
+        elif pol == "YY":
+            pol_int = -6
+        else:
+            print("ERROR: Unknown polarization.")
+            sys.exit(1)
+        print(f"Loading model from {model_path}.")
         sys.stdout.flush()
+        model.read_uvfits(model_path, polarizations=pol_int)
     else:
-        print(
-            f"Loading model from {model_path}, using the FHD run's data visibilities."
-        )
-        sys.stdout.flush()
-    model.read_fhd(model_filelist, use_model=model_use_model)
+        model_filelist = [
+            "{}/{}".format(model_path, file)
+            for file in [
+                "vis_data/{}_vis_{}.sav".format(obsid, pol),
+                "vis_data/{}_vis_model_{}.sav".format(obsid, pol),
+                "vis_data/{}_flags.sav".format(obsid),
+                "metadata/{}_params.sav".format(obsid),
+                "metadata/{}_settings.txt".format(obsid),
+                "metadata/{}_layout.sav".format(obsid),
+            ]
+        ]
+        if model_use_model:
+            print(
+                f"Loading model from {model_path}, using the FHD run's model visibilities."
+            )
+            sys.stdout.flush()
+        else:
+            print(
+                f"Loading model from {model_path}, using the FHD run's data visibilities."
+            )
+            sys.stdout.flush()
+        model.read_fhd(model_filelist, use_model=model_use_model)
 
     # Average across time
     model.downsample_in_time(n_times_to_avg=model.Ntimes)
@@ -78,17 +78,42 @@ def get_test_data(
 
     if data_path != model_path or model_use_model != data_use_model:
         data = pyuvdata.UVData()
-        if data_use_model:
-            print(
-                f"Loading data from {data_path}, using the FHD run's model visibilities."
-            )
+
+        if data_path.endswith(".uvfits"):
+            if pol == "XX":
+                pol_int = -5
+            elif pol == "YY":
+                pol_int = -6
+            else:
+                print("ERROR: Unknown polarization.")
+                sys.exit(1)
+            print(f"Loading data from {data_path}.")
             sys.stdout.flush()
+            data.read_uvfits(data_path, polarizations=pol_int)
         else:
-            print(
-                f"Loading data from {data_path}, using the FHD run's data visibilities."
-            )
-            sys.stdout.flush()
-        data.read_fhd(data_filelist, use_model=data_use_model)
+            data_filelist = [
+                "{}/{}".format(data_path, file)
+                for file in [
+                    "vis_data/{}_vis_{}.sav".format(obsid, pol),
+                    "vis_data/{}_vis_model_{}.sav".format(obsid, pol),
+                    "vis_data/{}_flags.sav".format(obsid),
+                    "metadata/{}_params.sav".format(obsid),
+                    "metadata/{}_settings.txt".format(obsid),
+                    "metadata/{}_layout.sav".format(obsid),
+                ]
+            ]
+            if data_use_model:
+                print(
+                    f"Loading data from {data_path}, using the FHD run's model visibilities."
+                )
+                sys.stdout.flush()
+            else:
+                print(
+                    f"Loading data from {data_path}, using the FHD run's data visibilities."
+                )
+                sys.stdout.flush()
+            data.read_fhd(data_filelist, use_model=data_use_model)
+
         data.downsample_in_time(n_times_to_avg=data.Ntimes)
         if debug_limit_freqs is not None:
             data.select(frequencies=use_frequencies)
@@ -411,12 +436,7 @@ def get_cov_mat_freq_avg(Nfreqs, Nbls):
 
 
 def get_weighted_cov_mat(
-    Nfreqs,
-    Nbls,
-    uvw_array,
-    freq_array,
-    wedge_buffer_factor=1.2,
-    downweight_frac=0.01,
+    Nfreqs, Nbls, uvw_array, freq_array, wedge_buffer_factor=1.2, downweight_frac=0.01,
 ):
 
     c = 3.0 * 10 ** 8  # Speed of light
@@ -428,10 +448,10 @@ def get_weighted_cov_mat(
     )
     delay_weighting = np.full((Nbls, 2 * Nfreqs - 1), downweight_frac)
     for delay_ind, delay_val in enumerate(delay_array):
-        window_bls = np.where(
-            wedge_buffer_factor * bl_lengths / c < np.abs(delay_val)
-        )[0]
-        delay_weighting[window_bls, delay_ind] = 1.
+        window_bls = np.where(wedge_buffer_factor * bl_lengths / c < np.abs(delay_val))[
+            0
+        ]
+        delay_weighting[window_bls, delay_ind] = 1.0
 
     # Shift delay zero point to the start
     delay_weighting = np.fft.ifftshift(delay_weighting, axes=1)
@@ -461,7 +481,7 @@ def get_cov_mat_no_wedge(
     freq_array,
     wedge_buffer_factor=1.2,
     min_baselines=0,
-    min_baseline_len=20.,
+    min_baseline_len=20.0,
 ):
 
     c = 3.0 * 10 ** 8  # Speed of light
@@ -657,9 +677,9 @@ def calibrate(
     if use_wedge_exclusion:
         print(f"use_wedge_exclusion=True: Generating wedge excluding covariance matrix")
         sys.stdout.flush()
-        #cov_mat = get_cov_mat_no_wedge(
+        # cov_mat = get_cov_mat_no_wedge(
         #    Nfreqs, Nbls, metadata_reference.uvw_array, metadata_reference.freq_array
-        #)
+        # )
         cov_mat = get_weighted_cov_mat(
             Nfreqs, Nbls, metadata_reference.uvw_array, metadata_reference.freq_array
         )
@@ -691,10 +711,13 @@ def calibrate(
             sys.stdout.flush()
             flag_array_inverted = np.invert(flag_array_time_averaged)
             cov_mat *= (
-                flag_array_inverted[:, :, np.newaxis] * flag_array_inverted[:, np.newaxis, :]
+                flag_array_inverted[:, :, np.newaxis]
+                * flag_array_inverted[:, np.newaxis, :]
             )
         else:
-            print(f"Warning: apply_flags is False. No flags are applied. Data and model may include zeroed visibilities")
+            print(
+                f"Warning: apply_flags is False. No flags are applied. Data and model may include zeroed visibilities"
+            )
             sys.stdout.flush()
 
     # Minimize the cost function
