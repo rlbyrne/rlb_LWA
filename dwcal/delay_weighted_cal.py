@@ -537,20 +537,29 @@ def apply_calibration(
     debug_limit_freqs=None,
 ):
 
-    data_filelist = [
-        "{}/{}".format(data_path, file)
-        for file in [
-            "vis_data/{}_vis_{}.sav".format(obsid, pol),
-            "vis_data/{}_vis_model_{}.sav".format(obsid, pol),
-            "vis_data/{}_flags.sav".format(obsid),
-            "metadata/{}_params.sav".format(obsid),
-            "metadata/{}_settings.txt".format(obsid),
-            "metadata/{}_layout.sav".format(obsid),
-        ]
-    ]
-
     data = pyuvdata.UVData()
-    data.read_fhd(data_filelist, use_model=data_use_model)
+    if data_path.endswith(".uvfits"):
+        if pol == "XX":
+            pol_int = -5
+        elif pol == "YY":
+            pol_int = -6
+        else:
+            print("ERROR: Unknown polarization.")
+            sys.exit(1)
+        data.read_uvfits(data_path, polarizations=pol_int)
+    else:
+        data_filelist = [
+            "{}/{}".format(data_path, file)
+            for file in [
+                "vis_data/{}_vis_{}.sav".format(obsid, pol),
+                "vis_data/{}_vis_model_{}.sav".format(obsid, pol),
+                "vis_data/{}_flags.sav".format(obsid),
+                "metadata/{}_params.sav".format(obsid),
+                "metadata/{}_settings.txt".format(obsid),
+                "metadata/{}_layout.sav".format(obsid),
+            ]
+        ]
+        data.read_fhd(data_filelist, use_model=data_use_model)
 
     if debug_limit_freqs is not None:
         min_freq_channel = round(data.Nfreqs / 2 - debug_limit_freqs / 2)
