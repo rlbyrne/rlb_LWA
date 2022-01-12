@@ -675,7 +675,7 @@ def calibrate(
     xtol = 1e-5
 
     # Initialize gains
-    gain_init_noise = 0.001
+    gain_init_noise = 0.1
     gains_init = np.random.normal(
         1.0, gain_init_noise, size=(Nants, Nfreqs),
     ) + 1.0j * np.random.normal(0.0, gain_init_noise, size=(Nants, Nfreqs),)
