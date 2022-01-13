@@ -435,20 +435,15 @@ def get_weighted_cov_mat(
 
     c = 3.0 * 10 ** 8  # Speed of light
     bl_lengths = np.sqrt(np.sum(uvw_array ** 2.0, axis=1))
-    freq_step = (np.max(freq_array) - np.min(freq_array)) / (Nfreqs - 1)
-    delay_step = 1 / (2 * (np.max(freq_array) - np.min(freq_array)))
-    delay_array = np.arange(
-        -(Nfreqs - 1) * delay_step, Nfreqs * delay_step, delay_step, dtype=float
-    )
-    delay_weighting = np.full((Nbls, 2 * Nfreqs - 1), downweight_frac)
+    channel_width = (np.max(freq_array) - np.min(freq_array)) / (Nfreqs - 1)
+    delay_array = np.fft.fftfreq(2 * Nfreqs - 1, d=channel_width)
+    delay_weighting = np.ones((Nbls, 2 * Nfreqs - 1))
     for delay_ind, delay_val in enumerate(delay_array):
-        window_bls = np.where(wedge_buffer_factor * bl_lengths / c < np.abs(delay_val))[
+        wedge_bls = np.where(wedge_buffer_factor * bl_lengths / c < np.abs(delay_val))[
             0
         ]
-        delay_weighting[window_bls, delay_ind] = 1.0
+        delay_weighting[wedge_bls, delay_ind] = downweight_frac
 
-    # Shift delay zero point to the start
-    delay_weighting = np.fft.ifftshift(delay_weighting, axes=1)
     # Fourier transform
     freq_weighting = np.fft.fft(delay_weighting, axis=1)
     # Result is symmetric and real, so keep half the values and real part only
