@@ -429,12 +429,6 @@ def get_cov_mat_identity(Nfreqs, Nbls):
     return cov_mat
 
 
-def get_cov_mat_freq_avg(Nfreqs, Nbls):
-
-    cov_mat = np.ones((Nbls, Nfreqs, Nfreqs), dtype=float)
-    return cov_mat
-
-
 def get_weighted_cov_mat(
     Nfreqs, Nbls, uvw_array, freq_array, wedge_buffer_factor=1.2, downweight_frac=0.01,
 ):
