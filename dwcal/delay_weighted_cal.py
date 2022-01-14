@@ -372,7 +372,7 @@ def hess_dw_cal(
     terms3and4 = -2 * (term3 + term4)
     for freq in range(Nfreqs):
         hess[:, :, freq, freq, 0] += np.real(terms3and4[:, :, freq])
-        hess[:, :, freq, freq, 1] -= np.imag(terms3and4[:, :, freq])
+        hess[:, :, freq, freq, 1] += np.imag(terms3and4[:, :, freq])
         hess[:, :, freq, freq, 2] += np.real(terms3and4[:, :, freq])
 
     hess_reformatted = np.zeros((2, Nants * Nfreqs, 2, Nants * Nfreqs), dtype=float)
