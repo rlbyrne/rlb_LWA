@@ -2,7 +2,7 @@ import delay_weighted_cal as dwcal
 import numpy as np
 
 
-def test_grad_real(
+def test_grad(
     test_ant,
     test_freq,
     delta_gains,
@@ -15,22 +15,30 @@ def test_grad_real(
     gains_exp_mat_2,
     cov_mat,
     data_visibilities,
+    real_part=True
 ):
 
     print("*******")
-    print("Testing the gradient calculation, real part")
+    if real_part:
+        print("Testing the gradient calculation, real part")
+        multiplier = 1.
+    else:
+        print("Testing the gradient calculation, imaginary part")
+        multiplier = 1j
 
     gains0 = np.copy(gains_init)
-    gains0[test_ant, test_freq] -= delta_gains / 2.0
+    gains0[test_ant, test_freq] -= multiplier * delta_gains / 2.0
     gains0_expanded = np.stack((np.real(gains0), np.imag(gains0)), axis=0).flatten()
     gains1 = np.copy(gains_init)
-    gains1[test_ant, test_freq] += delta_gains / 2.0
+    gains1[test_ant, test_freq] += multiplier * delta_gains / 2.0
     gains1_expanded = np.stack((np.real(gains1), np.imag(gains1)), axis=0).flatten()
     gains_init_expanded = np.stack(
         (np.real(gains_init), np.imag(gains_init)), axis=0
     ).flatten()
 
-    test_ind = test_ant*Nfreqs+test_freq
+    test_ind = test_ant * Nfreqs + test_freq
+    if not real_part:
+        test_ind += Nants * Nfreqs
 
     negloglikelihood0 = dwcal.cost_function_dw_cal(
         gains0_expanded,
@@ -70,75 +78,7 @@ def test_grad_real(
     print(f"Calculated value: {grad[test_ind]}")
 
 
-def test_grad_imag(
-    test_ant,
-    test_freq,
-    delta_gains,
-    gains_init,
-    Nants,
-    Nfreqs,
-    Nbls,
-    model_visibilities,
-    gains_exp_mat_1,
-    gains_exp_mat_2,
-    cov_mat,
-    data_visibilities,
-):
-
-    print("*******")
-    print("Testing the gradient calculation, imaginary part")
-
-    gains0 = np.copy(gains_init)
-    gains0[test_ant, test_freq] -= 1j * delta_gains / 2.0
-    gains0_expanded = np.stack((np.real(gains0), np.imag(gains0)), axis=0).flatten()
-    gains1 = np.copy(gains_init)
-    gains1[test_ant, test_freq] += 1j * delta_gains / 2.0
-    gains1_expanded = np.stack((np.real(gains1), np.imag(gains1)), axis=0).flatten()
-    gains_init_expanded = np.stack(
-        (np.real(gains_init), np.imag(gains_init)), axis=0
-    ).flatten()
-
-    test_ind = Nfreqs*Nants+test_ant*Nfreqs+test_freq
-
-    negloglikelihood0 = dwcal.cost_function_dw_cal(
-        gains0_expanded,
-        Nants,
-        Nfreqs,
-        Nbls,
-        model_visibilities,
-        gains_exp_mat_1,
-        gains_exp_mat_2,
-        cov_mat,
-        data_visibilities,
-    )
-    negloglikelihood1 = dwcal.cost_function_dw_cal(
-        gains1_expanded,
-        Nants,
-        Nfreqs,
-        Nbls,
-        model_visibilities,
-        gains_exp_mat_1,
-        gains_exp_mat_2,
-        cov_mat,
-        data_visibilities,
-    )
-    grad = dwcal.jac_dw_cal(
-        gains_init_expanded,
-        Nants,
-        Nfreqs,
-        Nbls,
-        model_visibilities,
-        gains_exp_mat_1,
-        gains_exp_mat_2,
-        cov_mat,
-        data_visibilities,
-    )
-
-    print(f"Empirical value: {(negloglikelihood1-negloglikelihood0)/delta_gains}")
-    print(f"Calculated value: {grad[test_ind]}")
-
-
-def test_hess_real_real(
+def test_hess(
     test_ant,
     test_freq,
     readout_ant,
@@ -153,23 +93,40 @@ def test_hess_real_real(
     gains_exp_mat_2,
     cov_mat,
     data_visibilities,
+    real_part1=True,
+    real_part2=True
 ):
 
+    if real_part1:
+        part1_text = "real"
+        multiplier = 1.
+    else:
+        part1_text = "imag"
+        multiplier = 1j
+    if real_part2:
+        part2_text = "real"
+    else:
+        part2_text = "imag"
+
     print("*******")
-    print("Testing the hessian calculation, real-real part")
+    print(f"Testing the hessian calculation, {part1_text}-{part2_text} part")
 
     gains0 = np.copy(gains_init)
-    gains0[test_ant, test_freq] -= 1j * delta_gains / 2.0
+    gains0[test_ant, test_freq] -= multiplier * delta_gains / 2.0
     gains0_expanded = np.stack((np.real(gains0), np.imag(gains0)), axis=0).flatten()
     gains1 = np.copy(gains_init)
-    gains1[test_ant, test_freq] += 1j * delta_gains / 2.0
+    gains1[test_ant, test_freq] += multiplier * delta_gains / 2.0
     gains1_expanded = np.stack((np.real(gains1), np.imag(gains1)), axis=0).flatten()
     gains_init_expanded = np.stack(
         (np.real(gains_init), np.imag(gains_init)), axis=0
     ).flatten()
 
-    test_ind = test_ant*Nfreqs+test_freq
-    readout_ind = readout_ant*Nfreqs+readout_freq
+    test_ind = test_ant * Nfreqs + test_freq
+    if not real_part1:
+        test_ind += Nants * Nfreqs
+    readout_ind = readout_ant * Nfreqs + readout_freq
+    if not real_part2:
+        readout_ind += Nants * Nfreqs
 
     grad0 = dwcal.jac_dw_cal(
         gains0_expanded,
@@ -208,8 +165,84 @@ def test_hess_real_real(
     )
 
     empirical_value = (
-        np.real(grad1[readout_ind])
-        - np.real(grad0[readout_ind])
+        np.real(grad1[readout_ind]) - np.real(grad0[readout_ind])
+    ) / delta_gains
+    calc_value = hess[test_ind, readout_ind]
+    print(f"Empirical value: {empirical_value}")
+    print(f"Calculated value: {calc_value}")
+
+
+def test_hess_real_imag(
+    test_ant,
+    test_freq,
+    readout_ant,
+    readout_freq,
+    delta_gains,
+    gains_init,
+    Nants,
+    Nfreqs,
+    Nbls,
+    model_visibilities,
+    gains_exp_mat_1,
+    gains_exp_mat_2,
+    cov_mat,
+    data_visibilities,
+):
+
+    print("*******")
+    print("Testing the hessian calculation, real-imag part")
+
+    gains0 = np.copy(gains_init)
+    gains0[test_ant, test_freq] -= delta_gains / 2.0
+    gains0_expanded = np.stack((np.real(gains0), np.imag(gains0)), axis=0).flatten()
+    gains1 = np.copy(gains_init)
+    gains1[test_ant, test_freq] += delta_gains / 2.0
+    gains1_expanded = np.stack((np.real(gains1), np.imag(gains1)), axis=0).flatten()
+    gains_init_expanded = np.stack(
+        (np.real(gains_init), np.imag(gains_init)), axis=0
+    ).flatten()
+
+    test_ind = test_ant * Nfreqs + test_freq
+    readout_ind = Nfreqs * Nants + readout_ant * Nfreqs + readout_freq
+
+    grad0 = dwcal.jac_dw_cal(
+        gains0_expanded,
+        Nants,
+        Nfreqs,
+        Nbls,
+        model_visibilities,
+        gains_exp_mat_1,
+        gains_exp_mat_2,
+        cov_mat,
+        data_visibilities,
+    )
+
+    grad1 = dwcal.jac_dw_cal(
+        gains1_expanded,
+        Nants,
+        Nfreqs,
+        Nbls,
+        model_visibilities,
+        gains_exp_mat_1,
+        gains_exp_mat_2,
+        cov_mat,
+        data_visibilities,
+    )
+
+    hess = dwcal.hess_dw_cal(
+        gains_init_expanded,
+        Nants,
+        Nfreqs,
+        Nbls,
+        model_visibilities,
+        gains_exp_mat_1,
+        gains_exp_mat_2,
+        cov_mat,
+        data_visibilities,
+    )
+
+    empirical_value = (
+        np.real(grad1[readout_ind]) - np.real(grad0[readout_ind])
     ) / delta_gains
     calc_value = hess[test_ind, readout_ind]
     print(f"Empirical value: {empirical_value}")
@@ -267,9 +300,6 @@ def test_cost_func_calculations():
             axis=0,
         )
 
-    if not np.max(flag_array):  # Check for flags
-        apply_flags = False
-
     # Create gains expand matrices
     gains_exp_mat_1 = np.zeros((Nbls, Nants), dtype=int)
     gains_exp_mat_2 = np.zeros((Nbls, Nants), dtype=int)
@@ -289,8 +319,6 @@ def test_cost_func_calculations():
     gains_init = np.random.normal(
         1.0, gain_init_noise, size=(Nants, Nfreqs),
     ) + 1.0j * np.random.normal(0.0, gain_init_noise, size=(Nants, Nfreqs),)
-    # Expand the initialized values
-    x0 = np.stack((np.real(gains_init), np.imag(gains_init)), axis=0).flatten()
 
     cov_mat = dwcal.get_weighted_cov_mat(
         Nfreqs, Nbls, metadata_reference.uvw_array, metadata_reference.freq_array
@@ -302,7 +330,7 @@ def test_cost_func_calculations():
     readout_freq = 2
     delta_gains = 0.0001
 
-    test_grad_real(
+    test_grad(
         test_ant,
         test_freq,
         delta_gains,
@@ -315,9 +343,10 @@ def test_cost_func_calculations():
         gains_exp_mat_2,
         cov_mat,
         data_visibilities,
+        real_part=True
     )
 
-    test_grad_imag(
+    test_grad(
         test_ant,
         test_freq,
         delta_gains,
@@ -330,9 +359,10 @@ def test_cost_func_calculations():
         gains_exp_mat_2,
         cov_mat,
         data_visibilities,
+        real_part=False
     )
 
-    test_hess_real_real(
+    test_hess(
         test_ant,
         test_freq,
         readout_ant,
@@ -347,6 +377,65 @@ def test_cost_func_calculations():
         gains_exp_mat_2,
         cov_mat,
         data_visibilities,
+        real_part1=True,
+        real_part2=True
+    )
+
+    test_hess(
+        test_ant,
+        test_freq,
+        readout_ant,
+        readout_freq,
+        delta_gains,
+        gains_init,
+        Nants,
+        Nfreqs,
+        Nbls,
+        model_visibilities,
+        gains_exp_mat_1,
+        gains_exp_mat_2,
+        cov_mat,
+        data_visibilities,
+        real_part1=True,
+        real_part2=False
+    )
+
+    test_hess(
+        test_ant,
+        test_freq,
+        readout_ant,
+        readout_freq,
+        delta_gains,
+        gains_init,
+        Nants,
+        Nfreqs,
+        Nbls,
+        model_visibilities,
+        gains_exp_mat_1,
+        gains_exp_mat_2,
+        cov_mat,
+        data_visibilities,
+        real_part1=False,
+        real_part2=True
+    )
+
+    test_hess(
+        test_ant,
+        test_freq,
+        readout_ant,
+        readout_freq,
+        delta_gains,
+        gains_init,
+        Nants,
+        Nfreqs,
+        Nbls,
+        model_visibilities,
+        gains_exp_mat_1,
+        gains_exp_mat_2,
+        cov_mat,
+        data_visibilities,
+        real_part1=False,
+        real_part2=False
     )
 
 
