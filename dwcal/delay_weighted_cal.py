@@ -59,7 +59,7 @@ def get_test_data(
         model.read_fhd(model_filelist, use_model=model_use_model)
 
     # Average across time
-    model.downsample_in_time(n_times_to_avg=model.Ntimes)
+    model.downsample_in_time(n_times_to_avg=int(model.Ntimes/2))
 
     if debug_limit_freqs is not None:  # Limit frequency axis for debugging
         min_freq_channel = round(model.Nfreqs / 2 - debug_limit_freqs / 2)
@@ -114,7 +114,8 @@ def get_test_data(
                 sys.stdout.flush()
             data.read_fhd(data_filelist, use_model=data_use_model)
 
-        data.downsample_in_time(n_times_to_avg=data.Ntimes)
+        # Average across time
+        data.downsample_in_time(n_times_to_avg=int(data.Ntimes/2))
         if debug_limit_freqs is not None:
             data.select(frequencies=use_frequencies)
         if use_antenna_list is not None:
@@ -263,7 +264,7 @@ def jac_dw_cal(
     term2_part1 = gains2_expanded[np.newaxis, :, :] * np.conj(data_visibilities)
     cost_term = (
         model_visibilities
-        - gains1_expanded * np.conj(gains2_expanded) * data_visibilities
+        - gains1_expanded[np.newaxis, :, :] * np.conj(gains2_expanded[np.newaxis, :, :]) * data_visibilities
     )
     weighted_part2 = np.squeeze(np.matmul(cost_term[:, :, np.newaxis, :], cov_mat))
     term1 = np.sum(
@@ -321,35 +322,27 @@ def hess_dw_cal(
     gains2_times_conj_data = gains2_expanded[np.newaxis, :, :] * np.conj(
         data_visibilities
     )
-
     term1 = np.sum(
-        gains1_times_data[:, :, np.newaxis, :]
-        * gains2_times_conj_data[:, :, :, np.newaxis]
-        * np.conj(cov_mat[np.newaxis, :, :, :]),
-        axis=0,
+        cov_mat[np.newaxis, :, :, :]
+        * gains1_times_data[:, :, :, np.newaxis]
+        * gains2_times_conj_data[:, :, np.newaxis, :], axis=0
     )
-    term1 = reformat_baselines_to_antenna_matrix(
-        term1, gains_exp_mat_1, gains_exp_mat_2
-    )
+    term1 = reformat_baselines_to_antenna_matrix(term1, gains_exp_mat_1, gains_exp_mat_2)
     term1 = np.transpose(term1, (1, 0, 2, 3))
 
     term2 = np.sum(
-        gains2_times_conj_data[:, :, np.newaxis, :]
-        * gains1_times_data[:, :, :, np.newaxis]
-        * cov_mat[np.newaxis, :, :, :],
-        axis=0,
+        np.conj(cov_mat[np.newaxis, :, :, :])
+        * gains2_times_conj_data[:, :, :, np.newaxis]
+        * gains1_times_data[:, :, np.newaxis, :], axis=0
     )
-    term2 = reformat_baselines_to_antenna_matrix(
-        term2, gains_exp_mat_1, gains_exp_mat_2
-    )
-    terms1and2 = 2 * (term1 + term2)
+    term2 = reformat_baselines_to_antenna_matrix(term2, gains_exp_mat_1, gains_exp_mat_2)
 
     # hess elements are ant_c, ant_d, freq_f0, freq_f1, and real/imag pair
     # The real/imag pairs are in order [real-real, real-imag, and imag-imag]
     hess = np.zeros((Nants, Nants, Nfreqs, Nfreqs, 3), dtype=float)
-    hess[:, :, :, :, 0] = np.real(terms1and2)
-    hess[:, :, :, :, 1] = np.imag(terms1and2)
-    hess[:, :, :, :, 2] = -np.real(terms1and2)
+    hess[:, :, :, :, 0] = 2*np.real(term1+term2)
+    hess[:, :, :, :, 1] = 2*np.imag(term1+term2)
+    hess[:, :, :, :, 2] = -2*np.real(term1+term2)
 
     term3 = np.sum(
         np.conj(data_visibilities)

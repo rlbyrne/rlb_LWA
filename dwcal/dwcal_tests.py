@@ -165,7 +165,7 @@ def test_hess(
     )
 
     empirical_value = (
-        np.real(grad1[readout_ind]) - np.real(grad0[readout_ind])
+        grad1[readout_ind] - grad0[readout_ind]
     ) / delta_gains
     calc_value = hess[test_ind, readout_ind]
     print(f"Empirical value: {empirical_value}")
@@ -242,7 +242,7 @@ def test_hess_real_imag(
     )
 
     empirical_value = (
-        np.real(grad1[readout_ind]) - np.real(grad0[readout_ind])
+        grad1[readout_ind] - grad0[readout_ind]
     ) / delta_gains
     calc_value = hess[test_ind, readout_ind]
     print(f"Empirical value: {empirical_value}")
@@ -315,10 +315,11 @@ def test_cost_func_calculations():
         ] = 1
 
     # Initialize gains
-    gain_init_noise = 0.1
-    gains_init = np.random.normal(
-        1.0, gain_init_noise, size=(Nants, Nfreqs),
-    ) + 1.0j * np.random.normal(0.0, gain_init_noise, size=(Nants, Nfreqs),)
+    #gain_init_noise = 0.1
+    #gains_init = np.random.normal(
+    #    1.0, gain_init_noise, size=(Nants, Nfreqs),
+    #) + 1.0j * np.random.normal(0.0, gain_init_noise, size=(Nants, Nfreqs),)
+    gains_init = np.full((Nants, Nfreqs), 1.01+0.01j, dtype="complex")
 
     cov_mat = dwcal.get_weighted_cov_mat(
         Nfreqs, Nbls, metadata_reference.uvw_array, metadata_reference.freq_array
