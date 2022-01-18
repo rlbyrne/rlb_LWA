@@ -15,13 +15,13 @@ def test_grad(
     gains_exp_mat_2,
     cov_mat,
     data_visibilities,
-    real_part=True
+    real_part=True,
 ):
 
     print("*******")
     if real_part:
         print("Testing the gradient calculation, real part")
-        multiplier = 1.
+        multiplier = 1.0
     else:
         print("Testing the gradient calculation, imaginary part")
         multiplier = 1j
@@ -94,12 +94,12 @@ def test_hess(
     cov_mat,
     data_visibilities,
     real_part1=True,
-    real_part2=True
+    real_part2=True,
 ):
 
     if real_part1:
         part1_text = "real"
-        multiplier = 1.
+        multiplier = 1.0
     else:
         part1_text = "imag"
         multiplier = 1j
@@ -164,9 +164,7 @@ def test_hess(
         data_visibilities,
     )
 
-    empirical_value = (
-        grad1[readout_ind] - grad0[readout_ind]
-    ) / delta_gains
+    empirical_value = (grad1[readout_ind] - grad0[readout_ind]) / delta_gains
     calc_value = hess[test_ind, readout_ind]
     print(f"Empirical value: {empirical_value}")
     print(f"Calculated value: {calc_value}")
@@ -241,9 +239,7 @@ def test_hess_real_imag(
         data_visibilities,
     )
 
-    empirical_value = (
-        grad1[readout_ind] - grad0[readout_ind]
-    ) / delta_gains
+    empirical_value = (grad1[readout_ind] - grad0[readout_ind]) / delta_gains
     calc_value = hess[test_ind, readout_ind]
     print(f"Empirical value: {empirical_value}")
     print(f"Calculated value: {calc_value}")
@@ -315,11 +311,11 @@ def test_derivative_calculations():
         ] = 1
 
     # Initialize gains
-    #gain_init_noise = 0.1
-    #gains_init = np.random.normal(
+    # gain_init_noise = 0.1
+    # gains_init = np.random.normal(
     #    1.0, gain_init_noise, size=(Nants, Nfreqs),
-    #) + 1.0j * np.random.normal(0.0, gain_init_noise, size=(Nants, Nfreqs),)
-    gains_init = np.full((Nants, Nfreqs), 1.01+0.01j, dtype="complex")
+    # ) + 1.0j * np.random.normal(0.0, gain_init_noise, size=(Nants, Nfreqs),)
+    gains_init = np.full((Nants, Nfreqs), 1.01 + 0.01j, dtype="complex")
 
     cov_mat = dwcal.get_weighted_cov_mat(
         Nfreqs, Nbls, metadata_reference.uvw_array, metadata_reference.freq_array
@@ -344,7 +340,7 @@ def test_derivative_calculations():
         gains_exp_mat_2,
         cov_mat,
         data_visibilities,
-        real_part=True
+        real_part=True,
     )
 
     test_grad(
@@ -360,7 +356,7 @@ def test_derivative_calculations():
         gains_exp_mat_2,
         cov_mat,
         data_visibilities,
-        real_part=False
+        real_part=False,
     )
 
     test_hess(
@@ -379,7 +375,7 @@ def test_derivative_calculations():
         cov_mat,
         data_visibilities,
         real_part1=True,
-        real_part2=True
+        real_part2=True,
     )
 
     test_hess(
@@ -398,7 +394,7 @@ def test_derivative_calculations():
         cov_mat,
         data_visibilities,
         real_part1=True,
-        real_part2=False
+        real_part2=False,
     )
 
     test_hess(
@@ -417,7 +413,7 @@ def test_derivative_calculations():
         cov_mat,
         data_visibilities,
         real_part1=False,
-        real_part2=True
+        real_part2=True,
     )
 
     test_hess(
@@ -436,14 +432,14 @@ def test_derivative_calculations():
         cov_mat,
         data_visibilities,
         real_part1=False,
-        real_part2=False
+        real_part2=False,
     )
 
 
 def test_derivative_calculations_randomized():
 
     Nants = 10
-    Nbls = int((Nants**2-Nants)/2)
+    Nbls = int((Nants ** 2 - Nants) / 2)
     Ntimes = 2
     Nfreqs = 384
 
@@ -451,51 +447,44 @@ def test_derivative_calculations_randomized():
     ant_2_array = np.zeros(Nbls, dtype=int)
     ind = 0
     for ant_1 in range(Nants):
-        for ant_2 in range(ant_1+1, Nants):
+        for ant_2 in range(ant_1 + 1, Nants):
             ant_1_array[ind] = ant_1
             ant_2_array[ind] = ant_2
             ind += 1
 
     # Format visibilities
-    data_stddev = 6.
-    data_visibilities = (
-        np.random.normal(0.0, data_stddev, size=(Ntimes, Nbls, Nfreqs),)
-        + 1.0j * np.random.normal(0.0, data_stddev, size=(Ntimes, Nbls, Nfreqs),)
-    )
-    model_visibilities = (
-        np.random.normal(0.0, data_stddev, size=(Ntimes, Nbls, Nfreqs),)
-        + 1.0j * np.random.normal(0.0, data_stddev, size=(Ntimes, Nbls, Nfreqs),)
-    )
+    data_stddev = 6.0
+    data_visibilities = np.random.normal(
+        0.0, data_stddev, size=(Ntimes, Nbls, Nfreqs),
+    ) + 1.0j * np.random.normal(0.0, data_stddev, size=(Ntimes, Nbls, Nfreqs),)
+    model_visibilities = np.random.normal(
+        0.0, data_stddev, size=(Ntimes, Nbls, Nfreqs),
+    ) + 1.0j * np.random.normal(0.0, data_stddev, size=(Ntimes, Nbls, Nfreqs),)
 
     # Create gains expand matrices
     gains_exp_mat_1 = np.zeros((Nbls, Nants), dtype=int)
     gains_exp_mat_2 = np.zeros((Nbls, Nants), dtype=int)
     antenna_list = np.unique([ant_1_array, ant_2_array])
     for baseline in range(Nbls):
-        gains_exp_mat_1[
-            baseline, np.where(antenna_list == ant_1_array[baseline])
-        ] = 1
-        gains_exp_mat_2[
-            baseline, np.where(antenna_list == ant_2_array[baseline])
-        ] = 1
+        gains_exp_mat_1[baseline, np.where(antenna_list == ant_1_array[baseline])] = 1
+        gains_exp_mat_2[baseline, np.where(antenna_list == ant_2_array[baseline])] = 1
 
     # Initialize gains
     gain_init_noise = 0.1
-    gains_init = (
-        np.random.normal(1.0, gain_init_noise, size=(Nants, Nfreqs),)
-        + 1.0j * np.random.normal(0.0, gain_init_noise, size=(Nants, Nfreqs),)
-    )
+    gains_init = np.random.normal(
+        1.0, gain_init_noise, size=(Nants, Nfreqs),
+    ) + 1.0j * np.random.normal(0.0, gain_init_noise, size=(Nants, Nfreqs),)
 
-    cov_mat_stddev = 5.
-    cov_mat = np.random.normal(0., cov_mat_stddev, size=(Nbls, Nfreqs, Nfreqs))
+    cov_mat_stddev = 5.0
+    cov_mat = np.random.normal(0.0, cov_mat_stddev, size=(Nbls, Nfreqs, Nfreqs))
     cov_mat += np.transpose(cov_mat, (0, 2, 1))  # Matrix must be Hermitian
 
-    test_ant = np.random.randint(0, Nants-1)
-    test_freq = np.random.randint(0, Nfreqs-1)
-    readout_ant = np.random.randint(0, Nants-1)
-    while readout_ant == test_ant: # Autocorrelations are excluded
-        readout_ant = np.random.randint(0, Nants-1)
-    readout_freq = np.random.randint(0, Nfreqs-1)
+    test_ant = np.random.randint(0, Nants - 1)
+    test_freq = np.random.randint(0, Nfreqs - 1)
+    readout_ant = np.random.randint(0, Nants - 1)
+    while readout_ant == test_ant:  # Autocorrelations are excluded
+        readout_ant = np.random.randint(0, Nants - 1)
+    readout_freq = np.random.randint(0, Nfreqs - 1)
     delta_gains = 0.0001
 
     test_grad(
@@ -511,7 +500,7 @@ def test_derivative_calculations_randomized():
         gains_exp_mat_2,
         cov_mat,
         data_visibilities,
-        real_part=True
+        real_part=True,
     )
 
     test_grad(
@@ -527,7 +516,7 @@ def test_derivative_calculations_randomized():
         gains_exp_mat_2,
         cov_mat,
         data_visibilities,
-        real_part=False
+        real_part=False,
     )
 
     test_hess(
@@ -546,7 +535,7 @@ def test_derivative_calculations_randomized():
         cov_mat,
         data_visibilities,
         real_part1=True,
-        real_part2=True
+        real_part2=True,
     )
 
     test_hess(
@@ -565,7 +554,7 @@ def test_derivative_calculations_randomized():
         cov_mat,
         data_visibilities,
         real_part1=True,
-        real_part2=False
+        real_part2=False,
     )
 
     test_hess(
@@ -584,7 +573,7 @@ def test_derivative_calculations_randomized():
         cov_mat,
         data_visibilities,
         real_part1=False,
-        real_part2=True
+        real_part2=True,
     )
 
     test_hess(
@@ -603,7 +592,7 @@ def test_derivative_calculations_randomized():
         cov_mat,
         data_visibilities,
         real_part1=False,
-        real_part2=False
+        real_part2=False,
     )
 
     # Test hess frequency diagonals
@@ -623,7 +612,7 @@ def test_derivative_calculations_randomized():
         cov_mat,
         data_visibilities,
         real_part1=True,
-        real_part2=True
+        real_part2=True,
     )
 
     test_hess(
@@ -642,7 +631,7 @@ def test_derivative_calculations_randomized():
         cov_mat,
         data_visibilities,
         real_part1=True,
-        real_part2=False
+        real_part2=False,
     )
 
     test_hess(
@@ -661,7 +650,7 @@ def test_derivative_calculations_randomized():
         cov_mat,
         data_visibilities,
         real_part1=False,
-        real_part2=True
+        real_part2=True,
     )
 
     test_hess(
@@ -680,11 +669,8 @@ def test_derivative_calculations_randomized():
         cov_mat,
         data_visibilities,
         real_part1=False,
-        real_part2=False
+        real_part2=False,
     )
-
-
-
 
 
 if __name__ == "__main__":
