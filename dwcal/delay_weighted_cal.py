@@ -59,7 +59,7 @@ def get_test_data(
         model.read_fhd(model_filelist, use_model=model_use_model)
 
     # Average across time
-    model.downsample_in_time(n_times_to_avg=int(model.Ntimes / 2))
+    model.downsample_in_time(n_times_to_avg=int(model.Ntimes))
 
     if debug_limit_freqs is not None:  # Limit frequency axis for debugging
         min_freq_channel = round(model.Nfreqs / 2 - debug_limit_freqs / 2)
@@ -115,7 +115,7 @@ def get_test_data(
             data.read_fhd(data_filelist, use_model=data_use_model)
 
         # Average across time
-        data.downsample_in_time(n_times_to_avg=int(data.Ntimes / 2))
+        data.downsample_in_time(n_times_to_avg=int(data.Ntimes))
         if debug_limit_freqs is not None:
             data.select(frequencies=use_frequencies)
         if use_antenna_list is not None:
