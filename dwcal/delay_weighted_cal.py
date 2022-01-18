@@ -344,28 +344,24 @@ def hess_dw_cal(
     hess[:, :, :, :, 1] = 2*np.imag(term1+term2)
     hess[:, :, :, :, 2] = -2*np.real(term1+term2)
 
-    term3 = np.sum(
-        np.conj(data_visibilities)
-        * np.sum(
-            cov_mat[np.newaxis, :, :, :]
-            * (
-                model_visibilities
-                - gains1_expanded[np.newaxis, :, :]
-                * np.conj(gains2_expanded[np.newaxis, :, :])
-                * data_visibilities
-            )[:, :, :, np.newaxis],
-            axis=3,
-        ),
-        axis=0,
+
+    cost_term = (
+        gains1_expanded[np.newaxis, :, :]
+        * np.conj(gains2_expanded[np.newaxis, :, :])
+        * data_visibilities
+        - model_visibilities
     )
+    weight_times_cost = np.einsum('ijk,jkl->ijl', cost_term, cov_mat)
+    term3 = np.sum(np.conj(data_visibilities)*weight_times_cost, axis=0)
     term3 = reformat_baselines_to_antenna_matrix(
         term3, gains_exp_mat_1, gains_exp_mat_2
     )
     term4 = np.transpose(np.conj(term3), (1, 0, 2))
-    terms3and4 = -2 * (term3 + term4)
+    terms3and4 = 2*(term3+term4)
+
     for freq in range(Nfreqs):
         hess[:, :, freq, freq, 0] += np.real(terms3and4[:, :, freq])
-        hess[:, :, freq, freq, 1] += np.imag(terms3and4[:, :, freq])
+        hess[:, :, freq, freq, 1] -= np.imag(terms3and4[:, :, freq])
         hess[:, :, freq, freq, 2] += np.real(terms3and4[:, :, freq])
 
     hess_reformatted = np.zeros((2, Nants * Nfreqs, 2, Nants * Nfreqs), dtype=float)
