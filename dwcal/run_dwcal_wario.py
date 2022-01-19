@@ -120,7 +120,7 @@ def run_calibration_Jan18():
         use_autos=False,
         use_wedge_exclusion=False,
         cal_savefile="/safepool/rbyrne/calibration_outputs/caltest_Jan18/vanilla_cal.calfits",
-        calibrated_data_savefile="/sa/safepool/rbyrne/calibration_outputs/caltest_Jan18/vanilla_cal.uvfits",
+        calibrated_data_savefile="/safepool/rbyrne/calibration_outputs/caltest_Jan18/vanilla_cal.uvfits",
         log_file_path="/safepool/rbyrne/calibration_outputs/caltest_Jan18/vanilla_cal_log.txt",
     )
 
