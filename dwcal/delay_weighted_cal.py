@@ -235,7 +235,7 @@ def cost_function_dw_cal(
     weighted_part2 = np.squeeze(np.matmul(res_vec[:, :, np.newaxis, :], cov_mat))
     cost = np.real(np.sum(np.conj(np.squeeze(res_vec)) * weighted_part2))
 
-    print("Cost func. eval.")
+    print(f"Cost func. value: {cost}")
     sys.stdout.flush()
 
     return cost
@@ -559,47 +559,15 @@ def apply_calibration(
     return data_calibrated
 
 
-def calibrate(
-    model_path="/Users/ruby/Astro/FHD_outputs/fhd_rlb_model_GLEAM_Aug2021",
-    model_use_model=True,
-    data_path="/Users/ruby/Astro/FHD_outputs/fhd_rlb_model_GLEAM_Aug2021",
-    data_use_model=True,
-    obsid="1061316296",
-    pol="XX",
-    use_autos=False,
+def calibration_optimization(
+    data,
+    model,
     use_wedge_exclusion=False,
-    calculate_freq_averaged_gains=False,
-    cal_savefile=None,
-    calibrated_data_savefile=None,
     log_file_path=None,
-    debug_limit_freqs=None,  # Set to number of freq channels to use
-    use_antenna_list=None,
-    use_flagged_baselines=False,
     apply_flags=False,
+    optimizer_precision=1e-8,
+    gain_init_stddev=0.01,
 ):
-
-    if log_file_path is not None:
-        sys.stdout = open(log_file_path, "w")
-        sys.stderr = sys.stdout
-
-    start = time.time()
-
-    start_read_data = time.time()
-    data, model = get_test_data(
-        model_path=model_path,
-        model_use_model=model_use_model,
-        data_path=data_path,
-        data_use_model=data_use_model,
-        obsid=obsid,
-        pol=pol,
-        use_autos=use_autos,
-        debug_limit_freqs=debug_limit_freqs,
-        use_antenna_list=use_antenna_list,
-        use_flagged_baselines=use_flagged_baselines,
-    )
-    end_read_data = time.time()
-    print(f"Time reading data: {(end_read_data - start_read_data)/60.} minutes")
-    sys.stdout.flush()
 
     Nants = data.Nants_data
     Nbls = data.Nbls
@@ -654,16 +622,10 @@ def calibrate(
             baseline, np.where(antenna_list == metadata_reference.ant_2_array[baseline])
         ] = 1
 
-    # method = 'CG'
-    method = "Newton-CG"
-    # xtol = 1e-10  # Defaults to 1e-05
-    xtol = 1e-5
-
     # Initialize gains
-    gain_init_noise = 0.1
     gains_init = np.random.normal(
-        1.0, gain_init_noise, size=(Nants, Nfreqs),
-    ) + 1.0j * np.random.normal(0.0, gain_init_noise, size=(Nants, Nfreqs),)
+        1.0, gain_init_stddev, size=(Nants, Nfreqs),
+    ) + 1.0j * np.random.normal(0.0, gain_init_stddev, size=(Nants, Nfreqs),)
     # Expand the initialized values
     x0 = np.stack((np.real(gains_init), np.imag(gains_init)), axis=0).flatten()
 
@@ -677,10 +639,6 @@ def calibrate(
         cov_mat = get_weighted_cov_mat(
             Nfreqs, Nbls, metadata_reference.uvw_array, metadata_reference.freq_array
         )
-    elif calculate_freq_averaged_gains:
-        print(f"calculate_freq_averaged_gains=True: Covariance matrix is all ones")
-        sys.stdout.flush()
-        cov_mat = get_cov_mat_freq_avg(Nfreqs, Nbls)
     else:
         print(f"use_wedge_exclusion=False: Covariance matrix is the identity")
         sys.stdout.flush()
@@ -691,28 +649,27 @@ def calibrate(
     )
     sys.stdout.flush()
 
-    if use_flagged_baselines:
-        if apply_flags:
-            # Apply flagging
-            print(f"Applying flags to the covariance matrix")
-            sys.stdout.flush()
-            # Flagging individual times is currently not supported
-            flag_array_time_averaged = np.max(flag_array, axis=0)
-            frac_flagged = float(np.sum(flag_array_time_averaged)) / float(
-                np.prod(np.shape(flag_array_time_averaged))
-            )
-            print(f"Fraction of the data flagged: {frac_flagged}")
-            sys.stdout.flush()
-            flag_array_inverted = np.invert(flag_array_time_averaged)
-            cov_mat *= (
-                flag_array_inverted[:, :, np.newaxis]
-                * flag_array_inverted[:, np.newaxis, :]
-            )
-        else:
-            print(
-                f"Warning: apply_flags is False. No flags are applied. Data and model may include zeroed visibilities"
-            )
-            sys.stdout.flush()
+    if apply_flags:
+        # Apply flagging
+        print(f"Applying flags to the covariance matrix")
+        sys.stdout.flush()
+        # Flagging individual times is currently not supported
+        flag_array_time_averaged = np.max(flag_array, axis=0)
+        frac_flagged = float(np.sum(flag_array_time_averaged)) / float(
+            np.prod(np.shape(flag_array_time_averaged))
+        )
+        print(f"Fraction of the data flagged: {frac_flagged}")
+        sys.stdout.flush()
+        flag_array_inverted = np.invert(flag_array_time_averaged)
+        cov_mat *= (
+            flag_array_inverted[:, :, np.newaxis]
+            * flag_array_inverted[:, np.newaxis, :]
+        )
+    else:
+        print(
+            f"Warning: apply_flags is False. No flags are applied. Data and model may include zeroed visibilities"
+        )
+        sys.stdout.flush()
 
     # Minimize the cost function
     start_optimize = time.time()
@@ -729,10 +686,10 @@ def calibrate(
             cov_mat,
             data_visibilities,
         ),
-        method=method,
+        method="Newton-CG",
         jac=jac_dw_cal,
         hess=hess_dw_cal,
-        options={"disp": True, "xtol": xtol},
+        options={"disp": True, "xtol": optimizer_precision},
     )
     print(result.message)
     end_optimize = time.time()
@@ -752,6 +709,59 @@ def calibrate(
 
     # Create cal object
     cal = initialize_cal(data, antenna_list, gains=gains_fit)
+
+    return cal
+
+
+def calibrate(
+    model_path="/Users/ruby/Astro/FHD_outputs/fhd_rlb_model_GLEAM_Aug2021",
+    model_use_model=True,
+    data_path="/Users/ruby/Astro/FHD_outputs/fhd_rlb_model_GLEAM_Aug2021",
+    data_use_model=True,
+    obsid="1061316296",
+    pol="XX",
+    use_autos=False,
+    use_wedge_exclusion=False,
+    cal_savefile=None,
+    calibrated_data_savefile=None,
+    log_file_path=None,
+    debug_limit_freqs=None,  # Set to number of freq channels to use
+    use_antenna_list=None,
+    use_flagged_baselines=False,
+    apply_flags=False,
+):
+
+    if log_file_path is not None:
+        sys.stdout = open(log_file_path, "w")
+        sys.stderr = sys.stdout
+
+    start = time.time()
+
+    start_read_data = time.time()
+    data, model = get_test_data(
+        model_path=model_path,
+        model_use_model=model_use_model,
+        data_path=data_path,
+        data_use_model=data_use_model,
+        obsid=obsid,
+        pol=pol,
+        use_autos=use_autos,
+        debug_limit_freqs=debug_limit_freqs,
+        use_antenna_list=use_antenna_list,
+        use_flagged_baselines=use_flagged_baselines,
+    )
+    end_read_data = time.time()
+    print(f"Time reading data: {(end_read_data - start_read_data)/60.} minutes")
+    sys.stdout.flush()
+
+    cal = calibration_optimization(
+        data,
+        model,
+        use_wedge_exclusion=use_wedge_exclusion,
+        log_file_path=log_file_path,
+        apply_flags=apply_flags,
+    )
+
     if cal_savefile is not None:
         print(f"Saving calibration solutions to {cal_savefile}")
         sys.stdout.flush()
@@ -813,16 +823,3 @@ if __name__ == "__main__":
         use_wedge_exclusion=True,
         use_antenna_list=[3, 4, 57, 70, 92, 110],
     )
-    """calibrate(
-        model_path="/Users/ruby/Astro/dwcal_tests_Jan2022/fhd_rlb_model_GLEAM_bright_sources_Dec2021",
-        model_use_model=True,
-        data_path="/Users/ruby/Astro/dwcal_tests_Jan2022/fhd_rlb_model_GLEAM_bright_sources_Dec2021",
-        data_use_model=False,
-        obsid="1061316296",
-        pol="XX",
-        use_autos=False,
-        cal_savefile="/Users/ruby/Astro/dwcal_tests_Jan2022/freq_averaging_limited_antennas.calfits",
-        use_wedge_exclusion=False,
-        calculate_freq_averaged_gains=True,
-        use_antenna_list=[3, 4, 57, 70, 92, 110],
-    )"""
