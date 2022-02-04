@@ -257,6 +257,7 @@ def jac_dw_cal(
     gains = (
         gains[0,] + 1.0j * gains[1,]
     )
+    print(np.shape(data_visibilities))
 
     gains1_expanded = np.matmul(gains_exp_mat_1, gains)
     gains2_expanded = np.matmul(gains_exp_mat_2, gains)
@@ -268,7 +269,9 @@ def jac_dw_cal(
         * np.conj(gains2_expanded[np.newaxis, :, :])
         * data_visibilities
     )
-    weighted_part2 = np.squeeze(np.matmul(cost_term[:, :, np.newaxis, :], cov_mat))
+    #weighted_part2 = np.squeeze(np.matmul(cost_term[:, :, np.newaxis, :], cov_mat))
+    weighted_part2 = np.matmul(cost_term[:, :, np.newaxis, :], cov_mat)
+    print(np.shape(weighted_part2))
     term1 = np.sum(
         np.matmul(gains_exp_mat_2.T, term1_part1 * np.conj(weighted_part2)), axis=0
     )
@@ -565,7 +568,7 @@ def calibration_optimization(
     use_wedge_exclusion=False,
     log_file_path=None,
     apply_flags=False,
-    optimizer_precision=1e-8,
+    xtol=1e-8,
     gain_init_stddev=0.01,
 ):
 
@@ -689,7 +692,7 @@ def calibration_optimization(
         method="Newton-CG",
         jac=jac_dw_cal,
         hess=hess_dw_cal,
-        options={"disp": True, "xtol": optimizer_precision},
+        options={"disp": True, "xtol":xtol},
     )
     print(result.message)
     end_optimize = time.time()
