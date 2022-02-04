@@ -3,7 +3,7 @@ import shlex
 import os
 
 obsids_list = [
-    'LWA_100ms_sim_center_time',
+    'OVRO-LWA_100ms_sim_center_time',
     'OVRO-LWA_100ms_sim_phased',
     'OVRO-LWA_100ms_sim_unphased'
 ]
