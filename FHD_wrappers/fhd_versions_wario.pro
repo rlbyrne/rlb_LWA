@@ -57,6 +57,16 @@ pro fhd_versions_wario
       save_uvf = 1
     end
 
+    'rlb_LWA_100ms_sim_Feb2021': begin
+      recalculate_all = 1
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/safepool/rbyrne/LWA_pyuvsim_simulations/LWAbeam_2015_new.fits'
+      beam_model_version = 0
+      calibrate_visibilities = 0
+      model_visibilities = 0
+      snapshot_healpix_export = 0
+    end
+
   endcase
 
   undefine, uvfits_subversion, uvfits_version

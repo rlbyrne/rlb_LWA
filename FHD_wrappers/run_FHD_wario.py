@@ -2,12 +2,16 @@ import subprocess
 import shlex
 import os
 
-obsids_list = ['1061316296']
-versions_list = [
-    'rlb_model_GLEAM_bright_sources_Dec2021'
+obsids_list = [
+    'LWA_100ms_sim_center_time',
+    'OVRO-LWA_100ms_sim_phased',
+    'OVRO-LWA_100ms_sim_unphased'
 ]
-uvfits_path = '/safepool/rbyrne/mwa_data'
-outdir = '/safepool/rbyrne/fhd_outputs'
+versions_list = [
+    'rlb_LWA_100ms_sim_Feb2021'
+]
+uvfits_path = '/safepool/rbyrne/LWA_pyuvsim_simulations'
+outdir = '/safepool/rbyrne/LWA_pyuvsim_simulations'
 run_eppsilon = False
 
 # Define wrappers
