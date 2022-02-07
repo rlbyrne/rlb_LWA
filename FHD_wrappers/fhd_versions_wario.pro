@@ -62,8 +62,7 @@ pro fhd_versions_wario
       instrument = 'lwa'
       import_pyuvdata_beam_filepath = '/safepool/rbyrne/LWA_pyuvsim_simulations/LWAbeam_2015_new.fits'
       beam_model_version = 0
-      model_visibilities = 1
-      model_catalog_file_path = '/safepool/rbyrne/LWA_pyuvsim_simulations/FullVLSSCatalog.skyh5'
+      model_visibilities = 0
       calibrate_visibilities = 0
       snapshot_healpix_export = 0
       instr_high = 1e10
