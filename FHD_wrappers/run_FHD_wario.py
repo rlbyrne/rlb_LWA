@@ -3,12 +3,15 @@ import shlex
 import os
 
 obsids_list = [
+    'OVRO-LWA_1h_sim_center_time',
+    'OVRO-LWA_1h_sim_phased',
+    'OVRO-LWA_1h_sim_unphased',
     'OVRO-LWA_100ms_sim_center_time',
     'OVRO-LWA_100ms_sim_phased',
     'OVRO-LWA_100ms_sim_unphased'
 ]
 versions_list = [
-    'rlb_LWA_100ms_sim_Feb2021'
+    'rlb_LWA_phasing_sim_Feb2021'
 ]
 uvfits_path = '/safepool/rbyrne/LWA_pyuvsim_simulations'
 outdir = '/safepool/rbyrne/LWA_pyuvsim_simulations'

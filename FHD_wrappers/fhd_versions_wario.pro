@@ -57,14 +57,19 @@ pro fhd_versions_wario
       save_uvf = 1
     end
 
-    'rlb_LWA_100ms_sim_Feb2021': begin
+    'rlb_LWA_phasing_sim_Feb2021': begin
       recalculate_all = 1
       instrument = 'lwa'
       import_pyuvdata_beam_filepath = '/safepool/rbyrne/LWA_pyuvsim_simulations/LWAbeam_2015_new.fits'
       beam_model_version = 0
+      model_visibilities = 1
+      model_catalog_file_path = '/safepool/rbyrne/LWA_pyuvsim_simulations/FullVLSSCatalog.skyh5'
       calibrate_visibilities = 0
-      model_visibilities = 0
       snapshot_healpix_export = 0
+      instr_high = 1e10
+      instr_low = -1e10
+      stokes_high = 1e10
+      stokes_low = -1e10
     end
 
   endcase
