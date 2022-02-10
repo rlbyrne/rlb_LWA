@@ -80,7 +80,7 @@ def test_grad(
         data_visibilities,
     )
 
-    empirical_val = (negloglikelihood1-negloglikelihood0)/delta_gains
+    empirical_val = (negloglikelihood1 - negloglikelihood0) / delta_gains
     calculated_val = grad[test_ind]
     pass_condition = np.isclose(
         empirical_val, calculated_val, rtol=1e-08, atol=1e-08, equal_nan=False
@@ -197,7 +197,9 @@ def test_hess(
         pass_text = "passed"
     else:
         pass_text = "FAILED!!!!!!!!!"
-    print(f"Hess calc., {part1_text}-{part2_text}, ants [{test_ant},{readout_ant}]: {pass_text}")
+    print(
+        f"Hess calc., {part1_text}-{part2_text}, ants [{test_ant},{readout_ant}]: {pass_text}"
+    )
     if verbose:
         print(f"Empirical value: {empirical_val}")
         print(f"Calculated value: {calculated_val}")
@@ -415,11 +417,23 @@ def test_derivative_calculations_randomized():
     # Format visibilities
     data_stddev = 6.0
     data_visibilities = np.random.normal(
-        0.0, data_stddev, size=(Ntimes, Nbls, Nfreqs),
-    ) + 1.0j * np.random.normal(0.0, data_stddev, size=(Ntimes, Nbls, Nfreqs),)
+        0.0,
+        data_stddev,
+        size=(Ntimes, Nbls, Nfreqs),
+    ) + 1.0j * np.random.normal(
+        0.0,
+        data_stddev,
+        size=(Ntimes, Nbls, Nfreqs),
+    )
     model_visibilities = np.random.normal(
-        0.0, data_stddev, size=(Ntimes, Nbls, Nfreqs),
-    ) + 1.0j * np.random.normal(0.0, data_stddev, size=(Ntimes, Nbls, Nfreqs),)
+        0.0,
+        data_stddev,
+        size=(Ntimes, Nbls, Nfreqs),
+    ) + 1.0j * np.random.normal(
+        0.0,
+        data_stddev,
+        size=(Ntimes, Nbls, Nfreqs),
+    )
 
     # Create gains expand matrices
     gains_exp_mat_1 = np.zeros((Nbls, Nants), dtype=int)
@@ -432,8 +446,14 @@ def test_derivative_calculations_randomized():
     # Initialize gains
     gain_init_noise = 0.1
     gains_init = np.random.normal(
-        1.0, gain_init_noise, size=(Nants, Nfreqs),
-    ) + 1.0j * np.random.normal(0.0, gain_init_noise, size=(Nants, Nfreqs),)
+        1.0,
+        gain_init_noise,
+        size=(Nants, Nfreqs),
+    ) + 1.0j * np.random.normal(
+        0.0,
+        gain_init_noise,
+        size=(Nants, Nfreqs),
+    )
 
     cov_mat_stddev = 5.0
     cov_mat = np.random.normal(0.0, cov_mat_stddev, size=(Nbls, Nfreqs, Nfreqs))
@@ -652,11 +672,23 @@ def test_derivative_calculations_all_baselines():
     # Format visibilities
     data_stddev = 6.0
     data_visibilities = np.random.normal(
-        0.0, data_stddev, size=(Ntimes, Nbls, Nfreqs),
-    ) + 1.0j * np.random.normal(0.0, data_stddev, size=(Ntimes, Nbls, Nfreqs),)
+        0.0,
+        data_stddev,
+        size=(Ntimes, Nbls, Nfreqs),
+    ) + 1.0j * np.random.normal(
+        0.0,
+        data_stddev,
+        size=(Ntimes, Nbls, Nfreqs),
+    )
     model_visibilities = np.random.normal(
-        0.0, data_stddev, size=(Ntimes, Nbls, Nfreqs),
-    ) + 1.0j * np.random.normal(0.0, data_stddev, size=(Ntimes, Nbls, Nfreqs),)
+        0.0,
+        data_stddev,
+        size=(Ntimes, Nbls, Nfreqs),
+    ) + 1.0j * np.random.normal(
+        0.0,
+        data_stddev,
+        size=(Ntimes, Nbls, Nfreqs),
+    )
 
     # Create gains expand matrices
     gains_exp_mat_1 = np.zeros((Nbls, Nants), dtype=int)
@@ -669,8 +701,14 @@ def test_derivative_calculations_all_baselines():
     # Initialize gains
     gain_init_noise = 0.1
     gains_init = np.random.normal(
-        1.0, gain_init_noise, size=(Nants, Nfreqs),
-    ) + 1.0j * np.random.normal(0.0, gain_init_noise, size=(Nants, Nfreqs),)
+        1.0,
+        gain_init_noise,
+        size=(Nants, Nfreqs),
+    ) + 1.0j * np.random.normal(
+        0.0,
+        gain_init_noise,
+        size=(Nants, Nfreqs),
+    )
 
     cov_mat_stddev = 5.0
     cov_mat = np.random.normal(0.0, cov_mat_stddev, size=(Nbls, Nfreqs, Nfreqs))
@@ -723,7 +761,7 @@ def test_derivative_calculations_all_baselines():
 
         for readout_ant in range(Nants):
 
-            #if readout_ant == test_ant:  # Autocorrelations are excluded
+            # if readout_ant == test_ant:  # Autocorrelations are excluded
             #    continue
 
             hess_pass_1 = test_hess(
@@ -802,9 +840,7 @@ def test_derivative_calculations_all_baselines():
                 real_part2=False,
             )
 
-            pass_cond.extend([
-                hess_pass_1, hess_pass_2, hess_pass_3, hess_pass_4
-            ])
+            pass_cond.extend([hess_pass_1, hess_pass_2, hess_pass_3, hess_pass_4])
 
             if test_freq != readout_freq:
                 # Test hess frequency diagonals
@@ -884,9 +920,7 @@ def test_derivative_calculations_all_baselines():
                     real_part2=False,
                 )
 
-                pass_cond.extend([
-                    hess_pass_5, hess_pass_6, hess_pass_7, hess_pass_8
-                ])
+                pass_cond.extend([hess_pass_5, hess_pass_6, hess_pass_7, hess_pass_8])
 
     if np.min(np.array(pass_cond)) == True:
         print("All tests passed successfully.")
@@ -916,6 +950,7 @@ def test_calibration():
         log_file_path=None,
         apply_flags=False,
     )
+
 
 if __name__ == "__main__":
     test_derivative_calculations_all_baselines()

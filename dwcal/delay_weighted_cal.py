@@ -224,9 +224,22 @@ def cost_function_dw_cal(
     verbose=True,
 ):
 
-    gains = np.reshape(x, (2, Nants, Nfreqs,))
+    gains = np.reshape(
+        x,
+        (
+            2,
+            Nants,
+            Nfreqs,
+        ),
+    )
     gains = (
-        gains[0,] + 1.0j * gains[1,]
+        gains[
+            0,
+        ]
+        + 1.0j
+        * gains[
+            1,
+        ]
     )
 
     gains_expanded = np.matmul(gains_exp_mat_1, gains) * np.matmul(
@@ -257,7 +270,13 @@ def jac_dw_cal(
 
     gains = np.reshape(x, (2, Nants, Nfreqs))
     gains = (
-        gains[0,] + 1.0j * gains[1,]
+        gains[
+            0,
+        ]
+        + 1.0j
+        * gains[
+            1,
+        ]
     )
 
     gains1_expanded = np.matmul(gains_exp_mat_1, gains)
@@ -270,7 +289,9 @@ def jac_dw_cal(
         * np.conj(gains2_expanded[np.newaxis, :, :])
         * data_visibilities
     )
-    weighted_part2 = np.squeeze(np.matmul(cost_term[:, :, np.newaxis, :], cov_mat), axis=2)
+    weighted_part2 = np.squeeze(
+        np.matmul(cost_term[:, :, np.newaxis, :], cov_mat), axis=2
+    )
     term1 = np.sum(
         np.matmul(gains_exp_mat_2.T, term1_part1 * np.conj(weighted_part2)), axis=0
     )
@@ -286,9 +307,16 @@ def reformat_baselines_to_antenna_matrix(bl_array, gains_exp_mat_1, gains_exp_ma
     # Reformat an array indexed in baselines into a matrix with antenna indices
 
     (Nbls, Nants) = np.shape(gains_exp_mat_1)
-    antenna_matrix = np.zeros_like(bl_array[0,], dtype=bl_array.dtype)
+    antenna_matrix = np.zeros_like(
+        bl_array[
+            0,
+        ],
+        dtype=bl_array.dtype,
+    )
     antenna_matrix = np.repeat(
-        np.repeat(antenna_matrix[np.newaxis,], Nants, axis=0)[np.newaxis,],
+        np.repeat(antenna_matrix[np.newaxis,], Nants, axis=0)[
+            np.newaxis,
+        ],
         Nants,
         axis=0,
     )
@@ -316,7 +344,13 @@ def hess_dw_cal(
 
     gains = np.reshape(x, (2, Nants, Nfreqs))
     gains = (
-        gains[0,] + 1.0j * gains[1,]
+        gains[
+            0,
+        ]
+        + 1.0j
+        * gains[
+            1,
+        ]
     )
 
     gains1_expanded = np.matmul(gains_exp_mat_1, gains)
@@ -406,7 +440,13 @@ def cost_function_sky_cal(
 
     gains = np.reshape(x, (2, Nants, Nfreqs))
     gains = (
-        gains[0,] + 1.0j * gains[1,]
+        gains[
+            0,
+        ]
+        + 1.0j
+        * gains[
+            1,
+        ]
     )
 
     gains_expanded = np.matmul(gains_exp_mat_1, gains) * np.matmul(
@@ -428,7 +468,12 @@ def get_cov_mat_identity(Nfreqs, Nbls):
 
 
 def get_weighted_cov_mat(
-    Nfreqs, Nbls, uvw_array, freq_array, wedge_buffer_factor=1.2, downweight_frac=0.01,
+    Nfreqs,
+    Nbls,
+    uvw_array,
+    freq_array,
+    wedge_buffer_factor=1.2,
+    downweight_frac=0.01,
 ):
 
     c = 3.0 * 10 ** 8  # Speed of light
@@ -626,8 +671,14 @@ def calibration_optimization(
 
     # Initialize gains
     gains_init = np.random.normal(
-        1.0, gain_init_stddev, size=(Nants, Nfreqs),
-    ) + 1.0j * np.random.normal(0.0, gain_init_stddev, size=(Nants, Nfreqs),)
+        1.0,
+        gain_init_stddev,
+        size=(Nants, Nfreqs),
+    ) + 1.0j * np.random.normal(
+        0.0,
+        gain_init_stddev,
+        size=(Nants, Nfreqs),
+    )
     # Expand the initialized values
     x0 = np.stack((np.real(gains_init), np.imag(gains_init)), axis=0).flatten()
 
@@ -691,7 +742,7 @@ def calibration_optimization(
         method="Newton-CG",
         jac=jac_dw_cal,
         hess=hess_dw_cal,
-        options={"disp": True, "xtol":xtol},
+        options={"disp": True, "xtol": xtol},
     )
     print(result.message)
     end_optimize = time.time()
@@ -700,7 +751,13 @@ def calibration_optimization(
 
     gains_fit = np.reshape(result.x, (2, Nants, Nfreqs))
     gains_fit = (
-        gains_fit[0,] + 1.0j * gains_fit[1,]
+        gains_fit[
+            0,
+        ]
+        + 1.0j
+        * gains_fit[
+            1,
+        ]
     )
     # Ensure that the angle of the gains is mean-zero for each frequency
     avg_angle = np.arctan2(
