@@ -221,6 +221,7 @@ def cost_function_dw_cal(
     gains_exp_mat_2,
     cov_mat,
     data_visibilities,
+    verbose=True,
 ):
 
     gains = np.reshape(x, (2, Nants, Nfreqs,))
@@ -235,8 +236,9 @@ def cost_function_dw_cal(
     weighted_part2 = np.squeeze(np.matmul(res_vec[:, :, np.newaxis, :], cov_mat))
     cost = np.real(np.sum(np.conj(np.squeeze(res_vec)) * weighted_part2))
 
-    print(f"Cost func. value: {cost}")
-    sys.stdout.flush()
+    if verbose:
+        print(f"Cost func. value: {cost}")
+        sys.stdout.flush()
 
     return cost
 
@@ -257,7 +259,6 @@ def jac_dw_cal(
     gains = (
         gains[0,] + 1.0j * gains[1,]
     )
-    print(np.shape(data_visibilities))
 
     gains1_expanded = np.matmul(gains_exp_mat_1, gains)
     gains2_expanded = np.matmul(gains_exp_mat_2, gains)
@@ -269,9 +270,7 @@ def jac_dw_cal(
         * np.conj(gains2_expanded[np.newaxis, :, :])
         * data_visibilities
     )
-    #weighted_part2 = np.squeeze(np.matmul(cost_term[:, :, np.newaxis, :], cov_mat))
-    weighted_part2 = np.matmul(cost_term[:, :, np.newaxis, :], cov_mat)
-    print(np.shape(weighted_part2))
+    weighted_part2 = np.squeeze(np.matmul(cost_term[:, :, np.newaxis, :], cov_mat), axis=2)
     term1 = np.sum(
         np.matmul(gains_exp_mat_2.T, term1_part1 * np.conj(weighted_part2)), axis=0
     )
