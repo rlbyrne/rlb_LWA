@@ -24,6 +24,7 @@ for file in use_files:
     file_split = file.split(".")
     uv_new = pyuvdata.UVData()
     uv_new.read_ms(f"{data_path}/{file_split[0]}.ms")
+    uv_new.phase_type = "drift"
     uv = uv + uv_new
     subprocess.call(shlex.split(f"rm -r {data_path}/{file_split[0]}.ms"))
 print(uv.check())
