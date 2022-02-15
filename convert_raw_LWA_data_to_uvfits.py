@@ -23,12 +23,12 @@ for file_ind, file in enumerate(use_files):
     file_split = file.split(".")
     uv_new = pyuvdata.UVData()
     uv_new.read_ms(f"{data_path}/{file_split[0]}.ms")
-    #uv_new.phase_type = "drift"
+    subprocess.call(shlex.split(f"rm -r {data_path}/{file_split[0]}.ms"))
+    uv_new.unphase_to_drift()
     if file_ind == 0:
         uv = uv_new
     else:
         uv = uv + uv_new
-    subprocess.call(shlex.split(f"rm -r {data_path}/{file_split[0]}.ms"))
 print(uv.check())
 
 uv.instrument = 'OVRO-LWA'
