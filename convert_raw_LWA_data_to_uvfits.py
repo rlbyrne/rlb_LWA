@@ -11,7 +11,7 @@ filenames = os.listdir(data_path)
 use_files = []
 for file in filenames:
     file_split = file.split("_")
-    if file_split[2] == f"{freq}.ms.tar":
+    if file_split[2] == "{}.ms.tar".format(freq):
         if int(file_split[1]) >= start_time_stamp and int(file_split[1]) <= end_time_stamp:
             use_files.append(file)
 
