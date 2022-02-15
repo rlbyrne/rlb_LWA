@@ -23,7 +23,7 @@ for file in use_files:
     subprocess.Popen(shlex.split(f"tar -xvf {data_path}/{file} -C {data_path}"))
     file_split = file.split(".")
     uv_new = pyuvdata.UVData()
-	uv_new.read_ms(f"{data_path}/{file_split[0]}.ms")
+    uv_new.read_ms(f"{data_path}/{file_split[0]}.ms")
     uv = uv + uv_new
 print(uv.check())
 
