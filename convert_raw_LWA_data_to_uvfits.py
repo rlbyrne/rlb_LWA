@@ -20,11 +20,12 @@ for file in filenames:
 
 uv = pyuvdata.UVData()
 for file in use_files:
-    subprocess.Popen(shlex.split(f"tar -xvf {data_path}/{file} -C {data_path}"))
+    subprocess.call(shlex.split(f"tar -xvf {data_path}/{file} -C {data_path}"))
     file_split = file.split(".")
     uv_new = pyuvdata.UVData()
     uv_new.read_ms(f"{data_path}/{file_split[0]}.ms")
     uv = uv + uv_new
+    subprocess.call(shlex.split(f"rm -r {data_path}/{file_split[0]}.ms"))
 print(uv.check())
 
 uv.instrument = 'OVRO-LWA'
