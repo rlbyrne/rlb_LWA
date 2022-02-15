@@ -18,14 +18,16 @@ for file in filenames:
         if int(file_split[1]) >= start_time_stamp and int(file_split[1]) <= end_time_stamp:
             use_files.append(file)
 
-uv = pyuvdata.UVData()
-for file in use_files:
+for file_ind, file in enumerate(use_files):
     subprocess.call(shlex.split(f"tar -xvf {data_path}/{file} -C {data_path}"))
     file_split = file.split(".")
     uv_new = pyuvdata.UVData()
     uv_new.read_ms(f"{data_path}/{file_split[0]}.ms")
-    uv_new.phase_type = "drift"
-    uv = uv + uv_new
+    #uv_new.phase_type = "drift"
+    if file_ind == 0:
+        uv = uv_new
+    else:
+        uv = uv + uv_new
     subprocess.call(shlex.split(f"rm -r {data_path}/{file_split[0]}.ms"))
 print(uv.check())
 
