@@ -16,7 +16,10 @@ use_files = []
 for file in filenames:
     file_split = file.split("_")
     if file_split[2] == "{}.ms.tar".format(freq):
-        if int(file_split[1]) >= start_time_stamp and int(file_split[1]) <= end_time_stamp:
+        if (
+            int(file_split[1]) >= start_time_stamp
+            and int(file_split[1]) <= end_time_stamp
+        ):
             use_files.append(file)
 
 for file_ind, file in enumerate(use_files):
@@ -28,14 +31,14 @@ for file_ind, file in enumerate(use_files):
     uv_new.unphase_to_drift()
     if file_ind % nfiles_per_uvfits == 0:
         uv = uv_new
-	time_stamp = file.split("_")[2]
-	outfile_name = f"/lustre/rbyrne/LWA_data_02102022/20220210_{freq}_{time_stamp}_combined.uvfits"
+        time_stamp = file.split("_")[2]
+        outfile_name = f"/lustre/rbyrne/LWA_data_02102022/20220210_{freq}_{time_stamp}_combined.uvfits"
     else:
         uv = uv + uv_new
-    if (file_ind+1) % nfiles_per_uvfits == 0:
-        uv.instrument = 'OVRO-LWA'
-        uv.telescope_name = 'OVRO-LWA'
+    if (file_ind + 1) % nfiles_per_uvfits == 0:
+        uv.instrument = "OVRO-LWA"
+        uv.telescope_name = "OVRO-LWA"
         uv.set_telescope_params()
-        print(uv.check())        
-        print('Saving file to {}'.format(outfile_name))
+        print(uv.check())
+        print("Saving file to {}".format(outfile_name))
         uv.write_uvfits(outfile_name, spoof_nonessential=True)
