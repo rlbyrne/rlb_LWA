@@ -8,7 +8,6 @@ data_path = "/lustre/rbyrne/LWA_data_20220210"
 freq = "70MHz"
 start_time_stamp = 191447
 end_time_stamp = 194824
-outfile_name = f"/lustre/rbyrne/LWA_data_02102022/20220210_{freq}_combined.uvfits"
 nfiles_per_uvfits = 12
 
 filenames = os.listdir(data_path)
@@ -31,8 +30,8 @@ for file_ind, file in enumerate(use_files):
     uv_new.unphase_to_drift()
     if file_ind % nfiles_per_uvfits == 0:
         uv = uv_new
-        time_stamp = file.split("_")[2]
-        outfile_name = f"/lustre/rbyrne/LWA_data_02102022/20220210_{freq}_{time_stamp}_combined.uvfits"
+        time_stamp = (file.split("_")[2]).split(".")[0]
+        outfile_name = f"/{data_path}/20220210_{freq}_{time_stamp}_combined.uvfits"
     else:
         uv = uv + uv_new
     if (file_ind + 1) % nfiles_per_uvfits == 0:
