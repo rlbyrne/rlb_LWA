@@ -38,6 +38,5 @@ for file_ind, file in enumerate(use_files):
         uv.instrument = "OVRO-LWA"
         uv.telescope_name = "OVRO-LWA"
         uv.set_telescope_params()
-        print(uv.check())
         print("Saving file to {}".format(outfile_name))
-        uv.write_uvfits(outfile_name, spoof_nonessential=True)
+        uv.write_uvfits(outfile_name, force_phase=True, spoof_nonessential=True)
