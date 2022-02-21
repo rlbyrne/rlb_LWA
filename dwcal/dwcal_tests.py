@@ -13,7 +13,7 @@ def test_grad(
     model_visibilities,
     gains_exp_mat_1,
     gains_exp_mat_2,
-    cov_mat,
+    weight_mat,
     data_visibilities,
     real_part=True,
     verbose=False,
@@ -52,7 +52,7 @@ def test_grad(
         model_visibilities,
         gains_exp_mat_1,
         gains_exp_mat_2,
-        cov_mat,
+        weight_mat,
         data_visibilities,
         verbose=False,
     )
@@ -64,7 +64,7 @@ def test_grad(
         model_visibilities,
         gains_exp_mat_1,
         gains_exp_mat_2,
-        cov_mat,
+        weight_mat,
         data_visibilities,
         verbose=False,
     )
@@ -76,7 +76,7 @@ def test_grad(
         model_visibilities,
         gains_exp_mat_1,
         gains_exp_mat_2,
-        cov_mat,
+        weight_mat,
         data_visibilities,
     )
 
@@ -113,7 +113,7 @@ def test_hess(
     model_visibilities,
     gains_exp_mat_1,
     gains_exp_mat_2,
-    cov_mat,
+    weight_mat,
     data_visibilities,
     real_part1=True,
     real_part2=True,
@@ -160,7 +160,7 @@ def test_hess(
         model_visibilities,
         gains_exp_mat_1,
         gains_exp_mat_2,
-        cov_mat,
+        weight_mat,
         data_visibilities,
     )
 
@@ -172,7 +172,7 @@ def test_hess(
         model_visibilities,
         gains_exp_mat_1,
         gains_exp_mat_2,
-        cov_mat,
+        weight_mat,
         data_visibilities,
     )
 
@@ -184,7 +184,7 @@ def test_hess(
         model_visibilities,
         gains_exp_mat_1,
         gains_exp_mat_2,
-        cov_mat,
+        weight_mat,
         data_visibilities,
     )
 
@@ -279,7 +279,7 @@ def test_derivative_calculations():
     # ) + 1.0j * np.random.normal(0.0, gain_init_noise, size=(Nants, Nfreqs),)
     gains_init = np.full((Nants, Nfreqs), 1.01 + 0.01j, dtype="complex")
 
-    cov_mat = dwcal.get_weighted_cov_mat(
+    weight_mat = dwcal.get_weighted_weight_mat(
         Nfreqs, Nbls, metadata_reference.uvw_array, metadata_reference.freq_array
     )
 
@@ -300,7 +300,7 @@ def test_derivative_calculations():
         model_visibilities,
         gains_exp_mat_1,
         gains_exp_mat_2,
-        cov_mat,
+        weight_mat,
         data_visibilities,
         real_part=True,
     )
@@ -316,7 +316,7 @@ def test_derivative_calculations():
         model_visibilities,
         gains_exp_mat_1,
         gains_exp_mat_2,
-        cov_mat,
+        weight_mat,
         data_visibilities,
         real_part=False,
     )
@@ -334,7 +334,7 @@ def test_derivative_calculations():
         model_visibilities,
         gains_exp_mat_1,
         gains_exp_mat_2,
-        cov_mat,
+        weight_mat,
         data_visibilities,
         real_part1=True,
         real_part2=True,
@@ -353,7 +353,7 @@ def test_derivative_calculations():
         model_visibilities,
         gains_exp_mat_1,
         gains_exp_mat_2,
-        cov_mat,
+        weight_mat,
         data_visibilities,
         real_part1=True,
         real_part2=False,
@@ -372,7 +372,7 @@ def test_derivative_calculations():
         model_visibilities,
         gains_exp_mat_1,
         gains_exp_mat_2,
-        cov_mat,
+        weight_mat,
         data_visibilities,
         real_part1=False,
         real_part2=True,
@@ -391,7 +391,7 @@ def test_derivative_calculations():
         model_visibilities,
         gains_exp_mat_1,
         gains_exp_mat_2,
-        cov_mat,
+        weight_mat,
         data_visibilities,
         real_part1=False,
         real_part2=False,
@@ -455,9 +455,9 @@ def test_derivative_calculations_randomized():
         size=(Nants, Nfreqs),
     )
 
-    cov_mat_stddev = 5.0
-    cov_mat = np.random.normal(0.0, cov_mat_stddev, size=(Nbls, Nfreqs, Nfreqs))
-    cov_mat += np.transpose(cov_mat, (0, 2, 1))  # Matrix must be Hermitian
+    weight_mat_stddev = 5.0
+    weight_mat = np.random.normal(0.0, weight_mat_stddev, size=(Nbls, Nfreqs, Nfreqs))
+    weight_mat += np.transpose(weight_mat, (0, 2, 1))  # Matrix must be Hermitian
 
     test_ant = np.random.randint(0, Nants - 1)
     test_freq = np.random.randint(0, Nfreqs - 1)
@@ -478,7 +478,7 @@ def test_derivative_calculations_randomized():
         model_visibilities,
         gains_exp_mat_1,
         gains_exp_mat_2,
-        cov_mat,
+        weight_mat,
         data_visibilities,
         real_part=True,
     )
@@ -494,7 +494,7 @@ def test_derivative_calculations_randomized():
         model_visibilities,
         gains_exp_mat_1,
         gains_exp_mat_2,
-        cov_mat,
+        weight_mat,
         data_visibilities,
         real_part=False,
     )
@@ -512,7 +512,7 @@ def test_derivative_calculations_randomized():
         model_visibilities,
         gains_exp_mat_1,
         gains_exp_mat_2,
-        cov_mat,
+        weight_mat,
         data_visibilities,
         real_part1=True,
         real_part2=True,
@@ -531,7 +531,7 @@ def test_derivative_calculations_randomized():
         model_visibilities,
         gains_exp_mat_1,
         gains_exp_mat_2,
-        cov_mat,
+        weight_mat,
         data_visibilities,
         real_part1=True,
         real_part2=False,
@@ -550,7 +550,7 @@ def test_derivative_calculations_randomized():
         model_visibilities,
         gains_exp_mat_1,
         gains_exp_mat_2,
-        cov_mat,
+        weight_mat,
         data_visibilities,
         real_part1=False,
         real_part2=True,
@@ -569,7 +569,7 @@ def test_derivative_calculations_randomized():
         model_visibilities,
         gains_exp_mat_1,
         gains_exp_mat_2,
-        cov_mat,
+        weight_mat,
         data_visibilities,
         real_part1=False,
         real_part2=False,
@@ -589,7 +589,7 @@ def test_derivative_calculations_randomized():
         model_visibilities,
         gains_exp_mat_1,
         gains_exp_mat_2,
-        cov_mat,
+        weight_mat,
         data_visibilities,
         real_part1=True,
         real_part2=True,
@@ -608,7 +608,7 @@ def test_derivative_calculations_randomized():
         model_visibilities,
         gains_exp_mat_1,
         gains_exp_mat_2,
-        cov_mat,
+        weight_mat,
         data_visibilities,
         real_part1=True,
         real_part2=False,
@@ -627,7 +627,7 @@ def test_derivative_calculations_randomized():
         model_visibilities,
         gains_exp_mat_1,
         gains_exp_mat_2,
-        cov_mat,
+        weight_mat,
         data_visibilities,
         real_part1=False,
         real_part2=True,
@@ -646,7 +646,7 @@ def test_derivative_calculations_randomized():
         model_visibilities,
         gains_exp_mat_1,
         gains_exp_mat_2,
-        cov_mat,
+        weight_mat,
         data_visibilities,
         real_part1=False,
         real_part2=False,
@@ -710,9 +710,9 @@ def test_derivative_calculations_all_baselines():
         size=(Nants, Nfreqs),
     )
 
-    cov_mat_stddev = 5.0
-    cov_mat = np.random.normal(0.0, cov_mat_stddev, size=(Nbls, Nfreqs, Nfreqs))
-    cov_mat += np.transpose(cov_mat, (0, 2, 1))  # Matrix must be Hermitian
+    weight_mat_stddev = 5.0
+    weight_mat = np.random.normal(0.0, weight_mat_stddev, size=(Nbls, Nfreqs, Nfreqs))
+    weight_mat += np.transpose(weight_mat, (0, 2, 1))  # Matrix must be Hermitian
 
     if Nfreqs == 1:
         test_freq = 0
@@ -736,7 +736,7 @@ def test_derivative_calculations_all_baselines():
             model_visibilities,
             gains_exp_mat_1,
             gains_exp_mat_2,
-            cov_mat,
+            weight_mat,
             data_visibilities,
             real_part=True,
         )
@@ -752,7 +752,7 @@ def test_derivative_calculations_all_baselines():
             model_visibilities,
             gains_exp_mat_1,
             gains_exp_mat_2,
-            cov_mat,
+            weight_mat,
             data_visibilities,
             real_part=False,
         )
@@ -777,7 +777,7 @@ def test_derivative_calculations_all_baselines():
                 model_visibilities,
                 gains_exp_mat_1,
                 gains_exp_mat_2,
-                cov_mat,
+                weight_mat,
                 data_visibilities,
                 real_part1=True,
                 real_part2=True,
@@ -796,7 +796,7 @@ def test_derivative_calculations_all_baselines():
                 model_visibilities,
                 gains_exp_mat_1,
                 gains_exp_mat_2,
-                cov_mat,
+                weight_mat,
                 data_visibilities,
                 real_part1=True,
                 real_part2=False,
@@ -815,7 +815,7 @@ def test_derivative_calculations_all_baselines():
                 model_visibilities,
                 gains_exp_mat_1,
                 gains_exp_mat_2,
-                cov_mat,
+                weight_mat,
                 data_visibilities,
                 real_part1=False,
                 real_part2=True,
@@ -834,7 +834,7 @@ def test_derivative_calculations_all_baselines():
                 model_visibilities,
                 gains_exp_mat_1,
                 gains_exp_mat_2,
-                cov_mat,
+                weight_mat,
                 data_visibilities,
                 real_part1=False,
                 real_part2=False,
@@ -857,7 +857,7 @@ def test_derivative_calculations_all_baselines():
                     model_visibilities,
                     gains_exp_mat_1,
                     gains_exp_mat_2,
-                    cov_mat,
+                    weight_mat,
                     data_visibilities,
                     real_part1=True,
                     real_part2=True,
@@ -876,7 +876,7 @@ def test_derivative_calculations_all_baselines():
                     model_visibilities,
                     gains_exp_mat_1,
                     gains_exp_mat_2,
-                    cov_mat,
+                    weight_mat,
                     data_visibilities,
                     real_part1=True,
                     real_part2=False,
@@ -895,7 +895,7 @@ def test_derivative_calculations_all_baselines():
                     model_visibilities,
                     gains_exp_mat_1,
                     gains_exp_mat_2,
-                    cov_mat,
+                    weight_mat,
                     data_visibilities,
                     real_part1=False,
                     real_part2=True,
@@ -914,7 +914,7 @@ def test_derivative_calculations_all_baselines():
                     model_visibilities,
                     gains_exp_mat_1,
                     gains_exp_mat_2,
-                    cov_mat,
+                    weight_mat,
                     data_visibilities,
                     real_part1=False,
                     real_part2=False,

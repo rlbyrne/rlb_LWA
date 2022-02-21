@@ -219,7 +219,7 @@ def cost_function_dw_cal(
     model_visibilities,
     gains_exp_mat_1,
     gains_exp_mat_2,
-    cov_mat,
+    weight_mat,
     data_visibilities,
     verbose=True,
 ):
@@ -246,7 +246,7 @@ def cost_function_dw_cal(
         gains_exp_mat_2, np.conj(gains)
     )
     res_vec = model_visibilities - gains_expanded[np.newaxis, :, :] * data_visibilities
-    weighted_part2 = np.squeeze(np.matmul(res_vec[:, :, np.newaxis, :], cov_mat))
+    weighted_part2 = np.squeeze(np.matmul(res_vec[:, :, np.newaxis, :], weight_mat))
     cost = np.real(np.sum(np.conj(np.squeeze(res_vec)) * weighted_part2))
 
     if verbose:
@@ -264,7 +264,7 @@ def jac_dw_cal(
     model_visibilities,
     gains_exp_mat_1,
     gains_exp_mat_2,
-    cov_mat,
+    weight_mat,
     data_visibilities,
 ):
 
@@ -290,7 +290,7 @@ def jac_dw_cal(
         * data_visibilities
     )
     weighted_part2 = np.squeeze(
-        np.matmul(cost_term[:, :, np.newaxis, :], cov_mat), axis=2
+        np.matmul(cost_term[:, :, np.newaxis, :], weight_mat), axis=2
     )
     term1 = np.sum(
         np.matmul(gains_exp_mat_2.T, term1_part1 * np.conj(weighted_part2)), axis=0
@@ -338,7 +338,7 @@ def hess_dw_cal(
     model_visibilities,
     gains_exp_mat_1,
     gains_exp_mat_2,
-    cov_mat,
+    weight_mat,
     data_visibilities,
 ):
 
@@ -361,7 +361,7 @@ def hess_dw_cal(
         data_visibilities
     )
     term1 = np.sum(
-        cov_mat[np.newaxis, :, :, :]
+        weight_mat[np.newaxis, :, :, :]
         * gains1_times_data[:, :, :, np.newaxis]
         * gains2_times_conj_data[:, :, np.newaxis, :],
         axis=0,
@@ -372,7 +372,7 @@ def hess_dw_cal(
     term1 = np.transpose(term1, (1, 0, 2, 3))
 
     term2 = np.sum(
-        np.conj(cov_mat[np.newaxis, :, :, :])
+        np.conj(weight_mat[np.newaxis, :, :, :])
         * gains2_times_conj_data[:, :, :, np.newaxis]
         * gains1_times_data[:, :, np.newaxis, :],
         axis=0,
@@ -394,7 +394,7 @@ def hess_dw_cal(
         * data_visibilities
         - model_visibilities
     )
-    weight_times_cost = np.einsum("ijk,jkl->ijl", cost_term, cov_mat)
+    weight_times_cost = np.einsum("ijk,jkl->ijl", cost_term, weight_mat)
     term3 = np.sum(np.conj(data_visibilities) * weight_times_cost, axis=0)
     term3 = reformat_baselines_to_antenna_matrix(
         term3, gains_exp_mat_1, gains_exp_mat_2
@@ -434,7 +434,7 @@ def cost_function_sky_cal(
     model_visibilities,
     gains_exp_mat_1,
     gains_exp_mat_2,
-    cov_mat,
+    weight_mat,
     data_visibilities,
 ):
 
@@ -459,15 +459,15 @@ def cost_function_sky_cal(
     return cost
 
 
-def get_cov_mat_identity(Nfreqs, Nbls):
+def get_weight_mat_identity(Nfreqs, Nbls):
 
-    cov_mat = np.identity(Nfreqs)
-    cov_mat = np.repeat(cov_mat[np.newaxis, :, :], Nbls, axis=0)
-    cov_mat = cov_mat.reshape((Nbls, Nfreqs, Nfreqs))
-    return cov_mat
+    weight_mat = np.identity(Nfreqs)
+    weight_mat = np.repeat(weight_mat[np.newaxis, :, :], Nbls, axis=0)
+    weight_mat = weight_mat.reshape((Nbls, Nfreqs, Nfreqs))
+    return weight_mat
 
 
-def get_weighted_cov_mat(
+def get_weighted_weight_mat(
     Nfreqs,
     Nbls,
     uvw_array,
@@ -492,21 +492,21 @@ def get_weighted_cov_mat(
     # Result is symmetric and real, so keep half the values and real part only
     freq_weighting = np.real(freq_weighting[:, 0:Nfreqs])
 
-    cov_mat = np.zeros((Nbls, Nfreqs, Nfreqs), dtype=float)
+    weight_mat = np.zeros((Nbls, Nfreqs, Nfreqs), dtype=float)
     # Set off-diagonals
     for freq_diff in range(1, Nfreqs):
         for start_freq in range(Nfreqs - freq_diff):
-            cov_mat[:, start_freq, start_freq + freq_diff] = freq_weighting[
+            weight_mat[:, start_freq, start_freq + freq_diff] = freq_weighting[
                 :, freq_diff
             ]
-    cov_mat += np.transpose(cov_mat, axes=(0, 2, 1))
+    weight_mat += np.transpose(weight_mat, axes=(0, 2, 1))
     # Set diagonals
     for freq_ind in range(Nfreqs):
-        cov_mat[:, freq_ind, freq_ind] = freq_weighting[:, 0]
-    return cov_mat
+        weight_mat[:, freq_ind, freq_ind] = freq_weighting[:, 0]
+    return weight_mat
 
 
-def get_cov_mat_no_wedge(
+def get_weight_mat_no_wedge(
     Nfreqs,
     Nbls,
     uvw_array,
@@ -545,18 +545,18 @@ def get_cov_mat_no_wedge(
     # Result is symmetric and real, so keep half the values and real part only
     freq_weighting = np.real(freq_weighting[:, 0:Nfreqs])
 
-    cov_mat = np.zeros((Nbls, Nfreqs, Nfreqs), dtype=float)
+    weight_mat = np.zeros((Nbls, Nfreqs, Nfreqs), dtype=float)
     # Set off-diagonals
     for freq_diff in range(1, Nfreqs):
         for start_freq in range(Nfreqs - freq_diff):
-            cov_mat[:, start_freq, start_freq + freq_diff] = freq_weighting[
+            weight_mat[:, start_freq, start_freq + freq_diff] = freq_weighting[
                 :, freq_diff
             ]
-    cov_mat += np.transpose(cov_mat, axes=(0, 2, 1))
+    weight_mat += np.transpose(weight_mat, axes=(0, 2, 1))
     # Set diagonals
     for freq_ind in range(Nfreqs):
-        cov_mat[:, freq_ind, freq_ind] = freq_weighting[:, 0]
-    return cov_mat
+        weight_mat[:, freq_ind, freq_ind] = freq_weighting[:, 0]
+    return weight_mat
 
 
 def apply_calibration(
@@ -682,23 +682,23 @@ def calibration_optimization(
     # Expand the initialized values
     x0 = np.stack((np.real(gains_init), np.imag(gains_init)), axis=0).flatten()
 
-    start_cov_mat = time.time()
+    start_weight_mat = time.time()
     if use_wedge_exclusion:
         print(f"use_wedge_exclusion=True: Generating wedge excluding covariance matrix")
         sys.stdout.flush()
-        # cov_mat = get_cov_mat_no_wedge(
+        # weight_mat = get_weight_mat_no_wedge(
         #    Nfreqs, Nbls, metadata_reference.uvw_array, metadata_reference.freq_array
         # )
-        cov_mat = get_weighted_cov_mat(
+        weight_mat = get_weighted_weight_mat(
             Nfreqs, Nbls, metadata_reference.uvw_array, metadata_reference.freq_array
         )
     else:
         print(f"use_wedge_exclusion=False: Covariance matrix is the identity")
         sys.stdout.flush()
-        cov_mat = get_cov_mat_identity(Nfreqs, Nbls)
-    end_cov_mat = time.time()
+        weight_mat = get_weight_mat_identity(Nfreqs, Nbls)
+    end_weight_mat = time.time()
     print(
-        f"Time generating covariance matrix: {(end_cov_mat - start_cov_mat)/60.} minutes"
+        f"Time generating covariance matrix: {(end_weight_mat - start_weight_mat)/60.} minutes"
     )
     sys.stdout.flush()
 
@@ -714,7 +714,7 @@ def calibration_optimization(
         print(f"Fraction of the data flagged: {frac_flagged}")
         sys.stdout.flush()
         flag_array_inverted = np.invert(flag_array_time_averaged)
-        cov_mat *= (
+        weight_mat *= (
             flag_array_inverted[:, :, np.newaxis]
             * flag_array_inverted[:, np.newaxis, :]
         )
@@ -736,7 +736,7 @@ def calibration_optimization(
             model_visibilities,
             gains_exp_mat_1,
             gains_exp_mat_2,
-            cov_mat,
+            weight_mat,
             data_visibilities,
         ),
         method="Newton-CG",
@@ -750,15 +750,7 @@ def calibration_optimization(
     sys.stdout.flush()
 
     gains_fit = np.reshape(result.x, (2, Nants, Nfreqs))
-    gains_fit = (
-        gains_fit[
-            0,
-        ]
-        + 1.0j
-        * gains_fit[
-            1,
-        ]
-    )
+    gains_fit = (gains_fit[0,]+ 1.0j* gains_fit[1,])
     # Ensure that the angle of the gains is mean-zero for each frequency
     avg_angle = np.arctan2(
         np.mean(np.sin(np.angle(gains_fit)), axis=0),
