@@ -388,6 +388,7 @@ def hess_dw_cal(
     hess[:, :, :, :, 1] = 2 * np.imag(term1 + term2)
     hess[:, :, :, :, 2] = -2 * np.real(term1 + term2)
 
+    # Calculate frequency diagonals
     cost_term = (
         gains1_expanded[np.newaxis, :, :]
         * np.conj(gains2_expanded[np.newaxis, :, :])
@@ -406,6 +407,31 @@ def hess_dw_cal(
         hess[:, :, freq, freq, 0] += np.real(terms3and4[:, :, freq])
         hess[:, :, freq, freq, 1] -= np.imag(terms3and4[:, :, freq])
         hess[:, :, freq, freq, 2] += np.real(terms3and4[:, :, freq])
+
+    # Calculate antenna diagonals
+    gains1_times_data = gains1_expanded[np.newaxis, :, :] * data_visibilities
+    gains2_times_conj_data = gains2_expanded[np.newaxis, :, :] * np.conj(
+        data_visibilities
+    )
+    ant_diag_part1 = np.sum(
+        weight_mat[np.newaxis, :, :, :]
+        * gains1_times_data[:, :, np.newaxis, :]
+        * np.conj(gains1_times_data[:, :, :, np.newaxis]),
+        axis=0,
+    )
+    ant_diag_part1 = np.einsum("ij,jkl->ikl", gains_exp_mat_2.T, ant_diag_part1)
+    ant_diag_part2 = np.sum(
+        weight_mat[np.newaxis, :, :, :]
+        * gains2_times_conj_data[:, :, np.newaxis, :]
+        * np.conj(gains2_times_conj_data[:, :, :, np.newaxis]),
+        axis=0,
+    )
+    ant_diag_part2 = np.einsum("ij,jkl->ikl", gains_exp_mat_1.T, ant_diag_part2)
+    ant_diags = ant_diag_part1 + ant_diag_part2
+    for ant_ind in range(Nants):
+        hess[ant_ind, ant_ind, :, :, 0] = 2 * np.real(ant_diags[ant_ind, :, :])
+        hess[ant_ind, ant_ind, :, :, 1] = 2 * np.imag(ant_diags[ant_ind, :, :])
+        hess[ant_ind, ant_ind, :, :, 2] = 2 * np.real(ant_diags[ant_ind, :, :])
 
     hess_reformatted = np.zeros((2, Nants * Nfreqs, 2, Nants * Nfreqs), dtype=float)
     hess_reformatted[0, :, 0, :] = np.transpose(
@@ -750,7 +776,15 @@ def calibration_optimization(
     sys.stdout.flush()
 
     gains_fit = np.reshape(result.x, (2, Nants, Nfreqs))
-    gains_fit = (gains_fit[0,]+ 1.0j* gains_fit[1,])
+    gains_fit = (
+        gains_fit[
+            0,
+        ]
+        + 1.0j
+        * gains_fit[
+            1,
+        ]
+    )
     # Ensure that the angle of the gains is mean-zero for each frequency
     avg_angle = np.arctan2(
         np.mean(np.sin(np.angle(gains_fit)), axis=0),
