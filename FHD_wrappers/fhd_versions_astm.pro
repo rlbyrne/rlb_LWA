@@ -74,14 +74,26 @@ pro fhd_versions_astm
     'rlb_test_LWA_increase_uv_resolution': begin
       recalculate_all = 1
       instrument = 'lwa'
-      import_pyuvdata_beam_filepath = '/opt/astro/devel/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      import_pyuvdata_beam_filepath = '/opt/astro/devel/rbyrne/rlb_LWA/LWAbeam_2015_new.fits'
       beam_model_version = 0
-      unflag_all = 1
       calibrate_visibilities = 0
       model_visibilities = 0
       snapshot_healpix_export = 0
-      dimension = 2500
+      dimension = 2000
       kbinsize = 0.2
+    end
+
+    'rlb_test_LWA_short_baselines': begin
+      recalculate_all = 1
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/opt/astro/devel/rbyrne/rlb_LWA/LWAbeam_2015_new.fits'
+      beam_model_version = 0
+      calibrate_visibilities = 0
+      model_visibilities = 0
+      snapshot_healpix_export = 0
+      max_baseline = 50
+      dimension = 2500
+      kbinsize = 0.04
     end
 
   endcase
