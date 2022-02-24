@@ -3,7 +3,7 @@ import shlex
 import os
 
 obsid = '2019-11-21T23:00:08'
-version = 'rlb_test_LWA_increase_uv_resolution'
+version = 'rlb_test_LWA_rebase_Feb2022'
 uvfits_path = '/lustre/rbyrne'
 outdir = '/lustre/rbyrne/fhd_outputs'
 run_eppsilon = False

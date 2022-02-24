@@ -13,7 +13,7 @@ pro fhd_versions_astm
     'rlb_test_run_Aug2021': begin
       catalog_file_path = filepath('GLEAM_v2_plus_rlb2019.sav',root=rootdir('FHD'),subdir='catalog_data')
     end
-    
+
     'rlb_model_GLEAM_Aug2021': begin
       recalculate_all = 0
       return_cal_visibilities = 0
@@ -36,7 +36,7 @@ pro fhd_versions_astm
       beam_nfreq_avg = 384 ; use one beam for all frequencies
       save_uvf = 1
     end
-    
+
     'rlb_model_GLEAM_bright_sources_Aug2021': begin
       recalculate_all = 0
       in_situ_sim_input = '/lustre/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_Aug2021/vis_data'
@@ -60,7 +60,7 @@ pro fhd_versions_astm
       beam_nfreq_avg = 384 ; use one beam for all frequencies
       save_uvf = 1
     end
-    
+
     'rlb_test_LWA_beam': begin
       instrument = 'lwa'
       import_pyuvdata_beam_filepath = '/opt/astro/devel/rbyrne/rlb_LWA/LWAbeam_2015.fits'
@@ -70,7 +70,7 @@ pro fhd_versions_astm
       model_visibilities = 0
       snapshot_healpix_export = 0
     end
-    
+
     'rlb_test_LWA_increase_uv_resolution': begin
       recalculate_all = 1
       instrument = 'lwa'
@@ -94,6 +94,15 @@ pro fhd_versions_astm
       max_baseline = 50
       dimension = 2500
       kbinsize = 0.04
+    end
+
+    'rlb_test_LWA_rebase_Feb2022': begin
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/opt/astro/devel/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      beam_model_version = 0
+      calibrate_visibilities = 0
+      model_visibilities = 0
+      snapshot_healpix_export = 0
     end
 
   endcase
