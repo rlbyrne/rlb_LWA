@@ -201,8 +201,8 @@ def test_hess(
         f"Hess calc., {part1_text}-{part2_text}, ants [{test_ant},{readout_ant}]: {pass_text}"
     )
     if verbose:
-        print(f"Empirical value: {empirical_val}")
-        print(f"Calculated value: {calculated_val}")
+        print(f"Empirical value: {empirical_value}")
+        print(f"Calculated value: {calc_value}")
 
     return pass_condition
 
@@ -461,9 +461,8 @@ def test_derivative_calculations_randomized():
 
     test_ant = np.random.randint(0, Nants - 1)
     test_freq = np.random.randint(0, Nfreqs - 1)
-    readout_ant = np.random.randint(0, Nants - 1)
-    while readout_ant == test_ant:  # Autocorrelations are excluded
-        readout_ant = np.random.randint(0, Nants - 1)
+    #readout_ant = np.random.randint(0, Nants - 1)
+    readout_ant = test_ant
     readout_freq = np.random.randint(0, Nfreqs - 1)
     delta_gains = 0.0001
 
@@ -481,6 +480,7 @@ def test_derivative_calculations_randomized():
         weight_mat,
         data_visibilities,
         real_part=True,
+        verbose=True,
     )
 
     test_grad(
@@ -497,6 +497,7 @@ def test_derivative_calculations_randomized():
         weight_mat,
         data_visibilities,
         real_part=False,
+        verbose=True,
     )
 
     test_hess(
@@ -516,6 +517,7 @@ def test_derivative_calculations_randomized():
         data_visibilities,
         real_part1=True,
         real_part2=True,
+        verbose=True,
     )
 
     test_hess(
@@ -535,6 +537,7 @@ def test_derivative_calculations_randomized():
         data_visibilities,
         real_part1=True,
         real_part2=False,
+        verbose=True,
     )
 
     test_hess(
@@ -554,6 +557,7 @@ def test_derivative_calculations_randomized():
         data_visibilities,
         real_part1=False,
         real_part2=True,
+        verbose=True,
     )
 
     test_hess(
@@ -573,6 +577,7 @@ def test_derivative_calculations_randomized():
         data_visibilities,
         real_part1=False,
         real_part2=False,
+        verbose=True,
     )
 
     # Test hess frequency diagonals
@@ -593,6 +598,7 @@ def test_derivative_calculations_randomized():
         data_visibilities,
         real_part1=True,
         real_part2=True,
+        verbose=True,
     )
 
     test_hess(
@@ -612,6 +618,7 @@ def test_derivative_calculations_randomized():
         data_visibilities,
         real_part1=True,
         real_part2=False,
+        verbose=True,
     )
 
     test_hess(
@@ -631,6 +638,7 @@ def test_derivative_calculations_randomized():
         data_visibilities,
         real_part1=False,
         real_part2=True,
+        verbose=True,
     )
 
     test_hess(
@@ -650,6 +658,7 @@ def test_derivative_calculations_randomized():
         data_visibilities,
         real_part1=False,
         real_part2=False,
+        verbose=True,
     )
 
 
@@ -953,4 +962,4 @@ def test_calibration():
 
 
 if __name__ == "__main__":
-    test_derivative_calculations_all_baselines()
+    test_derivative_calculations_randomized()
