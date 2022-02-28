@@ -632,6 +632,135 @@ def apply_calibration(
     return data_calibrated
 
 
+def newtons_method_optimizer(
+    x0,
+    Nants,
+    Nfreqs,
+    Nbls,
+    model_visibilities,
+    gains_exp_mat_1,
+    gains_exp_mat_2,
+    weight_mat,
+    data_visibilities,
+    step_size=1.0,
+    covergence_condition=0.001,
+):
+
+    n_iters = 0
+    convergence_iters = 0
+    while convergence_iters < 3:
+        hess_mat = dwcal.hess_dw_cal(
+            x0,
+            Nants,
+            Nfreqs,
+            Nbls,
+            model_visibilities,
+            gains_exp_mat_1,
+            gains_exp_mat_2,
+            weight_mat,
+            data_visibilities,
+        )
+        hess_mat_inv = np.linalg.inv(hess_mat)
+        del hess_mat
+        jac = dwcal.jac_dw_cal(
+            x0,
+            Nants,
+            Nfreqs,
+            Nbls,
+            model_visibilities,
+            gains_exp_mat_1,
+            gains_exp_mat_2,
+            weight_mat,
+            data_visibilities,
+        )
+        x1 = x0 - step_size * np.matmul(hess_mat_inv, jac)
+        del hess_mat_inv
+        del jac
+        cost = dwcal.cost_function_dw_cal(
+            x0,
+            Nants,
+            Nfreqs,
+            Nbls,
+            model_visibilities,
+            gains_exp_mat_1,
+            gains_exp_mat_2,
+            weight_mat,
+            data_visibilities,
+        )
+        print(f"Iteration {n_iters}, cost func value: {cost}")
+        check_conv = np.max(np.abs(x1 - x0))
+        if check_conv < covergence_condition:
+            convergence_iters += 1
+        else:
+            convergence_iters = 0
+        x0 = x1
+        n_iters += 1
+
+    return x1
+
+
+def grad_descent_optimizer(
+    x0,
+    Nants,
+    Nfreqs,
+    Nbls,
+    model_visibilities,
+    gains_exp_mat_1,
+    gains_exp_mat_2,
+    weight_mat,
+    data_visibilities,
+    covergence_condition=1e-8,
+):
+
+    n_iters = 0
+    convergence_iters = 0
+    while convergence_iters < 10:
+        jac = dwcal.jac_dw_cal(
+            x0,
+            Nants,
+            Nfreqs,
+            Nbls,
+            model_visibilities,
+            gains_exp_mat_1,
+            gains_exp_mat_2,
+            weight_mat,
+            data_visibilities,
+        )
+        if n_iters == 0:
+            step_size = 1.0 / (2 * np.max(jac))  # Don't change gains by more than 1/2
+        else:
+            step_size = np.abs(np.matmul((x0 - x_prev).T, jac - jac_prev)) / np.sum(
+                (jac - jac_prev) ** 2.0
+            )
+        print(step_size)
+        x1 = x0 - step_size * jac
+        cost = dwcal.cost_function_dw_cal(
+            x0,
+            Nants,
+            Nfreqs,
+            Nbls,
+            model_visibilities,
+            gains_exp_mat_1,
+            gains_exp_mat_2,
+            weight_mat,
+            data_visibilities,
+            verbose=False,
+        )
+        print(f"Iteration {n_iters}, cost func value: {cost}")
+        check_conv = np.max(np.abs(x1 - x0))
+        if check_conv < covergence_condition:
+            convergence_iters += 1
+        else:
+            convergence_iters = 0
+
+        jac_prev = jac
+        x_prev = x0
+        x0 = x1
+        n_iters += 1
+
+    return x1
+
+
 def calibration_optimization(
     data,
     model,
@@ -640,6 +769,8 @@ def calibration_optimization(
     apply_flags=False,
     xtol=1e-8,
     gain_init_stddev=0.01,
+    use_newtons_method=False,
+    use_grad_descent=False,
 ):
 
     Nants = data.Nants_data
@@ -752,10 +883,9 @@ def calibration_optimization(
 
     # Minimize the cost function
     start_optimize = time.time()
-    result = scipy.optimize.minimize(
-        cost_function_dw_cal,
-        x0,
-        args=(
+    if use_newtons_method:
+        gains_fit_flattened = newtons_method_optimizer(
+            x0,
             Nants,
             Nfreqs,
             Nbls,
@@ -764,18 +894,48 @@ def calibration_optimization(
             gains_exp_mat_2,
             weight_mat,
             data_visibilities,
-        ),
-        method="Newton-CG",
-        jac=jac_dw_cal,
-        hess=hess_dw_cal,
-        options={"disp": True, "xtol": xtol},
-    )
-    print(result.message)
+            step_size=1.0,
+            covergence_condition=xtol,
+        )
+    elif use_grad_descent:
+        gains_fit_flattened = grad_descent_optimizer(
+            x0,
+            Nants,
+            Nfreqs,
+            Nbls,
+            model_visibilities,
+            gains_exp_mat_1,
+            gains_exp_mat_2,
+            weight_mat,
+            data_visibilities,
+            covergence_condition=xtol,
+        )
+    else:  # Use scipy optimizer
+        result = scipy.optimize.minimize(
+            cost_function_dw_cal,
+            x0,
+            args=(
+                Nants,
+                Nfreqs,
+                Nbls,
+                model_visibilities,
+                gains_exp_mat_1,
+                gains_exp_mat_2,
+                weight_mat,
+                data_visibilities,
+            ),
+            method="Newton-CG",
+            jac=jac_dw_cal,
+            hess=hess_dw_cal,
+            options={"disp": True, "xtol": xtol},
+        )
+        print(result.message)
+        gains_fit_flattened = result.x
     end_optimize = time.time()
     print(f"Optimization time: {(end_optimize - start_optimize)/60.} minutes")
     sys.stdout.flush()
 
-    gains_fit = np.reshape(result.x, (2, Nants, Nfreqs))
+    gains_fit = np.reshape(gains_fit_flattened, (2, Nants, Nfreqs))
     gains_fit = (
         gains_fit[
             0,
