@@ -222,25 +222,11 @@ def cost_function_dw_cal(
     weight_mat,
     data_visibilities,
     verbose=True,
+    lambda_val=1.0,
 ):
 
-    gains = np.reshape(
-        x,
-        (
-            2,
-            Nants,
-            Nfreqs,
-        ),
-    )
-    gains = (
-        gains[
-            0,
-        ]
-        + 1.0j
-        * gains[
-            1,
-        ]
-    )
+    gains = np.reshape(x, (2, Nants, Nfreqs))
+    gains = gains[0, :, :] + 1.0j * gains[1, :, :]
 
     gains_expanded = np.matmul(gains_exp_mat_1, gains) * np.matmul(
         gains_exp_mat_2, np.conj(gains)
@@ -248,6 +234,9 @@ def cost_function_dw_cal(
     res_vec = model_visibilities - gains_expanded[np.newaxis, :, :] * data_visibilities
     weighted_part2 = np.squeeze(np.matmul(res_vec[:, :, np.newaxis, :], weight_mat))
     cost = np.real(np.sum(np.conj(np.squeeze(res_vec)) * weighted_part2))
+
+    if lambda_val != 0.0:
+        cost += lambda_val * np.sum(np.sum(np.angle(gains), axis=0) ** 2.0)
 
     if verbose:
         print(f"Cost func. value: {cost}")
@@ -266,18 +255,11 @@ def jac_dw_cal(
     gains_exp_mat_2,
     weight_mat,
     data_visibilities,
+    lambda_val=1.0,
 ):
 
     gains = np.reshape(x, (2, Nants, Nfreqs))
-    gains = (
-        gains[
-            0,
-        ]
-        + 1.0j
-        * gains[
-            1,
-        ]
-    )
+    gains = gains[0, :, :] + 1.0j * gains[1, :, :]
 
     gains1_expanded = np.matmul(gains_exp_mat_1, gains)
     gains2_expanded = np.matmul(gains_exp_mat_2, gains)
@@ -299,6 +281,19 @@ def jac_dw_cal(
     grad = -2 * (term1 + term2)
 
     grad = np.stack((np.real(grad), np.imag(grad)), axis=0).flatten()
+
+    if lambda_val != 0.0:
+        lagrange_multiplier = (
+            2
+            * lambda_val
+            * np.conj(gains)
+            / np.abs(gains) ** 2.0
+            * np.sum(np.angle(gains), axis=0)[np.newaxis, :]
+        )
+        lagrange_multiplier = np.stack(
+            (np.imag(lagrange_multiplier), np.real(lagrange_multiplier)), axis=0
+        ).flatten()
+        grad += lagrange_multiplier
 
     return grad
 
@@ -343,15 +338,7 @@ def hess_dw_cal(
 ):
 
     gains = np.reshape(x, (2, Nants, Nfreqs))
-    gains = (
-        gains[
-            0,
-        ]
-        + 1.0j
-        * gains[
-            1,
-        ]
-    )
+    gains = gains[0, :, :] + 1.0j * gains[1, :, :]
 
     gains1_expanded = np.matmul(gains_exp_mat_1, gains)
     gains2_expanded = np.matmul(gains_exp_mat_2, gains)
@@ -529,6 +516,11 @@ def get_weighted_weight_mat(
     # Set diagonals
     for freq_ind in range(Nfreqs):
         weight_mat[:, freq_ind, freq_ind] = freq_weighting[:, 0]
+
+    # Make normalization match identity matrix weight mat
+    normalization_factor = Nfreqs * Nbls / np.sum(weight_mat)
+    weight_mat *= normalization_factor
+
     return weight_mat
 
 
@@ -649,7 +641,7 @@ def newtons_method_optimizer(
     n_iters = 0
     convergence_iters = 0
     while convergence_iters < 3:
-        hess_mat = dwcal.hess_dw_cal(
+        hess_mat = hess_dw_cal(
             x0,
             Nants,
             Nfreqs,
@@ -662,7 +654,7 @@ def newtons_method_optimizer(
         )
         hess_mat_inv = np.linalg.inv(hess_mat)
         del hess_mat
-        jac = dwcal.jac_dw_cal(
+        jac = jac_dw_cal(
             x0,
             Nants,
             Nfreqs,
@@ -676,7 +668,7 @@ def newtons_method_optimizer(
         x1 = x0 - step_size * np.matmul(hess_mat_inv, jac)
         del hess_mat_inv
         del jac
-        cost = dwcal.cost_function_dw_cal(
+        cost = cost_function_dw_cal(
             x0,
             Nants,
             Nfreqs,
@@ -715,7 +707,7 @@ def grad_descent_optimizer(
     n_iters = 0
     convergence_iters = 0
     while convergence_iters < 10:
-        jac = dwcal.jac_dw_cal(
+        jac = jac_dw_cal(
             x0,
             Nants,
             Nfreqs,
@@ -734,7 +726,7 @@ def grad_descent_optimizer(
             )
         print(step_size)
         x1 = x0 - step_size * jac
-        cost = dwcal.cost_function_dw_cal(
+        cost = cost_function_dw_cal(
             x0,
             Nants,
             Nfreqs,
