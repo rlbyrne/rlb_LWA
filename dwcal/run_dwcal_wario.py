@@ -139,6 +139,37 @@ def run_calibration_Jan18():
     )
 
 
+def test_constrained_optimization_Mar1():
+
+    dwcal.calibrate(
+        model_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Dec2021",
+        model_use_model=True,
+        data_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Dec2021",
+        data_use_model=False,
+        obsid="1061316296",
+        pol="XX",
+        use_autos=False,
+        use_wedge_exclusion=False,
+        cal_savefile="/safepool/rbyrne/calibration_outputs/caltest_Mar1/vanilla_cal.calfits",
+        calibrated_data_savefile="/safepool/rbyrne/calibration_outputs/caltest_Mar1/vanilla_cal.uvfits",
+        log_file_path="/safepool/rbyrne/calibration_outputs/caltest_Mar1/vanilla_cal_log.txt",
+    )
+
+    dwcal.calibrate(
+        model_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Dec2021",
+        model_use_model=True,
+        data_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Dec2021",
+        data_use_model=False,
+        obsid="1061316296",
+        pol="XX",
+        use_autos=False,
+        use_wedge_exclusion=True,
+        cal_savefile="/safepool/rbyrne/calibration_outputs/caltest_Mar1/wedge_excluded.calfits",
+        calibrated_data_savefile="/safepool/rbyrne/calibration_outputs/caltest_Mar1/wedge_excluded.uvfits",
+        log_file_path="/safepool/rbyrne/calibration_outputs/caltest_Mar1/wedge_excluded_log.txt",
+    )
+
+
 if __name__ == "__main__":
 
-    run_calibration_Jan18()
+    test_constrained_optimization_Mar1()
