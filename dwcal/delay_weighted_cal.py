@@ -222,7 +222,7 @@ def cost_function_dw_cal(
     weight_mat,
     data_visibilities,
     verbose=True,
-    lambda_val=1.0,
+    lambda_val=1000.0,
 ):
 
     gains = np.reshape(x, (2, Nants, Nfreqs))
@@ -255,7 +255,7 @@ def jac_dw_cal(
     gains_exp_mat_2,
     weight_mat,
     data_visibilities,
-    lambda_val=1.0,
+    lambda_val=1000.0,
 ):
 
     gains = np.reshape(x, (2, Nants, Nfreqs))
@@ -335,7 +335,7 @@ def hess_dw_cal(
     gains_exp_mat_2,
     weight_mat,
     data_visibilities,
-    lambda_val=1.0,
+    lambda_val=1000.0,
 ):
 
     gains = np.reshape(x, (2, Nants, Nfreqs))
@@ -421,7 +421,7 @@ def hess_dw_cal(
         hess[ant_ind, ant_ind, :, :, 1] = 2 * np.imag(ant_diags[ant_ind, :, :])
         hess[ant_ind, ant_ind, :, :, 2] = 2 * np.real(ant_diags[ant_ind, :, :])
 
-    if lambda_val != 0.0:  # Implement Lagrange multiplier
+    if lambda_val != 0.0:  # Lagrange multiplier
 
         im_part = np.imag(gains) / np.abs(gains) ** 2.0
         real_part = np.real(gains) / np.abs(gains) ** 2.0
@@ -519,7 +519,7 @@ def get_weighted_weight_mat(
     uvw_array,
     freq_array,
     wedge_buffer_factor=1.2,
-    downweight_frac=0.01,
+    downweight_frac=0.1,
 ):
 
     c = 3.0 * 10 ** 8  # Speed of light
