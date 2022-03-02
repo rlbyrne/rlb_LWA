@@ -335,6 +335,7 @@ def hess_dw_cal(
     gains_exp_mat_2,
     weight_mat,
     data_visibilities,
+    lambda_val=1.0,
 ):
 
     gains = np.reshape(x, (2, Nants, Nfreqs))
@@ -419,6 +420,38 @@ def hess_dw_cal(
         hess[ant_ind, ant_ind, :, :, 0] = 2 * np.real(ant_diags[ant_ind, :, :])
         hess[ant_ind, ant_ind, :, :, 1] = 2 * np.imag(ant_diags[ant_ind, :, :])
         hess[ant_ind, ant_ind, :, :, 2] = 2 * np.real(ant_diags[ant_ind, :, :])
+
+    if lambda_val != 0.0:  # Implement Lagrange multiplier
+
+        im_part = np.imag(gains) / np.abs(gains) ** 2.0
+        real_part = np.real(gains) / np.abs(gains) ** 2.0
+        arg_sum = np.sum(np.angle(gains), axis=0)
+
+        # Real-real derivative
+        term1_rr = 2 * lambda_val * np.einsum("ik,jk->ijk", im_part, im_part)
+        term2_rr = 4 * lambda_val * arg_sum * im_part * real_part
+
+        # Real-imaginary derivative
+        term1_ri = -2 * lambda_val * np.einsum("ik,jk->ijk", im_part, real_part)
+        term2_ri = 2 * lambda_val * arg_sum * (im_part ** 2.0 - real_part ** 2.0)
+
+        # Imaginary-imaginary derivative
+        term1_ii = 2 * lambda_val * np.einsum("ik,jk->ijk", real_part, real_part)
+        term2_ii = -1 * term2_rr
+
+        hess[:, :, np.arange(Nfreqs), np.arange(Nfreqs), 0] += term1_rr
+        hess[:, :, np.arange(Nfreqs), np.arange(Nfreqs), 1] += term1_ri
+        hess[:, :, np.arange(Nfreqs), np.arange(Nfreqs), 2] += term1_ii
+        for ant_ind in range(Nants):
+            hess[ant_ind, ant_ind, np.arange(Nfreqs), np.arange(Nfreqs), 0] += term2_rr[
+                ant_ind, :
+            ]
+            hess[ant_ind, ant_ind, np.arange(Nfreqs), np.arange(Nfreqs), 1] += term2_ri[
+                ant_ind, :
+            ]
+            hess[ant_ind, ant_ind, np.arange(Nfreqs), np.arange(Nfreqs), 2] += term2_ii[
+                ant_ind, :
+            ]
 
     hess_reformatted = np.zeros((2, Nants * Nfreqs, 2, Nants * Nfreqs), dtype=float)
     hess_reformatted[0, :, 0, :] = np.transpose(

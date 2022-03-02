@@ -83,7 +83,7 @@ def test_grad(
     empirical_val = (negloglikelihood1 - negloglikelihood0) / delta_gains
     calculated_val = grad[test_ind]
     pass_condition = np.isclose(
-        empirical_val, calculated_val, rtol=1e-08, atol=1e-08, equal_nan=False
+        empirical_val, calculated_val, rtol=1e-06, atol=1e-06, equal_nan=False
     )
     if pass_condition:
         pass_text = "passed"
@@ -191,7 +191,7 @@ def test_hess(
     empirical_value = (grad1[readout_ind] - grad0[readout_ind]) / delta_gains
     calc_value = hess[readout_ind, test_ind]
     pass_condition = np.isclose(
-        empirical_value, calc_value, rtol=1e-08, atol=1e-08, equal_nan=False
+        empirical_value, calc_value, rtol=1e-06, atol=1e-06, equal_nan=False
     )
     if pass_condition:
         pass_text = "passed"
