@@ -33,7 +33,7 @@ for uvfits_file in use_files:
                     np.real(uv_time_selected.data_array[ant_ind, 0, :, pol_ind]),
                     '-o', markersize=2, linewidth=1, label=ant_name
                 )
-            plt.legend()
+            plt.legend(prop={'size': 4})
             plt.xlabel("Frequency (MHz)")
             plt.ylabel("Autocorr. Power")
             plt.savefig(
