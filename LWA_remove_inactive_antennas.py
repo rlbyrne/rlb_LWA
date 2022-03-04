@@ -25,7 +25,9 @@ for file_ind, uvfits_file in enumerate(use_files):
     )
     if file_ind == 0:
         uv = uv_new
+	start_time = np.min(uv.time_array)
     else:
+	uv_new.phase_to_time(start_time)
         uv += uv_new
 
 del uv_new
@@ -34,7 +36,7 @@ unused_ants = []
 used_ants = []
 for ant_ind in len(Nants):
     ant_name = uv.antenna_names[uv.ant_1_array[ant_ind]]
-    avg_autocorr = np.mean(uv.data_array[ant_ind, 0, :, :]))
+    avg_autocorr = np.mean(np.abs(uv.data_array[ant_ind, 0, :, :]))
     if avg_autocorr < 1.:
         unused_ants.append(ant_name)
     else:
