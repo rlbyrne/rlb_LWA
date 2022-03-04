@@ -25,9 +25,9 @@ for file_ind, uvfits_file in enumerate(use_files):
     )
     if file_ind == 0:
         uv = uv_new
-	start_time = np.min(uv.time_array)
+        start_time = np.min(uv.time_array)
     else:
-	uv_new.phase_to_time(start_time)
+        uv_new.phase_to_time(start_time)
         uv += uv_new
 
 del uv_new
