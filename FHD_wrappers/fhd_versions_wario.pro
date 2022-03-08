@@ -78,6 +78,7 @@ pro fhd_versions_wario
       model_visibilities = 0
       calibrate_visibilities = 0
       snapshot_healpix_export = 0
+      n_pol = 4
     end
 
   endcase
