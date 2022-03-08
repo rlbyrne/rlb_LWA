@@ -26,7 +26,7 @@ for file_ind, uvfits_file in enumerate(use_files):
 
     unused_ants = []
     used_ants = []
-    for ant_ind in len(Nants):
+    for ant_ind in range(Nants):
         ant_name = uv.antenna_names[uv.ant_1_array[ant_ind]]
         avg_autocorr = np.mean(np.abs(uv.data_array[ant_ind, 0, :, :]))
         if avg_autocorr < 1.:
@@ -34,7 +34,7 @@ for file_ind, uvfits_file in enumerate(use_files):
         else:
             used_ants.append(ant_name)
 
-    print("Used antennas: {used_ants}")
-    print("Unused antennas: {unused_ants}")
+    print(f"Used antennas: {used_ants}")
+    print(f"Unused antennas: {unused_ants}")
 
     uv.write_uvfits(f"{save_path}/{uvfits_file}")
