@@ -3,18 +3,13 @@ import shlex
 import os
 
 obsids_list = [
-    'OVRO-LWA_1h_sim_center_time',
-    'OVRO-LWA_1h_sim_phased',
-    'OVRO-LWA_1h_sim_unphased',
-    'OVRO-LWA_100ms_sim_center_time',
-    'OVRO-LWA_100ms_sim_phased',
-    'OVRO-LWA_100ms_sim_unphased'
+    'polarized_source_MWA_sim_results'
 ]
 versions_list = [
-    'rlb_LWA_phasing_sim_Feb2021'
+    'rlb_polarized_source_sim_Mar2021'
 ]
-uvfits_path = '/safepool/rbyrne/LWA_pyuvsim_simulations'
-outdir = '/safepool/rbyrne/LWA_pyuvsim_simulations'
+uvfits_path = '/safepool/rbyrne/pyuvsim_sims_for_polarimetry_paper'
+outdir = '/safepool/rbyrne/pyuvsim_sims_for_polarimetry_paper'
 run_eppsilon = False
 
 # Define wrappers

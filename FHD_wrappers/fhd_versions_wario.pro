@@ -70,6 +70,15 @@ pro fhd_versions_wario
       stokes_high = 1e10
       stokes_low = -1e10
     end
+    
+    'rlb_polarized_source_sim_Mar2021': begin
+      recalculate_all = 1
+      instrument = 'mwasim'
+      import_pyuvdata_beam_filepath = '/safepool/rbyrne/pyuvsim_sims_for_polarimetry_paper/mwa_full_embedded_element_pattern.fits'
+      model_visibilities = 0
+      calibrate_visibilities = 0
+      snapshot_healpix_export = 0
+    end
 
   endcase
 
