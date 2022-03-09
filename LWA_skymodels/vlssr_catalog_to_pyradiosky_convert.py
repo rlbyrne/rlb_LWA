@@ -143,7 +143,7 @@ vlssr_catalog = pyradiosky.SkyModel(
     dec=Latitude(cat_Dec, units.deg),
     stokes=cat_stokes,
     spectral_type="spectral_index",
-    reference_frequency=Quantity(np.full(nsources, 73.8 * 10e6), "hertz"),
+    reference_frequency=Quantity(np.full(nsources, 73.8 * 1e6), "hertz"),
     spectral_index=cat_spectral_index,
 )
 if not vlssr_catalog.check():
