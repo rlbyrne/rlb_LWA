@@ -70,7 +70,7 @@ pro fhd_versions_wario
       stokes_high = 1e10
       stokes_low = -1e10
     end
-    
+
     'rlb_polarized_source_sim_Mar2021': begin
       recalculate_all = 0
       export_images = 1
@@ -80,6 +80,24 @@ pro fhd_versions_wario
       calibrate_visibilities = 0
       snapshot_healpix_export = 0
       n_pol = 4
+    end
+
+    'rlb_polarized_source_sim_optimal_weighting_Mar2021': begin
+      recalculate_all = 0
+      export_images = 1
+      instrument = 'mwasim'
+      import_pyuvdata_beam_filepath = '/safepool/rbyrne/pyuvsim_sims_for_polarimetry_paper/mwa_full_embedded_element_pattern.fits'
+      model_visibilities = 1
+      model_catalog_file_path = '/safepool/rbyrne/pyuvsim_sims_for_polarimetry_paper/polarized_source.skyh5'
+      calibrate_visibilities = 0
+      snapshot_healpix_export = 0
+      n_pol = 4
+      image_filter_fn = "filter_uv_optimal"
+      instr_high = 15000
+      instr_low = -15000
+      stokes_high = 2e6
+      stokes_low = -2e6
+      mark_zenith = 1
     end
 
   endcase

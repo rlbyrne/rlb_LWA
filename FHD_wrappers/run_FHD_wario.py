@@ -6,7 +6,7 @@ obsids_list = [
     'polarized_source_MWA_sim_results'
 ]
 versions_list = [
-    'rlb_polarized_source_sim_Mar2021'
+    'rlb_polarized_source_sim_optimal_weighting_Mar2021'
 ]
 uvfits_path = '/safepool/rbyrne/pyuvsim_sims_for_polarimetry_paper'
 outdir = '/safepool/rbyrne/pyuvsim_sims_for_polarimetry_paper'
