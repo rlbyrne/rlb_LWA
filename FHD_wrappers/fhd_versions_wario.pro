@@ -90,6 +90,7 @@ pro fhd_versions_wario
       model_visibilities = 1
       model_catalog_file_path = '/safepool/rbyrne/pyuvsim_sims_for_polarimetry_paper/polarized_source.skyh5'
       calibrate_visibilities = 0
+      return_cal_visibilities = 0 ;Is needed because calibrate_visibilities is unset
       snapshot_healpix_export = 0
       n_pol = 4
       image_filter_fn = "filter_uv_optimal"
