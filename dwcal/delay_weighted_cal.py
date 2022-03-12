@@ -222,8 +222,11 @@ def cost_function_dw_cal(
     weight_mat,
     data_visibilities,
     verbose=True,
-    lambda_val=1000.0,
+    lambda_val=None,
 ):
+
+    if lambda_val is None:
+        lambda_val = float(Nbls)
 
     gains = np.reshape(x, (2, Nants, Nfreqs))
     gains = gains[0, :, :] + 1.0j * gains[1, :, :]
@@ -255,8 +258,11 @@ def jac_dw_cal(
     gains_exp_mat_2,
     weight_mat,
     data_visibilities,
-    lambda_val=1000.0,
+    lambda_val=None,
 ):
+
+    if lambda_val is None:
+        lambda_val = float(Nbls)
 
     gains = np.reshape(x, (2, Nants, Nfreqs))
     gains = gains[0, :, :] + 1.0j * gains[1, :, :]
@@ -335,8 +341,11 @@ def hess_dw_cal(
     gains_exp_mat_2,
     weight_mat,
     data_visibilities,
-    lambda_val=1000.0,
+    lambda_val=None,
 ):
+
+    if lambda_val is None:
+        lambda_val = float(Nbls)
 
     gains = np.reshape(x, (2, Nants, Nfreqs))
     gains = gains[0, :, :] + 1.0j * gains[1, :, :]
@@ -519,7 +528,7 @@ def get_weighted_weight_mat(
     uvw_array,
     freq_array,
     wedge_buffer_factor=1.2,
-    downweight_frac=0.1,
+    downweight_frac=0.01,
 ):
 
     c = 3.0 * 10 ** 8  # Speed of light

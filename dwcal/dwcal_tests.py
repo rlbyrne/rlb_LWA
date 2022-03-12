@@ -962,4 +962,4 @@ def test_calibration():
 
 
 if __name__ == "__main__":
-    test_derivative_calculations_randomized()
+    test_derivative_calculations_all_baselines()
