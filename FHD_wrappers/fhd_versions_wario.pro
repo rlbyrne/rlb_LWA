@@ -84,6 +84,7 @@ pro fhd_versions_wario
 
     'rlb_polarized_source_sim_optimal_weighting_Mar2021': begin
       recalculate_all = 0
+      snapshot_recalculate = 1
       export_images = 1
       instrument = 'mwasim'
       import_pyuvdata_beam_filepath = '/safepool/rbyrne/pyuvsim_sims_for_polarimetry_paper/mwa_full_embedded_element_pattern.fits'
