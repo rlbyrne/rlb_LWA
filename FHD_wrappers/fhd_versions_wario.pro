@@ -94,10 +94,10 @@ pro fhd_versions_wario
       snapshot_healpix_export = 0
       n_pol = 4
       image_filter_fn = "filter_uv_optimal"
-      instr_high = 15000
-      instr_low = -15000
-      stokes_high = 2e6
-      stokes_low = -2e6
+      instr_high = 1000
+      instr_low = -1000
+      stokes_high = 5e5
+      stokes_low = -5e5
       mark_zenith = 1
     end
 
