@@ -1,9 +1,8 @@
 from astropy.io import fits
+from astropy.wcs import WCS
 import numpy as np
 import sys
 import matplotlib.pyplot as plt
-import scipy.io
-from scipy.interpolate import griddata
 
 
 class SkyImage:
@@ -93,8 +92,9 @@ class SkyImage:
         if signal_extent is None:
             signal_extent = [np.min(self.signal_arr), np.max(self.signal_arr)]
 
-
-        self.crop_image(new_x_range=x_pixel_extent, new_y_range=y_pixel_extent, inplace=True)
+        self.crop_image(
+            new_x_range=x_pixel_extent, new_y_range=y_pixel_extent, inplace=True
+        )
 
         if diverging_colormap:
             colormap = "seismic"
@@ -138,7 +138,9 @@ def load_fits(data_filename):
 
     contents = fits.open(data_filename)
     use_hdu = 0
-    signal_arr = np.array(contents[use_hdu].data).T
+    signal_arr = np.array(
+        contents[use_hdu].data
+    ).T  # Not sure why this needs to be transposed
     signal_arr = np.flip(signal_arr, axis=0)  # RA decreases along the 0th axis
 
     header = contents[use_hdu].header
@@ -162,50 +164,63 @@ def load_fits(data_filename):
     return SkyImage(signal_arr, ra_axis=ra_axis, dec_axis=dec_axis)
 
 
-if __name__ == "__main__":
+def plot_fits_file(
+    data_filename,
+    edge_crop_ratio=0.33,
+    signal_extent=None,
+    colorbar_label="Surface Brightness (Jy/sr)",
+    save_filename=None,
+    title=None,
+    mark_pointing_ctr=True
+):
 
-    path = "/Users/ruby/Astro/polarized_source_sims_Feb2022/fhd_rlb_polarized_source_sim_optimal_weighting_Mar2021/output_data"
-    filename_stokes_i = "polarized_source_MWA_sim_results_optimal_Dirty_I.fits"
-    filename_stokes_q = "polarized_source_MWA_sim_results_optimal_Dirty_Q.fits"
-    filename_stokes_u = "polarized_source_MWA_sim_results_optimal_Dirty_U.fits"
-    filename_stokes_v = "polarized_source_MWA_sim_results_optimal_Dirty_V.fits"
+    hdu = fits.open(data_filename)[0]
+    wcs = WCS(hdu.header)
 
-    stokes_i = load_fits(f"{path}/{filename_stokes_i}")
-    stokes_q = load_fits(f"{path}/{filename_stokes_q}")
-    stokes_u = load_fits(f"{path}/{filename_stokes_u}")
-    stokes_v = load_fits(f"{path}/{filename_stokes_v}")
+    if signal_extent is None:
+        vmin = None
+        vmax = None
+    else:
+        vmin = np.min(signal_extent)
+        vmax = np.max(signal_extent)
 
-    image_span = 100
-    x_center = 1150
-    y_center = 1151
-    stokes_i.crop_image(
-        new_x_range=[x_center - image_span / 2, x_center + image_span / 2],
-        new_y_range=[y_center - image_span / 2, y_center + image_span / 2],
-        inplace=True
+    plt.subplot(projection=wcs)
+    plt.imshow(
+        hdu.data,
+        vmin=vmin,
+        vmax=vmax,
+        origin="lower",
+        cmap="inferno",
+        interpolation=None,
     )
-    stokes_q.crop_image(
-        new_x_range=[x_center - image_span / 2, x_center + image_span / 2],
-        new_y_range=[y_center - image_span / 2, y_center + image_span / 2],
-        inplace=True
+    plt.grid(color="white", ls="solid", lw=0.2)
+
+    n_x_pixels = np.shape(hdu.data)[0]
+    n_y_pixels = np.shape(hdu.data)[1]
+    plt.xlim(
+        [
+            int(np.round((1 - edge_crop_ratio) * n_x_pixels)),
+            int(np.round(edge_crop_ratio * n_x_pixels)),
+        ]
     )
-    stokes_u.crop_image(
-        new_x_range=[x_center - image_span / 2, x_center + image_span / 2],
-        new_y_range=[y_center - image_span / 2, y_center + image_span / 2],
-        inplace=True
+    plt.ylim(
+        [
+            int(np.round(edge_crop_ratio * n_y_pixels)),
+            int(np.round((1 - edge_crop_ratio) * n_y_pixels)),
+        ]
     )
-    stokes_v.crop_image(
-        new_x_range=[x_center - image_span / 2, x_center + image_span / 2],
-        new_y_range=[y_center - image_span / 2, y_center + image_span / 2],
-        inplace=True
-    )
-    max_val = np.max(stokes_i.signal_arr)
-    max_coords = np.where(stokes_i.signal_arr == max_val)
-    print(f"Stokes I intensity: {stokes_i.signal_arr[max_coords]}")
-    print(f"Stokes Q intensity: {stokes_q.signal_arr[max_coords]}")
-    print(f"Stokes U intensity: {stokes_u.signal_arr[max_coords]}")
-    print(f"Stokes V intensity: {stokes_v.signal_arr[max_coords]}")
-    stokes_q.plot(
-        #x_pixel_extent=[x_center - image_span / 2, x_center + image_span / 2],
-        #y_pixel_extent=[y_center - image_span / 2, y_center + image_span / 2],
-        signal_extent=[-7e5, 7e5],
-    )
+    if mark_pointing_ctr:
+        plt.plot(n_x_pixels/2., n_y_pixels/2., '+', color='white', markersize=5, lw=0.1)
+    plt.xlabel("RA")
+    plt.ylabel("Dec.")
+    if title is not None:
+        plt.title(title)
+    cbar = plt.colorbar()
+    cbar.ax.set_ylabel(colorbar_label, rotation=270, labelpad=6)
+
+    if save_filename is not None:
+        print(f"Saving figure to {save_filename}")
+        plt.savefig(save_filename, format="png", dpi=500)
+        plt.close()
+    else:
+        plt.show()
