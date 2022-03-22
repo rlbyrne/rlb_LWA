@@ -3,13 +3,16 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python>3.6
+  - python>3.8
   - astropy>=4.2.1
   - astropy-healpix
   - astroquery
   - h5py
   - numpy==1.19.2
   - pyuvdata
+  - openmpi
+  - mpi4py
+  - gcc
   - pre-commit
   - pyerfa>=2.0
   - pypandoc
