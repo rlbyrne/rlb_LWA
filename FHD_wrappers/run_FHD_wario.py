@@ -3,13 +3,13 @@ import shlex
 import os
 
 obsids_list = [
-    'polarized_source_MWA_sim_results'
+    '1061316296'
 ]
 versions_list = [
-    'rlb_polarized_source_sim_optimal_weighting_Mar2021'
+    'rlb_model_diffuse_skyh5_Mar2022'
 ]
-uvfits_path = '/safepool/rbyrne/pyuvsim_sims_for_polarimetry_paper'
-outdir = '/safepool/rbyrne/pyuvsim_sims_for_polarimetry_paper'
+uvfits_path = '/safepool/rbyrne/mwa_data'
+outdir = '/safepool/rbyrne/fhd_outputs'
 run_eppsilon = False
 
 # Define wrappers

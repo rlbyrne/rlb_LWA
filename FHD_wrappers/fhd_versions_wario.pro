@@ -102,6 +102,20 @@ pro fhd_versions_wario
       mark_zenith = 1
     end
 
+    'rlb_model_diffuse_skyh5_Mar2022': begin
+      recalculate_all = 0
+      calibrate_visibilities = 0
+      return_cal_visibilities = 0  ; changed this for calibration transfer
+      model_visibilities = 1
+      model_catalog_file_path = filepath('GLEAM_v2_plus_rlb2019.sav',root=rootdir('FHD'),subdir='catalog_data')
+      subtract_sidelobe_catalog = filepath('GLEAM_v2_plus_rlb2019.sav',root=rootdir('FHD'),subdir='catalog_data')
+      diffuse_model = '/safepool/rbyrne/diffuse_map.skyh5'
+      n_pol = 4
+      max_baseline = 50  ; use only baselines shorter than 50 wavelengths
+      dimension = 208 ; limit the UV plane to regions that contain data
+      image_filter_fn = 'filter_uv_optimal'
+    end
+
   endcase
 
   undefine, uvfits_subversion, uvfits_version
