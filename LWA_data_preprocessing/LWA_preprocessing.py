@@ -4,7 +4,9 @@ import numpy as np
 import subprocess
 import shlex
 import matplotlib.pyplot as plt
+from matplotlib import cm
 import SSINS
+from SSINS import plot_lib
 
 
 def convert_raw_ms_to_uvdata():
@@ -129,19 +131,110 @@ def plot_autocorrelations():
 
 
 def ssins_flagging(
-    data,  # Either a uvdata object or a path to a uvfits file
+    uvd,
+    sig_thresh=5,  # Flagging threshold in std. dev.
+    inplace=False,
+    plot=False,
+    plot_save_path=None,
 ):
 
-    if isinstance(data, str):
-        ss = SSINS.SS()
-        ss.read(data, diff=True)
-    else:  # Convert uvdata object to ss object and diff
-        ss = uvd.copy()
-        ss.MLE = None
-        ss.__class__ = SSINS.sky_subtract.SS
-        ss.diff()
+    ss = uvd.copy()
+    ss.MLE = None
+    ss.__class__ = SSINS.sky_subtract.SS
+    ss.diff()
+
+    ss.apply_flags(flag_choice="original")
+
+    # Create Incoherent Noise Spectrum
+    incoherent_noise_spec = SSINS.INS(ss)
+    match_filter = SSINS.MF(
+        incoherent_noise_spec.freq_array,
+        sig_thresh,
+        streak=False,
+        narrow=True,
+        shape_dict={},
+    )
+    match_filter.apply_match_test(incoherent_noise_spec)
+
+    if plot and plot_save_path is None:
+        print("WARNING: plot_save_path not supplied. Skipping plotting.")
+        plot = False
+    if plot:
+        Npols = uvd.Npols
+
+        pol_names = np.empty(Npols, dtype=object)
+        for pol_ind, pol in enumerate(uvd.polarization_array):
+            if pol == -5:
+                pol_name = "XX"
+            elif pol == -6:
+                pol_name = "YY"
+            elif pol == -7:
+                pol_name = "XY"
+            elif pol == -8:
+                pol_name = "YX"
+            else:
+                pol_name = str(pol)
+            pol_names[pol_ind] = pol_name
+
+        xticks = np.arange(0, len(incoherent_noise_spec.freq_array), 50)
+        xticklabels = ["%.1f" % (incoherent_noise_spec.freq_array[tick] * 10 ** (-6)) for tick in xticks]
+
+        fig, ax = plt.subplots(nrows=2 * Npols, figsize=(16, 4.*Npols+1))
+        subfig_ind = 0
+        # Plot averaged amplitudes:
+        for pol_ind, pol_name in enumerate(pol_names):
+            plot_lib.image_plot(
+                fig,
+                ax[subfig_ind],
+                incoherent_noise_spec.metric_array[:, :, pol_ind],
+                title=f"{pol_name} Amplitudes",
+                xticks=xticks,
+                xticklabels=xticklabels,
+            )
+            ax[subfig_ind].set_xlabel("Frequency (MHz)")
+            ax[subfig_ind].set_ylabel("Time (2s)")
+            subfig_ind += 1
+        # Plot z-scores:
+        for pol_ind, pol_name in enumerate(pol_names):
+            plot_lib.image_plot(
+                fig,
+                ax[subfig_ind],
+                incoherent_noise_spec.metric_ms[:, :, pol_ind],
+                title=f"{pol_name} z-scores",
+                xticks=xticks,
+                xticklabels=xticklabels,
+                cmap=cm.coolwarm,
+                midpoint=True,
+            )
+            ax[subfig_ind].set_xlabel("Frequency (MHz)")
+            ax[subfig_ind].set_ylabel("Time (2s)")
+        plt.tight_layout()
+        fig.savefig(plot_save_path, dpi=200)
+
+    uvf = pyuvdata.UVFlag(uvd, waterfall=True, mode="flag")
+    incoherent_noise_spec.flag_uvf(uvf, inplace=True)
+    if inplace:
+        pyuvdata.utils.apply_uvflag(uvd, uvf, inplace=True)
+    else:
+        uvd_flagged = pyuvdata.utils.apply_uvflag(uvd, uvf, inplace=False)
+        return uvd_flagged
 
 
 if __name__ == "__main__":
 
-    convert_raw_ms_to_uvdata("/lustre/rbyrne/LWA_data_20220210", "70MHz")
+    data_path = (
+        "/Users/ruby/Astro/SSINS/SSINS/data/1061313128_99bl_1pol_half_time.uvfits"
+    )
+    output_path = "/Users/ruby/Astro/SSINS_tutorial_outputs/tutorial_test_writeout.uvfits"
+    plot_save_path = "/Users/ruby/Astro/SSINS_tutorial_outputs/tutorial_test.png"
+
+    uvd = pyuvdata.UVData()
+    uvd.read(data_path)
+    ssins_flagging(
+        uvd,
+        sig_thresh=5,  # Flagging threshold in std. dev.
+        inplace=True,
+        plot=True,
+        plot_save_path=plot_save_path
+    )
+    uvd.write_uvfits(output_path)
