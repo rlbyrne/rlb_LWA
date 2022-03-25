@@ -216,7 +216,7 @@ def plot_fits_file(
     if title is not None:
         plt.title(title)
     cbar = plt.colorbar()
-    cbar.ax.set_ylabel(colorbar_label, rotation=270, labelpad=6)
+    cbar.ax.set_ylabel(colorbar_label, rotation=270, labelpad=10)
 
     if save_filename is not None:
         print(f"Saving figure to {save_filename}")

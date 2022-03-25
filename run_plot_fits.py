@@ -78,6 +78,19 @@ def plot_images_Mar17():
         )
 
 
+def plot_skyh5_test_Mar23():
+
+    path = "/Users/ruby/Astro/FHD_outputs/fhd_rlb_model_diffuse_skyh5_Mar2022/output_data"
+    stokes = ["I", "Q", "U", "V"]
+    for stokes_name in stokes:
+        filename = f"1061316296_optimal_Model_{stokes_name}.fits"
+        plot_fits.plot_fits_file(
+            f"{path}/{filename}",
+            save_filename = f"/Users/ruby/Astro/FHD_outputs/fhd_rlb_model_diffuse_skyh5_Mar2022/1061316296_optimal_Model_{stokes_name}.png",
+            title = f"Stokes {stokes_name}"
+        )
+
+
 
 if __name__ == "__main__":
-    plot_images_Mar17()
+    plot_skyh5_test_Mar23()
