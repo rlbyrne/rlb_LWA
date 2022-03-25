@@ -71,6 +71,51 @@ pro fhd_versions_wario
       stokes_low = -1e10
     end
 
+    'rlb_polarized_source_sim_Mar2021': begin
+      recalculate_all = 0
+      export_images = 1
+      instrument = 'mwasim'
+      import_pyuvdata_beam_filepath = '/safepool/rbyrne/pyuvsim_sims_for_polarimetry_paper/mwa_full_embedded_element_pattern.fits'
+      model_visibilities = 0
+      calibrate_visibilities = 0
+      snapshot_healpix_export = 0
+      n_pol = 4
+    end
+
+    'rlb_polarized_source_sim_optimal_weighting_Mar2021': begin
+      recalculate_all = 0
+      snapshot_recalculate = 1
+      export_images = 1
+      instrument = 'mwasim'
+      import_pyuvdata_beam_filepath = '/safepool/rbyrne/pyuvsim_sims_for_polarimetry_paper/mwa_full_embedded_element_pattern.fits'
+      model_visibilities = 1
+      model_catalog_file_path = '/safepool/rbyrne/pyuvsim_sims_for_polarimetry_paper/polarized_source.skyh5'
+      calibrate_visibilities = 0
+      return_cal_visibilities = 0 ;Is needed because calibrate_visibilities is unset
+      snapshot_healpix_export = 0
+      n_pol = 4
+      image_filter_fn = "filter_uv_optimal"
+      instr_high = 1000
+      instr_low = -1000
+      stokes_high = 5e5
+      stokes_low = -5e5
+      mark_zenith = 1
+    end
+
+    'rlb_model_diffuse_skyh5_Mar2022': begin
+      recalculate_all = 0
+      calibrate_visibilities = 0
+      return_cal_visibilities = 0  ; changed this for calibration transfer
+      model_visibilities = 1
+      model_catalog_file_path = filepath('GLEAM_v2_plus_rlb2019.sav',root=rootdir('FHD'),subdir='catalog_data')
+      subtract_sidelobe_catalog = filepath('GLEAM_v2_plus_rlb2019.sav',root=rootdir('FHD'),subdir='catalog_data')
+      diffuse_model = '/safepool/rbyrne/diffuse_map.skyh5'
+      n_pol = 4
+      max_baseline = 50  ; use only baselines shorter than 50 wavelengths
+      dimension = 208 ; limit the UV plane to regions that contain data
+      image_filter_fn = 'filter_uv_optimal'
+    end
+
   endcase
 
   undefine, uvfits_subversion, uvfits_version

@@ -3,7 +3,7 @@ pro fhd_versions_mac
   !except=0
   heap_gc
 
-  version = 'rlb_test_LWA_data_rephased'
+  version = 'rlb_test_skyh5_sky_model'
   output_directory = '/Users/ruby/Astro/FHD_outputs'
   
   case version of
@@ -98,6 +98,28 @@ pro fhd_versions_mac
       ;beam_nfreq_avg = 384
       ;psf_resolution = 8
       snapshot_healpix_export = 0
+    end
+    
+    'rlb_test_skyh5_sky_model': begin
+      recalculate_all = 1
+      export_images = 1
+      model_visibilities = 1
+      model_catalog_file_path = '/Users/ruby/Astro/polarized_source_sims_Feb2022/polarized_source.skyh5'
+      ;obs_id = '1061316296_small'
+      obs_id = 'polarized_source_MWA_sim_results'
+      ;vis_file_list = '/Users/ruby/Astro/'+obs_id+'.uvfits'
+      vis_file_list = '/Users/ruby/Astro/polarized_source_sims_Feb2022/'+obs_id+'.uvfits'
+      calibrate_visibilities = 0
+      model_visibilities = 1
+      ;model_catalog_file_path = filepath('GLEAM_v2_plus_rlb2019.sav',root=rootdir('FHD'),subdir='catalog_data')
+      snapshot_healpix_export = 0
+      n_pol = 4
+      image_filter_fn = "filter_uv_optimal"
+      instr_high = 15000
+      instr_low = -15000
+      stokes_high = 2e6
+      stokes_low = -2e6
+      mark_zenith = 1
     end
     
   endcase
