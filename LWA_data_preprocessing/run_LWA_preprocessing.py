@@ -10,7 +10,7 @@ def ssins_flagging_Mar25():
     plot_save_path = "/lustre/rbyrne/LWA_data_20220210/ssins_plots"
 
     filenames = os.listdir(data_path)
-    filenames = [file for file in filenames if file.enswith(".uvfits")]
+    filenames = [file for file in filenames if file.endswith(".uvfits")]
 
     for file in filenames:
         file_split = file.split(".")[:-1]
