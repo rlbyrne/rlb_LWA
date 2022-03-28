@@ -5,7 +5,7 @@ import os
 
 def ssins_flagging_Mar25():
 
-    data_path = "/lustre/rbyrne/LWA_data_20220210/uvfits_antenna_selected"
+    data_path = "/lustre/rbyrne/LWA_data_20220210"
     output_path = "/lustre/rbyrne/LWA_data_20220210/uvfits_ssins_flagged"
     plot_save_path = "/lustre/rbyrne/LWA_data_20220210/ssins_plots"
 
@@ -13,7 +13,7 @@ def ssins_flagging_Mar25():
     filenames = [file for file in filenames if file.endswith(".uvfits")]
 
     for file in filenames:
-        file_split = file.split(".")[:-1]
+        file_split = ".".join(file.split(".")[:-1])
         plot_name = f"{file_split}_ssins_plot.png"
         uvd = pyuvdata.UVData()
         uvd.read(f"{data_path}/{file}")
