@@ -24,7 +24,7 @@ def ssins_flagging_Mar25():
             plot=True,
             plot_save_path=f"{plot_save_path}/{plot_name}"
         )
-        uvd.write_uvfits(f"{output_path}/{file}"")
+        uvd.write_uvfits(f"{output_path}/{file}")
 
 if __name__=="__main__":
     ssins_flagging_Mar25()
