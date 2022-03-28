@@ -13,7 +13,8 @@ def ssins_flagging_Mar25():
     filenames = [file for file in filenames if file.enswith(".uvfits")]
 
     for file in filenames:
-        plot_name = f"{file.split(".")[:-1]}_ssins_plot.png"
+        file_split = file.split(".")[:-1]
+        plot_name = f"{file_split}_ssins_plot.png"
         uvd = pyuvdata.UVData()
         uvd.read(f"{data_path}/{file}")
         LWA_preprocessing.ssins_flagging(
