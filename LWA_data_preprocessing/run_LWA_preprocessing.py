@@ -27,17 +27,19 @@ def ssins_flagging_Mar25():
             plot_save_path=autos_plot_save_path,
             plot_file_prefix=autos_all_ants_plot_prefix,
             time_average=True,
-            plot_legend=False
+            plot_legend=False,
         )
 
-        LWA_preprocessing.remove_inactive_antennas(uvd, autocorr_thresh=1.0, inplace=True)
+        LWA_preprocessing.remove_inactive_antennas(
+            uvd, autocorr_thresh=10.0, inplace=True
+        )
 
         LWA_preprocessing.plot_autocorrelations(
             uvd,
             plot_save_path=autos_plot_save_path,
             plot_file_prefix=plot_prefix,
             time_average=True,
-            plot_legend=False
+            plot_legend=False,
         )
 
         LWA_preprocessing.ssins_flagging(
