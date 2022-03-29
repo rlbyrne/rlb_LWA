@@ -146,10 +146,13 @@ def remove_inactive_antennas(uvd, autocorr_thresh=10.0, inplace=False):
         ant_name = uvd_autos.antenna_names[uvd_autos.ant_1_array[ant_ind]]
         bl_inds = np.where(uvd_autos.ant_1_array == ant_ind)[0]
         avg_autocorr = np.mean(np.abs(uvd_autos.data_array))
+        print(f"Avg. autocorr: {avg_autocorr}")
         if avg_autocorr > autocorr_thresh:
             used_antennas.append(ant_name)
 
-    print(f"{uvd_autos.Nants_data-len(used_antennas)}/{uvd_autos.Nants_data} removed.")
+    print(
+        f"{uvd_autos.Nants_data-len(used_antennas)}/{uvd_autos.Nants_data} antennas removed due to low autocorrelation power."
+    )
 
     if inplace:
         uvd.select(antenna_names=used_antennas, inplace=True)
