@@ -52,7 +52,7 @@ def convert_raw_ms_to_uvdata():
 def get_pol_names(polarization_array):
 
     pol_names = np.empty_like(polarization_array, dtype=object)
-    for pol_ind, pol in polarization_array:
+    for pol_ind, pol in enumerate(polarization_array):
         # Instrumental polarizations:
         if pol == -5:
             pol_names[pol_ind] = "XX"
