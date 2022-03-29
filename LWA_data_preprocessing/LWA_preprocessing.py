@@ -49,85 +49,153 @@ def convert_raw_ms_to_uvdata():
             uv.write_uvfits(outfile_name, force_phase=True, spoof_nonessential=True)
 
 
-def remove_zeroed_antennas():
-    # Script to remove "data" from antennas that are not plugged in, i.e. visibilities are zeroed
+def get_pol_names(polarization_array):
 
-    data_path = "/lustre/rbyrne/LWA_data_20220210"
-    save_path = f"{data_path}/uvfits_antenna_selected"
+    pol_names = np.array_like(polarization_array, dtype=object)
+    for pol_ind, pol in polarization_array:
+        # Instrumental polarizations:
+        if pol == -5:
+            pol_names[pol_ind] = "XX"
+        elif pol == -6:
+            pol_names[pol_ind] = "YY"
+        elif pol == -7:
+            pol_names[pol_ind] = "XY"
+        elif pol == -8:
+            pol_names[pol_ind] = "YX"
+        # Pseudo-Stokes polarizations:
+        elif pol == 1:
+            pol_names[pol_ind] = "pI"
+        elif pol == 2:
+            pol_names[pol_ind] = "pQ"
+        elif pol == 3:
+            pol_names[pol_ind] = "pU"
+        elif pol == 4:
+            pol_names[pol_ind] = "pV"
+        # Circular polarizations:
+        elif pol == -1:
+            pol_names[pol_ind] = "RR"
+        elif pol == -2:
+            pol_names[pol_ind] = "LL"
+        elif pol == -3:
+            pol_names[pol_ind] = "RL"
+        elif pol == -4:
+            pol_names[pol_ind] = "LR"
+        else:
+            print(f"WARNING: Unknown polarization mode {pol}.")
+            pol_names[pol_ind] = str(pol)
 
-    filenames = os.listdir(data_path)
-    use_files = []
-    use_files = [
-        filename
-        for filename in filenames
-        if len(filename.split(".")) > 1 and filename.split(".")[1] == "uvfits"
-    ]
+    return pol_names
 
-    Nants = 352
-    autocorr_bls = [(ant_ind, ant_ind) for ant_ind in range(Nants)]
-    for file_ind, uvfits_file in enumerate(use_files):
-        uv = pyuvdata.UVData()
-        uv.read_uvfits(f"{data_path}/{uvfits_file}", bls=autocorr_bls)
 
-        unused_ants = []
-        used_ants = []
-        for ant_ind in range(Nants):
-            ant_name = uv.antenna_names[uv.ant_1_array[ant_ind]]
-            avg_autocorr = np.mean(np.abs(uv.data_array[ant_ind, 0, :, :]))
-            if avg_autocorr < 1.0:
-                unused_ants.append(ant_name)
+def plot_autocorrelations(
+    uvd, plot_save_path="", plot_file_prefix="", time_average=True, plot_legend=False
+):
+
+    if time_average:
+        n_time_plots = 1
+    else:
+        n_time_plots = uvd.Ntimes
+        times = np.unique(uv.time_array)
+
+    for time_plot_ind in range(n_time_plots):
+
+        if time_average:
+            uvd_autos = uvd.select(ant_str="auto", inplace=False)
+        else:
+            uvd_autos = uvd.select(
+                ant_str="auto", times=times[time_plot_ind], inplace=False
+            )
+
+        pol_names = get_pol_names(uvd_autos.polarization_array)
+        for pol_ind in range(uvd_autos.Npols):
+
+            if time_average:
+                plot_name = f"{plot_file_prefix}_autocorr_{pol_names[pol_ind]}.png"
             else:
-                used_ants.append(ant_name)
+                plot_name = f"{plot_file_prefix}_autocorr_{pol_names[pol_ind]}_time{time_plot_ind:05d}.png"
 
-        print(f"Used antennas: {used_ants}")
-        print(f"Unused antennas: {unused_ants}")
+            for ant_ind in range(uvd_autos.Nants_data):
+                ant_name = uvd_autos.antenna_names[uvd_autos.ant_1_array[ant_ind]]
+                bl_inds = np.where(uvd.ant_1_array == ant_ind)
+                plt.plot(
+                    uvd_autos.freq_array[0, :],
+                    np.mean(
+                        np.real(uvd_autos.data_array[bl_inds, 0, :, pol_ind]), axis=0
+                    ),
+                    "-o",
+                    markersize=2,
+                    linewidth=1,
+                    label=ant_name,
+                )
 
-        uv.write_uvfits(f"{save_path}/{uvfits_file}")
+            if plot_legend:
+                plt.legend(prop={"size": 4})
+            plt.xlabel("Frequency (MHz)")
+            plt.ylabel("Autocorr. Power")
+            plt.savefig(f"{plot_save_path}/{plot_name}")
+            plt.close()
 
 
-def plot_autocorrelations():
+def remove_inactive_antennas(uvd, autocorr_thresh=1.0, inplace=False):
+    # Remove unused antennas based on low autocorrelation values
 
-    data_path = "/lustre/rbyrne/LWA_data_20220210"
-    save_path = f"{data_path}/autocorrelation_plots"
+    used_antennas = []
+    for ant_ind in range(uvd.Nants_data):
+        bl_inds = np.intersect1d(
+            np.where(uvd.ant_1_array == ant_ind), np.where(uvd.ant_2_array == ant_ind)
+        )
+        avg_autocorr = np.mean(np.abs(uvd.data_array[bl_inds, :, :, :]))
+        if avg_autocorr > autocorr_thresh:
+            used_antennas.append(uvd.antenna_names[ant_ind])
 
-    filenames = os.listdir(data_path)
-    use_files = []
-    use_files = [
-        filename
-        for filename in filenames
-        if len(filename.split(".")) > 1 and filename.split(".")[1] == "uvfits"
+    if inplace:
+        uvd.select(antenna_names=used_antennas, inplace=True)
+    else:
+        uvd_new = uvd.select(antenna_names=used_antennas, inplace=False)
+        return uvd_new
+
+
+def plot_ssins(incoherent_noise_spec, plot_save_filename, Npols, pol_names):
+
+    xticks = np.arange(0, len(incoherent_noise_spec.freq_array), 50)
+    xticklabels = [
+        "%.1f" % (incoherent_noise_spec.freq_array[tick] * 10 ** (-6))
+        for tick in xticks
     ]
 
-    Nants = 352
-    autocorr_bls = [(ant_ind, ant_ind) for ant_ind in range(Nants)]
-    for uvfits_file in use_files:
-        uv = pyuvdata.UVData()
-        uv.read_uvfits(
-            f"{data_path}/{uvfits_file}", bls=autocorr_bls, polarizations=[-5, -6]
+    fig, ax = plt.subplots(nrows=2 * Npols, figsize=(16, 4.0 * Npols + 1))
+    subfig_ind = 0
+
+    # Plot averaged amplitudes:
+    for pol_ind, pol_name in enumerate(pol_names):
+        plot_lib.image_plot(
+            fig,
+            ax[subfig_ind],
+            incoherent_noise_spec.metric_array[:, :, pol_ind],
+            title=f"{pol_name} Amplitudes",
+            xticks=xticks,
+            xticklabels=xticklabels,
         )
-        times = list(set(uv.time_array))
-        for time_ind, time_val in enumerate(times):
-            uv_time_selected = uv.select(times=time_val, inplace=False)
-            for pol_ind, pol_name in enumerate(["xx", "yy"]):
-                for ant_ind in range(Nants):
-                    ant_name = uv_time_selected.antenna_names[
-                        uv_time_selected.ant_1_array[ant_ind]
-                    ]
-                    plt.plot(
-                        uv_time_selected.freq_array[0, :],
-                        np.real(uv_time_selected.data_array[ant_ind, 0, :, pol_ind]),
-                        "-o",
-                        markersize=2,
-                        linewidth=1,
-                        label=ant_name,
-                    )
-                # plt.legend(prop={"size": 4})
-                plt.xlabel("Frequency (MHz)")
-                plt.ylabel("Autocorr. Power")
-                plt.savefig(
-                    f"{save_path}/LWA_data_20220210_autocorr_{pol_name}_{time_ind:05d}"
-                )
-                plt.close()
+        ax[subfig_ind].set_xlabel("Frequency (MHz)")
+        ax[subfig_ind].set_ylabel("Time (2s)")
+        subfig_ind += 1
+
+    # Plot z-scores:
+    for pol_ind, pol_name in enumerate(pol_names):
+        plot_lib.image_plot(
+            fig,
+            ax[subfig_ind],
+            incoherent_noise_spec.metric_ms[:, :, pol_ind],
+            title=f"{pol_name} z-scores",
+            xticks=xticks,
+            xticklabels=xticklabels,
+            cmap=cm.coolwarm,
+            midpoint=True,
+        )
+        ax[subfig_ind].set_xlabel("Frequency (MHz)")
+        ax[subfig_ind].set_ylabel("Time (2s)")
+    plt.tight_layout()
+    fig.savefig(plot_save_filename, dpi=200)
 
 
 def ssins_flagging(
@@ -135,7 +203,7 @@ def ssins_flagging(
     sig_thresh=5,  # Flagging threshold in std. dev.
     inplace=False,
     plot=False,
-    plot_save_path=None,
+    plot_save_filename=None,
 ):
 
     ss = uvd.copy()
@@ -145,7 +213,7 @@ def ssins_flagging(
 
     ss.apply_flags(flag_choice="original")
 
-    # Create Incoherent Noise Spectrum
+    # Create Incoherent Noise Spectrum and flag with a match filter
     incoherent_noise_spec = SSINS.INS(ss)
     match_filter = SSINS.MF(
         incoherent_noise_spec.freq_array,
@@ -156,61 +224,15 @@ def ssins_flagging(
     )
     match_filter.apply_match_test(incoherent_noise_spec)
 
-    if plot and plot_save_path is None:
-        print("WARNING: plot_save_path not supplied. Skipping plotting.")
+    # Plot
+    if plot and plot_save_filename is None:
+        print("WARNING: plot_save_filename not supplied. Skipping plotting.")
         plot = False
     if plot:
-        Npols = uvd.Npols
+        pol_names = get_pol_names(uvd.polarization_array)
+        plot_ssins(incoherent_noise_spec, plot_save_filename, uvd.Npols, pol_names)
 
-        pol_names = np.empty(Npols, dtype=object)
-        for pol_ind, pol in enumerate(uvd.polarization_array):
-            if pol == -5:
-                pol_name = "XX"
-            elif pol == -6:
-                pol_name = "YY"
-            elif pol == -7:
-                pol_name = "XY"
-            elif pol == -8:
-                pol_name = "YX"
-            else:
-                pol_name = str(pol)
-            pol_names[pol_ind] = pol_name
-
-        xticks = np.arange(0, len(incoherent_noise_spec.freq_array), 50)
-        xticklabels = ["%.1f" % (incoherent_noise_spec.freq_array[tick] * 10 ** (-6)) for tick in xticks]
-
-        fig, ax = plt.subplots(nrows=2 * Npols, figsize=(16, 4.*Npols+1))
-        subfig_ind = 0
-        # Plot averaged amplitudes:
-        for pol_ind, pol_name in enumerate(pol_names):
-            plot_lib.image_plot(
-                fig,
-                ax[subfig_ind],
-                incoherent_noise_spec.metric_array[:, :, pol_ind],
-                title=f"{pol_name} Amplitudes",
-                xticks=xticks,
-                xticklabels=xticklabels,
-            )
-            ax[subfig_ind].set_xlabel("Frequency (MHz)")
-            ax[subfig_ind].set_ylabel("Time (2s)")
-            subfig_ind += 1
-        # Plot z-scores:
-        for pol_ind, pol_name in enumerate(pol_names):
-            plot_lib.image_plot(
-                fig,
-                ax[subfig_ind],
-                incoherent_noise_spec.metric_ms[:, :, pol_ind],
-                title=f"{pol_name} z-scores",
-                xticks=xticks,
-                xticklabels=xticklabels,
-                cmap=cm.coolwarm,
-                midpoint=True,
-            )
-            ax[subfig_ind].set_xlabel("Frequency (MHz)")
-            ax[subfig_ind].set_ylabel("Time (2s)")
-        plt.tight_layout()
-        fig.savefig(plot_save_path, dpi=200)
-
+    # Apply flags and save
     uvf = pyuvdata.UVFlag(uvd, waterfall=True, mode="flag")
     incoherent_noise_spec.flag_uvf(uvf, inplace=True)
     if inplace:
@@ -218,23 +240,3 @@ def ssins_flagging(
     else:
         uvd_flagged = pyuvdata.utils.apply_uvflag(uvd, uvf, inplace=False)
         return uvd_flagged
-
-
-if __name__ == "__main__":
-
-    data_path = (
-        "/Users/ruby/Astro/SSINS/SSINS/data/1061313128_99bl_1pol_half_time.uvfits"
-    )
-    output_path = "/Users/ruby/Astro/SSINS_tutorial_outputs/tutorial_test_writeout.uvfits"
-    plot_save_path = "/Users/ruby/Astro/SSINS_tutorial_outputs/tutorial_test.png"
-
-    uvd = pyuvdata.UVData()
-    uvd.read(data_path)
-    ssins_flagging(
-        uvd,
-        sig_thresh=5,  # Flagging threshold in std. dev.
-        inplace=True,
-        plot=True,
-        plot_save_path=plot_save_path
-    )
-    uvd.write_uvfits(output_path)
