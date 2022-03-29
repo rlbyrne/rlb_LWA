@@ -120,7 +120,7 @@ def plot_autocorrelations(
                 plt.plot(
                     uvd_autos.freq_array[0, :],
                     np.mean(
-                        np.real(uvd_autos.data_array[bl_inds, 0, :, pol_ind]), axis=0
+                        np.abs(uvd_autos.data_array[bl_inds, 0, :, pol_ind]), axis=0
                     ),
                     "-o",
                     markersize=2,
@@ -139,14 +139,15 @@ def plot_autocorrelations(
 def remove_inactive_antennas(uvd, autocorr_thresh=5.0, inplace=False):
     # Remove unused antennas based on low autocorrelation values
 
+    uvd_autos = uvd.select(ant_str="auto", inplace=False)
+
     used_antennas = []
-    for ant_ind in range(uvd.Nants_data):
-        bl_inds = np.intersect1d(
-            np.where(uvd.ant_1_array == ant_ind), np.where(uvd.ant_2_array == ant_ind)
-        )
-        avg_autocorr = np.mean(np.abs(uvd.data_array[bl_inds, :, :, :]))
+    for ant_ind in range(uvd_autos.Nants_data):
+        ant_name = uvd_autos.antenna_names[uvd_autos.ant_1_array[ant_ind]]
+        bl_inds = np.where(uvd_autos.ant_1_array == ant_ind)[0]
+        avg_autocorr = np.mean(np.abs(uvd_autos.data_array))
         if avg_autocorr > autocorr_thresh:
-            used_antennas.append(uvd.antenna_names[ant_ind])
+            used_antennas.append(ant_name)
 
     if inplace:
         uvd.select(antenna_names=used_antennas, inplace=True)
