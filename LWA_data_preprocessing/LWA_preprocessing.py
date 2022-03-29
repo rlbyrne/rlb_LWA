@@ -116,7 +116,7 @@ def plot_autocorrelations(
 
             for ant_ind in range(uvd_autos.Nants_data):
                 ant_name = uvd_autos.antenna_names[uvd_autos.ant_1_array[ant_ind]]
-                bl_inds = np.where(uvd.ant_1_array == ant_ind)
+                bl_inds = np.where(uvd_autos.ant_1_array == ant_ind)
                 plt.plot(
                     uvd_autos.freq_array[0, :],
                     np.mean(
