@@ -16,9 +16,8 @@ def ssins_flagging_Mar25():
     for file in filenames:
 
         file_split = ".".join(file.split(".")[:-1])
-        ssins_plot_name = f"{file_split}_ssins_plot.png"
         autos_all_ants_plot_prefix = f"{file_split}_all_ants"
-        autos_plot_prefix = f"{file_split}"
+        plot_prefix = f"{file_split}"
 
         uvd = pyuvdata.UVData()
         uvd.read(f"{data_path}/{file}")
@@ -36,17 +35,20 @@ def ssins_flagging_Mar25():
         LWA_preprocessing.plot_autocorrelations(
             uvd,
             plot_save_path=autos_plot_save_path,
-            plot_file_prefix=autos_plot_prefix,
+            plot_file_prefix=plot_prefix,
             time_average=True,
             plot_legend=False
         )
 
         LWA_preprocessing.ssins_flagging(
             uvd,
-            sig_thresh=5,  # Flagging threshold in std. dev.
+            sig_thresh=1,  # Flagging threshold in std. dev.
             inplace=True,
-            plot=True,
-            plot_save_filename=f"{ssins_plot_save_path}/{ssins_plot_name}",
+            plot_no_flags=True,
+            plot_orig_flags=True,
+            plot_ssins_flags=True,
+            plot_save_path=ssins_plot_save_path,
+            plot_file_prefix=plot_prefix,
         )
         uvd.write_uvfits(f"{output_path}/{file}")
 

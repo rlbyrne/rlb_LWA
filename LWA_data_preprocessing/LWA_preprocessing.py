@@ -136,7 +136,7 @@ def plot_autocorrelations(
             plt.close()
 
 
-def remove_inactive_antennas(uvd, autocorr_thresh=1.0, inplace=False):
+def remove_inactive_antennas(uvd, autocorr_thresh=5.0, inplace=False):
     # Remove unused antennas based on low autocorrelation values
 
     used_antennas = []
@@ -194,16 +194,21 @@ def plot_ssins(incoherent_noise_spec, plot_save_filename, Npols, pol_names):
         )
         ax[subfig_ind].set_xlabel("Frequency (MHz)")
         ax[subfig_ind].set_ylabel("Time (2s)")
+        subfig_ind += 1
     plt.tight_layout()
     fig.savefig(plot_save_filename, dpi=200)
+    plt.close()
 
 
 def ssins_flagging(
     uvd,
-    sig_thresh=5,  # Flagging threshold in std. dev.
+    sig_thresh=1,  # Flagging threshold in std. dev.
     inplace=False,
-    plot=False,
-    plot_save_filename=None,
+    plot_no_flags=False,
+    plot_orig_flags=False,
+    plot_ssins_flags=False,
+    plot_save_path="",
+    plot_file_prefix="",
 ):
 
     ss = uvd.copy()
@@ -211,10 +216,22 @@ def ssins_flagging(
     ss.__class__ = SSINS.sky_subtract.SS
     ss.diff()
 
-    ss.apply_flags(flag_choice="original")
+    pol_names = get_pol_names(uvd.polarization_array)
 
-    # Create Incoherent Noise Spectrum and flag with a match filter
-    incoherent_noise_spec = SSINS.INS(ss)
+    if plot_no_flags:
+        ss.apply_flags(flag_choice=None)  # Remove flags
+        incoherent_noise_spec = SSINS.INS(ss)
+        plot_save_filename = f"{plot_save_path}/{plot_file_prefix}_ins_no_flags.png"
+        plot_ssins(incoherent_noise_spec, plot_save_filename, uvd.Npols, pol_names)
+
+    ss.apply_flags(flag_choice="original")  # Restore original flags
+    incoherent_noise_spec = SSINS.INS(ss)  # Create Incoherent Noise Spectrum
+
+    if plot_orig_flags:
+        plot_save_filename = f"{plot_save_path}/{plot_file_prefix}_ins_orig_flags.png"
+        plot_ssins(incoherent_noise_spec, plot_save_filename, uvd.Npols, pol_names)
+
+    # Flag with a match filter
     match_filter = SSINS.MF(
         incoherent_noise_spec.freq_array,
         sig_thresh,
@@ -224,12 +241,9 @@ def ssins_flagging(
     )
     match_filter.apply_match_test(incoherent_noise_spec)
 
-    # Plot
-    if plot and plot_save_filename is None:
-        print("WARNING: plot_save_filename not supplied. Skipping plotting.")
-        plot = False
-    if plot:
-        pol_names = get_pol_names(uvd.polarization_array)
+    # Plot with SSINS flags
+    if plot_ssins_flags:
+        plot_save_filename = f"{plot_save_path}/{plot_file_prefix}_ins_ssins_flags.png"
         plot_ssins(incoherent_noise_spec, plot_save_filename, uvd.Npols, pol_names)
 
     # Apply flags and save
