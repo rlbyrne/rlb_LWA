@@ -9,44 +9,38 @@ import SSINS
 from SSINS import plot_lib
 
 
-def convert_raw_ms_to_uvdata():
+def convert_raw_ms_to_uvdata(ms_filenames):  # String or list of strings
 
-    data_path = "/lustre/rbyrne/LWA_data_20220210"
-    freq = "70MHz"
-    start_time_stamp = 191447
-    end_time_stamp = 194824
-    nfiles_per_uvfits = 12
+    if type(ms_filenames) == str:
+        ms_filenames = [ms_filenames]
 
-    filenames = os.listdir(data_path)
-    use_files = []
-    for file in filenames:
-        file_split = file.split("_")
-        if file_split[2] == "{}.ms.tar".format(freq):
-            if (
-                int(file_split[1]) >= start_time_stamp
-                and int(file_split[1]) <= end_time_stamp
-            ):
-                use_files.append(file)
-
-    for file_ind, file in enumerate(use_files):
-        subprocess.call(shlex.split(f"tar -xvf {data_path}/{file} -C {data_path}"))
-        file_split = file.split(".")
-        uv_new = pyuvdata.UVData()
-        uv_new.read_ms(f"{data_path}/{file_split[0]}.ms")
-        subprocess.call(shlex.split(f"rm -r {data_path}/{file_split[0]}.ms"))
-        uv_new.unphase_to_drift()
-        if file_ind % nfiles_per_uvfits == 0:
-            uv = uv_new
-            time_stamp = (file.split("_")[1]).split(".")[0]
-            outfile_name = f"/{data_path}/20220210_{freq}_{time_stamp}_combined.uvfits"
+    uvd_new = pyuvdata.UVData()
+    for file_ind, ms_file in enumerate(ms_filenames):
+        uvd_new = pyuvdata.UVData()
+        if ms_file.endswith(".tar"):
+            ms_file_split = ms_file.split("/")
+            data_path = "/".join(ms_file_split[:-1])
+            filename = ms_file_split[-1]
+            subprocess.call(
+                shlex.split(f"tar -xvf {data_path}/{filename} -C {data_path}")
+            )
+            untar_filename = ".".join(filename.split(".")[:-1])
+            uvd_new.read_ms(f"{data_path}/{untar_filename}")
+            subprocess.call(shlex.split(f"rm -r {data_path}/{untar_filename}"))
         else:
-            uv = uv + uv_new
-        if (file_ind + 1) % nfiles_per_uvfits == 0:
-            uv.instrument = "OVRO-LWA"
-            uv.telescope_name = "OVRO-LWA"
-            uv.set_telescope_params()
-            print("Saving file to {}".format(outfile_name))
-            uv.write_uvfits(outfile_name, force_phase=True, spoof_nonessential=True)
+            uvd_new.read_ms(ms_file)
+        uvd_new.unphase_to_drift()
+        if file_ind == 0:
+            uvd = uvd_new
+        else:
+            uvd = uvd + uvd_new
+
+    uvd.instrument = "OVRO-LWA"
+    uvd.telescope_name = "OVRO-LWA"
+    uvd.set_telescope_params()
+    uvd.scan_number_array = None  # Fixes a pyuvdata bug
+    uvd.check()
+    return uvd
 
 
 def get_pol_names(polarization_array):
@@ -107,6 +101,7 @@ def plot_autocorrelations(
             )
 
         pol_names = get_pol_names(uvd_autos.polarization_array)
+        ant_inds = np.intersect1d(uvd_autos.ant_1_array, uvd_autos.ant_2_array)
         for pol_ind in range(uvd_autos.Npols):
 
             if time_average:
@@ -114,8 +109,8 @@ def plot_autocorrelations(
             else:
                 plot_name = f"{plot_file_prefix}_autocorr_{pol_names[pol_ind]}_time{time_plot_ind:05d}.png"
 
-            for ant_ind in range(uvd_autos.Nants_data):
-                ant_name = uvd_autos.antenna_names[uvd_autos.ant_1_array[ant_ind]]
+            for ant_ind in ant_inds:
+                ant_name = uvd_autos.antenna_names[ant_ind]
                 bl_inds = np.where(uvd_autos.ant_1_array == ant_ind)[0]
                 plt.plot(
                     uvd_autos.freq_array[0, :],
@@ -123,8 +118,8 @@ def plot_autocorrelations(
                         np.abs(uvd_autos.data_array[bl_inds, 0, :, pol_ind]), axis=0
                     ),
                     "-o",
-                    markersize=2,
-                    linewidth=1,
+                    markersize=0.5,
+                    linewidth=0.3,
                     label=ant_name,
                 )
 
@@ -132,22 +127,40 @@ def plot_autocorrelations(
                 plt.legend(prop={"size": 4})
             plt.xlabel("Frequency (MHz)")
             plt.ylabel("Autocorr. Power")
-            plt.savefig(f"{plot_save_path}/{plot_name}")
+            plt.title(f"{pol_names[pol_ind]} Autocorrelations")
+            plt.savefig(f"{plot_save_path}/{plot_name}", dpi=200)
             plt.close()
 
 
-def remove_inactive_antennas(uvd, autocorr_thresh=10.0, inplace=False):
+def remove_inactive_antennas(uvd, autocorr_thresh=5.0, inplace=False, flag_only=False):
     # Remove unused antennas based on low autocorrelation values
+    # If flag_only=False, antennas with low autocorrelations across all polarizations are removed
+    # Antenna polarizations with low autocorrelations are flagged
 
     uvd_autos = uvd.select(ant_str="auto", inplace=False)
+    flag_arr = uvd.flag_array
 
+    ant_inds = np.intersect1d(uvd_autos.ant_1_array, uvd_autos.ant_2_array)
     used_antennas = []
-    for ant_ind in range(uvd_autos.Nants_data):
-        ant_name = uvd_autos.antenna_names[uvd_autos.ant_1_array[ant_ind]]
+    for ant_ind in ant_inds:
+        ant_name = uvd_autos.antenna_names[ant_ind]
         bl_inds = np.where(uvd_autos.ant_1_array == ant_ind)[0]
-        avg_autocorr = np.mean(np.abs(uvd_autos.data_array[bl_inds, :, :, :]))
-        print(f"Avg. autocorr: {avg_autocorr}")
-        if avg_autocorr > autocorr_thresh:
+        avg_autocorr = np.mean(
+            np.abs(uvd_autos.data_array[bl_inds, :, :, :]), axis=(0, 1, 2)
+        )
+        for pol_ind in range(uvd_autos.Npols):
+            if avg_autocorr[pol_ind] < autocorr_thresh:
+                ant_ind_full_array = np.where(uvd.antenna_names == ant_name)[0]
+                flag_bls = np.unique(
+                    np.concatenate(
+                        (
+                            np.where(uvd.ant_1_array == ant_ind_full_array),
+                            np.where(uvd.ant_2_array == ant_ind_full_array),
+                        )
+                    )
+                )
+                flag_arr[flag_bls, :, :, pol_ind] = True
+        if np.mean(avg_autocorr) > autocorr_thresh:
             used_antennas.append(ant_name)
 
     print(
@@ -155,9 +168,12 @@ def remove_inactive_antennas(uvd, autocorr_thresh=10.0, inplace=False):
     )
 
     if inplace:
+        uvd.flag_array = flag_arr
         uvd.select(antenna_names=used_antennas, inplace=True)
     else:
-        uvd_new = uvd.select(antenna_names=used_antennas, inplace=False)
+        uvd_new = uvd.copy()
+        uvd_new.flag_array = flag_arr
+        uvd_new.select(antenna_names=used_antennas, inplace=True)
         return uvd_new
 
 
