@@ -82,7 +82,12 @@ def get_pol_names(polarization_array):
 
 
 def plot_autocorrelations(
-    uvd, plot_save_path="", plot_file_prefix="", time_average=True, plot_legend=False
+    uvd,
+    plot_save_path="",
+    plot_file_prefix="",
+    time_average=True,
+    plot_legend=False,
+    plot_flagged_data=True,
 ):
 
     if time_average:
@@ -99,6 +104,9 @@ def plot_autocorrelations(
             uvd_autos = uvd.select(
                 ant_str="auto", times=times[time_plot_ind], inplace=False
             )
+
+        if not plot_flagged_data:
+            uvd_autos.data_array[np.where(uvd_autos.flag_array)] = np.nan
 
         pol_names = get_pol_names(uvd_autos.polarization_array)
         ant_inds = np.intersect1d(uvd_autos.ant_1_array, uvd_autos.ant_2_array)
@@ -128,6 +136,7 @@ def plot_autocorrelations(
             plt.xlabel("Frequency (MHz)")
             plt.ylabel("Autocorr. Power")
             plt.title(f"{pol_names[pol_ind]} Autocorrelations")
+            print(f"Saving figure to {plot_save_path}/{plot_name}")
             plt.savefig(f"{plot_save_path}/{plot_name}", dpi=200)
             plt.close()
 
@@ -218,6 +227,7 @@ def plot_ssins(incoherent_noise_spec, plot_save_filename, Npols, pol_names):
         ax[subfig_ind].set_ylabel("Time (2s)")
         subfig_ind += 1
     plt.tight_layout()
+    print(f"Saving figure to {plot_save_filename}")
     fig.savefig(plot_save_filename, dpi=200)
     plt.close()
 
@@ -235,6 +245,8 @@ def ssins_flagging(
 
     ss = uvd.copy()
     ss.MLE = None
+    if ss.phase_type == "drift":
+        ss.phase_to_time(np.mean(ss.time_array))
     ss.__class__ = SSINS.sky_subtract.SS
     ss.diff()
 
@@ -268,7 +280,7 @@ def ssins_flagging(
         plot_save_filename = f"{plot_save_path}/{plot_file_prefix}_ins_ssins_flags.png"
         plot_ssins(incoherent_noise_spec, plot_save_filename, uvd.Npols, pol_names)
 
-    # Apply flags and save
+    # Apply flags
     uvf = pyuvdata.UVFlag(uvd, waterfall=True, mode="flag")
     incoherent_noise_spec.flag_uvf(uvf, inplace=True)
     if inplace:
