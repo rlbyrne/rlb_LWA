@@ -93,14 +93,15 @@ def ssins_flagging_Mar31():
     # Process files
     for file_group in range(len(ms_filenames_grouped)):
 
-        file_split = ".".join(file_group[0].split(".")[:-2])
+        file_split = ms_filenames_grouped[file_group][0].split(".")[0]
         autos_all_ants_plot_prefix = f"{file_split}_all_ants"
         plot_prefix = f"{file_split}"
         autos_with_flags_plot_prefix = f"{file_split}_with_flags"
 
-        uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(
-            ms_filenames_grouped[file_group]
-        )
+        ms_group_full_paths = [
+            f"{data_path}/{file}" for file in ms_filenames_grouped[file_group]
+        ]
+        uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(ms_group_full_paths)
 
         LWA_preprocessing.plot_autocorrelations(
             uvd,
