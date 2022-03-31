@@ -29,6 +29,7 @@ def convert_raw_ms_to_uvdata(ms_filenames):  # String or list of strings
             subprocess.call(shlex.split(f"rm -r {data_path}/{untar_filename}"))
         else:
             uvd_new.read_ms(ms_file)
+        uvd_new.scan_number_array = None  # Fixes a pyuvdata bug
         uvd_new.unphase_to_drift()
         if file_ind == 0:
             uvd = uvd_new
@@ -38,7 +39,6 @@ def convert_raw_ms_to_uvdata(ms_filenames):  # String or list of strings
     uvd.instrument = "OVRO-LWA"
     uvd.telescope_name = "OVRO-LWA"
     uvd.set_telescope_params()
-    uvd.scan_number_array = None  # Fixes a pyuvdata bug
     uvd.check()
     return uvd
 
