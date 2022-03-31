@@ -55,5 +55,38 @@ def ssins_flagging_Mar25():
         uvd.write_uvfits(f"{output_path}/{file}")
 
 
+def ssins_flagging_Mar31():
+
+    data_path = "/lustre/rbyrne/LWA_data_20220210"
+    output_path = "/lustre/rbyrne/LWA_data_20220210/uvfits_ssins_flagged"
+    ssins_plot_save_path = "/lustre/rbyrne/LWA_data_20220210/ssins_plots"
+    autos_plot_save_path = "/lustre/rbyrne/LWA_data_20220210/autocorrelation_plots"
+
+    # Find raw ms files
+    freq = "70MHz"
+    start_time_stamp = 191447
+    end_time_stamp = 194824
+    nfiles_per_uvfits = 12
+
+    ms_filenames = os.listdir(data_path)
+    ms_filenames = [file for file in ms_filenames if file.endswith(".ms.tar")]
+    file_split = file.split("_")
+    ms_filenames = [
+        file for file in ms_filnames if (
+            int(file_split[1]) >= start_time_stamp
+            and int(file_split[1]) <= end_time_stamp
+        )
+    ]
+    print(ms_filenames)
+
+    ms_filenames_grouped = []
+    file_ind = 0
+    while file_ind < len(ms_filenames):
+        max_ind = np.min(file_ind+nfiles_per_uvfits, len(ms_filenames))
+        file_group = ms_filenames[file_ind:max_ind]
+        ms_filenames_grouped.append(file_group)
+    print(ms_filenames_grouped)
+
+
 if __name__ == "__main__":
-    ssins_flagging_Mar25()
+    ssins_flagging_Mar31()
