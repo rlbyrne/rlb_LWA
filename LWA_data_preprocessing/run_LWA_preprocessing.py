@@ -82,7 +82,7 @@ def ssins_flagging_Mar31():
     ms_filenames_grouped = []
     file_ind = 0
     while file_ind < len(ms_filenames):
-        max_ind = np.min(file_ind+nfiles_per_uvfits, len(ms_filenames))
+        max_ind = np.min([file_ind+nfiles_per_uvfits, len(ms_filenames)])
         file_group = ms_filenames[file_ind:max_ind]
         ms_filenames_grouped.append(file_group)
     print(ms_filenames_grouped)
