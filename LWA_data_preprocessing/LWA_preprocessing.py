@@ -16,6 +16,7 @@ def convert_raw_ms_to_uvdata(ms_filenames):  # String or list of strings
 
     uvd_new = pyuvdata.UVData()
     for file_ind, ms_file in enumerate(ms_filenames):
+        print(f"Reading data file {ms_file}")
         uvd_new = pyuvdata.UVData()
         if ms_file.endswith(".tar"):
             ms_file_split = ms_file.split("/")
