@@ -1,6 +1,7 @@
 import LWA_preprocessing
 import pyuvdata
 import os
+import numpy as np
 
 
 def ssins_flagging_Mar25():
