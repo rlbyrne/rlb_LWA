@@ -71,22 +71,77 @@ def ssins_flagging_Mar31():
 
     ms_filenames = os.listdir(data_path)
     ms_filenames = [file for file in ms_filenames if file.endswith(".ms.tar")]
-    ms_filenames = [
-        file for file in ms_filenames if (
-            int(file.split("_")[1]) >= start_time_stamp
-            and int(file.split("_")[1]) <= end_time_stamp
-        )
-    ]
-    print(ms_filenames)
+    ms_filenames = sorted(
+        [
+            file
+            for file in ms_filenames
+            if (
+                int(file.split("_")[1]) >= start_time_stamp
+                and int(file.split("_")[1]) <= end_time_stamp
+            )
+        ]
+    )
 
     ms_filenames_grouped = []
     file_ind = 0
     while file_ind < len(ms_filenames):
-        max_ind = np.min([file_ind+nfiles_per_uvfits, len(ms_filenames)])
+        max_ind = np.min([file_ind + nfiles_per_uvfits, len(ms_filenames)])
         file_group = ms_filenames[file_ind:max_ind]
         ms_filenames_grouped.append(file_group)
         file_ind += nfiles_per_uvfits
-    print(ms_filenames_grouped)
+
+    # Process files
+    for file_group in range(len(ms_filenames_grouped)):
+
+        file_split = ".".join(file_group[0].split(".")[:-2])
+        autos_all_ants_plot_prefix = f"{file_split}_all_ants"
+        plot_prefix = f"{file_split}"
+        autos_with_flags_plot_prefix = f"{file_split}_with_flags"
+
+        uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(
+            ms_filenames_grouped[file_group]
+        )
+
+        LWA_preprocessing.plot_autocorrelations(
+            uvd,
+            plot_save_path=autos_plot_save_path,
+            plot_file_prefix=autos_all_ants_plot_prefix,
+            time_average=True,
+            plot_legend=False,
+        )
+
+        LWA_preprocessing.remove_inactive_antennas(
+            uvd, autocorr_thresh=10.0, inplace=True
+        )
+
+        LWA_preprocessing.plot_autocorrelations(
+            uvd,
+            plot_save_path=autos_plot_save_path,
+            plot_file_prefix=plot_prefix,
+            time_average=True,
+            plot_legend=False,
+        )
+
+        LWA_preprocessing.ssins_flagging(
+            uvd,
+            sig_thresh=0.1,  # Flagging threshold in std. dev.
+            inplace=True,
+            plot_no_flags=True,
+            plot_orig_flags=True,
+            plot_ssins_flags=True,
+            plot_save_path=ssins_plot_save_path,
+            plot_file_prefix=plot_prefix,
+        )
+        uvd.write_uvfits(f"{output_path}/{file_split}.uvfits")
+
+        LWA_preprocessing.plot_autocorrelations(
+            uvd,
+            plot_save_path=autos_plot_save_path,
+            plot_file_prefix=autos_with_flags_plot_prefix,
+            time_average=True,
+            plot_legend=False,
+            plot_flagged_data=False,
+        )
 
 
 if __name__ == "__main__":
