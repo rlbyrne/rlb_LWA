@@ -70,11 +70,10 @@ def ssins_flagging_Mar31():
 
     ms_filenames = os.listdir(data_path)
     ms_filenames = [file for file in ms_filenames if file.endswith(".ms.tar")]
-    file_split = file.split("_")
     ms_filenames = [
         file for file in ms_filnames if (
-            int(file_split[1]) >= start_time_stamp
-            and int(file_split[1]) <= end_time_stamp
+            int(file.split("_")[1]) >= start_time_stamp
+            and int(file.split("_")[1]) <= end_time_stamp
         )
     ]
     print(ms_filenames)
