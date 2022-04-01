@@ -1,4 +1,4 @@
-import delay_weighted_cal as dwcal
+from dwcal import delay_weighted_cal as dwcal
 import numpy as np
 import pyuvdata
 from pyuvdata import utils
@@ -201,6 +201,37 @@ def test_constrained_optimization_Mar14():
     )
 
 
+def test_updated_weight_mat_calculation_Mar31():
+
+    dwcal.calibrate(
+        model_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Dec2021",
+        model_use_model=True,
+        data_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Dec2021",
+        data_use_model=False,
+        obsid="1061316296",
+        pol="XX",
+        use_autos=False,
+        use_wedge_exclusion=False,
+        cal_savefile="/safepool/rbyrne/calibration_outputs/caltest_Mar31/vanilla_cal.calfits",
+        calibrated_data_savefile="/safepool/rbyrne/calibration_outputs/caltest_Mar31/vanilla_cal.uvfits",
+        log_file_path="/safepool/rbyrne/calibration_outputs/caltest_Mar31/vanilla_cal_log.txt",
+    )
+
+    dwcal.calibrate(
+        model_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Dec2021",
+        model_use_model=True,
+        data_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Dec2021",
+        data_use_model=False,
+        obsid="1061316296",
+        pol="XX",
+        use_autos=False,
+        use_wedge_exclusion=True,
+        cal_savefile="/safepool/rbyrne/calibration_outputs/caltest_Mar31/wedge_excluded.calfits",
+        calibrated_data_savefile="/safepool/rbyrne/calibration_outputs/caltest_Mar31/wedge_excluded.uvfits",
+        log_file_path="/safepool/rbyrne/calibration_outputs/caltest_Mar31/wedge_excluded_log.txt",
+    )
+
+
 if __name__ == "__main__":
 
-    test_constrained_optimization_Mar14()
+    test_updated_weight_mat_calculation_Mar31()
