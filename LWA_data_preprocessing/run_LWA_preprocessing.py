@@ -73,19 +73,20 @@ def ssins_flagging_Mar31():
 
         ms_filenames = os.listdir(data_path)
         ms_filenames = [
-            file for file in ms_filenames
-            if (
-                file.endswith(".ms.tar")
-                and subband in file
-            )
+            file
+            for file in ms_filenames
+            if (file.endswith(".ms.tar") and subband in file)
         ]
-        ms_filenames = sorted([
-            file for file in ms_filenames
-            if (
-                int(file.split("_")[1]) >= start_time_stamp
-                and int(file.split("_")[1]) <= end_time_stamp
-            )
-        ])
+        ms_filenames = sorted(
+            [
+                file
+                for file in ms_filenames
+                if (
+                    int(file.split("_")[1]) >= start_time_stamp
+                    and int(file.split("_")[1]) <= end_time_stamp
+                )
+            ]
+        )
 
         ms_filenames_grouped = []
         file_ind = 0
@@ -130,7 +131,7 @@ def ssins_flagging_Mar31():
 
             LWA_preprocessing.ssins_flagging(
                 uvd,
-                sig_thresh=10.,  # Flagging threshold in std. dev.
+                sig_thresh=10.0,  # Flagging threshold in std. dev.
                 inplace=True,
                 plot_no_flags=True,
                 plot_orig_flags=True,
@@ -138,7 +139,11 @@ def ssins_flagging_Mar31():
                 plot_save_path=ssins_plot_save_path,
                 plot_file_prefix=plot_prefix,
             )
-            uvd.write_uvfits(f"{output_path}/{file_split}.uvfits", force_phase=True)
+            uvd.write_uvfits(
+                f"{output_path}/{file_split}.uvfits",
+                force_phase=True,
+                spoof_nonessential=True,
+            )
 
             LWA_preprocessing.plot_autocorrelations(
                 uvd,
