@@ -235,7 +235,7 @@ def plot_ssins(incoherent_noise_spec, plot_save_filename, Npols, pol_names):
 
 def ssins_flagging(
     uvd,
-    sig_thresh=1,  # Flagging threshold in std. dev.
+    sig_thresh=5,  # Flagging threshold in std. dev.
     inplace=False,
     plot_no_flags=False,
     plot_orig_flags=False,
@@ -278,7 +278,7 @@ def ssins_flagging(
 
     # Plot with SSINS flags
     if plot_ssins_flags:
-        plot_save_filename = f"{plot_save_path}/{plot_file_prefix}_ins_ssins_flags.png"
+        plot_save_filename = f"{plot_save_path}/{plot_file_prefix}_ins_ssins_flags_thresh_{sig_thresh}.png"
         plot_ssins(incoherent_noise_spec, plot_save_filename, uvd.Npols, pol_names)
 
     # Apply flags

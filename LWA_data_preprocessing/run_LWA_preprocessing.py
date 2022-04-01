@@ -130,7 +130,7 @@ def ssins_flagging_Mar31():
 
             LWA_preprocessing.ssins_flagging(
                 uvd,
-                sig_thresh=0.01,  # Flagging threshold in std. dev.
+                sig_thresh=10.,  # Flagging threshold in std. dev.
                 inplace=True,
                 plot_no_flags=True,
                 plot_orig_flags=True,
