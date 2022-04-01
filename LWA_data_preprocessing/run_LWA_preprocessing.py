@@ -138,7 +138,7 @@ def ssins_flagging_Mar31():
                 plot_save_path=ssins_plot_save_path,
                 plot_file_prefix=plot_prefix,
             )
-            uvd.write_uvfits(f"{output_path}/{file_split}.uvfits")
+            uvd.write_uvfits(f"{output_path}/{file_split}.uvfits", force_phase=True)
 
             LWA_preprocessing.plot_autocorrelations(
                 uvd,
