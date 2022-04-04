@@ -105,6 +105,16 @@ pro fhd_versions_astm
       snapshot_healpix_export = 0
     end
 
+    'rlb_LWA_imaging_Apr2022': begin
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/opt/astro/devel/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      calibrate_visibilities = 1
+      n_pol = 2
+      calibration_catalog_file_path = '/opt/astro/devel/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
+      allow_sidelobe_cal_sources = 1
+      sim_over_calibrate = 1 ;use per-frequency calibration
+    end
+
   endcase
 
   undefine, uvfits_subversion, uvfits_version
