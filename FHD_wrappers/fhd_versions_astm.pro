@@ -106,6 +106,7 @@ pro fhd_versions_astm
     end
 
     'rlb_LWA_imaging_Apr2022': begin
+      recalculate_all = 1
       instrument = 'lwa'
       import_pyuvdata_beam_filepath = '/opt/astro/devel/rbyrne/rlb_LWA/LWAbeam_2015.fits'
       calibrate_visibilities = 1
