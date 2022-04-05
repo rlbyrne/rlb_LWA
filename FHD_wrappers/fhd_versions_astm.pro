@@ -106,14 +106,18 @@ pro fhd_versions_astm
     end
 
     'rlb_LWA_imaging_Apr2022': begin
-      recalculate_all = 1
+      recalculate_all = 0
       instrument = 'lwa'
       import_pyuvdata_beam_filepath = '/opt/astro/devel/rbyrne/rlb_LWA/LWAbeam_2015.fits'
       calibrate_visibilities = 1
       n_pol = 2
       calibration_catalog_file_path = '/opt/astro/devel/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
       allow_sidelobe_cal_sources = 1
-      sim_over_calibrate = 1 ;use per-frequency calibration
+      ; Try to force per-frequency calibration
+      sim_over_calibrate = 1
+      bandpass_calibrate = 0
+      cable_bandpass_fit = 0
+      cal_mode_fit = 0
     end
 
   endcase
