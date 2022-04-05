@@ -118,6 +118,7 @@ pro fhd_versions_astm
       bandpass_calibrate = 0
       cable_bandpass_fit = 0
       cal_mode_fit = 0
+      calibration_polyfit = 0
     end
 
   endcase
