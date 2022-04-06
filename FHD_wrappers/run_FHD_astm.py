@@ -3,7 +3,7 @@ import shlex
 import os
 
 obsid = "20220210_191447_70MHz"
-version = "rlb_LWA_imaging_Apr2022"
+version = "rlb_LWA_imaging_average_calibration_Apr2022"
 uvfits_path = "/lustre/rbyrne/LWA_data_20220210/uvfits_ssins_flagged"
 outdir = "/lustre/rbyrne/fhd_outputs"
 run_eppsilon = True

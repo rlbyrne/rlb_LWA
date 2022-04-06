@@ -121,6 +121,23 @@ pro fhd_versions_astm
       calibration_polyfit = 0
     end
 
+    'rlb_LWA_imaging_average_calibration_Apr2022': begin
+      recalculate_all = 0
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/opt/astro/devel/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      calibrate_visibilities = 1
+      n_pol = 2
+      calibration_catalog_file_path = '/opt/astro/devel/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
+      allow_sidelobe_cal_sources = 1
+      ; Try to force per-frequency calibration
+      bandpass_calibrate = 1
+      cal_amp_degree_fit = 0 ;Average gain amplitudes across frequency
+      cable_bandpass_fit = 0 ;Do not fit cable reflections
+      cal_mode_fit = 0 ;Do not fit cable reflections
+      calibration_polyfit = 1 ;Do frequency averaging
+      cal_phase_degree_fit = 0 ;Average gain phases across frequency
+    end
+
   endcase
 
   undefine, uvfits_subversion, uvfits_version
