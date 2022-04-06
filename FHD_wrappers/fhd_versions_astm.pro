@@ -134,6 +134,7 @@ pro fhd_versions_astm
       cal_amp_degree_fit = 0 ;Average gain amplitudes across frequency
       cable_bandpass_fit = 0 ;Do not fit cable reflections
       cal_mode_fit = 0 ;Do not fit cable reflections
+      cal_reflection_mode_theory = 0 ;Do not fit cable reflections
       calibration_polyfit = 1 ;Do frequency averaging
       cal_phase_degree_fit = 0 ;Average gain phases across frequency
     end
