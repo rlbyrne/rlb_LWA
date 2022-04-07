@@ -9,7 +9,10 @@ import SSINS
 from SSINS import plot_lib
 
 
-def convert_raw_ms_to_uvdata(ms_filenames):  # String or list of strings
+def convert_raw_ms_to_uvdata(
+    ms_filenames,  # String or list of strings
+    untar_dir=None,  # Used if files are tar-ed. None defaults to original data dir.
+):
 
     if type(ms_filenames) == str:
         ms_filenames = [ms_filenames]
@@ -20,14 +23,16 @@ def convert_raw_ms_to_uvdata(ms_filenames):  # String or list of strings
         uvd_new = pyuvdata.UVData()
         if ms_file.endswith(".tar"):
             ms_file_split = ms_file.split("/")
-            data_path = "/".join(ms_file_split[:-1])
+            data_dir = "/".join(ms_file_split[:-1])
+            if untar_dir is None:
+                untar_dir = data_dir
             filename = ms_file_split[-1]
             subprocess.call(
-                shlex.split(f"tar -xvf {data_path}/{filename} -C {data_path}")
+                shlex.split(f"tar -xvf {data_dir}/{filename} -C {untar_dir}")
             )
             untar_filename = ".".join(filename.split(".")[:-1])
-            uvd_new.read_ms(f"{data_path}/{untar_filename}")
-            subprocess.call(shlex.split(f"rm -r {data_path}/{untar_filename}"))
+            uvd_new.read_ms(f"{untar_dir}/{untar_filename}")
+            subprocess.call(shlex.split(f"rm -r {untar_dir}/{untar_filename}"))
         else:
             uvd_new.read_ms(ms_file)
         uvd_new.scan_number_array = None  # Fixes a pyuvdata bug

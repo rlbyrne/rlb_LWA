@@ -165,10 +165,11 @@ def ssins_flagging_Mar31():
 def process_data_Apr6():
 
     data_path = "/lustre/data/stageiii/20220304/feon"
-    output_path = "/lustre/rbyrne/LWA_data_20220304/uvfits_ssins_flagged"
-    ssins_plot_save_path = "/lustre/rbyrne/LWA_data_20220304/ssins_plots"
-    ssins_flags_save_path = "/lustre/rbyrne/LWA_data_20220304/ssins_flags"
-    autos_plot_save_path = "/lustre/rbyrne/LWA_data_20220304/autocorrelation_plots"
+    output_dir = "/lustre/rbyrne/LWA_data_20220304"
+    output_path = f"{output_dir}/uvfits_ssins_flagged"
+    ssins_plot_save_path = f"{output_dir}/ssins_plots"
+    ssins_flags_save_path = f"{output_dir}/ssins_flags"
+    autos_plot_save_path = f"{output_dir}/autocorrelation_plots"
 
     # Find raw ms files
     subbands = [
@@ -232,7 +233,10 @@ def process_data_Apr6():
             ms_group_full_paths = [
                 f"{data_path}/{file}" for file in ms_filenames_grouped[file_group]
             ]
-            uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(ms_group_full_paths)
+            uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(
+                ms_group_full_paths,
+                untar_dir=output_dir,
+            )
 
             # Plot autocorrelations before any preprocessing
             LWA_preprocessing.plot_autocorrelations(
