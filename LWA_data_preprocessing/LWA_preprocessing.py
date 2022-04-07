@@ -237,6 +237,7 @@ def ssins_flagging(
     uvd,
     sig_thresh=5,  # Flagging threshold in std. dev.
     inplace=False,
+    save_flags_filepath=None,
     plot_no_flags=False,
     plot_orig_flags=False,
     plot_ssins_flags=False,
@@ -284,6 +285,11 @@ def ssins_flagging(
     # Apply flags
     uvf = pyuvdata.UVFlag(uvd, waterfall=True, mode="flag")
     incoherent_noise_spec.flag_uvf(uvf, inplace=True)
+
+    # Optionally save flags to an .hdf5 file
+    if save_flags_filepath is not None:
+        uvf.write(save_flags_filepath)
+
     if inplace:
         pyuvdata.utils.apply_uvflag(uvd, uvf, inplace=True)
     else:
