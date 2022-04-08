@@ -128,7 +128,7 @@ def plot_autocorrelations(
                 bl_inds = np.where(uvd_autos.ant_1_array == ant_ind)[0]
                 plt.plot(
                     uvd_autos.freq_array[0, :],
-                    np.mean(
+                    np.nanmean(
                         np.abs(uvd_autos.data_array[bl_inds, 0, :, pol_ind]), axis=0
                     ),
                     "-o",
@@ -192,7 +192,16 @@ def remove_inactive_antennas(uvd, autocorr_thresh=5.0, inplace=False, flag_only=
         return uvd_new
 
 
-def plot_ssins(incoherent_noise_spec, plot_save_filename, Npols, pol_names):
+def plot_ssins(
+    incoherent_noise_spec,
+    plot_save_filename,
+    Npols,
+    pol_names,
+    vmin_avg_amp=0,
+    vmax_avg_amp=0.4,
+    vmin_zscore=-10,
+    vmax_zscore=10,
+):
 
     xticks = np.arange(0, len(incoherent_noise_spec.freq_array), 50)
     xticklabels = [
@@ -205,36 +214,63 @@ def plot_ssins(incoherent_noise_spec, plot_save_filename, Npols, pol_names):
 
     # Plot averaged amplitudes:
     for pol_ind, pol_name in enumerate(pol_names):
-        plot_lib.image_plot(
-            fig,
-            ax[subfig_ind],
+
+        cmap = cm.plasma
+        cax = ax[subfig_ind].imshow(
             incoherent_noise_spec.metric_array[:, :, pol_ind],
-            title=f"{pol_name} Amplitudes",
-            xticks=xticks,
-            xticklabels=xticklabels,
+            cmap=cmap,
+            vmin=vmin_avg_amp,
+            vmax=vmax_avg_amp,
+            extent=[
+                np.min(incoherent_noise_spec.freq_array) * 1e-6,
+                np.max(incoherent_noise_spec.freq_array) * 1e-6,
+                incoherent_noise_spec.Ntimes + 0.5,
+                -0.5,
+            ],
+            aspect="auto",
+            interpolation="none",
         )
+
+        cmap.set_bad(color="white")
+        cbar = fig.colorbar(cax, ax=ax[subfig_ind], extend="max")
+        cbar.set_label("Amplitude", rotation=270, labelpad=15)
+
+        ax[subfig_ind].set_title(f"{pol_name} Amplitudes")
         ax[subfig_ind].set_xlabel("Frequency (MHz)")
-        ax[subfig_ind].set_ylabel("Time (2s)")
+        ax[subfig_ind].set_ylabel("Time Step")
         subfig_ind += 1
 
     # Plot z-scores:
     for pol_ind, pol_name in enumerate(pol_names):
-        plot_lib.image_plot(
-            fig,
-            ax[subfig_ind],
+
+        cmap = cm.coolwarm
+        cax = ax[subfig_ind].imshow(
             incoherent_noise_spec.metric_ms[:, :, pol_ind],
-            title=f"{pol_name} z-scores",
-            xticks=xticks,
-            xticklabels=xticklabels,
-            cmap=cm.coolwarm,
-            midpoint=True,
+            cmap=cmap,
+            extent=[
+                np.min(incoherent_noise_spec.freq_array) * 1e-6,
+                np.max(incoherent_noise_spec.freq_array) * 1e-6,
+                incoherent_noise_spec.Ntimes + 0.5,
+                -0.5,
+            ],
+            vmin=vmin_zscore,
+            vmax=vmax_zscore,
+            aspect="auto",
+            interpolation="none",
         )
+
+        cmap.set_bad(color="white")
+        cbar = fig.colorbar(cax, ax=ax[subfig_ind], extend="both")
+        cbar.set_label("Deviation (Std. Dev.)", rotation=270, labelpad=15)
+
+        ax[subfig_ind].set_title(f"{pol_name} z-Scores")
         ax[subfig_ind].set_xlabel("Frequency (MHz)")
-        ax[subfig_ind].set_ylabel("Time (2s)")
+        ax[subfig_ind].set_ylabel("Time Step")
         subfig_ind += 1
+
     plt.tight_layout()
     print(f"Saving figure to {plot_save_filename}")
-    fig.savefig(plot_save_filename, dpi=200)
+    fig.savefig(plot_save_filename, facecolor="white", dpi=200)
     plt.close()
 
 
