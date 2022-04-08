@@ -91,6 +91,16 @@ def plot_skyh5_test_Mar23():
         )
 
 
+def plot_marin_images_Apr8():
+
+    filename = "/Users/ruby/Astro/LWA_data/LWA_data_20220307/20220307_175923_15MHz-dirty.fits"
+
+    plot_fits.plot_fits_file(
+        filename,
+        #save_filename = f"/Users/ruby/Astro/FHD_outputs/fhd_rlb_model_diffuse_skyh5_Mar2022/1061316296_optimal_Model_{stokes_name}.png",
+    )
+
+
 
 if __name__ == "__main__":
-    plot_skyh5_test_Mar23()
+    plot_marin_images_Apr8()

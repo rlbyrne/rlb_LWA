@@ -166,7 +166,7 @@ def load_fits(data_filename):
 
 def plot_fits_file(
     data_filename,
-    edge_crop_ratio=0.33,
+    edge_crop_ratio=0.2,
     signal_extent=None,
     colorbar_label="Surface Brightness (Jy/sr)",
     save_filename=None,
@@ -176,6 +176,19 @@ def plot_fits_file(
 
     hdu = fits.open(data_filename)[0]
     wcs = WCS(hdu.header)
+    plot_data = hdu.data
+    if hdu.header["NAXIS"] == 2:
+        use_slices = ["x", "y"]
+        plot_coord_1 = 0
+        plot_coord_2 = 1
+    elif hdu.header["NAXIS"] == 4:
+        plot_data = plot_data[0, 0, :, :]
+        use_slices = [0,0,"x","y"]
+        plot_coord_1 = 2
+        plot_coord_2 = 3
+    else:
+        print("ERROR: Unknown format.")
+        sys.exit(1)
 
     if signal_extent is None:
         vmin = None
@@ -184,9 +197,9 @@ def plot_fits_file(
         vmin = np.min(signal_extent)
         vmax = np.max(signal_extent)
 
-    plt.subplot(projection=wcs)
+    plt.subplot(projection=wcs, slices=use_slices)
     plt.imshow(
-        hdu.data,
+        plot_data,
         vmin=vmin,
         vmax=vmax,
         origin="lower",
@@ -195,8 +208,8 @@ def plot_fits_file(
     )
     plt.grid(color="white", ls="solid", lw=0.2)
 
-    n_x_pixels = np.shape(hdu.data)[0]
-    n_y_pixels = np.shape(hdu.data)[1]
+    n_x_pixels = np.shape(hdu.data)[plot_coord_1]
+    n_y_pixels = np.shape(hdu.data)[plot_coord_2]
     plt.xlim(
         [
             int(np.round((1 - edge_crop_ratio) * n_x_pixels)),
@@ -211,6 +224,7 @@ def plot_fits_file(
     )
     if mark_pointing_ctr:
         plt.plot(n_x_pixels/2., n_y_pixels/2., '+', color='white', markersize=5, lw=0.1)
+
     plt.xlabel("RA")
     plt.ylabel("Dec.")
     if title is not None:
