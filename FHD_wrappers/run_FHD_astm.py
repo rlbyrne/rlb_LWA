@@ -3,13 +3,25 @@ import shlex
 import os
 
 obsids_list = [
-    #"20220210_191447_70MHz",
-    "20220210_191758_70MHz",
-    "20220210_191958_70MHz",
-    "20220210_192159_70MHz"
+    "20220304_181704_15MHz",
+    "20220304_181704_20MHz",
+    "20220304_181704_24MHz",
+    "20220304_181704_29MHz",
+    "20220304_181704_34MHz",
+    "20220304_181704_38MHz",
+    "20220304_181704_43MHz",
+    "20220304_181704_47MHz",
+    "20220304_181704_52MHz",
+    "20220304_181704_57MHz",
+    "20220304_181704_61MHz",
+    "20220304_181704_66MHz",
+    "20220304_181704_70MHz",
+    "20220304_181704_75MHz",
+    "20220304_181704_80MHz",
+    "20220304_181704_84MHz"
 ]
 versions_list = ["rlb_LWA_imaging_Apr2022"]
-uvfits_path = "/lustre/rbyrne/LWA_data_20220210/uvfits_ssins_flagged"
+uvfits_path = "/lustre/rbyrne/LWA_data_20220304/uvfits_ssins_flagged"
 outdir = "/lustre/rbyrne/fhd_outputs"
 run_eppsilon = True
 
