@@ -12,6 +12,7 @@ from SSINS import plot_lib
 def convert_raw_ms_to_uvdata(
     ms_filenames,  # String or list of strings
     untar_dir=None,  # Used if files are tar-ed. None defaults to original data dir.
+    data_column="DATA",  # Other option is "CORRECTED_DATA"
 ):
 
     if type(ms_filenames) == str:
@@ -31,10 +32,10 @@ def convert_raw_ms_to_uvdata(
                 shlex.split(f"tar -xvf {data_dir}/{filename} -C {untar_dir}")
             )
             untar_filename = ".".join(filename.split(".")[:-1])
-            uvd_new.read_ms(f"{untar_dir}/{untar_filename}")
+            uvd_new.read_ms(f"{untar_dir}/{untar_filename}", data_column=data_column)
             subprocess.call(shlex.split(f"rm -r {untar_dir}/{untar_filename}"))
         else:
-            uvd_new.read_ms(ms_file)
+            uvd_new.read_ms(ms_file, data_column=data_column)
         uvd_new.scan_number_array = None  # Fixes a pyuvdata bug
         uvd_new.unphase_to_drift()
         if file_ind == 0:

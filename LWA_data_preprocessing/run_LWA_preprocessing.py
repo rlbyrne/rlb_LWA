@@ -282,5 +282,41 @@ def process_data_Apr6():
             )
 
 
+def pipeline_comparison_Apr8():
+
+    ms_filename = "/lustre/mmanders/stageiii/phaseiii/20220307/calint/20220307_175923_61MHz.ms"
+    output_dir = "/lustre/rbyrne/LWA_data_20220307"
+    output_path = f"{output_dir}/uvfits"
+    ssins_plot_save_path = f"{output_dir}/ssins_plots"
+    ssins_flags_save_path = f"{output_dir}/ssins_flags"
+    autos_plot_save_path = f"{output_dir}/autocorrelation_plots"
+
+    uvd_uncalib = LWA_preprocessing.convert_raw_ms_to_uvdata(
+        ms_filename,
+        untar_dir=output_dir,
+        data_column='DATA'
+    )
+
+    # Write uvfits
+    uvd_uncalib.write_uvfits(
+        f"{output_path}/20220307_175923_61MHz_uncalib.uvfits",
+        force_phase=True,
+        spoof_nonessential=True,
+    )
+
+    uvd_calib = LWA_preprocessing.convert_raw_ms_to_uvdata(
+        ms_filename,
+        untar_dir=output_dir,
+        data_column='CORRECTED_DATA'
+    )
+
+    # Write uvfits
+    uvd_uncalib.write_uvfits(
+        f"{output_path}/20220307_175923_61MHz_calib.uvfits",
+        force_phase=True,
+        spoof_nonessential=True,
+    )
+
+
 if __name__ == "__main__":
-    process_data_Apr6()
+    pipeline_comparison_Apr8()
