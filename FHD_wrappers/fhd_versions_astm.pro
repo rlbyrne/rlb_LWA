@@ -139,6 +139,14 @@ pro fhd_versions_astm
       cal_phase_degree_fit = 0 ;Average gain phases across frequency
     end
 
+    'rlb_LWA_image_calibrated_data_Apr2022': begin
+      recalculate_all = 0
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/opt/astro/devel/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      calibrate_visibilities = 0
+      n_pol = 2
+    end
+
   endcase
 
   undefine, uvfits_subversion, uvfits_version

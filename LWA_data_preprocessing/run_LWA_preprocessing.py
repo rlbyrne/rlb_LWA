@@ -287,9 +287,6 @@ def pipeline_comparison_Apr8():
     ms_filename = "/lustre/mmanders/stageiii/phaseiii/20220307/calint/20220307_175923_61MHz.ms"
     output_dir = "/lustre/rbyrne/LWA_data_20220307"
     output_path = f"{output_dir}/uvfits"
-    ssins_plot_save_path = f"{output_dir}/ssins_plots"
-    ssins_flags_save_path = f"{output_dir}/ssins_flags"
-    autos_plot_save_path = f"{output_dir}/autocorrelation_plots"
 
     uvd_uncalib = LWA_preprocessing.convert_raw_ms_to_uvdata(
         ms_filename,
