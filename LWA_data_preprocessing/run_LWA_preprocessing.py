@@ -308,7 +308,7 @@ def pipeline_comparison_Apr8():
     )
 
     # Write uvfits
-    uvd_uncalib.write_uvfits(
+    uvd_calib.write_uvfits(
         f"{output_path}/20220307_175923_61MHz_calib.uvfits",
         force_phase=True,
         spoof_nonessential=True,
