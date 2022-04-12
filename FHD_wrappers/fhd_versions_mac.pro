@@ -3,7 +3,7 @@ pro fhd_versions_mac
   !except=0
   heap_gc
 
-  version = 'rlb_test_skyh5_sky_model'
+  version = 'rlb_LWA_imaging_Apr2022'
   output_directory = '/Users/ruby/Astro/FHD_outputs'
   
   case version of
@@ -120,6 +120,26 @@ pro fhd_versions_mac
       stokes_high = 2e6
       stokes_low = -2e6
       mark_zenith = 1
+    end
+    
+    'rlb_LWA_imaging_Apr2022': begin
+      obs_id = '20220307_175923_61MHz_uncalib'
+      vis_file_list = '/Users/ruby/Astro/LWA_data/LWA_data_20220307/'+obs_id+'.uvfits'
+      recalculate_all = 1
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/Users/ruby/Astro/rlb_LWA/LWAbeam_2015.fits'
+      calibrate_visibilities = 1
+      n_pol = 2
+      calibration_catalog_file_path = '/Users/ruby/Astro/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
+      allow_sidelobe_cal_sources = 1
+      ; Try to force per-frequency calibration
+      sim_over_calibrate = 1
+      bandpass_calibrate = 0
+      cable_bandpass_fit = 0
+      cal_mode_fit = 0
+      calibration_polyfit = 0
+      flag_calibration = 0 ;Try turning off calibration flagging
+      snapshot_healpix_export = 0 ;Healpix export does not work with just one time step
     end
     
   endcase

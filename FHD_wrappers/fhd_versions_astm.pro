@@ -106,7 +106,7 @@ pro fhd_versions_astm
     end
 
     'rlb_LWA_imaging_Apr2022': begin
-      recalculate_all = 0
+      recalculate_all = 1
       instrument = 'lwa'
       import_pyuvdata_beam_filepath = '/opt/astro/devel/rbyrne/rlb_LWA/LWAbeam_2015.fits'
       calibrate_visibilities = 1
@@ -119,6 +119,9 @@ pro fhd_versions_astm
       cable_bandpass_fit = 0
       cal_mode_fit = 0
       calibration_polyfit = 0
+      ; Added Apr 12:
+      flag_calibration = 0 ;Try turning off calibration flagging
+      snapshot_healpix_export = 0 ;Healpix export does not work with just one time step
     end
 
     'rlb_LWA_imaging_average_calibration_Apr2022': begin
