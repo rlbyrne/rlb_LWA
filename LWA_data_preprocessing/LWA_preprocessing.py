@@ -12,7 +12,7 @@ from SSINS import plot_lib
 def convert_raw_ms_to_uvdata(
     ms_filenames,  # String or list of strings
     untar_dir=None,  # Used if files are tar-ed. None defaults to original data dir.
-    data_column="DATA",  # Other option is "CORRECTED_DATA"
+    data_column="DATA",  # Other options are "CORRECTED_DATA" or "MODEL_DATA"
 ):
 
     if type(ms_filenames) == str:
@@ -146,6 +146,45 @@ def plot_autocorrelations(
             print(f"Saving figure to {plot_save_path}/{plot_name}")
             plt.savefig(f"{plot_save_path}/{plot_name}", dpi=200)
             plt.close()
+
+
+def flag_outriggers(
+    uvd,
+    core_center_coords=None,  # If None, defaults to median ant position
+    core_radius_m=130.0,
+    inplace=False,
+):
+
+    # Get antennas positions in ECEF
+    antpos = uvd.antenna_positions + uvd.telescope_location
+    # Convert to topocentric (East, North, Up or ENU) coords.
+    antpos = pyuvdata.utils.ENU_from_ECEF(antpos, *uvd.telescope_location_lat_lon_alt)
+
+    if core_center_coords is None:
+        core_center_coords = [np.median(antpos[:, 0]), np.median(antpos[:, 1])]
+    outrigger_ants = np.where(
+        np.sqrt(
+            (antpos[:, 0] - core_center_coords[0]) ** 2.0
+            + (antpos[:, 1] - core_center_coords[1]) ** 2.0
+        )
+        > core_radius_m
+    )[0]
+
+    flag_arr = np.copy(uvd.flag_array)
+    for ant in outrigger_ants:
+        ant_1_bls = np.where(uvd.ant_1_array == ant)[0]
+        if len(ant_1_bls) > 0:
+            flag_arr[ant_1_bls, :, :, :] = True
+        ant_2_bls = np.where(uvd.ant_2_array == ant)[0]
+        if len(ant_2_bls) > 0:
+            flag_arr[ant_2_bls, :, :, :] = True
+
+    if inplace:
+        uvd.flag_array = flag_arr
+    else:
+        uvd_new = uvd.copy()
+        uvd_new.flag_array = flag_arr
+        return uvd_new
 
 
 def remove_inactive_antennas(uvd, autocorr_thresh=5.0, inplace=False, flag_only=False):
