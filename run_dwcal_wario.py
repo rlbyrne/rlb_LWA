@@ -294,6 +294,39 @@ def dwcal_test_Apr12():
     )
 
 
+def dwcal_newtons_method_test_Apr15():
+
+    dwcal.calibrate(
+        model_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Apr2022",
+        model_use_model=True,
+        data_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_Apr2022",
+        data_use_model=True,
+        obsid="1061316296",
+        pol="XX",
+        use_autos=False,
+        use_wedge_exclusion=False,
+        cal_savefile="/safepool/rbyrne/calibration_outputs/caltest_newtons_method_Apr12/vanilla_cal.calfits",
+        calibrated_data_savefile="/safepool/rbyrne/calibration_outputs/caltest_newtons_method_Apr12/vanilla_cal.uvfits",
+        log_file_path="/safepool/rbyrne/calibration_outputs/caltest_newtons_method_Apr12/vanilla_cal_log.txt",
+        use_newtons_method=True,
+    )
+
+    dwcal.calibrate(
+        model_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Apr2022",
+        model_use_model=True,
+        data_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_Apr2022",
+        data_use_model=True,
+        obsid="1061316296",
+        pol="XX",
+        use_autos=False,
+        use_wedge_exclusion=True,
+        cal_savefile="/safepool/rbyrne/calibration_outputs/caltest_newtons_method_Apr12/wedge_excluded.calfits",
+        calibrated_data_savefile="/safepool/rbyrne/calibration_outputs/caltest_newtons_method_Apr12/wedge_excluded.uvfits",
+        log_file_path="/safepool/rbyrne/calibration_outputs/caltest_newtons_method_Apr12/wedge_excluded_log.txt",
+        use_newtons_method=True,
+    )
+
+
 if __name__ == "__main__":
 
-    dwcal_test_Apr12()
+    dwcal_newtons_method_test_Apr15()
