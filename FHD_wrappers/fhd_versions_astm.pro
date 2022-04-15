@@ -120,8 +120,10 @@ pro fhd_versions_astm
       cal_mode_fit = 0
       calibration_polyfit = 0
       ; Added Apr 12:
-      flag_calibration = 0 ;Try turning off calibration flagging
+      ; flag_calibration = 0 ;Try turning off calibration flagging
       snapshot_healpix_export = 0 ;Healpix export does not work with just one time step
+      ; Added Apr 15:
+      min_cal_baseline = 0
     end
 
     'rlb_LWA_imaging_average_calibration_Apr2022': begin
