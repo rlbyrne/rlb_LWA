@@ -48,7 +48,7 @@ for version in versions_list:
             ) as err:
                 process = subprocess.Popen(
                     shlex.split(
-                        f"/opt/astro/devel/harris/idl87/bin/idl -e {eppsilon_script} -args {obsid} {outdir} {version} {refresh_ps} {uvf_input}"
+                        f"/opt/idl/idl88/bin/idl -e {eppsilon_script} -args {obsid} {outdir} {version} {refresh_ps} {uvf_input}"
                     ),
                     stdout=out,
                     stderr=err,
