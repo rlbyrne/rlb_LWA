@@ -178,8 +178,7 @@ pro fhd_versions_astm
       n_pol = 2
       model_visibilities = 1
       model_catalog_file_path = '/opt/astro/devel/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
-      model_subtract_sidelobe_catalog  = '/opt/astro/devel/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
-      allow_sidelobe_model_sources = 1
+      allow_sidelobe_model_sources = 0 ;model catalog does not include sidelobe sources
       diffuse_model = "/lustre/rbyrne/ovro_lwa_sky_map_73.152MHz.skyh5"
       diffuse_units_kelvin = 1
       return_cal_visibilities = 0
