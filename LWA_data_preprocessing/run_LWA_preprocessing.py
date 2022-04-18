@@ -340,5 +340,63 @@ def process_data_Apr15():
     )
 
 
+def test_ssins_flagging_Apr17():
+
+    ms_filename = "/lustre/mmanders/stageiii/phaseiii/20220307/calint/20220307_175923_61MHz.ms"
+    output_dir = "/lustre/rbyrne/LWA_data_20220307"
+    uvfits_output_dir = f"{output_dir}/uvfits"
+    ssins_plot_save_dir = f"{output_dir}/ssins_plots"
+    ssins_flags_save_dir = f"{output_dir}/ssins_flags"
+    autos_plot_save_dir = f"{output_dir}/autocorrelation_plots"
+    save_prefix = "20220307_175923_61MHz"
+
+    uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(
+        ms_filename,
+        untar_dir=output_dir,
+        data_column='DATA'
+    )
+
+    # Remove all flags
+    uvd.flag_array[:, :, :, :] = False
+
+    LWA_preprocessing.flag_outriggers(
+        uvd,
+        inplace=True,
+    )
+
+    LWA_preprocessing.plot_autocorrelations(
+        uvd,
+        plot_save_dir=autos_plot_save_dir,
+        plot_file_prefix=save_prefix,
+        time_average=True,
+        plot_legend=False,
+        plot_flagged_data=False,
+    )
+
+    # RFI flagging
+    rfi_flagging_thresholds = [20., 10., 5., 1.]
+    plot_orig_flags = True
+    for sig_thresh in rfi_flagging_thresholds:
+        LWA_preprocessing.ssins_flagging(
+            uvd,
+            sig_thresh=20.0,  # Flagging threshold in std. dev.
+            inplace=True,
+            save_flags_filepath=f"{ssins_flags_save_dir}/{save_prefix}_flags_ssins_thresh_{sig_thresh}.hdf5",
+            plot_no_flags=False,
+            plot_orig_flags=plot_orig_flags,
+            plot_ssins_flags=True,
+            plot_save_dir=ssins_plot_save_dir,
+            plot_file_prefix=save_prefix,
+        )
+        plot_orig_flags = False
+
+        # Write uvfits
+        uvd_uncalib.write_uvfits(
+            f"{uvfits_output_dir}/{save_prefix}_ssins_thresh_{sig_thresh}.uvfits",
+            force_phase=True,
+            spoof_nonessential=True,
+        )
+
+
 if __name__ == "__main__":
-    process_data_Apr15()
+    test_ssins_flagging_Apr17()
