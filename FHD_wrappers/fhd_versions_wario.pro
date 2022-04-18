@@ -165,6 +165,7 @@ pro fhd_versions_wario
 
     'rlb_cal_sims_Apr2022': begin
       calibrate_visibilities = 0
+      return_cal_visibilities = 0
       model_visibilities = 1
       model_catalog_file_path = filepath('GLEAM_v2_plus_rlb2019.sav',root=rootdir('FHD'),subdir='catalog_data')
       model_subtract_sidelobe_catalog = filepath('GLEAM_v2_plus_rlb2019.sav',root=rootdir('FHD'),subdir='catalog_data')
