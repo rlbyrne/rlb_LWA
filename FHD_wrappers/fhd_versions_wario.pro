@@ -173,6 +173,7 @@ pro fhd_versions_wario
       unflag_all = 1
       beam_nfreq_avg = 384
       n_pol = 1
+      export_images = 0 ;Cannot export images with just one polarization
     end
 
   endcase
