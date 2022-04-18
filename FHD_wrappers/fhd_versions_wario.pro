@@ -172,6 +172,7 @@ pro fhd_versions_wario
       allow_sidelobe_model_sources = 1
       unflag_all = 1
       beam_nfreq_avg = 384
+      n_pol = 1
     end
 
   endcase
