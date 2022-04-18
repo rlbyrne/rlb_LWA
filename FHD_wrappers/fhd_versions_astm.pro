@@ -170,6 +170,22 @@ pro fhd_versions_astm
       image_filter_fn = "filter_uv_optimal"
     end
 
+    'rlb_LWA_model_mmode_map_Apr2022': begin
+      recalculate_all = 0
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/opt/astro/devel/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      calibrate_visibilities = 0
+      n_pol = 2
+      model_visibilities = 1
+      model_catalog_file_path = '/opt/astro/devel/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
+      model_subtract_sidelobe_catalog  = '/opt/astro/devel/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
+      allow_sidelobe_model_sources = 1
+      diffuse_model = "/lustre/rbyrne/ovro_lwa_sky_map_73.152MHz.skyh5"
+      diffuse_units_kelvin = 1
+      return_cal_visibilities = 0
+      image_filter_fn = "filter_uv_optimal"
+    end
+
   endcase
 
   undefine, uvfits_subversion, uvfits_version
