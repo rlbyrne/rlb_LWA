@@ -164,6 +164,7 @@ pro fhd_versions_wario
     end
 
     'rlb_cal_sims_Apr2022': begin
+      recalculate_all = 1
       calibrate_visibilities = 0
       return_cal_visibilities = 0
       model_visibilities = 1
@@ -174,6 +175,7 @@ pro fhd_versions_wario
       beam_nfreq_avg = 384
       n_pol = 1
       export_images = 0 ;Cannot export images with just one polarization
+      save_uvf = 1
     end
 
   endcase

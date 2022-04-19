@@ -1,4 +1,4 @@
-pro ps_single_obs_astm
+pro ps_single_obs_wrapper
 
   args = Command_Line_Args(count=nargs)
   obs_id=args[0]
