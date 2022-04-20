@@ -6,6 +6,7 @@ obsids_list = ["vanilla_cal", "wedge_excluded"]
 versions_list = ["rlb_cal_sims_Apr2022"]
 uvfits_path = "/safepool/rbyrne/calibration_outputs/caltest_Apr12"
 outdir = "/safepool/rbyrne/fhd_outputs"
+run_fhd = False
 run_eppsilon = True
 
 # Define wrappers
@@ -13,7 +14,7 @@ fhd_versions_script = "fhd_versions_wario"
 eppsilon_script = "ps_single_obs_wrapper"
 
 # Set eppsilon options
-refresh_ps = 0
+refresh_ps = 1
 uvf_input = 1
 
 for version in versions_list:
@@ -25,19 +26,20 @@ for version in versions_list:
 
     for obsid in obsids_list:
         # Run FHD
-        with open(
-            f"{outdir}/fhd_{version}/logs/{obsid}_fhd_stdout.txt", "wb"
-        ) as out, open(
-            f"{outdir}/fhd_{version}/logs/{obsid}_fhd_stderr.txt", "wb"
-        ) as err:
-            process = subprocess.Popen(
-                shlex.split(
-                    f"/opt/idl/idl88/bin/idl -e {fhd_versions_script} -args {outdir} {version} {uvfits_path}/{obsid}.uvfits"
-                ),
-                stdout=out,
-                stderr=err,
-            )
-        stdout, stderr = process.communicate()
+        if run_fhd:
+            with open(
+                f"{outdir}/fhd_{version}/logs/{obsid}_fhd_stdout.txt", "wb"
+            ) as out, open(
+                f"{outdir}/fhd_{version}/logs/{obsid}_fhd_stderr.txt", "wb"
+            ) as err:
+                process = subprocess.Popen(
+                    shlex.split(
+                        f"/opt/idl/idl88/bin/idl -e {fhd_versions_script} -args {outdir} {version} {uvfits_path}/{obsid}.uvfits"
+                    ),
+                    stdout=out,
+                    stderr=err,
+                )
+            stdout, stderr = process.communicate()
 
         # Run eppsilon
         if run_eppsilon:
