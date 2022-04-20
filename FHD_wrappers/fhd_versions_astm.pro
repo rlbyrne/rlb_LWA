@@ -145,11 +145,12 @@ pro fhd_versions_astm
     end
 
     'rlb_LWA_image_calibrated_data_Apr2022': begin
-      recalculate_all = 0
+      recalculate_all = 1
       instrument = 'lwa'
       import_pyuvdata_beam_filepath = '/opt/astro/devel/rbyrne/rlb_LWA/LWAbeam_2015.fits'
       calibrate_visibilities = 0
       n_pol = 2
+      image_filter_fn = "filter_uv_optimal"
     end
 
     'rlb_LWA_imaging_optimal_Apr2022': begin
@@ -184,6 +185,7 @@ pro fhd_versions_astm
       diffuse_units_kelvin = 1
       return_cal_visibilities = 0
       image_filter_fn = "filter_uv_optimal"
+      snapshot_healpix_export = 0
     end
 
   endcase
