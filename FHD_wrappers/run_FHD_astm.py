@@ -3,9 +3,9 @@ import shlex
 import os
 
 obsids_list = [
-    "20220307_175923_61MHz_calib"
+    "20220307_175923_61MHz_uncalib_transferred_flags"
 ]
-versions_list = ["rlb_LWA_image_calibrated_data_Apr2022"]
+versions_list = ["rlb_LWA_imaging_optimal_Apr2022"]
 uvfits_path = "/lustre/rbyrne/LWA_data_20220307/uvfits"
 outdir = "/lustre/rbyrne/fhd_outputs"
 run_eppsilon = False

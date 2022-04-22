@@ -5,6 +5,8 @@ import numpy as np
 
 
 def catalog_ms_to_pyradiosky(cat_ms_path):
+# Unfinished function
+# Unclear how to get absolute fluxes and positions of sources from the ms
 
     cattable = tables.table(cat_ms_path)
     fluxcol = cattable.getcol("Flux")
@@ -112,6 +114,6 @@ def cal_ms_to_uvcal(
 
 
 if __name__ == "__main__":
-    cal_ms_to_uvcal(
+    uvcal = cal_ms_to_uvcal(
         "/Users/ruby/Astro/LWA_data/LWA_data_20220307/20220307_175923_61MHz.bcal"
     )
