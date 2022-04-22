@@ -169,6 +169,7 @@ pro fhd_versions_astm
       snapshot_healpix_export = 0 ;Healpix export does not work with just one time step
       min_cal_baseline = 0
       image_filter_fn = "filter_uv_optimal"
+      flag_calibration = 0  ; try turning off calibration flagging
     end
 
     'rlb_LWA_model_mmode_map_Apr2022': begin
