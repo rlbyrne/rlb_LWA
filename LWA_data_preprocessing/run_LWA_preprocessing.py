@@ -398,7 +398,7 @@ def reprocessing_Apr25():
             # Plot autocorrelations before any preprocessing
             LWA_preprocessing.plot_autocorrelations(
                 uvd,
-                plot_save_dir=autos_plot_save_dir,
+                plot_save_dir=autos_plot_dir,
                 plot_file_prefix=f"{file_split}_all_ants",
                 time_average=True,
                 plot_legend=False,
@@ -416,7 +416,7 @@ def reprocessing_Apr25():
             # Replot autocorrelations with antenna flagging
             LWA_preprocessing.plot_autocorrelations(
                 uvd,
-                plot_save_dir=autos_plot_save_dir,
+                plot_save_dir=autos_plot_dir,
                 plot_file_prefix=f"{file_split}_ant_flags",
                 time_average=True,
                 plot_legend=False,
@@ -441,7 +441,7 @@ def reprocessing_Apr25():
                 # Replot autocorrelations with flagging
                 LWA_preprocessing.plot_autocorrelations(
                     uvd_ssins_flagged,
-                    plot_save_dir=autos_plot_save_dir,
+                    plot_save_dir=autos_plot_dir,
                     plot_file_prefix=f"{file_split}_ssins_flagged_thresh_{ssins_thresh}",
                     time_average=True,
                     plot_legend=False,
