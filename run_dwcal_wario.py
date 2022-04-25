@@ -339,7 +339,6 @@ def dwcal_newtons_method_test_Apr22():
         use_autos=False,
         use_wedge_exclusion=False,
         cal_savefile="/safepool/rbyrne/calibration_outputs/caltest_newtons_method_Apr22/vanilla_cal.calfits",
-        calibrated_data_savefile="/safepool/rbyrne/calibration_outputs/caltest_newtons_method_Apr12/vanilla_cal.uvfits",
         log_file_path="/safepool/rbyrne/calibration_outputs/caltest_newtons_method_Apr22/vanilla_cal_log.txt",
         use_newtons_method=True,
         gain_init_stddev=0.,
@@ -356,7 +355,6 @@ def dwcal_newtons_method_test_Apr22():
         use_autos=False,
         use_wedge_exclusion=True,
         cal_savefile="/safepool/rbyrne/calibration_outputs/caltest_newtons_method_Apr22/wedge_excluded.calfits",
-        calibrated_data_savefile="/safepool/rbyrne/calibration_outputs/caltest_newtons_method_Apr12/wedge_excluded.uvfits",
         log_file_path="/safepool/rbyrne/calibration_outputs/caltest_newtons_method_Apr22/wedge_excluded_log.txt",
         use_newtons_method=True,
         gain_init_stddev=0.,
@@ -364,6 +362,143 @@ def dwcal_newtons_method_test_Apr22():
     )
 
 
+def random_gains_test_Apr25():
+
+    save_dir = "/safepool/rbyrne/calibration_outputs/random_gains_test_Apr25"
+
+    model_path = "/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Apr2022"
+    model_use_model = True
+    data_path = "/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_Apr2022"
+    data_use_model = True
+    obsid = "1061316296"
+    pol = "XX"
+    use_autos = False
+
+    data, model = dwcal.get_test_data(
+        model_path=model_path,
+        model_use_model=model_use_model,
+        data_path=data_path,
+        data_use_model=data_use_model,
+        obsid=obsid,
+        pol=pol,
+        use_autos=use_autos,
+        debug_limit_freqs=None,
+        use_antenna_list=None,
+        use_flagged_baselines=False,
+    )
+
+    # Create randomized gains and apply to data
+    randomized_gains_cal_savefile = f"{save_dir}/random_initial_gains.calfits"
+    randomized_gains_data_uvfits = f"{save_dir}/random_initial_gains_data.uvfits"
+    random_gains_stddev = .01
+    random_gains = np.random.normal(
+            1.0,
+            random_gains_stddev,
+            size=(data.Nants_data, data.Nfreqs),
+        ) + 1.0j * np.random.normal(
+            0.0,
+            random_gains_stddev,
+            size=(data.Nants_data, data.Nfreqs),
+        )
+    random_gains_cal = dwcal.initialize_cal(
+        data,
+        np.arange(data.Nants_data),
+        gains=random_gains
+    )
+    random_gains_cal.gain_convention = "divide"  # Apply initial calibration as division
+    random_gains_cal.write_calfits(randomized_gains_cal_savefile, clobber=True)  # Save gains
+    # Apply gains to data
+    pyuvdata.utils.uvcalibrate(
+        data, random_gains_cal, inplace=True, time_check=False
+    )
+    # Save data as uvfits
+    data.write_uvfits(randomized_gains_data_uvfits)
+
+    # Do vanilla cal
+    use_wedge_exclusion = False
+    cal_savefile = f"{save_dir}/vanilla_cal.calfits"
+    log_file_path = f"{save_dir}/vanilla_cal_log.txt"
+    calibrated_data_savefile=f"{save_dir}/vanilla_cal.uvfits",
+
+    if log_file_path is not None:
+        sys.stdout = open(log_file_path, "w")
+        sys.stderr = sys.stdout
+
+    cal = dwcal.calibration_optimization(
+        data,
+        model,
+        use_wedge_exclusion=use_wedge_exclusion,
+        log_file_path=log_file_path,
+    )
+
+    if cal_savefile is not None:
+        print(f"Saving calibration solutions to {cal_savefile}")
+        sys.stdout.flush()
+        cal.write_calfits(cal_savefile, clobber=True)
+
+    # Apply calibration
+    if calibrated_data_savefile is not None:
+        calibrated_data = apply_calibration(
+            cal,
+            calibrated_data_savefile,
+            data_path=data_path,
+            data_use_model=data_use_model,
+            obsid=obsid,
+            pol=pol,
+        )
+        print(f"Saving calibrated data to {calibrated_data_savefile}")
+        sys.stdout.flush()
+        calibrated_data.write_uvfits(calibrated_data_savefile)
+
+    end = time.time()
+    print(f"Total runtime: {(end - start)/60.} minutes")
+
+    if log_file_path is not None:
+        sys.stdout.close()
+
+    # Do wedge excluded cal
+    use_wedge_exclusion = True
+    cal_savefile = f"{save_dir}/wedge_excluded.calfits"
+    log_file_path = f"{save_dir}/wedge_excluded_log.txt"
+    calibrated_data_savefile=f"{save_dir}/wedge_excluded.uvfits",
+
+    if log_file_path is not None:
+        sys.stdout = open(log_file_path, "w")
+        sys.stderr = sys.stdout
+
+    cal = dwcal.calibration_optimization(
+        data,
+        model,
+        use_wedge_exclusion=use_wedge_exclusion,
+        log_file_path=log_file_path,
+    )
+
+    if cal_savefile is not None:
+        print(f"Saving calibration solutions to {cal_savefile}")
+        sys.stdout.flush()
+        cal.write_calfits(cal_savefile, clobber=True)
+
+    # Apply calibration
+    if calibrated_data_savefile is not None:
+        calibrated_data = apply_calibration(
+            cal,
+            calibrated_data_savefile,
+            data_path=data_path,
+            data_use_model=data_use_model,
+            obsid=obsid,
+            pol=pol,
+        )
+        print(f"Saving calibrated data to {calibrated_data_savefile}")
+        sys.stdout.flush()
+        calibrated_data.write_uvfits(calibrated_data_savefile)
+
+    end = time.time()
+    print(f"Total runtime: {(end - start)/60.} minutes")
+
+    if log_file_path is not None:
+        sys.stdout.close()
+
+
 if __name__ == "__main__":
 
-    dwcal_newtons_method_test_Apr22()
+    random_gains_test_Apr25()
