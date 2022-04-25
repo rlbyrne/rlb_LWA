@@ -2,6 +2,7 @@ from dwcal import delay_weighted_cal as dwcal
 import numpy as np
 import pyuvdata
 from pyuvdata import utils
+import sys
 
 
 def run_calibration_Jan5():
