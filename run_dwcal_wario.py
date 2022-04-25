@@ -62,8 +62,14 @@ def create_randomized_gains_Jan11(randomized_gains_uvfits_path):
     antenna_list = np.sort(np.unique([data.ant_1_array, data.ant_2_array]))
     gain_stddev = 0.05
     gains = np.random.normal(
-        1.0, gain_stddev, size=(data.Nants_data, data.Nfreqs),
-    ) + 1.0j * np.random.normal(0.0, gain_stddev, size=(data.Nants_data, data.Nfreqs),)
+        1.0,
+        gain_stddev,
+        size=(data.Nants_data, data.Nfreqs),
+    ) + 1.0j * np.random.normal(
+        0.0,
+        gain_stddev,
+        size=(data.Nants_data, data.Nfreqs),
+    )
     cal_obj = dwcal.initialize_cal(data, antenna_list, gains=gains)
     cal_obj.write_calfits(
         "/safepool/rbyrne/calibration_outputs/randomized_gains/true_gains.calfits",
@@ -341,7 +347,7 @@ def dwcal_newtons_method_test_Apr22():
         cal_savefile="/safepool/rbyrne/calibration_outputs/caltest_newtons_method_Apr22/vanilla_cal.calfits",
         log_file_path="/safepool/rbyrne/calibration_outputs/caltest_newtons_method_Apr22/vanilla_cal_log.txt",
         use_newtons_method=True,
-        gain_init_stddev=0.,
+        gain_init_stddev=0.0,
         gain_init_calfile="/safepool/rbyrne/calibration_outputs/caltest_Apr12/vanilla_cal.calfits",
     )
 
@@ -357,7 +363,7 @@ def dwcal_newtons_method_test_Apr22():
         cal_savefile="/safepool/rbyrne/calibration_outputs/caltest_newtons_method_Apr22/wedge_excluded.calfits",
         log_file_path="/safepool/rbyrne/calibration_outputs/caltest_newtons_method_Apr22/wedge_excluded_log.txt",
         use_newtons_method=True,
-        gain_init_stddev=0.,
+        gain_init_stddev=0.0,
         gain_init_calfile="/safepool/rbyrne/calibration_outputs/caltest_Apr12/wedge_excluded.calfits",
     )
 
@@ -366,7 +372,9 @@ def random_gains_test_Apr25():
 
     save_dir = "/safepool/rbyrne/calibration_outputs/random_gains_test_Apr25"
 
-    model_path = "/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Apr2022"
+    model_path = (
+        "/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Apr2022"
+    )
     model_use_model = True
     data_path = "/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_Apr2022"
     data_use_model = True
@@ -390,27 +398,24 @@ def random_gains_test_Apr25():
     # Create randomized gains and apply to data
     randomized_gains_cal_savefile = f"{save_dir}/random_initial_gains.calfits"
     randomized_gains_data_uvfits = f"{save_dir}/random_initial_gains_data.uvfits"
-    random_gains_stddev = .01
+    random_gains_stddev = 0.01
     random_gains = np.random.normal(
-            1.0,
-            random_gains_stddev,
-            size=(data.Nants_data, data.Nfreqs),
-        ) + 1.0j * np.random.normal(
-            0.0,
-            random_gains_stddev,
-            size=(data.Nants_data, data.Nfreqs),
-        )
-    random_gains_cal = dwcal.initialize_cal(
-        data,
-        np.arange(data.Nants_data),
-        gains=random_gains
+        1.0,
+        random_gains_stddev,
+        size=(data.Nants_data, data.Nfreqs),
+    ) + 1.0j * np.random.normal(
+        0.0,
+        random_gains_stddev,
+        size=(data.Nants_data, data.Nfreqs),
     )
+    antenna_list = np.unique([data.ant_1_array, data.ant_2_array])
+    random_gains_cal = dwcal.initialize_cal(data, antenna_list, gains=random_gains)
     random_gains_cal.gain_convention = "divide"  # Apply initial calibration as division
-    random_gains_cal.write_calfits(randomized_gains_cal_savefile, clobber=True)  # Save gains
+    random_gains_cal.write_calfits(
+        randomized_gains_cal_savefile, clobber=True
+    )  # Save gains
     # Apply gains to data
-    pyuvdata.utils.uvcalibrate(
-        data, random_gains_cal, inplace=True, time_check=False
-    )
+    pyuvdata.utils.uvcalibrate(data, random_gains_cal, inplace=True, time_check=False)
     # Save data as uvfits
     data.write_uvfits(randomized_gains_data_uvfits)
 
@@ -418,7 +423,7 @@ def random_gains_test_Apr25():
     use_wedge_exclusion = False
     cal_savefile = f"{save_dir}/vanilla_cal.calfits"
     log_file_path = f"{save_dir}/vanilla_cal_log.txt"
-    calibrated_data_savefile=f"{save_dir}/vanilla_cal.uvfits",
+    calibrated_data_savefile = (f"{save_dir}/vanilla_cal.uvfits",)
 
     if log_file_path is not None:
         sys.stdout = open(log_file_path, "w")
@@ -460,7 +465,7 @@ def random_gains_test_Apr25():
     use_wedge_exclusion = True
     cal_savefile = f"{save_dir}/wedge_excluded.calfits"
     log_file_path = f"{save_dir}/wedge_excluded_log.txt"
-    calibrated_data_savefile=f"{save_dir}/wedge_excluded.uvfits",
+    calibrated_data_savefile = (f"{save_dir}/wedge_excluded.uvfits",)
 
     if log_file_path is not None:
         sys.stdout = open(log_file_path, "w")
