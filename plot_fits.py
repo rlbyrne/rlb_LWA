@@ -3,6 +3,7 @@ from astropy.wcs import WCS
 import numpy as np
 import sys
 import matplotlib.pyplot as plt
+import matplotlib
 
 
 class SkyImage:
@@ -171,7 +172,8 @@ def plot_fits_file(
     colorbar_label="Surface Brightness (Jy/sr)",
     save_filename=None,
     title=None,
-    mark_pointing_ctr=True
+    mark_pointing_ctr=False,
+    symlog = False,
 ):
 
     hdu = fits.open(data_filename)[0]
@@ -193,18 +195,26 @@ def plot_fits_file(
     if signal_extent is None:
         vmin = None
         vmax = None
+        if symlog:
+            linthresh = (np.max(plot_data)-np.min(plot_data))*1e-3
     else:
         vmin = np.min(signal_extent)
         vmax = np.max(signal_extent)
+        if symlog:
+            linthresh = (vmax-vmin)*1e-3
+
+    if symlog:
+        norm = matplotlib.colors.SymLogNorm(linthresh=linthresh, vmin=vmin, vmax=vmax)
+    else:
+        norm = matplotlib.colors.Normalize(vmin=vmin, vmax=vmax)
 
     plt.subplot(projection=wcs, slices=use_slices)
     plt.imshow(
         plot_data,
-        vmin=vmin,
-        vmax=vmax,
         origin="lower",
         cmap="inferno",
         interpolation=None,
+        norm=norm,
     )
     plt.grid(color="white", ls="solid", lw=0.2)
 

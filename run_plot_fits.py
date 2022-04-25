@@ -101,6 +101,18 @@ def plot_marin_images_Apr8():
     )
 
 
+def plot_mmode_sims_Apr19():
+
+    filename = "/Users/ruby/Astro/FHD_outputs/fhd_rlb_LWA_imaging_optimal_Apr2022/output_data/20220307_175923_61MHz_uncalib_optimal_Residual_I.fits"
+
+    plot_fits.plot_fits_file(
+        filename,
+        edge_crop_ratio = 0,
+        signal_extent = [-5e6, 5e6],
+        #save_filename = f"/Users/ruby/Astro/FHD_outputs/fhd_rlb_LWA_model_mmode_map_Apr2022/20220307_175923_61MHz_calib_optimal_Dirty_I.png",
+    )
+
+
 
 if __name__ == "__main__":
-    plot_marin_images_Apr8()
+    plot_mmode_sims_Apr19()
