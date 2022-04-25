@@ -340,63 +340,121 @@ def process_data_Apr15():
     )
 
 
-def test_ssins_flagging_Apr17():
+def reprocessing_Apr25():
 
-    ms_filename = "/lustre/mmanders/stageiii/phaseiii/20220307/calint/20220307_175923_61MHz.ms"
-    output_dir = "/lustre/rbyrne/LWA_data_20220307"
-    uvfits_output_dir = f"{output_dir}/uvfits"
-    ssins_plot_save_dir = f"{output_dir}/ssins_plots"
-    ssins_flags_save_dir = f"{output_dir}/ssins_flags"
-    autos_plot_save_dir = f"{output_dir}/autocorrelation_plots"
-    save_prefix = "20220307_175923_61MHz"
+    data_dir = "/lustre/rbyrne/LWA_data_20220210"
+    output_uvfits_dir = f"{data_dir}/uvfits_ssins_flagged"
+    ssins_plot_dir = f"{data_dir}/ssins_plots"
+    ssins_flags_dir = f"{data_dir}/ssins_flags"
+    autos_plot_dir = f"{data_dir}/autocorrelation_plots"
 
-    uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(
-        ms_filename,
-        untar_dir=output_dir,
-        data_column='DATA'
-    )
+    # Find raw ms files
+    subbands = ["70MHz"]
+    ssins_thresholds = [1, 5, 10, 15, 20]
+    start_time_stamp = 191447
+    end_time_stamp = 194824
+    nfiles_per_uvfits = 12
 
-    # Remove all flags
-    uvd.flag_array[:, :, :, :] = False
+    for subband in subbands:
 
-    LWA_preprocessing.flag_outriggers(
-        uvd,
-        inplace=True,
-    )
-
-    LWA_preprocessing.plot_autocorrelations(
-        uvd,
-        plot_save_dir=autos_plot_save_dir,
-        plot_file_prefix=save_prefix,
-        time_average=True,
-        plot_legend=False,
-        plot_flagged_data=False,
-    )
-
-    # RFI flagging
-    rfi_flagging_thresholds = [20., 10., 5., 1.]
-    plot_orig_flags = True
-    for sig_thresh in rfi_flagging_thresholds:
-        LWA_preprocessing.ssins_flagging(
-            uvd,
-            sig_thresh=20.0,  # Flagging threshold in std. dev.
-            inplace=True,
-            save_flags_filepath=f"{ssins_flags_save_dir}/{save_prefix}_flags_ssins_thresh_{sig_thresh}.hdf5",
-            plot_no_flags=False,
-            plot_orig_flags=plot_orig_flags,
-            plot_ssins_flags=True,
-            plot_save_dir=ssins_plot_save_dir,
-            plot_file_prefix=save_prefix,
+        ms_filenames = os.listdir(data_dir)
+        ms_filenames = [
+            file
+            for file in ms_filenames
+            if (file.endswith(".ms.tar") and subband in file)
+        ]
+        ms_filenames = sorted(
+            [
+                file
+                for file in ms_filenames
+                if (
+                    int(file.split("_")[1]) >= start_time_stamp
+                    and int(file.split("_")[1]) <= end_time_stamp
+                )
+            ]
         )
-        plot_orig_flags = False
 
-        # Write uvfits
-        uvd_uncalib.write_uvfits(
-            f"{uvfits_output_dir}/{save_prefix}_ssins_thresh_{sig_thresh}.uvfits",
-            force_phase=True,
-            spoof_nonessential=True,
-        )
+        ms_filenames_grouped = []
+        file_ind = 0
+        while file_ind < len(ms_filenames):
+            max_ind = np.min([file_ind + nfiles_per_uvfits, len(ms_filenames)])
+            file_group = ms_filenames[file_ind:max_ind]
+            ms_filenames_grouped.append(file_group)
+            file_ind += nfiles_per_uvfits
+
+        # Process files
+        for file_group in range(len(ms_filenames_grouped)):
+
+            file_split = ms_filenames_grouped[file_group][0].split(".")[0]
+            autos_all_ants_plot_prefix = f"{file_split}_all_ants"
+            plot_prefix = f"{file_split}"
+            autos_with_flags_plot_prefix = f"{file_split}_with_flags"
+
+            ms_group_full_paths = [
+                f"{data_dir}/{file}" for file in ms_filenames_grouped[file_group]
+            ]
+            uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(ms_group_full_paths)
+
+            # Plot autocorrelations before any preprocessing
+            LWA_preprocessing.plot_autocorrelations(
+                uvd,
+                plot_save_dir=autos_plot_save_dir,
+                plot_file_prefix=f"{file_split}_all_ants",
+                time_average=True,
+                plot_legend=False,
+                plot_flagged_data=False,
+            )
+
+            # Flag outriggers
+            LWA_preprocessing.flag_outriggers(uvd, inplace=True)
+
+            # Flag inactive antennas
+            LWA_preprocessing.remove_inactive_antennas(
+                uvd, autocorr_thresh=20.0, inplace=True, flag_only=True
+            )
+
+            # Replot autocorrelations with antenna flagging
+            LWA_preprocessing.plot_autocorrelations(
+                uvd,
+                plot_save_dir=autos_plot_save_dir,
+                plot_file_prefix=f"{file_split}_ant_flags",
+                time_average=True,
+                plot_legend=False,
+                plot_flagged_data=False,
+            )
+
+            for ssins_thresh in ssins_thresholds:
+
+                # RFI flagging
+                uvd_ssins_flagged = LWA_preprocessing.ssins_flagging(
+                    uvd,
+                    sig_thresh=ssins_thresh,  # Flagging threshold in std. dev.
+                    inplace=False,
+                    save_flags_filepath=f"{ssins_flags_dir}/{file_split}_flags_thresh_{ssins_thresh}.hdf5",
+                    plot_no_flags=False,
+                    plot_orig_flags=True,
+                    plot_ssins_flags=True,
+                    plot_save_dir=ssins_plot_dir,
+                    plot_file_prefix=f"{file_split}_thresh_{ssins_thresh}",
+                )
+
+                # Replot autocorrelations with flagging
+                LWA_preprocessing.plot_autocorrelations(
+                    uvd_ssins_flagged,
+                    plot_save_dir=autos_plot_save_dir,
+                    plot_file_prefix=f"{file_split}_ssins_flagged_thresh_{ssins_thresh}",
+                    time_average=True,
+                    plot_legend=False,
+                    plot_flagged_data=False,
+                )
+
+                # Write uvfits
+                uvd_ssins_flagged.write_uvfits(
+                    f"{output_uvfits_dir}/{file_split}_ssins_thresh_{ssins_thresh}.uvfits",
+                    force_phase=True,
+                    spoof_nonessential=True,
+                )
 
 
 if __name__ == "__main__":
-    test_ssins_flagging_Apr17()
+    reprocessing_Apr25()

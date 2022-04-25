@@ -95,6 +95,7 @@ def plot_autocorrelations(
     time_average=True,
     plot_legend=False,
     plot_flagged_data=True,
+    yrange=[0, 100],
 ):
 
     if time_average:
@@ -142,6 +143,8 @@ def plot_autocorrelations(
                 plt.legend(prop={"size": 4})
             plt.xlabel("Frequency (MHz)")
             plt.ylabel("Autocorr. Power")
+            plt.xlim([np.nanmin(uvd_autos.freq_array), np.nanmax(uvd_autos.freq_array)])
+            plt.ylim(yrange)
             plt.title(f"{pol_names[pol_ind]} Autocorrelations")
             print(f"Saving figure to {plot_save_dir}/{plot_name}")
             plt.savefig(f"{plot_save_dir}/{plot_name}", dpi=200)
