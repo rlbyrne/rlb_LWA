@@ -446,7 +446,6 @@ def random_gains_test_Apr25():
     if calibrated_data_savefile is not None:
         calibrated_data = dwcal.apply_calibration(
             cal,
-            calibrated_data_savefile,
             data_path=data_path,
             data_use_model=data_use_model,
             obsid=obsid,
@@ -488,7 +487,6 @@ def random_gains_test_Apr25():
     if calibrated_data_savefile is not None:
         calibrated_data = dwcal.apply_calibration(
             cal,
-            calibrated_data_savefile,
             data_path=data_path,
             data_use_model=data_use_model,
             obsid=obsid,
