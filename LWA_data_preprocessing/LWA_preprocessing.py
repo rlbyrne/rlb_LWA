@@ -1,6 +1,7 @@
 import pyuvdata
 import os
 import numpy as np
+import sys
 import subprocess
 import shlex
 import matplotlib.pyplot as plt
@@ -94,8 +95,10 @@ def plot_autocorrelations(
     plot_file_prefix="",
     time_average=True,
     plot_legend=False,
-    plot_flagged_data=True,
+    plot_flagged_data=False,
     yrange=[0, 100],
+    plot_antennas_together=True,
+    plot_antennas_individually=True,
 ):
 
     if time_average:
@@ -118,37 +121,71 @@ def plot_autocorrelations(
 
         pol_names = get_pol_names(uvd_autos.polarization_array)
         ant_inds = np.intersect1d(uvd_autos.ant_1_array, uvd_autos.ant_2_array)
-        for pol_ind in range(uvd_autos.Npols):
 
-            if time_average:
-                plot_name = f"{plot_file_prefix}_autocorr_{pol_names[pol_ind]}.png"
-            else:
-                plot_name = f"{plot_file_prefix}_autocorr_{pol_names[pol_ind]}_time{time_plot_ind:05d}.png"
+        if plot_antennas_together:
+            for pol_ind in range(uvd_autos.Npols):
+
+                if time_average:
+                    plot_name = f"{plot_file_prefix}_autocorr_{pol_names[pol_ind]}.png"
+                else:
+                    plot_name = f"{plot_file_prefix}_autocorr_{pol_names[pol_ind]}_time{time_plot_ind:05d}.png"
+
+                for ant_ind in ant_inds:
+                    ant_name = uvd_autos.antenna_names[ant_ind]
+                    bl_inds = np.where(uvd_autos.ant_1_array == ant_ind)[0]
+                    plt.plot(
+                        uvd_autos.freq_array[0, :],
+                        np.nanmean(
+                            np.abs(uvd_autos.data_array[bl_inds, 0, :, pol_ind]), axis=0
+                        ),
+                        "-o",
+                        markersize=0.5,
+                        linewidth=0.3,
+                        label=ant_name,
+                    )
+
+                if plot_legend:
+                    plt.legend(prop={"size": 4})
+                plt.xlabel("Frequency (MHz)")
+                plt.ylabel("Autocorr. Power")
+                plt.xlim([np.nanmin(uvd_autos.freq_array), np.nanmax(uvd_autos.freq_array)])
+                plt.ylim(yrange)
+                plt.title(f"{pol_names[pol_ind]} Autocorrelations")
+                print(f"Saving figure to {plot_save_dir}/{plot_name}")
+                plt.savefig(f"{plot_save_dir}/{plot_name}", dpi=200)
+                plt.close()
+
+        if plot_antennas_individually:
 
             for ant_ind in ant_inds:
                 ant_name = uvd_autos.antenna_names[ant_ind]
+                if time_average:
+                    plot_name = f"{plot_file_prefix}_autocorr_ant_{ant_name}.png"
+                else:
+                    plot_name = f"{plot_file_prefix}_autocorr_ant_{ant_name}_time{time_plot_ind:05d}.png"
                 bl_inds = np.where(uvd_autos.ant_1_array == ant_ind)[0]
-                plt.plot(
-                    uvd_autos.freq_array[0, :],
-                    np.nanmean(
-                        np.abs(uvd_autos.data_array[bl_inds, 0, :, pol_ind]), axis=0
-                    ),
-                    "-o",
-                    markersize=0.5,
-                    linewidth=0.3,
-                    label=ant_name,
+                plot_values = np.nanmean(
+                    np.abs(uvd_autos.data_array[bl_inds, 0, :, :]), axis=0
                 )
-
-            if plot_legend:
-                plt.legend(prop={"size": 4})
-            plt.xlabel("Frequency (MHz)")
-            plt.ylabel("Autocorr. Power")
-            plt.xlim([np.nanmin(uvd_autos.freq_array), np.nanmax(uvd_autos.freq_array)])
-            plt.ylim(yrange)
-            plt.title(f"{pol_names[pol_ind]} Autocorrelations")
-            print(f"Saving figure to {plot_save_dir}/{plot_name}")
-            plt.savefig(f"{plot_save_dir}/{plot_name}", dpi=200)
-            plt.close()
+                if not np.isnan(np.nanmean(plot_values)):  # Check if antenna is completely flagged
+                    for pol_ind in range(uvd_autos.Npols):
+                        plt.plot(
+                            uvd_autos.freq_array[0, :],
+                            plot_values[:, pol_ind],
+                            "-o",
+                            markersize=0.5,
+                            linewidth=0.3,
+                            label=pol_names[pol_ind],
+                        )
+                    plt.legend(prop={"size": 4})
+                    plt.xlabel("Frequency (MHz)")
+                    plt.ylabel("Autocorr. Power")
+                    plt.xlim([np.nanmin(uvd_autos.freq_array), np.nanmax(uvd_autos.freq_array)])
+                    plt.ylim(yrange)
+                    plt.title(f"Antenna {ant_name} Autocorrelations")
+                    print(f"Saving figure to {plot_save_dir}/{plot_name}")
+                    plt.savefig(f"{plot_save_dir}/{plot_name}", dpi=200)
+                    plt.close()
 
 
 def flag_outriggers(
@@ -190,49 +227,135 @@ def flag_outriggers(
         return uvd_new
 
 
-def remove_inactive_antennas(uvd, autocorr_thresh=5.0, inplace=False, flag_only=False):
-    # Remove unused antennas based on low autocorrelation values
+def flag_antennas(
+    uvd,
+    antenna_names=[],
+    flag_pol = "all",  # Options are "all", "X", "Y", "XX", "YY", "XY", or "YX"
+    inplace=False
+):
+
+    flag_arr = np.copy(uvd.flag_array)
+    pol_names = get_pol_names(uvd_autos.polarization_array)
+
+    for ant_name in antenna_names:
+        ant_ind = np.where(np.array(uvd.antenna_names) == ant_name)[0]
+        if np.size(ant_ind) == 0:
+            print(f"WARNING: Antenna {ant_name} not found in antenna_names.")
+        else:
+            flag_bls_1 = np.where(uvd.ant_1_array == ant_ind_full_array)[0]
+            flag_bls_2 = np.where(uvd.ant_2_array == ant_ind_full_array)[0]
+            flag_bls = np.unique(np.concatenate((flag_bls_1, flag_bls_2)))
+            if flag_pol == "all":
+                flag_arr[flag_bls, :, :, :] = True
+            elif flag_pol in ["XX", "YY", "XY", "YX"]:
+                pol_ind = np.where(pol_names == flag_pol)[0]
+                flag_arr[flag_bls, :, :, pol_ind] = True
+            elif flag_pol == "X":
+                pol_ind_xx = np.where(pol_names == "XX")[0]
+                if np.size(pol_ind_xx) > 0:
+                    flag_arr[flag_bls, :, :, pol_ind_xx] = True
+                pol_ind_xy = np.where(pol_names == "XY")[0]
+                if np.size(pol_ind_xy) > 0:
+                    flag_arr[flag_bls_1, :, :, pol_ind_xy] = True
+                pol_ind_yx = np.where(pol_names == "YX")[0]
+                if np.size(pol_ind_yx) > 0:
+                    flag_arr[flag_bls_2, :, :, pol_ind_yx] = True
+            elif flag_pol == "Y":
+                pol_ind_yy = np.where(pol_names == "YY")[0]
+                if np.size(pol_ind_yy) > 0:
+                    flag_arr[flag_bls, :, :, pol_ind_yy] = True
+                pol_ind_xy = np.where(pol_names == "XY")[0]
+                if np.size(pol_ind_xy) > 0:
+                    flag_arr[flag_bls_2, :, :, pol_ind_xy] = True
+                pol_ind_yx = np.where(pol_names == "YX")[0]
+                if np.size(pol_ind_yx) > 0:
+                    flag_arr[flag_bls_1, :, :, pol_ind_yx] = True
+            else:
+                print(f"ERROR: Unknown flag_pol option {flag_pol}.")
+                sys.exit(1)
+
+    if inplace:
+        uvd.flag_array = flag_arr
+    else:
+        uvd_new = uvd.copy()
+        uvd_new.flag_array = flag_arr
+        return uvd_new
+
+
+def flag_inactive_antennas(uvd, autocorr_thresh=5.0, inplace=False, flag_only=True):
+    # Flag unused antennas based on low autocorrelation values
     # If flag_only=False, antennas with low autocorrelations across all polarizations are removed
     # Antenna polarizations with low autocorrelations are flagged
 
+    flag_arr = np.copy(uvd.flag_array)
     uvd_autos = uvd.select(ant_str="auto", inplace=False)
-    flag_arr = uvd.flag_array
-
+    uvd_autos.data_array[np.where(uvd_autos.flag_array)] = np.nan
     ant_inds = np.intersect1d(uvd_autos.ant_1_array, uvd_autos.ant_2_array)
-    used_antennas = []
+
+    pol_names = get_pol_names(uvd_autos.polarization_array)
+    auto_pol_names = [name for name in pol_names if name in ["XX", "YY"]]
+    cross_pol_names = [name for name in pol_names if name in ["XY", "YX"]]
+
+    inactive_ants = []
     for ant_ind in ant_inds:
         ant_name = uvd_autos.antenna_names[ant_ind]
         bl_inds = np.where(uvd_autos.ant_1_array == ant_ind)[0]
-        avg_autocorr = np.mean(
+        avg_autocorr = np.nanmean(
             np.abs(uvd_autos.data_array[bl_inds, :, :, :]), axis=(0, 1, 2)
         )
-        for pol_ind in range(uvd_autos.Npols):
-            if avg_autocorr[pol_ind] < autocorr_thresh:
-                ant_ind_full_array = np.where(uvd.antenna_names == ant_name)[0]
-                flag_bls = np.unique(
-                    np.concatenate(
-                        (
-                            np.where(uvd.ant_1_array == ant_ind_full_array),
-                            np.where(uvd.ant_2_array == ant_ind_full_array),
-                        )
-                    )
-                )
+        for pol in auto_pol_names:
+            pol_ind = np.where(pol_names == pol)[0][0]
+            if avg_autocorr[pol_ind] < autocorr_thresh or np.isnan(
+                avg_autocorr[pol_ind]
+            ):
+                ant_ind_full_array = np.where(np.array(uvd.antenna_names) == ant_name)[
+                    0
+                ]
+                flag_bls_1 = np.where(uvd.ant_1_array == ant_ind_full_array)[0]
+                flag_bls_2 = np.where(uvd.ant_2_array == ant_ind_full_array)[0]
+                flag_bls = np.unique(np.concatenate((flag_bls_1, flag_bls_2)))
                 flag_arr[flag_bls, :, :, pol_ind] = True
-        if np.mean(avg_autocorr) > autocorr_thresh:
-            used_antennas.append(ant_name)
+                for cross_pol in cross_pol_names:  # Flag cross polarizations also
+                    cross_pol_ind = np.where(pol_names == cross_pol)[0][0]
+                    if (pol == "XX" and cross_pol == "XY") or (
+                        pol == "YY" and cross_pol == "YX"
+                    ):
+                        flag_arr[flag_bls_1, :, :, cross_pol_ind] = True
+                    if (pol == "XX" and cross_pol == "YX") or (
+                        pol == "YY" and cross_pol == "XY"
+                    ):
+                        flag_arr[flag_bls_2, :, :, cross_pol_ind] = True
+
+        pol_max_autocorr = np.nanmax(avg_autocorr)
+        if pol_max_autocorr < autocorr_thresh or np.isnan(pol_max_autocorr):
+            inactive_ants.append(ant_name)
 
     print(
-        f"{uvd_autos.Nants_data-len(used_antennas)}/{uvd_autos.Nants_data} antennas removed due to low autocorrelation power."
+        f"{len(inactive_ants)}/{uvd_autos.Nants_data} antennas removed due to low autocorrelation power."
     )
 
     if inplace:
         uvd.flag_array = flag_arr
         if not flag_only:
+            used_antennas = np.array(
+                [
+                    ant_name
+                    for ant_name in uvd.antenna_names
+                    if ant_name not in inactive_ants
+                ]
+            )
             uvd.select(antenna_names=used_antennas, inplace=True)
     else:
         uvd_new = uvd.copy()
         uvd_new.flag_array = flag_arr
         if not flag_only:
+            used_antennas = np.array(
+                [
+                    ant_name
+                    for ant_name in uvd.antenna_names
+                    if ant_name not in inactive_ants
+                ]
+            )
             uvd_new.select(antenna_names=used_antennas, inplace=True)
         return uvd_new
 

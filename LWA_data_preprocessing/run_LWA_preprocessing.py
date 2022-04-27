@@ -31,7 +31,7 @@ def ssins_flagging_Mar25():
             plot_legend=False,
         )
 
-        LWA_preprocessing.remove_inactive_antennas(
+        LWA_preprocessing.flag_inactive_antennas(
             uvd, autocorr_thresh=10.0, inplace=True
         )
 
@@ -119,7 +119,7 @@ def ssins_flagging_Mar31():
             )
 
             # Remove inactive antennas
-            LWA_preprocessing.remove_inactive_antennas(
+            LWA_preprocessing.flag_inactive_antennas(
                 uvd, autocorr_thresh=10.0, inplace=True
             )
 
@@ -248,7 +248,7 @@ def process_data_Apr6():
             )
 
             # Remove inactive antennas
-            LWA_preprocessing.remove_inactive_antennas(
+            LWA_preprocessing.flag_inactive_antennas(
                 uvd, autocorr_thresh=10.0, inplace=True
             )
 
@@ -350,7 +350,7 @@ def reprocessing_Apr25():
 
     # Find raw ms files
     subbands = ["70MHz"]
-    ssins_thresholds = [1, 5, 10, 15, 20]
+    ssins_thresholds = [1, 5, 10, 20]
     start_time_stamp = 191447
     end_time_stamp = 194824
     nfiles_per_uvfits = 12
@@ -403,13 +403,14 @@ def reprocessing_Apr25():
                 time_average=True,
                 plot_legend=False,
                 plot_flagged_data=False,
+                plot_antennas_individually=False,
             )
 
             # Flag outriggers
             LWA_preprocessing.flag_outriggers(uvd, inplace=True)
 
             # Flag inactive antennas
-            LWA_preprocessing.remove_inactive_antennas(
+            LWA_preprocessing.flag_inactive_antennas(
                 uvd, autocorr_thresh=20.0, inplace=True, flag_only=True
             )
 
@@ -421,8 +422,10 @@ def reprocessing_Apr25():
                 time_average=True,
                 plot_legend=False,
                 plot_flagged_data=False,
+                plot_antennas_individually=False,
             )
 
+            plot_orig_flags = True
             for ssins_thresh in ssins_thresholds:
 
                 # RFI flagging
@@ -431,12 +434,13 @@ def reprocessing_Apr25():
                     sig_thresh=ssins_thresh,  # Flagging threshold in std. dev.
                     inplace=False,
                     save_flags_filepath=f"{ssins_flags_dir}/{file_split}_flags_thresh_{ssins_thresh}.hdf5",
-                    plot_no_flags=False,
+                    plot_no_flags=plot_orig_flags,
                     plot_orig_flags=True,
                     plot_ssins_flags=True,
                     plot_save_dir=ssins_plot_dir,
-                    plot_file_prefix=f"{file_split}_thresh_{ssins_thresh}",
+                    plot_file_prefix=f"{file_split}",
                 )
+                plot_orig_flags = False
 
                 # Replot autocorrelations with flagging
                 LWA_preprocessing.plot_autocorrelations(
@@ -446,6 +450,7 @@ def reprocessing_Apr25():
                     time_average=True,
                     plot_legend=False,
                     plot_flagged_data=False,
+                    plot_antennas_individually=False,
                 )
 
                 # Write uvfits
