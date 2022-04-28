@@ -54,6 +54,9 @@ def convert_fits_to_pyradiosky(fits_filepath, freq_mhz):
 
 
 if __name__ == "__main__":
+
+    # Map is downloaded from https://lambda.gsfc.nasa.gov/product/foreground/fg_ovrolwa_radio_maps_get.html
+
     fits_filepath = (
         "/Users/ruby/Astro/mmode_maps_eastwood/ovro_lwa_sky_map_73.152MHz.fits"
     )
