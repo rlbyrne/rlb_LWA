@@ -4,6 +4,7 @@ import pyradiosky
 import astropy.units as units
 from astropy.units import Quantity
 from astropy.coordinates import Latitude, Longitude
+import pyradiosky_utils
 
 
 # Source models downloaded from http://cdsarc.u-strasbg.fr/viz-bin/cat/J/A+A/635/A150#/browse
@@ -153,9 +154,14 @@ if __name__ == "__main__":
         source_name="Vir",
     )
 
-    combined_cat = cas_cat.concat(cyg_cat, inplace=False)
-    combined_cat.concat(tau_cat)
-    combined_cat.concat(vir_cat)
+    cas_cyg = cas_cat.concat(cyg_cat, inplace=False)
+    combined_cat = cas_cyg.concat(tau_cat, inplace=False)
+    combined_cat.concat(vir_cat, inplace=True)
+    cas_cyg.write_skyh5(
+        "/Users/ruby/Astro/Gasperin2020_source_models/Gasperin2020_cyg_cas.skyh5"
+    )
     combined_cat.write_skyh5(
         "/Users/ruby/Astro/Gasperin2020_source_models/Gasperin2020_sources.skyh5"
     )
+
+    #pyradiosky_utils.plot_skymodel(combined_cat)

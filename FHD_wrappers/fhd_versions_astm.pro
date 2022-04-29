@@ -202,7 +202,7 @@ pro fhd_versions_astm
       cable_bandpass_fit = 0
       cal_mode_fit = 0
       calibration_polyfit = 0
-      snapshot_healpix_export = 0 ;Healpix export does not work with just one time step
+      snapshot_healpix_export = 0
       min_cal_baseline = 0
       image_filter_fn = "filter_uv_optimal"
       flag_calibration = 1 ;allow calibration to flag antennas
@@ -222,7 +222,7 @@ pro fhd_versions_astm
       cable_bandpass_fit = 0
       cal_mode_fit = 0
       calibration_polyfit = 0
-      snapshot_healpix_export = 0 ;Healpix export does not work with just one time step
+      snapshot_healpix_export = 0
       min_cal_baseline = 0
       image_filter_fn = "filter_uv_optimal"
       flag_calibration = 1 ;allow calibration to flag antennas
@@ -244,7 +244,49 @@ pro fhd_versions_astm
       cable_bandpass_fit = 0
       cal_mode_fit = 0
       calibration_polyfit = 0
-      snapshot_healpix_export = 0 ;Healpix export does not work with just one time step
+      snapshot_healpix_export = 0
+      min_cal_baseline = 0
+      image_filter_fn = "filter_uv_optimal"
+      flag_calibration = 1 ;allow calibration to flag antennas
+      calibration_flag_iterate = 1 ;repeat calibration after flagging
+    end
+
+    'rlb_LWA_caltest_Gasperin_sources_Apr2022': begin
+      recalculate_all = 1
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/opt/astro/devel/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      calibrate_visibilities = 1
+      n_pol = 2
+      calibration_catalog_file_path = '/lustre/rbyrne/Gasperin2020_sources.skyh5'
+      allow_sidelobe_cal_sources = 1
+      sim_over_calibrate = 1
+      bandpass_calibrate = 0
+      cable_bandpass_fit = 0
+      cal_mode_fit = 0
+      calibration_polyfit = 0
+      snapshot_healpix_export = 0
+      min_cal_baseline = 0
+      image_filter_fn = "filter_uv_optimal"
+      flag_calibration = 1 ;allow calibration to flag antennas
+      calibration_flag_iterate = 1 ;repeat calibration after flagging
+    end
+
+    'rlb_LWA_caltest_mmode_with_Gasperin_cyg_cas_Apr2022': begin
+      recalculate_all = 1
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/opt/astro/devel/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      calibrate_visibilities = 1
+      n_pol = 2
+      calibration_catalog_file_path = '/lustre/rbyrne/Gasperin2020_cyg_cas.skyh5'
+      allow_sidelobe_cal_sources = 1
+      diffuse_calibrate = "/lustre/rbyrne/ovro_lwa_sky_map_73.152MHz.skyh5"
+      diffuse_units_kelvin = 1
+      sim_over_calibrate = 1
+      bandpass_calibrate = 0
+      cable_bandpass_fit = 0
+      cal_mode_fit = 0
+      calibration_polyfit = 0
+      snapshot_healpix_export = 0
       min_cal_baseline = 0
       image_filter_fn = "filter_uv_optimal"
       flag_calibration = 1 ;allow calibration to flag antennas
