@@ -2,7 +2,7 @@ import numpy as np
 import pyradiosky
 import astropy.units as units
 from astropy.units import Quantity
-from astropy.coordinates import Latitude, Longitude, SkyCoord
+from astropy.coordinates import Latitude, Longitude
 import matplotlib.pyplot as plt
 
 
