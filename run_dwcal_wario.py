@@ -442,19 +442,6 @@ def random_gains_test_Apr25():
         sys.stdout.flush()
         cal.write_calfits(cal_savefile, clobber=True)
 
-    # Apply calibration
-    if calibrated_data_savefile is not None:
-        calibrated_data = dwcal.apply_calibration(
-            cal,
-            data_path=data_path,
-            data_use_model=data_use_model,
-            obsid=obsid,
-            pol=pol,
-        )
-        print(f"Saving calibrated data to {calibrated_data_savefile}")
-        sys.stdout.flush()
-        calibrated_data.write_uvfits(calibrated_data_savefile)
-
     end = time.time()
     print(f"Total runtime: {(end - start)/60.} minutes")
 
@@ -482,19 +469,6 @@ def random_gains_test_Apr25():
         print(f"Saving calibration solutions to {cal_savefile}")
         sys.stdout.flush()
         cal.write_calfits(cal_savefile, clobber=True)
-
-    # Apply calibration
-    if calibrated_data_savefile is not None:
-        calibrated_data = dwcal.apply_calibration(
-            cal,
-            data_path=data_path,
-            data_use_model=data_use_model,
-            obsid=obsid,
-            pol=pol,
-        )
-        print(f"Saving calibrated data to {calibrated_data_savefile}")
-        sys.stdout.flush()
-        calibrated_data.write_uvfits(calibrated_data_savefile)
 
     end = time.time()
     print(f"Total runtime: {(end - start)/60.} minutes")
