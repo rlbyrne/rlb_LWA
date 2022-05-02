@@ -13,7 +13,9 @@ obsids_list = [
 versions_list = [
     "rlb_LWA_caltest_cyg_cas_Apr2022",
     "rlb_LWA_caltest_vlssr_Apr2022",
-    "rlb_LWA_caltest_mmode_with_cyg_cas_Apr2022"
+    "rlb_LWA_caltest_mmode_with_cyg_cas_Apr2022",
+    "rlb_LWA_caltest_Gasperin_sources_Apr2022",
+    "rlb_LWA_caltest_mmode_with_Gasperin_cyg_cas_Apr2022"
 ]
 uvfits_path = "/lustre/rbyrne/LWA_data_20220210/uvfits_ssins_flagged"
 outdir = "/lustre/rbyrne/fhd_outputs"
