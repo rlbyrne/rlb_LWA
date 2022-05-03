@@ -3,6 +3,7 @@ import numpy as np
 import pyuvdata
 from pyuvdata import utils
 import sys
+import time
 
 
 def run_calibration_Jan5():
