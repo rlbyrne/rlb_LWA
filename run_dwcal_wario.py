@@ -443,9 +443,6 @@ def random_gains_test_Apr25():
         sys.stdout.flush()
         cal.write_calfits(cal_savefile, clobber=True)
 
-    end = time.time()
-    print(f"Total runtime: {(end - start)/60.} minutes")
-
     if log_file_path is not None:
         sys.stdout.close()
 
@@ -470,9 +467,6 @@ def random_gains_test_Apr25():
         print(f"Saving calibration solutions to {cal_savefile}")
         sys.stdout.flush()
         cal.write_calfits(cal_savefile, clobber=True)
-
-    end = time.time()
-    print(f"Total runtime: {(end - start)/60.} minutes")
 
     if log_file_path is not None:
         sys.stdout.close()
