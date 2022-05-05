@@ -410,14 +410,25 @@ def random_gains_test_Apr25():
         random_gains_stddev,
         size=(data.Nants_data, data.Nfreqs),
     )
+
+    # Ensure that the phase of the gains is mean-zero for each frequency
+    avg_angle = np.arctan2(
+        np.mean(np.sin(np.angle(random_gains)), axis=0),
+        np.mean(np.cos(np.angle(random_gains)), axis=0),
+    )
+    random_gains *= np.cos(avg_angle) - 1j * np.sin(avg_angle)
+
+    # Save randomized gains
     antenna_list = np.unique([data.ant_1_array, data.ant_2_array])
     random_gains_cal = dwcal.initialize_cal(data, antenna_list, gains=random_gains)
     random_gains_cal.gain_convention = "divide"  # Apply initial calibration as division
     random_gains_cal.write_calfits(
         randomized_gains_cal_savefile, clobber=True
-    )  # Save gains
+    )
+
     # Apply gains to data
     pyuvdata.utils.uvcalibrate(data, random_gains_cal, inplace=True, time_check=False)
+
     # Save data as uvfits
     data.write_uvfits(randomized_gains_data_uvfits)
 
