@@ -523,7 +523,7 @@ def gain_ripple_test_May6():
     ripple_delay = np.zeros_like(delay_array)
     ripple_delay[np.argmin(np.abs(delay_array - 1e-6))] = 1  # Add ripple
     ripple_gains = np.fft.ifft(ripple_delay)
-    ripple_gains /= np.mean(np.abs(gains))  # Set mean amp to 1
+    ripple_gains /= np.mean(np.abs(ripple_gains))  # Set mean amp to 1
 
     antenna_list = np.unique([data.ant_1_array, data.ant_2_array])
     gains = np.ones((data.Nants_data, data.Nfreqs), dtype=complex)
