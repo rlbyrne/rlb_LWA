@@ -2,11 +2,18 @@ import subprocess
 import shlex
 import os
 
-obsids_list = ["vanilla_cal", "wedge_excluded"]
+obsids_list = [
+    "unity_gains_diagonal.uvfits",
+    "unity_gains_dwcal.uvfits",
+    "random_gains_diagonal.uvfits",
+    "random_gains_dwcal.uvfits",
+    "ripple_gains_diagonal.uvfits",
+    "ripple_gains_dwcal.uvfits",
+]
 versions_list = ["rlb_cal_sims_Apr2022"]
-uvfits_path = "/safepool/rbyrne/calibration_outputs/caltest_Apr12"
+uvfits_path = "/safepool/rbyrne/calibration_outputs/uvfits"
 outdir = "/safepool/rbyrne/fhd_outputs"
-run_fhd = False
+run_fhd = True
 run_eppsilon = True
 
 # Define wrappers
