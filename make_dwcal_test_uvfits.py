@@ -18,7 +18,7 @@ filelist = [
         "metadata/{}_layout.sav".format(obsid),
     ]
 ]
-data.read_fhd(data_filelist, use_model=data_use_model)
+data.read_fhd(filelist, use_model=data_use_model)
 
 cal_filenames = [
     "/safepool/rbyrne/calibration_outputs/caltest_Apr12/vanilla_cal.calfits",
