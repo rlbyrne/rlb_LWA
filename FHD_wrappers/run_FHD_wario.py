@@ -21,7 +21,7 @@ fhd_versions_script = "fhd_versions_wario"
 eppsilon_script = "ps_single_obs_wrapper"
 
 # Set eppsilon options
-refresh_ps = 1
+refresh_ps = 0
 uvf_input = 1
 
 for version in versions_list:
