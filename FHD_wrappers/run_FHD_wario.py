@@ -3,12 +3,12 @@ import shlex
 import os
 
 obsids_list = [
-    "unity_gains_diagonal.uvfits",
-    "unity_gains_dwcal.uvfits",
-    "random_gains_diagonal.uvfits",
-    "random_gains_dwcal.uvfits",
-    "ripple_gains_diagonal.uvfits",
-    "ripple_gains_dwcal.uvfits",
+    "unity_gains_diagonal",
+    "unity_gains_dwcal",
+    "random_gains_diagonal",
+    "random_gains_dwcal",
+    "ripple_gains_diagonal",
+    "ripple_gains_dwcal",
 ]
 versions_list = ["rlb_cal_sims_Apr2022"]
 uvfits_path = "/safepool/rbyrne/calibration_outputs/uvfits"
