@@ -52,15 +52,15 @@ uvfits_output_filenames = [
 true_gains_calfits = "/safepool/rbyrne/calibration_outputs/random_gains_test_Apr25/random_initial_gains.calfits"
 true_gains_cal = pyuvdata.UVCal()
 true_gains_cal.read_calfits(true_gains_calfits)
-data_calibrated = pyuvdata.utils.uvcalibrate(
+data_orig = pyuvdata.utils.uvcalibrate(
     data, true_gains_cal, inplace=False, time_check=False
 )
-data_calibrated.write_uvfits(f"{uvfits_output_dir}/random_gains_uncalib.uvfits")
+data_orig.write_uvfits(f"{uvfits_output_dir}/random_gains_uncalib.uvfits")
 for ind in range(len(cal_filenames)):
     cal = pyuvdata.UVCal()
     cal.read_calfits(cal_filenames[ind])
-    pyuvdata.utils.uvcalibrate(
-        data_calibrated, cal, inplace=True, time_check=False
+    data_calibrated = pyuvdata.utils.uvcalibrate(
+        data_orig, cal, inplace=False, time_check=False
     )
     data_calibrated.write_uvfits(uvfits_output_filenames[ind])
 
@@ -76,14 +76,14 @@ uvfits_output_filenames = [
 true_gains_calfits = "/safepool/rbyrne/calibration_outputs/gain_ripple_test_May6/ripple_initial_gains.calfits"
 true_gains_cal = pyuvdata.UVCal()
 true_gains_cal.read_calfits(true_gains_calfits)
-data_calibrated = pyuvdata.utils.uvcalibrate(
+data_orig = pyuvdata.utils.uvcalibrate(
     data, true_gains_cal, inplace=False, time_check=False
 )
-data_calibrated.write_uvfits(f"{uvfits_output_dir}/ripple_gains_uncalib.uvfits")
+data_orig.write_uvfits(f"{uvfits_output_dir}/ripple_gains_uncalib.uvfits")
 for ind in range(len(cal_filenames)):
     cal = pyuvdata.UVCal()
     cal.read_calfits(cal_filenames[ind])
-    pyuvdata.utils.uvcalibrate(
-        data_calibrated, cal, inplace=True, time_check=False
+    data_calibrated = pyuvdata.utils.uvcalibrate(
+        data_orig, cal, inplace=False, time_check=False
     )
     data_calibrated.write_uvfits(uvfits_output_filenames[ind])
