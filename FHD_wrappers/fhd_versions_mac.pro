@@ -3,7 +3,7 @@ pro fhd_versions_mac
   !except=0
   heap_gc
 
-  version = 'rlb_LWA_imaging_Apr2022'
+  version = 'rlb_cal_sims_Apr2022'
   output_directory = '/Users/ruby/Astro/FHD_outputs'
   
   case version of
@@ -140,6 +140,23 @@ pro fhd_versions_mac
       calibration_polyfit = 0
       flag_calibration = 0 ;Try turning off calibration flagging
       snapshot_healpix_export = 0 ;Healpix export does not work with just one time step
+    end
+    
+    'rlb_cal_sims_Apr2022': begin
+      obs_id = 'vanilla_cal'
+      vis_file_list = '/Users/ruby/Astro/dwcal_tests_Apr2022/caltest_Apr12/'+obs_id+'.uvfits'
+      recalculate_all = 1
+      calibrate_visibilities = 0
+      return_cal_visibilities = 0
+      model_visibilities = 1
+      model_catalog_file_path = filepath('GLEAM_v2_plus_rlb2019.sav',root=rootdir('FHD'),subdir='catalog_data')
+      model_subtract_sidelobe_catalog = filepath('GLEAM_v2_plus_rlb2019.sav',root=rootdir('FHD'),subdir='catalog_data')
+      allow_sidelobe_model_sources = 1
+      unflag_all = 1
+      beam_nfreq_avg = 384
+      n_pol = 1
+      export_images = 0 ;Cannot export images with just one polarization
+      save_uvf = 1
     end
     
   endcase
