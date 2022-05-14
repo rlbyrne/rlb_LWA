@@ -164,7 +164,7 @@ pro fhd_versions_wario
     end
 
     'rlb_cal_sims_Apr2022': begin
-      recalculate_all = 0
+      recalculate_all = 1
       calibrate_visibilities = 0
       return_cal_visibilities = 0
       model_visibilities = 1

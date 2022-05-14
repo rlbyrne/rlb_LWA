@@ -3,14 +3,14 @@ import shlex
 import os
 
 obsids_list = [
-    "unity_gains_uncalib",
-    "unity_gains_diagonal",
-    "unity_gains_dwcal",
-    "random_gains_uncalib",
-    "random_gains_diagonal",
+    #"unity_gains_uncalib",
+    #"unity_gains_diagonal",
+    #"unity_gains_dwcal",
+    #"random_gains_uncalib",
+    #"random_gains_diagonal",
     "random_gains_dwcal",
-    "ripple_gains_uncalib",
-    "ripple_gains_diagonal",
+    #"ripple_gains_uncalib",
+    #"ripple_gains_diagonal",
     "ripple_gains_dwcal",
 ]
 versions_list = ["rlb_cal_sims_Apr2022"]
@@ -24,7 +24,7 @@ fhd_versions_script = "fhd_versions_wario"
 eppsilon_script = "ps_single_obs_wrapper"
 
 # Set eppsilon options
-refresh_ps = 0
+refresh_ps = 1
 uvf_input = 1
 
 for version in versions_list:
