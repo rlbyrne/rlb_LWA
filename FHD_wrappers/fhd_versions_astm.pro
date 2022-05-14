@@ -227,6 +227,7 @@ pro fhd_versions_astm
       image_filter_fn = "filter_uv_optimal"
       flag_calibration = 1 ;allow calibration to flag antennas
       calibration_flag_iterate = 1 ;repeat calibration after flagging
+      save_uvf = 1
     end
 
     'rlb_LWA_caltest_mmode_with_cyg_cas_Apr2022': begin
@@ -249,6 +250,7 @@ pro fhd_versions_astm
       image_filter_fn = "filter_uv_optimal"
       flag_calibration = 1 ;allow calibration to flag antennas
       calibration_flag_iterate = 1 ;repeat calibration after flagging
+      save_uvf = 1
     end
 
     'rlb_LWA_caltest_Gasperin_sources_Apr2022': begin
@@ -269,6 +271,7 @@ pro fhd_versions_astm
       image_filter_fn = "filter_uv_optimal"
       flag_calibration = 1 ;allow calibration to flag antennas
       calibration_flag_iterate = 1 ;repeat calibration after flagging
+      save_uvf = 1
     end
 
     'rlb_LWA_caltest_mmode_with_Gasperin_cyg_cas_Apr2022': begin
@@ -291,6 +294,7 @@ pro fhd_versions_astm
       image_filter_fn = "filter_uv_optimal"
       flag_calibration = 1 ;allow calibration to flag antennas
       calibration_flag_iterate = 1 ;repeat calibration after flagging
+      save_uvf = 1
     end
 
   endcase
