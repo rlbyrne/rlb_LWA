@@ -190,7 +190,7 @@ pro fhd_versions_astm
     end
 
     'rlb_LWA_caltest_cyg_cas_Apr2022': begin
-      recalculate_all = 0
+      recalculate_all = 1
       instrument = 'lwa'
       import_pyuvdata_beam_filepath = '/opt/astro/devel/rbyrne/rlb_LWA/LWAbeam_2015.fits'
       calibrate_visibilities = 1
@@ -210,7 +210,7 @@ pro fhd_versions_astm
     end
 
     'rlb_LWA_caltest_vlssr_Apr2022': begin
-      recalculate_all = 0
+      recalculate_all = 1
       instrument = 'lwa'
       import_pyuvdata_beam_filepath = '/opt/astro/devel/rbyrne/rlb_LWA/LWAbeam_2015.fits'
       calibrate_visibilities = 1
@@ -231,7 +231,7 @@ pro fhd_versions_astm
     end
 
     'rlb_LWA_caltest_mmode_with_cyg_cas_Apr2022': begin
-      recalculate_all = 0
+      recalculate_all = 1
       instrument = 'lwa'
       import_pyuvdata_beam_filepath = '/opt/astro/devel/rbyrne/rlb_LWA/LWAbeam_2015.fits'
       calibrate_visibilities = 1
@@ -254,7 +254,7 @@ pro fhd_versions_astm
     end
 
     'rlb_LWA_caltest_Gasperin_sources_Apr2022': begin
-      recalculate_all = 0
+      recalculate_all = 1
       instrument = 'lwa'
       import_pyuvdata_beam_filepath = '/opt/astro/devel/rbyrne/rlb_LWA/LWAbeam_2015.fits'
       calibrate_visibilities = 1
@@ -275,7 +275,7 @@ pro fhd_versions_astm
     end
 
     'rlb_LWA_caltest_mmode_with_Gasperin_cyg_cas_Apr2022': begin
-      recalculate_all = 0
+      recalculate_all = 1
       instrument = 'lwa'
       import_pyuvdata_beam_filepath = '/opt/astro/devel/rbyrne/rlb_LWA/LWAbeam_2015.fits'
       calibrate_visibilities = 1

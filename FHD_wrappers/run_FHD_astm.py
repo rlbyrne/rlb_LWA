@@ -4,11 +4,11 @@ import os
 
 obsids_list = [
     "20220210_191447_70MHz_ssins_thresh_20",
-    "20220210_191758_70MHz_ssins_thresh_20",
-    "20220210_191958_70MHz_ssins_thresh_20",
-    "20220210_192159_70MHz_ssins_thresh_20",
-    "20220210_194002_70MHz_ssins_thresh_20",
-    "20220210_194202_70MHz_ssins_thresh_20"
+    #"20220210_191758_70MHz_ssins_thresh_20",
+    #"20220210_191958_70MHz_ssins_thresh_20",
+    #"20220210_192159_70MHz_ssins_thresh_20",
+    #"20220210_194002_70MHz_ssins_thresh_20",
+    #"20220210_194202_70MHz_ssins_thresh_20"
 ]
 versions_list = [
     "rlb_LWA_caltest_cyg_cas_Apr2022",
