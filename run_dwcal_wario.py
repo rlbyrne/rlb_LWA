@@ -600,6 +600,68 @@ def gain_ripple_test_May6():
         sys.stdout.close()
 
 
+def gain_ripple_newtons_test_May17():
+
+    save_dir = "/safepool/rbyrne/calibration_outputs/gain_ripple_newtons_test_May17"
+    ripple_gains_cal_savefile = "/safepool/rbyrne/calibration_outputs/gain_ripple_test_May6/ripple_initial_gains.calfits"
+    gain_init_calfile = "/safepool/rbyrne/calibration_outputs/gain_ripple_test_May6/wedge_excluded.calfits"
+
+    model_path = (
+        "/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Apr2022"
+    )
+    model_use_model = True
+    data_path = "/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_Apr2022"
+    data_use_model = True
+    obsid = "1061316296"
+    pol = "XX"
+    use_autos = False
+
+    data, model = dwcal.get_test_data(
+        model_path=model_path,
+        model_use_model=model_use_model,
+        data_path=data_path,
+        data_use_model=data_use_model,
+        obsid=obsid,
+        pol=pol,
+        use_autos=use_autos,
+        debug_limit_freqs=None,
+        use_antenna_list=None,
+        use_flagged_baselines=False,
+    )
+
+    ripple_gains_cal.UVCal()
+    ripple_gains_cal.read_calfits(ripple_gains_cal_savefile)
+
+    # Apply gains to data
+    pyuvdata.utils.uvcalibrate(data, ripple_gains_cal, inplace=True, time_check=False)
+
+    # Do wedge excluded cal
+    use_wedge_exclusion = True
+    cal_savefile = f"{save_dir}/wedge_excluded.calfits"
+    log_file_path = f"{save_dir}/wedge_excluded_log.txt"
+
+    if log_file_path is not None:
+        sys.stdout = open(log_file_path, "w")
+        sys.stderr = sys.stdout
+
+    cal = dwcal.calibration_optimization(
+        data,
+        model,
+        use_wedge_exclusion=use_wedge_exclusion,
+        log_file_path=log_file_path,
+        use_newtons_method=True,
+        gain_init_calfile=gain_init_calfile,
+    )
+
+    if cal_savefile is not None:
+        print(f"Saving calibration solutions to {cal_savefile}")
+        sys.stdout.flush()
+        cal.write_calfits(cal_savefile, clobber=True)
+
+    if log_file_path is not None:
+        sys.stdout.close()
+
+
 if __name__ == "__main__":
 
-    gain_ripple_test_May6()
+    gain_ripple_newtons_test_May17()
