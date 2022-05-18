@@ -629,7 +629,7 @@ def gain_ripple_newtons_test_May17():
         use_flagged_baselines=False,
     )
 
-    ripple_gains_cal.UVCal()
+    ripple_gains_cal = pyuvdata.UVCal()
     ripple_gains_cal.read_calfits(ripple_gains_cal_savefile)
 
     # Apply gains to data
