@@ -664,7 +664,7 @@ def gain_ripple_newtons_test_May17():
 
 def gain_ripple_recalc_test_May18():
 
-    save_dir = "/safepool/rbyrne/calibration_outputs/gain_ripple_newtons_test_May17"
+    save_dir = "/safepool/rbyrne/calibration_outputs/gain_ripple_recalc_test_May18"
     ripple_gains_cal_savefile = "/safepool/rbyrne/calibration_outputs/gain_ripple_test_May6/ripple_initial_gains.calfits"
     gain_init_calfile = "/safepool/rbyrne/calibration_outputs/gain_ripple_test_May6/wedge_excluded.calfits"
 
