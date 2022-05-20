@@ -223,7 +223,7 @@ pro fhd_versions_astm
       cable_bandpass_fit = 0
       cal_mode_fit = 0
       calibration_polyfit = 0
-      snapshot_healpix_export = 0
+      ;snapshot_healpix_export = 0
       min_cal_baseline = 0
       image_filter_fn = "filter_uv_optimal"
       flag_calibration = 1 ;allow calibration to flag antennas
@@ -246,7 +246,7 @@ pro fhd_versions_astm
       cable_bandpass_fit = 0
       cal_mode_fit = 0
       calibration_polyfit = 0
-      snapshot_healpix_export = 0
+      ;snapshot_healpix_export = 0
       min_cal_baseline = 0
       image_filter_fn = "filter_uv_optimal"
       flag_calibration = 1 ;allow calibration to flag antennas
@@ -267,7 +267,7 @@ pro fhd_versions_astm
       cable_bandpass_fit = 0
       cal_mode_fit = 0
       calibration_polyfit = 0
-      snapshot_healpix_export = 0
+      ;snapshot_healpix_export = 0
       min_cal_baseline = 0
       image_filter_fn = "filter_uv_optimal"
       flag_calibration = 1 ;allow calibration to flag antennas
@@ -290,7 +290,7 @@ pro fhd_versions_astm
       cable_bandpass_fit = 0
       cal_mode_fit = 0
       calibration_polyfit = 0
-      snapshot_healpix_export = 0
+      ;snapshot_healpix_export = 0
       min_cal_baseline = 0
       image_filter_fn = "filter_uv_optimal"
       flag_calibration = 1 ;allow calibration to flag antennas
