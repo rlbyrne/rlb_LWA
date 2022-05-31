@@ -13,7 +13,7 @@ pro plot_kpar0_fractional_power
   
   pols = ['xx', 'yy']
   yrange = [0,100]
-  xrange=[.5e-3, .1]
+  xrange=[.5e-3, 3.5e-2]
   background_shading = 0
 
   colors = ['Navy', 'YGB4', 'Dark Green', 'ORG4', 'Crimson'] ;Choose colors with cgPickColorName()
@@ -86,7 +86,7 @@ pro plot_kpar0_fractional_power
     cgText, xlocation, ylocation+.01, textoidl('k-perpendicular (!8h!X Mpc^{-1})'), $
       /Normal, Alignment=0.5, Charsize=1.5
     cglegend, title=legend_labels, $
-      linestyle=linestyles, thick=6, $
+      linestyle=linestyles, thick=linewidths[0], $
       color=colors, length=0.03, /center_sym, location=[.5,.45], charsize=1.1, /box, background='white', vspace=1.5
     cgControl, Resize=[800,800]
     cgps_close, /png, /delete_ps, density=800
