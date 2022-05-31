@@ -13,12 +13,12 @@ pro plot_kpar0_fractional_power
   
   pols = ['xx', 'yy']
   yrange = [0,100]
-  xrange=[.5e-3, 2.5e-2]
+  xrange=[.5e-3, .1]
   background_shading = 0
 
   colors = ['Navy', 'YGB4', 'Dark Green', 'ORG4', 'Crimson'] ;Choose colors with cgPickColorName()
   linestyles = [0,0,0,0,0]
-  linewidths = [6,6,6,6,6]
+  linewidths = [3,3,3,3,3]
   legend_labels = ['Cyg & Cas', 'm-mode map + Cyg & Cas', 'Gasperin', 'm-mode map + Gasperin', 'VLSSR']
 
   for pol_ind=0,n_elements(pols)-1 do begin
@@ -87,7 +87,7 @@ pro plot_kpar0_fractional_power
       /Normal, Alignment=0.5, Charsize=1.5
     cglegend, title=legend_labels, $
       linestyle=linestyles, thick=6, $
-      color=colors, length=0.03, /center_sym, location=[.5,.4], charsize=1.1, /box, background='white', vspace=1.5
+      color=colors, length=0.03, /center_sym, location=[.5,.45], charsize=1.1, /box, background='white', vspace=1.5
     cgControl, Resize=[800,800]
     cgps_close, /png, /delete_ps, density=800
 
