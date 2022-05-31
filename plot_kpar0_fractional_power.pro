@@ -1,4 +1,4 @@
-pro kpar0_fractional_power
+pro plot_kpar0_fractional_power
 
   fhd_outputs_dir = '/lustre/rbyrne/fhd_outputs'
   plot_save_dir = '/lustre/rbyrne/kpar0_plots'
@@ -42,7 +42,7 @@ pro kpar0_fractional_power
         plot_y = [plot_y, frac_power[datapoint], frac_power[datapoint]]
         plot_x = [plot_x, k_edges[datapoint], k_edges[datapoint+1]]
       endfor
-      if file_ind eq 0 then begin
+      if version_ind eq 0 then begin
         cgplot, plot_x, plot_y, /xlog, yrange=yrange, xrange=xrange, $
           linestyle=linestyles[file_ind], color=colors[file_ind], thick=linewidths[file_ind], title='', Charsize=1.5,$
           ytitle=textoidl('Fraction of signal modeled (per cent)'), xtitle=textoidl('k-perpendicular (!8h!X Mpc^{-1})'), $
