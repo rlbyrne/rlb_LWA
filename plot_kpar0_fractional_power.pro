@@ -13,9 +13,8 @@ pro plot_kpar0_fractional_power
   
   pols = ['xx', 'yy']
   yrange = [0,100]
-  ;xrange=[2e-3, 2e-1]
-  xrange=[2.5e-3, 2.5e-1]
-  bl_range = [6.1, 50.]
+  xrange=[.5e-3, 2.5e-2]
+  background_shading = 0
 
   colors = ['Navy', 'YGB4', 'Dark Green', 'ORG4', 'Crimson'] ;Choose colors with cgPickColorName()
   linestyles = [0,0,0,0,0]
@@ -45,16 +44,19 @@ pro plot_kpar0_fractional_power
       if version_ind eq 0 then begin
         cgplot, plot_x, plot_y, /xlog, yrange=yrange, xrange=xrange, $
           linestyle=linestyles[version_ind], color=colors[version_ind], thick=linewidths[version_ind], title='', Charsize=1.5,$
-          ytitle=textoidl('Fraction of signal modeled (per cent)'), xtitle=textoidl('k-perpendicular (!8h!X Mpc^{-1})'), $
+          ytitle=textoidl('Fraction of signal modeled (%)'), xtitle=textoidl('k-perpendicular (!8h!X Mpc^{-1})'), $
           xstyle=4, /nodata, Position=[0.1, 0.22, 0.97, 0.9]
-        cgcolorfill, [xrange[0], bl_range[0]*1e-3, bl_range[0]*1e-3, xrange[0]], [yrange[0], yrange[0], yrange[1], yrange[1]], $
-          color='BLK2'
-        cgcolorfill, [xrange[1], bl_range[1]*1e-3, bl_range[1]*1e-3, xrange[1]], [yrange[0], yrange[0], yrange[1], yrange[1]], $
-          color='BLK2'
+        if keyword_set(background_shading) then begin
+          bl_range = [6.1, 50.]
+          cgcolorfill, [xrange[0], bl_range[0]*1e-3, bl_range[0]*1e-3, xrange[0]], [yrange[0], yrange[0], yrange[1], yrange[1]], $
+            color='BLK2'
+          cgcolorfill, [xrange[1], bl_range[1]*1e-3, bl_range[1]*1e-3, xrange[1]], [yrange[0], yrange[0], yrange[1], yrange[1]], $
+            color='BLK2'
+        endif
       endif
       cgplot, plot_x, plot_y, /xlog, yrange=yrange, xrange=xrange, $
         linestyle=linestyles[version_ind], color=colors[version_ind], thick=linewidths[version_ind], /overplot, title='', Charsize=1.5,$
-        ytitle=textoidl('Fraction of signal modeled (per cent)'), xtitle=textoidl('k-perpendicular (!8h!X Mpc^{-1})'), $
+        ytitle=textoidl('Fraction of signal modeled (%)'), xtitle=textoidl('k-perpendicular (!8h!X Mpc^{-1})'), $
         xstyle=4 ;suppress horizontal axes
     endfor
     ; Draw lower x axis
