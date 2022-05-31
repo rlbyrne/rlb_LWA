@@ -44,7 +44,7 @@ pro plot_kpar0_fractional_power
       endfor
       if version_ind eq 0 then begin
         cgplot, plot_x, plot_y, /xlog, yrange=yrange, xrange=xrange, $
-          linestyle=linestyles[file_ind], color=colors[file_ind], thick=linewidths[file_ind], title='', Charsize=1.5,$
+          linestyle=linestyles[version_ind], color=colors[version_ind], thick=linewidths[version_ind], title='', Charsize=1.5,$
           ytitle=textoidl('Fraction of signal modeled (per cent)'), xtitle=textoidl('k-perpendicular (!8h!X Mpc^{-1})'), $
           xstyle=4, /nodata, Position=[0.1, 0.22, 0.97, 0.9]
         cgcolorfill, [xrange[0], bl_range[0]*1e-3, bl_range[0]*1e-3, xrange[0]], [yrange[0], yrange[0], yrange[1], yrange[1]], $
@@ -53,7 +53,7 @@ pro plot_kpar0_fractional_power
           color='BLK2'
       endif
       cgplot, plot_x, plot_y, /xlog, yrange=yrange, xrange=xrange, $
-        linestyle=linestyles[file_ind], color=colors[file_ind], thick=linewidths[file_ind], /overplot, title='', Charsize=1.5,$
+        linestyle=linestyles[version_ind], color=colors[version_ind], thick=linewidths[version_ind], /overplot, title='', Charsize=1.5,$
         ytitle=textoidl('Fraction of signal modeled (per cent)'), xtitle=textoidl('k-perpendicular (!8h!X Mpc^{-1})'), $
         xstyle=4 ;suppress horizontal axes
     endfor
