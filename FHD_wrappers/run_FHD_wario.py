@@ -16,7 +16,7 @@ obsids_list = [
 versions_list = ["rlb_cal_sims_Jun2022"]
 uvfits_path = "/safepool/rbyrne/calibration_outputs/caltest_May19"
 outdir = "/safepool/rbyrne/fhd_outputs"
-run_fhd = False
+run_fhd = True
 run_eppsilon = True
 
 # Define wrappers
