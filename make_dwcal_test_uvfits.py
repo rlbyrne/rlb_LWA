@@ -20,12 +20,12 @@ filelist = [
 ]
 data.read_fhd(filelist, use_model=data_use_model)
 
-uvfits_output_dir = "/safepool/rbyrne/calibration_outputs/uvfits"
+uvfits_output_dir = "/safepool/rbyrne/calibration_outputs/caltest_May19"
 
 # Unity gains
 cal_filenames = [
-    "/safepool/rbyrne/calibration_outputs/caltest_Apr12/vanilla_cal.calfits",
-    "/safepool/rbyrne/calibration_outputs/caltest_Apr12/wedge_excluded.calfits",
+    "/safepool/rbyrne/calibration_outputs/caltest_May19/unity_gains_diagonal.calfits",
+    "/safepool/rbyrne/calibration_outputs/caltest_May19/unity_gains_dwcal.calfits",
 ]
 uvfits_output_filenames = [
     f"{uvfits_output_dir}/unity_gains_diagonal.uvfits",
@@ -42,14 +42,14 @@ for ind in range(len(cal_filenames)):
 
 # Random gains
 cal_filenames = [
-    "/safepool/rbyrne/calibration_outputs/random_gains_test_Apr25/vanilla_cal.calfits",
-    "/safepool/rbyrne/calibration_outputs/random_gains_test_Apr25/wedge_excluded.calfits",
+    "/safepool/rbyrne/calibration_outputs/caltest_May19/random_gains_diagonal.calfits",
+    "/safepool/rbyrne/calibration_outputs/caltest_May19/random_gains_dwcal.calfits",
 ]
 uvfits_output_filenames = [
     f"{uvfits_output_dir}/random_gains_diagonal.uvfits",
     f"{uvfits_output_dir}/random_gains_dwcal.uvfits",
 ]
-true_gains_calfits = "/safepool/rbyrne/calibration_outputs/random_gains_test_Apr25/random_initial_gains.calfits"
+true_gains_calfits = "/safepool/rbyrne/calibration_outputs/caltest_May19/random_initial_gains.calfits"
 true_gains_cal = pyuvdata.UVCal()
 true_gains_cal.read_calfits(true_gains_calfits)
 data_orig = pyuvdata.utils.uvcalibrate(
@@ -66,14 +66,14 @@ for ind in range(len(cal_filenames)):
 
 # Ripple gains
 cal_filenames = [
-    "/safepool/rbyrne/calibration_outputs/gain_ripple_test_May6/vanilla_cal.calfits",
-    "/safepool/rbyrne/calibration_outputs/gain_ripple_test_May6/wedge_excluded.calfits",
+    "/safepool/rbyrne/calibration_outputs/caltest_May19/ripple_gains_diagonal.calfits",
+    "/safepool/rbyrne/calibration_outputs/caltest_May19/ripple_gains_dwcal.calfits",
 ]
 uvfits_output_filenames = [
     f"{uvfits_output_dir}/ripple_gains_diagonal.uvfits",
     f"{uvfits_output_dir}/ripple_gains_dwcal.uvfits",
 ]
-true_gains_calfits = "/safepool/rbyrne/calibration_outputs/gain_ripple_test_May6/ripple_initial_gains.calfits"
+true_gains_calfits = "/safepool/rbyrne/calibration_outputs/caltest_May19/ripple_initial_gains.calfits"
 true_gains_cal = pyuvdata.UVCal()
 true_gains_cal.read_calfits(true_gains_calfits)
 data_orig = pyuvdata.utils.uvcalibrate(
