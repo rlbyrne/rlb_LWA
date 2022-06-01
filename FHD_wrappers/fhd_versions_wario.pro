@@ -178,6 +178,21 @@ pro fhd_versions_wario
       save_uvf = 1
     end
 
+    'rlb_cal_sims_Jun2022': begin
+      recalculate_all = 1
+      calibrate_visibilities = 0
+      return_cal_visibilities = 0
+      model_visibilities = 1
+      model_catalog_file_path = filepath('GLEAM_v2_plus_rlb2019.sav',root=rootdir('FHD'),subdir='catalog_data')
+      model_subtract_sidelobe_catalog = filepath('GLEAM_v2_plus_rlb2019.sav',root=rootdir('FHD'),subdir='catalog_data')
+      allow_sidelobe_model_sources = 1
+      unflag_all = 1
+      beam_nfreq_avg = 384
+      n_pol = 1
+      export_images = 0 ;Cannot export images with just one polarization
+      save_uvf = 1
+    end
+
   endcase
 
   undefine, uvfits_subversion, uvfits_version

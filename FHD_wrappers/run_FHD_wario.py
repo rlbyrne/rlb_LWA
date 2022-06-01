@@ -3,18 +3,18 @@ import shlex
 import os
 
 obsids_list = [
-    #"unity_gains_uncalib",
-    #"unity_gains_diagonal",
-    #"unity_gains_dwcal",
-    #"random_gains_uncalib",
-    #"random_gains_diagonal",
+    "unity_gains_uncalib",
+    "unity_gains_diagonal",
+    "unity_gains_dwcal",
+    "random_gains_uncalib",
+    "random_gains_diagonal",
     "random_gains_dwcal",
-    #"ripple_gains_uncalib",
-    #"ripple_gains_diagonal",
+    "ripple_gains_uncalib",
+    "ripple_gains_diagonal",
     "ripple_gains_dwcal",
 ]
-versions_list = ["rlb_cal_sims_Apr2022"]
-uvfits_path = "/safepool/rbyrne/calibration_outputs/uvfits"
+versions_list = ["rlb_cal_sims_Jun2022"]
+uvfits_path = "/safepool/rbyrne/calibration_outputs/caltest_May19"
 outdir = "/safepool/rbyrne/fhd_outputs"
 run_fhd = False
 run_eppsilon = True
