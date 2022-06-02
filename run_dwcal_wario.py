@@ -798,8 +798,8 @@ def unity_gains_test_May19():
         pol="XX",
         use_autos=False,
         use_wedge_exclusion=False,
-        cal_savefile="/safepool/rbyrne/calibration_outputs/caltest_May19/unity_gains_diagonal.calfits",
-        log_file_path="/safepool/rbyrne/calibration_outputs/caltest_May19/unity_gains_diagonal_log.txt",
+        cal_savefile="/safepool/rbyrne/calibration_outputs/caltest_Jun2/unity_gains_diagonal.calfits",
+        log_file_path="/safepool/rbyrne/calibration_outputs/caltest_Jun2/unity_gains_diagonal_log.txt",
     )
 
     dwcal.calibrate(
@@ -811,14 +811,14 @@ def unity_gains_test_May19():
         pol="XX",
         use_autos=False,
         use_wedge_exclusion=True,
-        cal_savefile="/safepool/rbyrne/calibration_outputs/caltest_May19/unity_gains_dwcal.calfits",
-        log_file_path="/safepool/rbyrne/calibration_outputs/caltest_May19/unity_gains_dwcal_log.txt",
+        cal_savefile="/safepool/rbyrne/calibration_outputs/caltest_Jun2/unity_gains_dwcal.calfits",
+        log_file_path="/safepool/rbyrne/calibration_outputs/caltest_Jun2/unity_gains_dwcal_log.txt",
     )
 
 
 def random_gains_test_May19():
 
-    save_dir = "/safepool/rbyrne/calibration_outputs/caltest_May19"
+    save_dir = "/safepool/rbyrne/calibration_outputs/caltest_Jun2"
 
     model_path = (
         "/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Apr2022"
@@ -923,7 +923,7 @@ def random_gains_test_May19():
 
 def ripple_gains_test_May19():
 
-    save_dir = "/safepool/rbyrne/calibration_outputs/caltest_May19"
+    save_dir = "/safepool/rbyrne/calibration_outputs/caltest_Jun2"
 
     model_path = (
         "/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Apr2022"
@@ -1034,13 +1034,8 @@ def ripple_gains_test_May19():
         sys.stdout.close()
 
 
-def caltest_May19():
-
-    #unity_gains_test_May19()
-    random_gains_test_May19()
-    ripple_gains_test_May19()
-
-
 if __name__ == "__main__":
 
-    caltest_May19()
+    unity_gains_test_May19()
+    random_gains_test_May19()
+    ripple_gains_test_May19()
