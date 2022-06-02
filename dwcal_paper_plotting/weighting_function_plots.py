@@ -1,4 +1,3 @@
-import sys
 import numpy as np
 import pyuvdata
 import matplotlib.pyplot as plt
@@ -115,9 +114,9 @@ def plot_delay_spectra(
 
 def plot_weighting_function(bin_edges, delay_array):
 
-    wedge_val = 1./np.sqrt(np.pi)/1.62533161
-    window_val = 1./np.sqrt(np.pi)/0.08559771
-    wedge_slope_factor = 0.653
+    wedge_val = 0.141634
+    window_val = 10.7401
+    wedge_slope_factor =  0.628479
     wedge_delay_buffer = 6.5e-8
     c = 3e8
     weighting_func_delay_vals = np.full((len(bin_edges)-1, len(delay_array)), window_val)
@@ -133,7 +132,7 @@ def plot_weighting_function(bin_edges, delay_array):
         extent=[np.min(bin_edges), np.max(bin_edges), np.min(delay_array)*1e6,
                     np.max(delay_array)*1e6],
         aspect='auto',
-        norm=matplotlib.colors.LogNorm(vmin=1e-1, vmax=15),
+        norm=matplotlib.colors.LogNorm(vmin=5e-2, vmax=20),
     )
     cbar = plt.colorbar(extend="both")
     cbar.ax.set_ylabel(
