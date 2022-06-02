@@ -1,7 +1,6 @@
 import numpy as np
 import pyuvdata
 import matplotlib.pyplot as plt
-import matplotlib
 
 
 def plot_gain_error(
