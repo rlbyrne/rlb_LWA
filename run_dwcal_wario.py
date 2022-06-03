@@ -878,8 +878,9 @@ def random_gains_test_May19():
     log_file_path = f"{save_dir}/random_gains_diagonal_log.txt"
 
     if log_file_path is not None:
-        sys.stdout = open(log_file_path, "w")
-        sys.stderr = sys.stdout
+        stdout_orig = sys.stdout
+        stderr_orig = sys.stderr
+        sys.stdout = sys.stderr = log_file_new = open(log_file_path, "w")
 
     cal = dwcal.calibration_optimization(
         data,
@@ -894,7 +895,9 @@ def random_gains_test_May19():
         cal.write_calfits(cal_savefile, clobber=True)
 
     if log_file_path is not None:
-        sys.stdout.close()
+        sys.stdout = stdout_orig
+        sys.stderr = stderr_orig
+        log_file_new.close()
 
     # Do wedge excluded cal
     use_wedge_exclusion = True
@@ -902,8 +905,9 @@ def random_gains_test_May19():
     log_file_path = f"{save_dir}/random_gains_dwcal_log.txt"
 
     if log_file_path is not None:
-        sys.stdout = open(log_file_path, "w")
-        sys.stderr = sys.stdout
+        stdout_orig = sys.stdout
+        stderr_orig = sys.stderr
+        sys.stdout = sys.stderr = log_file_new = open(log_file_path, "w")
 
     cal = dwcal.calibration_optimization(
         data,
@@ -918,7 +922,9 @@ def random_gains_test_May19():
         cal.write_calfits(cal_savefile, clobber=True)
 
     if log_file_path is not None:
-        sys.stdout.close()
+        sys.stdout = stdout_orig
+        sys.stderr = stderr_orig
+        log_file_new.close()
 
 
 def ripple_gains_test_May19():
@@ -991,8 +997,9 @@ def ripple_gains_test_May19():
     log_file_path = f"{save_dir}/ripple_gains_diagonal_log.txt"
 
     if log_file_path is not None:
-        sys.stdout = open(log_file_path, "w")
-        sys.stderr = sys.stdout
+        stdout_orig = sys.stdout
+        stderr_orig = sys.stderr
+        sys.stdout = sys.stderr = log_file_new = open(log_file_path, "w")
 
     cal = dwcal.calibration_optimization(
         data,
@@ -1007,7 +1014,9 @@ def ripple_gains_test_May19():
         cal.write_calfits(cal_savefile, clobber=True)
 
     if log_file_path is not None:
-        sys.stdout.close()
+        sys.stdout = stdout_orig
+        sys.stderr = stderr_orig
+        log_file_new.close()
 
     # Do wedge excluded cal
     use_wedge_exclusion = True
@@ -1015,8 +1024,9 @@ def ripple_gains_test_May19():
     log_file_path = f"{save_dir}/ripple_gains_dwcal_log.txt"
 
     if log_file_path is not None:
-        sys.stdout = open(log_file_path, "w")
-        sys.stderr = sys.stdout
+        stdout_orig = sys.stdout
+        stderr_orig = sys.stderr
+        sys.stdout = sys.stderr = log_file_new = open(log_file_path, "w")
 
     cal = dwcal.calibration_optimization(
         data,
@@ -1031,11 +1041,13 @@ def ripple_gains_test_May19():
         cal.write_calfits(cal_savefile, clobber=True)
 
     if log_file_path is not None:
-        sys.stdout.close()
+        sys.stdout = stdout_orig
+        sys.stderr = stderr_orig
+        log_file_new.close()
 
 
 if __name__ == "__main__":
 
-    unity_gains_test_May19()
+    #unity_gains_test_May19()
     random_gains_test_May19()
     ripple_gains_test_May19()
