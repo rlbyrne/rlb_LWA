@@ -116,29 +116,41 @@ def plot_weighting_function(bin_edges, delay_array):
 
     wedge_val = 0.141634
     window_val = 10.7401
-    wedge_slope_factor =  0.628479
+    wedge_slope_factor = 0.628479
     wedge_delay_buffer = 6.5e-8
     c = 3e8
-    weighting_func_delay_vals = np.full((len(bin_edges)-1, len(delay_array)), window_val)
+    weighting_func_delay_vals = np.full(
+        (len(bin_edges) - 1, len(delay_array)), window_val
+    )
     for bin_ind, bl_length_start in enumerate(bin_edges[:-1]):
-        bl_length = (bl_length_start + bin_edges[bin_ind+1])/2.
-        wedge_inds = np.where(np.abs(delay_array) <= bl_length*wedge_slope_factor/c + wedge_delay_buffer)[0]
+        bl_length = (bl_length_start + bin_edges[bin_ind + 1]) / 2.0
+        wedge_inds = np.where(
+            np.abs(delay_array)
+            <= bl_length * wedge_slope_factor / c + wedge_delay_buffer
+        )[0]
         weighting_func_delay_vals[bin_ind, wedge_inds] = wedge_val
 
-    use_cmap = matplotlib.cm.get_cmap('plasma').copy()
-    use_cmap.set_bad(color='whitesmoke')
+    use_cmap = matplotlib.cm.get_cmap("plasma").copy()
+    use_cmap.set_bad(color="whitesmoke")
     plt.imshow(
-        weighting_func_delay_vals.T, origin='lower', interpolation='none', cmap=use_cmap,
-        extent=[np.min(bin_edges), np.max(bin_edges), np.min(delay_array)*1e6,
-                    np.max(delay_array)*1e6],
-        aspect='auto',
+        weighting_func_delay_vals.T,
+        origin="lower",
+        interpolation="none",
+        cmap=use_cmap,
+        extent=[
+            np.min(bin_edges),
+            np.max(bin_edges),
+            np.min(delay_array) * 1e6,
+            np.max(delay_array) * 1e6,
+        ],
+        aspect="auto",
         norm=matplotlib.colors.LogNorm(vmin=5e-2, vmax=20),
     )
     cbar = plt.colorbar(extend="both")
     cbar.ax.set_ylabel(
-        'Weighting Function Value (Jy$^{-2}$)', rotation=270, labelpad=15
+        "Weighting Function Value (Jy$^{-2}$)", rotation=270, labelpad=15
     )
-    for line_slope in [1.]:
+    for line_slope in [1.0]:
         plt.plot(
             [np.min(bin_edges), np.max(bin_edges)],
             [
@@ -159,9 +171,9 @@ def plot_weighting_function(bin_edges, delay_array):
             color="white",
             linewidth=1.0,
         )
-    plt.xlabel('Baseline Length (m)')
+    plt.xlabel("Baseline Length (m)")
     plt.ylim([-3, 3])
-    plt.ylabel('Delay ($\mu$s)')
+    plt.ylabel("Delay ($\mu$s)")
     plt.savefig("/Users/ruby/Astro/dwcal_paper_plots/weighting_func.png", dpi=600)
     plt.close()
 
@@ -201,6 +213,113 @@ def plot_model_visibility_error():
     plot_weighting_function(bin_edges, delay_array)
 
 
+def plot_example_baseline_weights():
+
+    bl_lengths = [10, 50, 200, 500]
+
+    wedge_val = 0.141634
+    window_val = 10.7401
+    wedge_slope_factor = 0.628479
+    wedge_delay_buffer = 6.5e-8
+    c = 3e8
+
+    Nfreqs = 384
+    channel_width = 80000.0
+    min_freq_mhz = 167075000.0 / 1e6
+    max_freq_mhz = 197715000.0 / 1e6
+
+    fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(16, 6))
+
+    delay_array = np.fft.fftshift(np.fft.fftfreq(Nfreqs, d=channel_width))
+
+    delay_weighting = np.full((len(bl_lengths), Nfreqs), window_val)
+    for bl_ind, bl_len in enumerate(bl_lengths):
+        wedge_delays = np.where(
+            np.abs(delay_array) < wedge_slope_factor * bl_len / c + wedge_delay_buffer
+        )[0]
+        delay_weighting[bl_ind, wedge_delays] = wedge_val
+
+    linewidth = 2.0
+    delta_linewidth = 0.3
+    for bl_ind in range(len(bl_lengths)):
+        ax[0].plot(
+            delay_array * 1e6,
+            delay_weighting[bl_ind, :],
+            linewidth=linewidth,
+            label=f"{bl_lengths[bl_ind]} m",
+        )
+        linewidth -= delta_linewidth
+    ax[0].set_xlim(np.min(delay_array) * 1e6, np.max(delay_array) * 1e6)
+    ax[0].set_ylim(0, 12)
+    ax[0].set_xlabel("Delay ($\mu$s)")
+    ax[0].set_ylabel("Weighting Function Value (Jy$^{-2}$)")
+    ax[0].legend(title="Baseline Length")
+
+    freq_weighting = np.fft.ifft(np.fft.ifftshift(delay_weighting, axes=1), axis=1)
+    freq_weighting_shifted = np.fft.fftshift(freq_weighting, axes=1)
+    freqs = np.array([channel_width * freq_ind for freq_ind in range(Nfreqs)])
+    freqs = np.fft.fftshift(freqs)
+    freqs[np.where(freqs > freqs[-1])[0]] -= np.max(freqs) + channel_width
+    linewidth = 2.0
+    delta_linewidth = 0.3
+    for bl_ind in range(len(bl_lengths)):
+        ax[1].plot(
+            freqs / 1e6,
+            np.real(freq_weighting_shifted[bl_ind, :]),
+            linewidth=linewidth,
+            label=f"{bl_lengths[bl_ind]} m",
+        )
+        linewidth -= delta_linewidth
+    ax[1].set_xlim(np.min(freqs) / 1e6, np.max(freqs) / 1e6)
+    ax[1].set_ylim(-4, 20)
+    ax[1].set_xlabel("$\Delta$ Frequency (MHz)")
+    ax[1].set_yscale("symlog", linthresh=5e-1)
+    ax[1].set_ylabel("Weighting Function Value (Jy$^{-2}$)")
+    ax[1].grid()
+    ax[1].legend(title="Baseline Length")
+
+    plt.savefig("/Users/ruby/Astro/dwcal_paper_plots/weighting_func_select_bls.png", dpi=600)
+    plt.close()
+
+    plot_mat_bl_inds = [0, 2]
+    fig, ax = plt.subplots(nrows=1, ncols=len(plot_mat_bl_inds), figsize=(16, 6))
+    subplot_ind = 0
+    for bl in plot_mat_bl_inds:
+        weight_mat = np.zeros((Nfreqs, Nfreqs), dtype=complex)
+        for freq_ind1 in range(Nfreqs):
+            for freq_ind2 in range(Nfreqs):
+                weight_mat[freq_ind1, freq_ind2] = freq_weighting[
+                    bl, np.abs(freq_ind1 - freq_ind2)
+                ]
+        use_cmap = matplotlib.cm.get_cmap("Spectral_r").copy()
+        cax = ax[subplot_ind].imshow(
+            np.real(weight_mat).T,
+            origin="lower",
+            interpolation="none",
+            cmap=use_cmap,
+            extent=[
+                np.min(min_freq_mhz),
+                np.max(max_freq_mhz),
+                np.min(min_freq_mhz),
+                np.max(max_freq_mhz),
+            ],
+            aspect="auto",
+            norm=matplotlib.colors.SymLogNorm(linthresh=2e-2, vmin=-10, vmax=10),
+        )
+        ax[subplot_ind].set_xlabel("Frequency 1 (MHz)")
+        ax[subplot_ind].set_ylabel("Frequency 2 (MHz)")
+        ax[subplot_ind].set_title(
+            f"Weighting Matrix, Baseline Length {bl_lengths[bl]} m"
+        )
+        ax[subplot_ind].set_aspect("equal")
+        subplot_ind += 1
+
+    cbar = fig.colorbar(cax, ax=ax.ravel().tolist(), extend="both")
+    cbar.set_label("Weighting Matrix Value (Jy$^{-2}$)", rotation=270, labelpad=15)
+    plt.savefig("/Users/ruby/Astro/dwcal_paper_plots/weighting_mats.png", dpi=600)
+    plt.close()
+
+
 if __name__ == "__main__":
 
-    plot_model_visibility_error()
+    plot_example_baseline_weights()
