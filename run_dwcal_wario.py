@@ -1048,6 +1048,6 @@ def ripple_gains_test_May19():
 
 if __name__ == "__main__":
 
-    #unity_gains_test_May19()
+    unity_gains_test_May19()
     random_gains_test_May19()
     ripple_gains_test_May19()
