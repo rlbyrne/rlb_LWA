@@ -789,18 +789,18 @@ def gain_ripple_lambda_1_May18():
 def unity_gains_test_May19():
 
     ##### Unity gains #####
-    dwcal.calibrate(
-        model_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Apr2022",
-        model_use_model=True,
-        data_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_Apr2022",
-        data_use_model=True,
-        obsid="1061316296",
-        pol="XX",
-        use_autos=False,
-        use_wedge_exclusion=False,
-        cal_savefile="/safepool/rbyrne/calibration_outputs/caltest_Jun2/unity_gains_diagonal.calfits",
-        log_file_path="/safepool/rbyrne/calibration_outputs/caltest_Jun2/unity_gains_diagonal_log.txt",
-    )
+    #dwcal.calibrate(
+    #    model_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Apr2022",
+    #    model_use_model=True,
+    #    data_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_Apr2022",
+    #    data_use_model=True,
+    #    obsid="1061316296",
+    #    pol="XX",
+    #    use_autos=False,
+    #    use_wedge_exclusion=False,
+    #    cal_savefile="/safepool/rbyrne/calibration_outputs/caltest_Jun2/unity_gains_diagonal.calfits",
+    #    log_file_path="/safepool/rbyrne/calibration_outputs/caltest_Jun2/unity_gains_diagonal_log.txt",
+    #)
 
     dwcal.calibrate(
         model_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Apr2022",
@@ -811,8 +811,8 @@ def unity_gains_test_May19():
         pol="XX",
         use_autos=False,
         use_wedge_exclusion=True,
-        cal_savefile="/safepool/rbyrne/calibration_outputs/caltest_Jun2/unity_gains_dwcal.calfits",
-        log_file_path="/safepool/rbyrne/calibration_outputs/caltest_Jun2/unity_gains_dwcal_log.txt",
+        cal_savefile="/safepool/rbyrne/calibration_outputs/caltest_Jun6/unity_gains_dwcal.calfits",
+        log_file_path="/safepool/rbyrne/calibration_outputs/caltest_Jun6/unity_gains_dwcal_log.txt",
     )
 
 
@@ -1049,5 +1049,5 @@ def ripple_gains_test_May19():
 if __name__ == "__main__":
 
     unity_gains_test_May19()
-    random_gains_test_May19()
-    ripple_gains_test_May19()
+    #random_gains_test_May19()
+    #ripple_gains_test_May19()
