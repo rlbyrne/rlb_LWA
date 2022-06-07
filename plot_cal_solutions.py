@@ -2,6 +2,43 @@ import pyuvdata
 import numpy as np
 import matplotlib.pyplot as plt
 
+
+def get_pol_name(pol):
+
+    # Instrumental polarizations:
+    if pol == -5:
+        pol_name = "XX"
+    elif pol == -6:
+        pol_name = "YY"
+    elif pol == -7:
+        pol_name = "XY"
+    elif pol == -8:
+        pol_name = "YX"
+    # Pseudo-Stokes polarizations:
+    elif pol == 1:
+        pol_name = "pI"
+    elif pol == 2:
+        pol_name = "pQ"
+    elif pol == 3:
+        pol_name = "pU"
+    elif pol == 4:
+        pol_name = "pV"
+    # Circular polarizations:
+    elif pol == -1:
+        pol_name = "RR"
+    elif pol == -2:
+        pol_name = "LL"
+    elif pol == -3:
+        pol_name = "RL"
+    elif pol == -4:
+        pol_name = "LR"
+    else:
+        print(f"WARNING: Unknown polarization mode {pol}.")
+        pol_name = str(pol)
+
+    return pol_name
+
+
 fhd_output_path = "/lustre/rbyrne/fhd_outputs/fhd_rlb_LWA_caltest_mmode_with_cyg_cas_Apr2022"
 obsid = "20220210_191447_70MHz_ssins_thresh_20"
 
@@ -61,13 +98,24 @@ for ant_ind in range(cal.Nants_data):
     else:
         plot_gains[ant_ind, :, :] = np.nan
 
+nrows = 5
+ncols = 5
+plot_ind = 1
 for ant_ind in range(cal.Nants_data):
-    plt.plot(cal.freq_array[0, :]/1e6, np.abs(plot_gains[ant_ind, :, 0]))
-plt.xlim([np.min(cal.freq_array[0, :]/1e6), np.max(cal.freq_array[0, :]/1e6)])
-plt.xlabel("Frequency (MHz)")
-plt.ylabel("Gain Amplitude")
-plt.savefig(f"{fhd_output_path}/{obsid}_cal_amp.png", dpi=600)
-plt.close()
+    if ant_ind%(nrows*ncols) == 0:  # Create new plot
+        fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(10, 10))
+        ax_list = ax.ravel()
+    for pol_ind, pol in enumerate(cal.jones_array):
+        pol_name = get_pol_name(pol)
+        ax_list[ant_ind].plot(cal.freq_array[0, :]/1e6, np.abs(plot_gains[ant_ind, :, pol_ind]), label=pol_name)
+    ax_list[ant_ind].set_xlim([np.min(cal.freq_array[0, :]/1e6), np.max(cal.freq_array[0, :]/1e6)])
+    ax_list[ant_ind].set_xlabel("Frequency (MHz)")
+    ax_list[ant_ind].set_ylabel("Gain Amplitude")
+    if (ant_ind+1)%(nrows*ncols) == 0:  # Save plot
+        plt.tight_layout()
+        plt.savefig(f"{fhd_output_path}/{obsid}_cal_amp_plot{plot_ind}.png", dpi=600)
+        plt.close()
+        plot_ind += 1
 
 for ant_ind in range(np.shape(cal.gain_array)[0]):
     ant_name = cal.antenna_names[cal.ant_array[ant_ind]]
