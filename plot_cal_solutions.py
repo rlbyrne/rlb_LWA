@@ -139,7 +139,7 @@ for ant_ind in range(cal.Nants_data):
     subplot_ind += 1
     if (ant_ind + 1) % (nrows * ncols) == 0:  # Save plot
         plt.tight_layout()
-        plt.savefig(f"{fhd_output_path}/{obsid}_cal_amp_plot{plot_ind}.png", dpi=600)
+        plt.savefig(f"{fhd_output_path}/{obsid}_cal_amp_page{plot_ind}.png", dpi=600)
         plt.close()
         plot_ind += 1
 
@@ -154,7 +154,7 @@ for ant_ind in range(cal.Nants_data):
         pol_name = get_pol_name(pol)
         ax_list[subplot_ind].plot(
             cal.freq_array[0, :] / 1e6,
-            np.abs(plot_gains[ant_ind, :, pol_ind]),
+            np.phase(plot_gains[ant_ind, :, pol_ind]),
             label=pol_name,
         )
     ax_list[subplot_ind].set_xlim(
@@ -167,6 +167,6 @@ for ant_ind in range(cal.Nants_data):
     subplot_ind += 1
     if (ant_ind + 1) % (nrows * ncols) == 0:  # Save plot
         plt.tight_layout()
-        plt.savefig(f"{fhd_output_path}/{obsid}_cal_phase_plot{plot_ind}.png", dpi=600)
+        plt.savefig(f"{fhd_output_path}/{obsid}_cal_phase_page{plot_ind}.png", dpi=600)
         plt.close()
         plot_ind += 1
