@@ -1074,12 +1074,6 @@ def newtons_test_Jun6():
         use_flagged_baselines=False,
     )
 
-    init_cal = pyuvdata.UVCal()
-    init_cal.read_calfits(gain_init_calfile)
-
-    # Apply gains to data
-    pyuvdata.utils.uvcalibrate(data, init_cal, inplace=True, time_check=False)
-
     # Do wedge excluded cal
     cal_savefile = f"{save_dir}/unity_gains_dwcal_newtons.calfits"
     log_file_path = f"{save_dir}/unity_gains_dwcal_newtons_log.txt"
