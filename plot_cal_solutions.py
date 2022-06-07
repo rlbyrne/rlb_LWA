@@ -111,6 +111,8 @@ for ant_ind in range(cal.Nants_data):
 
 nrows = 5
 ncols = 5
+
+# Plot amplitudes
 plot_ind = 1
 subplot_ind = 0
 gain_amp_mean = np.nanmean(np.abs(plot_gains))
@@ -137,13 +139,14 @@ for ant_ind in range(cal.Nants_data):
     ax_list[subplot_ind].set_ylabel("Gain Amplitude")
     ax_list[subplot_ind].set_title(ant_name)
     subplot_ind += 1
-    if subplot_ind == nrows * ncols - 1 or ant_ind == cal.Nants_data - 1:  # Save plot
+    if subplot_ind == nrows * ncols or ant_ind == cal.Nants_data - 1:  # Save plot
         plt.tight_layout()
         plt.savefig(f"{fhd_output_path}/cal_plots/{obsid}_cal_amp_page{plot_ind}.png", dpi=600)
         plt.close()
         plot_ind += 1
         subplot_ind = 0
 
+# Plot phases
 plot_ind = 1
 subplot_ind = 0
 for ant_ind in range(cal.Nants_data):
@@ -166,7 +169,7 @@ for ant_ind in range(cal.Nants_data):
     ax_list[subplot_ind].set_ylabel("Gain Phase (rad)")
     ax_list[subplot_ind].set_title(ant_name)
     subplot_ind += 1
-    if subplot_ind == nrows * ncols - 1 or ant_ind == cal.Nants_data - 1:  # Save plot
+    if subplot_ind == nrows * ncols or ant_ind == cal.Nants_data - 1:  # Save plot
         plt.tight_layout()
         plt.savefig(f"{fhd_output_path}/cal_plots/{obsid}_cal_phase_page{plot_ind}.png", dpi=600)
         plt.close()
