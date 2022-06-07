@@ -502,7 +502,7 @@ def get_rfi_occupancy_Jun6():
                 inplace=False,
             )
             flagging_frac = np.sum(uvd_ssins_flagged.flag_array)/np.size(uvd_ssins_flagged.flag_array)
-            txtfile.write(f"{obsid}, {ssins_thresh}, {flagging_frac}\n"))
+            txtfile.write(f"{obsid}, {ssins_thresh}, {flagging_frac}\n")
 
     txtfile.close()
 
