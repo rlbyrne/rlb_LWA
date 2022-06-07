@@ -482,7 +482,7 @@ def get_rfi_occupancy_Jun6():
 
         uvd = pyuvdata.UVData()
         uvd.read_uvfits(f"{uvfits_dir}/{filename}")
-        uvd.flag_array = False  # Unflag all
+        uvd.flag_array[:, :, :, :] = False  # Unflag all
 
         # Flag outriggers
         LWA_preprocessing.flag_outriggers(uvd, inplace=True)
