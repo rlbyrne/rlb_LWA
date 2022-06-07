@@ -46,26 +46,22 @@ plot_gains = cal.gain_array[:, 0, :, 0, :]  # Shape (Nants_data, 1, Nfreqs, Ntim
 
 for ant_ind in range(cal.Nants_data):
     ant_name = cal.antenna_names[cal.ant_array[ant_ind]]
-    data_ant_ind = np.where(data.antenna_names == ant_name)[0]
-    print(data_ant_ind)
+    data_ant_ind = np.where(np.array(data.antenna_names) == ant_name)[0]
     bls = np.unique(np.concatenate((
         np.where(data.ant_1_array == data_ant_ind)[0],
         np.where(data.ant_2_array == data_ant_ind)[0],
     )))
-    print(bls)
     if np.size(bls) > 0:
         plot_gains_ant = plot_gains[ant_ind, :, :]
         flag_channels = np.where(
             np.min(data.flag_array[bls, 0, :, :], axis=0)
-        )[0]
+        )
         if np.size(flag_channels) > 0:
-            plot_gains_ant[flag_channels] = np.nan
-            plot_gains[ant_ind, :, :] = plot_gains_ant
+            plot_gains[ant_ind, flag_channels[0], flag_channels[1]] = np.nan
     else:
         plot_gains[ant_ind, :, :] = np.nan
 
 for ant_ind in range(cal.Nants_data):
-    print(np.mean(np.abs(plot_gains[ant_ind, :, 0])))
     plt.plot(cal.freq_array[0, :]/1e6, np.abs(plot_gains[ant_ind, :, 0]))
 plt.xlim([np.min(cal.freq_array[0, :]/1e6), np.max(cal.freq_array[0, :]/1e6)])
 plt.xlabel("Frequency (MHz)")
