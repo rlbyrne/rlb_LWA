@@ -154,7 +154,7 @@ for ant_ind in range(cal.Nants_data):
         pol_name = get_pol_name(pol)
         ax_list[subplot_ind].plot(
             cal.freq_array[0, :] / 1e6,
-            np.phase(plot_gains[ant_ind, :, pol_ind]),
+            np.angle(plot_gains[ant_ind, :, pol_ind]),
             label=pol_name,
         )
     ax_list[subplot_ind].set_xlim(
