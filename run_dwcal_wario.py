@@ -1088,6 +1088,7 @@ def newtons_test_Jun6():
         use_wedge_exclusion=True,
         log_file_path=log_file_path,
         use_newtons_method=True,
+        gain_init_stddev=0.0,
         gain_init_calfile=gain_init_calfile,
     )
 
