@@ -85,6 +85,7 @@ cal.read_fhd_cal(
     settings_file=f"{fhd_output_path}/metadata/{obsid}_settings.txt",
 )
 cal.select(antenna_names=ants_with_data)
+cal.reorder_antennas(order="name")
 plot_gains = cal.gain_array[
     :, 0, :, 0, :
 ]  # Shape (Nants_data, 1, Nfreqs, Ntimes, Njones)
@@ -116,7 +117,7 @@ gain_amp_stddev = np.nanstd(np.abs(plot_gains))
 for ant_ind in range(cal.Nants_data):
     ant_name = cal.antenna_names[cal.ant_array[ant_ind]]
     if ant_ind % (nrows * ncols) == 0:  # Create new plot
-        fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(10, 15))
+        fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(15, 10))
         ax_list = ax.ravel()
         subplot_ind = 0
     for pol_ind, pol in enumerate(cal.jones_array):
@@ -130,7 +131,7 @@ for ant_ind in range(cal.Nants_data):
         [np.min(cal.freq_array[0, :] / 1e6), np.max(cal.freq_array[0, :] / 1e6)]
     )
     ax_list[subplot_ind].set_ylim(
-        [gain_amp_mean - 2 * gain_amp_stddev, gain_amp_mean + 2 * gain_amp_stddev]
+        [gain_amp_mean - 6 * gain_amp_stddev, gain_amp_mean + 6 * gain_amp_stddev]
     )
     ax_list[subplot_ind].set_xlabel("Frequency (MHz)")
     ax_list[subplot_ind].set_ylabel("Gain Amplitude")
