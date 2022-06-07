@@ -112,14 +112,14 @@ for ant_ind in range(cal.Nants_data):
 nrows = 5
 ncols = 5
 plot_ind = 1
+subplot_ind = 0
 gain_amp_mean = np.nanmean(np.abs(plot_gains))
 gain_amp_stddev = np.nanstd(np.abs(plot_gains))
 for ant_ind in range(cal.Nants_data):
     ant_name = cal.antenna_names[cal.ant_array[ant_ind]]
-    if ant_ind % (nrows * ncols) == 0:  # Create new plot
+    if subplot_ind == 0:  # Create new plot
         fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(15, 10))
         ax_list = ax.ravel()
-        subplot_ind = 0
     for pol_ind, pol in enumerate(cal.jones_array):
         pol_name = get_pol_name(pol)
         ax_list[subplot_ind].plot(
@@ -137,19 +137,20 @@ for ant_ind in range(cal.Nants_data):
     ax_list[subplot_ind].set_ylabel("Gain Amplitude")
     ax_list[subplot_ind].set_title(ant_name)
     subplot_ind += 1
-    if (ant_ind + 1) % (nrows * ncols) == 0:  # Save plot
+    if subplot_ind == nrows * ncols - 1 or ant_ind = cal.Nants_data - 1:  # Save plot
         plt.tight_layout()
         plt.savefig(f"{fhd_output_path}/{obsid}_cal_amp_page{plot_ind}.png", dpi=600)
         plt.close()
         plot_ind += 1
+        subplot_ind = 0
 
 plot_ind = 1
+subplot_ind = 0
 for ant_ind in range(cal.Nants_data):
     ant_name = cal.antenna_names[cal.ant_array[ant_ind]]
-    if ant_ind % (nrows * ncols) == 0:  # Create new plot
+    if subplot_ind == 0:  # Create new plot
         fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(15, 10))
         ax_list = ax.ravel()
-        subplot_ind = 0
     for pol_ind, pol in enumerate(cal.jones_array):
         pol_name = get_pol_name(pol)
         ax_list[subplot_ind].plot(
@@ -165,8 +166,9 @@ for ant_ind in range(cal.Nants_data):
     ax_list[subplot_ind].set_ylabel("Gain Phase (rad)")
     ax_list[subplot_ind].set_title(ant_name)
     subplot_ind += 1
-    if (ant_ind + 1) % (nrows * ncols) == 0:  # Save plot
+    if subplot_ind == nrows * ncols - 1 or ant_ind = cal.Nants_data - 1:  # Save plot
         plt.tight_layout()
         plt.savefig(f"{fhd_output_path}/{obsid}_cal_phase_page{plot_ind}.png", dpi=600)
         plt.close()
         plot_ind += 1
+        subplot_ind = 0
