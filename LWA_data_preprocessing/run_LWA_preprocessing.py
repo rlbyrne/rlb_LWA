@@ -476,13 +476,12 @@ def get_rfi_occupancy_Jun6():
     filenames = [file for file in filenames if "20220210_194804" not in file]
 
     # Process files
-    for filepath in filenames:
+    for filename in filenames:
 
-        obsid = filepath.split("/")[-1]
-        obsid = obsid[0:15]
+        obsid = filename[0:15]
 
         uvd = pyuvdata.UVData()
-        uvd.read_uvfits(filepath)
+        uvd.read_uvfits(f"{uvfits_dir}/{filepath}")
         uvd.flag_array = False  # Unflag all
 
         # Flag outriggers
