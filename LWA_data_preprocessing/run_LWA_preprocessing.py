@@ -461,5 +461,50 @@ def reprocessing_Apr25():
                 )
 
 
+def get_rfi_occupancy_Jun6():
+
+    data_dir = "/lustre/rbyrne/LWA_data_20220210"
+    uvfits_dir = f"{data_dir}/uvfits_ssins_flagged"
+    txtfilepath = "/lustre/rbyrne/LWA_data_20220210/ssins_occupany.txt"
+    txtfile = open(outfile, "w")
+
+    # Find raw ms files
+    ssins_thresholds = [1, 5, 10, 20]
+
+    filenames = os.listdir(uvfits_dir)
+    filenames = [file for file in filenames if file.endswith("thresh_20.uvfits")]
+    filenames = [file for file in filenames if "20220210_194804" not in file]
+
+    # Process files
+    for filepath in filenames:
+
+        obsid = filepath.split("/")[-1]
+        obsid = obsid[0:15]
+
+        uvd = pyuvdata.UVData()
+        uvd.read_uvfits(filepath)
+        uvd.flag_array = False  # Unflag all
+
+        # Flag outriggers
+        LWA_preprocessing.flag_outriggers(uvd, inplace=True)
+
+        # Flag inactive antennas
+        LWA_preprocessing.flag_inactive_antennas(
+            uvd, autocorr_thresh=20.0, inplace=True, flag_only=True
+        )
+
+        for ssins_thresh in ssins_thresholds:
+
+            # RFI flagging
+            uvd_ssins_flagged = LWA_preprocessing.ssins_flagging(
+                uvd,
+                sig_thresh=ssins_thresh,  # Flagging threshold in std. dev.
+                inplace=False,
+            )
+            flagging_frac = np.sum(uvd_ssins_flagged.flag_array)/np.size(uvd_ssins_flagged.flag_array)
+            txtfile.write(f"{obsid}, {ssins_thresh}, {flagging_frac}\n")
+        txtfile.close()
+
+
 if __name__ == "__main__":
-    reprocessing_Apr25()
+    get_rfi_occupancy_Jun6()
