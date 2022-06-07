@@ -37,8 +37,11 @@ data.select(antenna_names=ants_with_data)
 cal = pyuvdata.UVCal()
 cal.read_fhd_cal(
     f"{fhd_output_path}/calibration/{obsid}_cal.sav",
-    f"{fhd_output_path}/metadata/{obsid}_obs.sav"
+    f"{fhd_output_path}/metadata/{obsid}_obs.sav",
+    layout_file=f"{fhd_output_path}/metadata/{obsid}_layout.sav",
+    settings_file=f"{fhd_output_path}/metadata/{obsid}_settings.txt",
 )
+print(cal.antenna_names)
 cal.select(antenna_names=ants_with_data)
 plot_gains = cal.gain_array[:, 0, :, 0, :]  # Shape (Nants_data, 1, Nfreqs, Ntimes, Njones)
 for ant_ind in range(cal.Nants_data):
