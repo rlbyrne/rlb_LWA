@@ -466,7 +466,7 @@ def get_rfi_occupancy_Jun6():
     data_dir = "/lustre/rbyrne/LWA_data_20220210"
     uvfits_dir = f"{data_dir}/uvfits_ssins_flagged"
     txtfilepath = "/lustre/rbyrne/LWA_data_20220210/ssins_occupany.txt"
-    txtfile = open(outfile, "w")
+    txtfile = open(txtfilepath, "w")
 
     # Find raw ms files
     ssins_thresholds = [1, 5, 10, 20]
