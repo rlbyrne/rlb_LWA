@@ -41,7 +41,6 @@ cal.read_fhd_cal(
     layout_file=f"{fhd_output_path}/metadata/{obsid}_layout.sav",
     settings_file=f"{fhd_output_path}/metadata/{obsid}_settings.txt",
 )
-print(cal.antenna_names)
 cal.select(antenna_names=ants_with_data)
 plot_gains = cal.gain_array[:, 0, :, 0, :]  # Shape (Nants_data, 1, Nfreqs, Ntimes, Njones)
 for ant_ind in range(cal.Nants_data):
@@ -63,7 +62,8 @@ for ant_ind in range(cal.Nants_data):
         plot_gains[ant_ind, :, :] = np.nan
 
 for ant_ind in range(cal.Nants_data):
-    plt.plot(cal.freq_array[0, :]/1e6, np.abs(cal.gain_array[ant_ind, 0, :, 0, 0]))
+    print(np.mean(np.abs(plot_gains[ant_ind, :, 0])))
+    plt.plot(cal.freq_array[0, :]/1e6, np.abs(plot_gains[ant_ind, :, 0]))
 plt.xlim([np.min(cal.freq_array[0, :]/1e6), np.max(cal.freq_array[0, :]/1e6)])
 plt.xlabel("Frequency (MHz)")
 plt.ylabel("Gain Amplitude")
@@ -72,7 +72,7 @@ plt.close()
 
 for ant_ind in range(np.shape(cal.gain_array)[0]):
     ant_name = cal.antenna_names[cal.ant_array[ant_ind]]
-    plt.plot(cal.freq_array[0, :]/1e6, np.angle(cal.gain_array[ant_ind, 0, :, 0, 0]))
+    plt.plot(cal.freq_array[0, :]/1e6, np.angle(plot_gains[ant_ind, :, 0]))
 plt.xlim([np.min(cal.freq_array[0, :]/1e6), np.max(cal.freq_array[0, :]/1e6)])
 plt.xlabel("Frequency (MHz)")
 plt.ylim([-np.pi, np.pi])
