@@ -143,12 +143,30 @@ for ant_ind in range(cal.Nants_data):
         plt.close()
         plot_ind += 1
 
-for ant_ind in range(np.shape(cal.gain_array)[0]):
+plot_ind = 1
+for ant_ind in range(cal.Nants_data):
     ant_name = cal.antenna_names[cal.ant_array[ant_ind]]
-    plt.plot(cal.freq_array[0, :] / 1e6, np.angle(plot_gains[ant_ind, :, 0]))
-plt.xlim([np.min(cal.freq_array[0, :] / 1e6), np.max(cal.freq_array[0, :] / 1e6)])
-plt.xlabel("Frequency (MHz)")
-plt.ylim([-np.pi, np.pi])
-plt.ylabel("Gain Phase (rad.)")
-plt.savefig(f"{fhd_output_path}/{obsid}_cal_phase.png", dpi=600)
-plt.close()
+    if ant_ind % (nrows * ncols) == 0:  # Create new plot
+        fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(15, 10))
+        ax_list = ax.ravel()
+        subplot_ind = 0
+    for pol_ind, pol in enumerate(cal.jones_array):
+        pol_name = get_pol_name(pol)
+        ax_list[subplot_ind].plot(
+            cal.freq_array[0, :] / 1e6,
+            np.abs(plot_gains[ant_ind, :, pol_ind]),
+            label=pol_name,
+        )
+    ax_list[subplot_ind].set_xlim(
+        [np.min(cal.freq_array[0, :] / 1e6), np.max(cal.freq_array[0, :] / 1e6)]
+    )
+    ax_list[subplot_ind].set_ylim([-np.pi, np.pi])
+    ax_list[subplot_ind].set_xlabel("Frequency (MHz)")
+    ax_list[subplot_ind].set_ylabel("Gain Phase (rad)")
+    ax_list[subplot_ind].set_title(ant_name)
+    subplot_ind += 1
+    if (ant_ind + 1) % (nrows * ncols) == 0:  # Save plot
+        plt.tight_layout()
+        plt.savefig(f"{fhd_output_path}/{obsid}_cal_phase_plot{plot_ind}.png", dpi=600)
+        plt.close()
+        plot_ind += 1
