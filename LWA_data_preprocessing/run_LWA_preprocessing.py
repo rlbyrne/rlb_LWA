@@ -481,7 +481,7 @@ def get_rfi_occupancy_Jun6():
         obsid = filename[0:15]
 
         uvd = pyuvdata.UVData()
-        uvd.read_uvfits(f"{uvfits_dir}/{filepath}")
+        uvd.read_uvfits(f"{uvfits_dir}/{filename}")
         uvd.flag_array = False  # Unflag all
 
         # Flag outriggers
