@@ -39,7 +39,9 @@ def get_pol_name(pol):
     return pol_name
 
 
-fhd_output_path = "/lustre/rbyrne/fhd_outputs/fhd_rlb_LWA_caltest_mmode_with_cyg_cas_Apr2022"
+fhd_output_path = (
+    "/lustre/rbyrne/fhd_outputs/fhd_rlb_LWA_caltest_mmode_with_cyg_cas_Apr2022"
+)
 obsid = "20220210_191447_70MHz_ssins_thresh_20"
 
 data = pyuvdata.UVData()
@@ -60,10 +62,14 @@ data.read_fhd(filelist)
 ant_inds = np.unique(np.concatenate((data.ant_1_array, data.ant_2_array)))
 ants_with_data = []
 for ant_ind in ant_inds:
-    bls = np.unique(np.concatenate((
-        np.where(data.ant_1_array == ant_ind)[0],
-        np.where(data.ant_2_array == ant_ind)[0],
-    )))
+    bls = np.unique(
+        np.concatenate(
+            (
+                np.where(data.ant_1_array == ant_ind)[0],
+                np.where(data.ant_2_array == ant_ind)[0],
+            )
+        )
+    )
     if not np.min(data.flag_array[bls, :, :, :]):
         ant_name = data.antenna_names[ant_ind]
         ants_with_data.append(ant_name)
@@ -79,20 +85,24 @@ cal.read_fhd_cal(
     settings_file=f"{fhd_output_path}/metadata/{obsid}_settings.txt",
 )
 cal.select(antenna_names=ants_with_data)
-plot_gains = cal.gain_array[:, 0, :, 0, :]  # Shape (Nants_data, 1, Nfreqs, Ntimes, Njones)
+plot_gains = cal.gain_array[
+    :, 0, :, 0, :
+]  # Shape (Nants_data, 1, Nfreqs, Ntimes, Njones)
 
 for ant_ind in range(cal.Nants_data):
     ant_name = cal.antenna_names[cal.ant_array[ant_ind]]
     data_ant_ind = np.where(np.array(data.antenna_names) == ant_name)[0]
-    bls = np.unique(np.concatenate((
-        np.where(data.ant_1_array == data_ant_ind)[0],
-        np.where(data.ant_2_array == data_ant_ind)[0],
-    )))
+    bls = np.unique(
+        np.concatenate(
+            (
+                np.where(data.ant_1_array == data_ant_ind)[0],
+                np.where(data.ant_2_array == data_ant_ind)[0],
+            )
+        )
+    )
     if np.size(bls) > 0:
         plot_gains_ant = plot_gains[ant_ind, :, :]
-        flag_channels = np.where(
-            np.min(data.flag_array[bls, 0, :, :], axis=0)
-        )
+        flag_channels = np.where(np.min(data.flag_array[bls, 0, :, :], axis=0))
         if np.size(flag_channels) > 0:
             plot_gains[ant_ind, flag_channels[0], flag_channels[1]] = np.nan
     else:
@@ -101,19 +111,32 @@ for ant_ind in range(cal.Nants_data):
 nrows = 5
 ncols = 5
 plot_ind = 1
+gain_amp_mean = np.nanmean(np.abs(plot_gains))
+gain_amp_stddev = np.nanstd(np.abs(plot_gains))
 for ant_ind in range(cal.Nants_data):
-    if ant_ind%(nrows*ncols) == 0:  # Create new plot
-        fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(10, 10))
+    ant_name = cal.antenna_names[cal.ant_array[ant_ind]]
+    if ant_ind % (nrows * ncols) == 0:  # Create new plot
+        fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(10, 15))
         ax_list = ax.ravel()
         subplot_ind = 0
     for pol_ind, pol in enumerate(cal.jones_array):
         pol_name = get_pol_name(pol)
-        ax_list[subplot_ind].plot(cal.freq_array[0, :]/1e6, np.abs(plot_gains[ant_ind, :, pol_ind]), label=pol_name)
-    ax_list[subplot_ind].set_xlim([np.min(cal.freq_array[0, :]/1e6), np.max(cal.freq_array[0, :]/1e6)])
+        ax_list[subplot_ind].plot(
+            cal.freq_array[0, :] / 1e6,
+            np.abs(plot_gains[ant_ind, :, pol_ind]),
+            label=pol_name,
+        )
+    ax_list[subplot_ind].set_xlim(
+        [np.min(cal.freq_array[0, :] / 1e6), np.max(cal.freq_array[0, :] / 1e6)]
+    )
+    ax_list[subplot_ind].set_ylim(
+        [gain_amp_mean - 2 * gain_amp_stddev, gain_amp_mean + 2 * gain_amp_stddev]
+    )
     ax_list[subplot_ind].set_xlabel("Frequency (MHz)")
     ax_list[subplot_ind].set_ylabel("Gain Amplitude")
+    ax_list[subplot_ind].set_title(ant_name)
     subplot_ind += 1
-    if (ant_ind+1)%(nrows*ncols) == 0:  # Save plot
+    if (ant_ind + 1) % (nrows * ncols) == 0:  # Save plot
         plt.tight_layout()
         plt.savefig(f"{fhd_output_path}/{obsid}_cal_amp_plot{plot_ind}.png", dpi=600)
         plt.close()
@@ -121,8 +144,8 @@ for ant_ind in range(cal.Nants_data):
 
 for ant_ind in range(np.shape(cal.gain_array)[0]):
     ant_name = cal.antenna_names[cal.ant_array[ant_ind]]
-    plt.plot(cal.freq_array[0, :]/1e6, np.angle(plot_gains[ant_ind, :, 0]))
-plt.xlim([np.min(cal.freq_array[0, :]/1e6), np.max(cal.freq_array[0, :]/1e6)])
+    plt.plot(cal.freq_array[0, :] / 1e6, np.angle(plot_gains[ant_ind, :, 0]))
+plt.xlim([np.min(cal.freq_array[0, :] / 1e6), np.max(cal.freq_array[0, :] / 1e6)])
 plt.xlabel("Frequency (MHz)")
 plt.ylim([-np.pi, np.pi])
 plt.ylabel("Gain Phase (rad.)")
