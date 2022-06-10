@@ -1079,8 +1079,9 @@ def newtons_test_Jun6():
     log_file_path = f"{save_dir}/unity_gains_dwcal_newtons_log.txt"
 
     if log_file_path is not None:
-        sys.stdout = open(log_file_path, "w")
-        sys.stderr = sys.stdout
+        stdout_orig = sys.stdout
+        stderr_orig = sys.stderr
+        sys.stdout = sys.stderr = log_file_new = open(log_file_path, "w")
 
     cal = dwcal.calibration_optimization(
         data,
@@ -1098,9 +1099,65 @@ def newtons_test_Jun6():
         cal.write_calfits(cal_savefile, clobber=True)
 
     if log_file_path is not None:
-        sys.stdout.close()
+        sys.stdout = stdout_orig
+        sys.stderr = stderr_orig
+        log_file_new.close()
+
+
+def test_gaussian_weights_Jun9():
+
+    save_dir = "/safepool/rbyrne/calibration_outputs/caltest_Jun9"
+
+    model_path = (
+        "/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Apr2022"
+    )
+    model_use_model = True
+    data_path = "/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_Apr2022"
+    data_use_model = True
+    obsid = "1061316296"
+    pol = "XX"
+    use_autos = False
+
+    data, model = dwcal.get_test_data(
+        model_path=model_path,
+        model_use_model=model_use_model,
+        data_path=data_path,
+        data_use_model=data_use_model,
+        obsid=obsid,
+        pol=pol,
+        use_autos=use_autos,
+        debug_limit_freqs=None,
+        use_antenna_list=None,
+        use_flagged_baselines=False,
+    )
+
+    # Do wedge excluded cal
+    cal_savefile = f"{save_dir}/unity_gains_dwcal.calfits"
+    log_file_path = f"{save_dir}/unity_gains_dwcal_log.txt"
+
+    if log_file_path is not None:
+        stdout_orig = sys.stdout
+        stderr_orig = sys.stderr
+        sys.stdout = sys.stderr = log_file_new = open(log_file_path, "w")
+
+    cal = dwcal.calibration_optimization(
+        data,
+        model,
+        weight_mat_option="gaussian window fit",
+        log_file_path=log_file_path,
+    )
+
+    if cal_savefile is not None:
+        print(f"Saving calibration solutions to {cal_savefile}")
+        sys.stdout.flush()
+        cal.write_calfits(cal_savefile, clobber=True)
+
+    if log_file_path is not None:
+        sys.stdout = stdout_orig
+        sys.stderr = stderr_orig
+        log_file_new.close()
 
 
 if __name__ == "__main__":
 
-    newtons_test_Jun6()
+    test_gaussian_weights_Jun9()
