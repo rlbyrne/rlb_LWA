@@ -1158,6 +1158,266 @@ def test_gaussian_weights_Jun9():
         log_file_new.close()
 
 
+def unity_gains_test_Jun9():
+
+    ##### Unity gains #####
+    dwcal.calibrate(
+        model_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Apr2022",
+        model_use_model=True,
+        data_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_Apr2022",
+        data_use_model=True,
+        obsid="1061316296",
+        pol="XX",
+        use_autos=False,
+        weight_mat_option="diagonal",
+        cal_savefile="/safepool/rbyrne/calibration_outputs/caltest_Jun9/unity_gains_diagonal.calfits",
+        log_file_path="/safepool/rbyrne/calibration_outputs/caltest_Jun9/unity_gains_diagonal_log.txt",
+    )
+
+    #dwcal.calibrate(
+    #    model_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Apr2022",
+    #    model_use_model=True,
+    #    data_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_Apr2022",
+    #    data_use_model=True,
+    #    obsid="1061316296",
+    #    pol="XX",
+    #    use_autos=False,
+    #    weight_mat_option="gaussian window fit",
+    #    cal_savefile="/safepool/rbyrne/calibration_outputs/caltest_Jun9/unity_gains_dwcal.calfits",
+    #    log_file_path="/safepool/rbyrne/calibration_outputs/caltest_Jun9/unity_gains_dwcal_log.txt",
+    #)
+
+
+def random_gains_test_Jun9():
+
+    save_dir = "/safepool/rbyrne/calibration_outputs/caltest_Jun9"
+
+    model_path = (
+        "/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Apr2022"
+    )
+    model_use_model = True
+    data_path = "/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_Apr2022"
+    data_use_model = True
+    obsid = "1061316296"
+    pol = "XX"
+    use_autos = False
+
+    data, model = dwcal.get_test_data(
+        model_path=model_path,
+        model_use_model=model_use_model,
+        data_path=data_path,
+        data_use_model=data_use_model,
+        obsid=obsid,
+        pol=pol,
+        use_autos=use_autos,
+        debug_limit_freqs=None,
+        use_antenna_list=None,
+        use_flagged_baselines=False,
+    )
+
+    # Create randomized gains and apply to data
+    randomized_gains_cal_savefile = f"{save_dir}/random_initial_gains.calfits"
+    random_gains_stddev = 0.01
+    random_gains = np.random.normal(
+        1.0,
+        random_gains_stddev,
+        size=(data.Nants_data, data.Nfreqs),
+    ) + 1.0j * np.random.normal(
+        0.0,
+        random_gains_stddev,
+        size=(data.Nants_data, data.Nfreqs),
+    )
+
+    # Ensure that the phase of the gains is mean-zero for each frequency
+    avg_angle = np.arctan2(
+        np.mean(np.sin(np.angle(random_gains)), axis=0),
+        np.mean(np.cos(np.angle(random_gains)), axis=0),
+    )
+    random_gains *= np.cos(avg_angle) - 1j * np.sin(avg_angle)
+
+    # Save randomized gains
+    antenna_list = np.unique([data.ant_1_array, data.ant_2_array])
+    random_gains_cal = dwcal.initialize_cal(data, antenna_list, gains=random_gains)
+    random_gains_cal.gain_convention = "divide"  # Apply initial calibration as division
+    random_gains_cal.write_calfits(randomized_gains_cal_savefile, clobber=True)
+
+    # Apply gains to data
+    pyuvdata.utils.uvcalibrate(data, random_gains_cal, inplace=True, time_check=False)
+
+    # Do vanilla cal
+    cal_savefile = f"{save_dir}/random_gains_diagonal.calfits"
+    log_file_path = f"{save_dir}/random_gains_diagonal_log.txt"
+
+    if log_file_path is not None:
+        stdout_orig = sys.stdout
+        stderr_orig = sys.stderr
+        sys.stdout = sys.stderr = log_file_new = open(log_file_path, "w")
+
+    cal = dwcal.calibration_optimization(
+        data,
+        model,
+        weight_mat_option="diagonal",
+        log_file_path=log_file_path,
+    )
+
+    if cal_savefile is not None:
+        print(f"Saving calibration solutions to {cal_savefile}")
+        sys.stdout.flush()
+        cal.write_calfits(cal_savefile, clobber=True)
+
+    if log_file_path is not None:
+        sys.stdout = stdout_orig
+        sys.stderr = stderr_orig
+        log_file_new.close()
+
+    # Do wedge excluded cal
+    cal_savefile = f"{save_dir}/random_gains_dwcal.calfits"
+    log_file_path = f"{save_dir}/random_gains_dwcal_log.txt"
+
+    if log_file_path is not None:
+        stdout_orig = sys.stdout
+        stderr_orig = sys.stderr
+        sys.stdout = sys.stderr = log_file_new = open(log_file_path, "w")
+
+    cal = dwcal.calibration_optimization(
+        data,
+        model,
+        weight_mat_option="gaussian window fit",
+        log_file_path=log_file_path,
+    )
+
+    if cal_savefile is not None:
+        print(f"Saving calibration solutions to {cal_savefile}")
+        sys.stdout.flush()
+        cal.write_calfits(cal_savefile, clobber=True)
+
+    if log_file_path is not None:
+        sys.stdout = stdout_orig
+        sys.stderr = stderr_orig
+        log_file_new.close()
+
+
+def ripple_gains_test_May19():
+
+    save_dir = "/safepool/rbyrne/calibration_outputs/caltest_Jun9"
+
+    model_path = (
+        "/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Apr2022"
+    )
+    model_use_model = True
+    data_path = "/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_Apr2022"
+    data_use_model = True
+    obsid = "1061316296"
+    pol = "XX"
+    use_autos = False
+
+    data, model = dwcal.get_test_data(
+        model_path=model_path,
+        model_use_model=model_use_model,
+        data_path=data_path,
+        data_use_model=data_use_model,
+        obsid=obsid,
+        pol=pol,
+        use_autos=use_autos,
+        debug_limit_freqs=None,
+        use_antenna_list=None,
+        use_flagged_baselines=False,
+    )
+
+    # Create gain with frequency ripple and apply to data
+    ripple_gains_cal_savefile = f"{save_dir}/ripple_initial_gains.calfits"
+    delay_mode = 1e-6
+    use_ants = [
+        "Tile143",
+        "Tile072",
+        "Tile012",
+        "Tile088",
+        "Tile042",
+    ]  # 5 randomly selected antennas
+    delay_array = np.fft.fftfreq(data.Nfreqs, d=data.channel_width)
+    ripple_delay = np.zeros_like(delay_array)
+    ripple_delay[np.argmin(np.abs(delay_array - 1e-6))] = 1  # Add ripple
+    ripple_gains = np.fft.ifft(ripple_delay)
+    ripple_gains /= np.mean(np.abs(ripple_gains))  # Set mean amp to 1
+
+    antenna_list = np.unique([data.ant_1_array, data.ant_2_array])
+    gains = np.ones((data.Nants_data, data.Nfreqs), dtype=complex)
+    for antname in use_ants:
+        ant_ind = np.where(np.array(data.antenna_names) == antname)[0][0]
+        gains[np.where(antenna_list == ant_ind)[0], :] = ripple_gains
+
+    # Ensure that the phase of the gains is mean-zero for each frequency
+    avg_angle = np.arctan2(
+        np.mean(np.sin(np.angle(gains)), axis=0),
+        np.mean(np.cos(np.angle(gains)), axis=0),
+    )
+    gains *= np.cos(avg_angle) - 1j * np.sin(avg_angle)
+
+    # Save gains
+    ripple_gains_cal = dwcal.initialize_cal(data, antenna_list, gains=gains)
+    ripple_gains_cal.gain_convention = "divide"  # Apply initial calibration as division
+    ripple_gains_cal.write_calfits(ripple_gains_cal_savefile, clobber=True)
+
+    # Apply gains to data
+    pyuvdata.utils.uvcalibrate(data, ripple_gains_cal, inplace=True, time_check=False)
+
+    # Do vanilla cal
+    use_wedge_exclusion = False
+    cal_savefile = f"{save_dir}/ripple_gains_diagonal.calfits"
+    log_file_path = f"{save_dir}/ripple_gains_diagonal_log.txt"
+
+    if log_file_path is not None:
+        stdout_orig = sys.stdout
+        stderr_orig = sys.stderr
+        sys.stdout = sys.stderr = log_file_new = open(log_file_path, "w")
+
+    cal = dwcal.calibration_optimization(
+        data,
+        model,
+        weight_mat_option="diagonal",
+        log_file_path=log_file_path,
+    )
+
+    if cal_savefile is not None:
+        print(f"Saving calibration solutions to {cal_savefile}")
+        sys.stdout.flush()
+        cal.write_calfits(cal_savefile, clobber=True)
+
+    if log_file_path is not None:
+        sys.stdout = stdout_orig
+        sys.stderr = stderr_orig
+        log_file_new.close()
+
+    # Do wedge excluded cal
+    use_wedge_exclusion = True
+    cal_savefile = f"{save_dir}/ripple_gains_dwcal.calfits"
+    log_file_path = f"{save_dir}/ripple_gains_dwcal_log.txt"
+
+    if log_file_path is not None:
+        stdout_orig = sys.stdout
+        stderr_orig = sys.stderr
+        sys.stdout = sys.stderr = log_file_new = open(log_file_path, "w")
+
+    cal = dwcal.calibration_optimization(
+        data,
+        model,
+        weight_mat_option="gaussian window fit",
+        log_file_path=log_file_path,
+    )
+
+    if cal_savefile is not None:
+        print(f"Saving calibration solutions to {cal_savefile}")
+        sys.stdout.flush()
+        cal.write_calfits(cal_savefile, clobber=True)
+
+    if log_file_path is not None:
+        sys.stdout = stdout_orig
+        sys.stderr = stderr_orig
+        log_file_new.close()
+
+
 if __name__ == "__main__":
 
-    test_gaussian_weights_Jun9()
+    unity_gains_test_Jun9()
+    random_gains_test_Jun9()
+    ripple_gains_test_May19()
