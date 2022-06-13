@@ -194,7 +194,7 @@ pro fhd_versions_wario
     end
 
     'rlb_model_GLEAM_Jun2022': begin
-      recalculate_all = 0
+      recalculate_all = 1
       return_cal_visibilities = 0
       catalog_file_path = 0
       diffuse_calibrate = 0
@@ -211,9 +211,9 @@ pro fhd_versions_wario
       ring_radius = 0
       n_pol = 2
       unflag_all = 1  ; unflag for simulation
+      flag_visibilities = 0  ; try turning this off
       beam_nfreq_avg = 384 ; use one beam for all frequencies
       max_baseline = 3000  ; try increasing max baseline to prevent baseline cutting
-      dimension = 4096  ; try increasing UV plane size
     end
 
   endcase
