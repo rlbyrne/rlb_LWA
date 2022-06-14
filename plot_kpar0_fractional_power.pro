@@ -3,14 +3,15 @@ pro plot_kpar0_fractional_power
   fhd_outputs_dir = '/lustre/rbyrne/fhd_outputs'
   plot_save_dir = '/lustre/rbyrne/kpar0_plots'
   obsid = '20220210_191447_70MHz_ssins_thresh_20'
-  version_names = ['fhd_rlb_LWA_caltest_cyg_cas_Apr2022', $
-    'fhd_rlb_LWA_caltest_Gasperin_sources_Apr2022', $
-    'fhd_rlb_LWA_caltest_mmode_with_cyg_cas_Apr2022', $
-    'fhd_rlb_LWA_caltest_mmode_with_Gasperin_cyg_cas_Apr2022', $
-    'fhd_rlb_LWA_caltest_vlssr_Apr2022']
+  ;version_names = ['fhd_rlb_LWA_caltest_cyg_cas_Apr2022', $
+  ;  'fhd_rlb_LWA_caltest_Gasperin_sources_Apr2022', $
+  ;  'fhd_rlb_LWA_caltest_mmode_with_cyg_cas_Apr2022', $
+  ;  'fhd_rlb_LWA_caltest_mmode_with_Gasperin_cyg_cas_Apr2022', $
+  ;  'fhd_rlb_LWA_caltest_vlssr_Apr2022']
+  version_names = ['fhd_rlb_LWA_caltest_mmode_with_cyg_cas_Apr2022', 'fhd_rlb_LWA_caltest_mmode_with_cyg_cas_Jun2022']
   version_paths = []
   for name_ind=0,n_elements(version_names)-1 do version_paths = [version_paths, fhd_outputs_dir+'/'+version_names[name_ind]]
-  
+
   pols = ['xx', 'yy']
   yrange = [0,100]
   xrange=[.5e-3, 3.5e-2]
@@ -23,13 +24,14 @@ pro plot_kpar0_fractional_power
 
   for pol_ind=0,n_elements(pols)-1 do begin
     pol = pols[pol_ind]
-    cgps_open, plot_save_dir+'/frac_power_recovered_'+pol+'.png'
+    ;cgps_open, plot_save_dir+'/frac_power_recovered_'+pol+'.png'
+    cgps_open, plot_save_dir+'/check_diffuse_norm_'+pol+'.png'
     cgDisplay, 900, 650
     for version_ind = 0,n_elements(version_paths)-1 do begin
-      
+
       dirty_file = version_paths[version_ind]+'/ps/data/1d_binning/'+obsid+'_gridded_uvf__even_odd_joint_noimgclip_dirty_'+pol+'_dft_averemove_swbh_dencorr_k0power.idlsave'
       dirty_power = getvar_savefile(dirty_file, 'power')
-      
+
       res_file = version_paths[version_ind]+'/ps/data/1d_binning/'+obsid+'_gridded_uvf__even_odd_joint_noimgclip_res_'+pol+'_dft_averemove_swbh_dencorr_k0power.idlsave'
       k_edges = getvar_savefile(res_file, 'k_edges')
       power = getvar_savefile(res_file, 'power')
