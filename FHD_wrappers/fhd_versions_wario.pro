@@ -214,7 +214,7 @@ pro fhd_versions_wario
       flag_visibilities = 0  ; try turning this off
       beam_nfreq_avg = 384 ; use one beam for all frequencies
       max_baseline = 3000  ; try increasing max baseline to prevent baseline cutting
-      dimension = 4096
+      dimension = 8192
     end
 
   endcase
