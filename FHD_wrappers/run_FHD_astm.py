@@ -11,7 +11,7 @@ obsids_list = [
     #"20220210_194202_70MHz_ssins_thresh_20"
 ]
 versions_list = [
-    "rlb_LWA_caltest_mmode_with_cyg_cas_Jun2022",
+    "rlb_LWA_caltest_mmode_with_Gasperin_cyg_cas_Jun2022",
 ]
 uvfits_path = "/lustre/rbyrne/LWA_data_20220210/uvfits_ssins_flagged"
 outdir = "/lustre/rbyrne/fhd_outputs"
