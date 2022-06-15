@@ -3,12 +3,11 @@ pro plot_kpar0_fractional_power
   fhd_outputs_dir = '/lustre/rbyrne/fhd_outputs'
   plot_save_dir = '/lustre/rbyrne/kpar0_plots'
   obsid = '20220210_191447_70MHz_ssins_thresh_20'
-  ;version_names = ['fhd_rlb_LWA_caltest_cyg_cas_Apr2022', $
-  ;  'fhd_rlb_LWA_caltest_Gasperin_sources_Apr2022', $
-  ;  'fhd_rlb_LWA_caltest_mmode_with_cyg_cas_Apr2022', $
-  ;  'fhd_rlb_LWA_caltest_mmode_with_Gasperin_cyg_cas_Apr2022', $
-  ;  'fhd_rlb_LWA_caltest_vlssr_Apr2022']
-  version_names = ['fhd_rlb_LWA_caltest_mmode_with_cyg_cas_Apr2022', 'fhd_rlb_LWA_caltest_mmode_with_cyg_cas_Jun2022']
+  version_names = ['fhd_rlb_LWA_caltest_cyg_cas_Apr2022', $
+    'fhd_rlb_LWA_caltest_Gasperin_sources_Apr2022', $
+    'fhd_rlb_LWA_caltest_mmode_with_cyg_cas_Jun2022', $
+    'fhd_rlb_LWA_caltest_mmode_with_Gasperin_cyg_cas_Jun2022', $
+    'fhd_rlb_LWA_caltest_vlssr_Apr2022']
   version_paths = []
   for name_ind=0,n_elements(version_names)-1 do version_paths = [version_paths, fhd_outputs_dir+'/'+version_names[name_ind]]
 
