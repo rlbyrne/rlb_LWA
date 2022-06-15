@@ -78,9 +78,9 @@ def plot_gain_error(
 def plot_tests_individually():
 
     # Unity gains
-    cal_diagonal_path = "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun2/unity_gains_diagonal.calfits"
+    cal_diagonal_path = "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun9/unity_gains_diagonal.calfits"
     #cal_dwcal_path = '/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun6/unity_gains_dwcal.calfits'
-    cal_dwcal_path = '/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun6/unity_gains_dwcal_newtons.calfits'
+    cal_dwcal_path = '/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun9/unity_gains_dwcal.calfits'
 
     cal_diagonal = pyuvdata.UVCal()
     cal_diagonal.read_calfits(cal_diagonal_path)
@@ -108,9 +108,9 @@ def plot_tests_individually():
     )
 
     # Randomized gains
-    cal_true_path = "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun2/random_initial_gains.calfits"
-    cal_diagonal_path = "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun2/random_gains_diagonal.calfits"
-    cal_dwcal_path = '/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun2/random_gains_dwcal.calfits'
+    cal_true_path = "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun9/random_initial_gains.calfits"
+    cal_diagonal_path = "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun9/random_gains_diagonal.calfits"
+    cal_dwcal_path = '/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun9/random_gains_dwcal.calfits'
 
     cal_true = pyuvdata.UVCal()
     cal_true.read_calfits(cal_true_path)
@@ -143,9 +143,9 @@ def plot_tests_individually():
     )
 
     # Ripple gains
-    cal_true_path = "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun2/ripple_initial_gains.calfits"
-    cal_diagonal_path = "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun2/ripple_gains_diagonal.calfits"
-    cal_dwcal_path = '/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun2/ripple_gains_dwcal.calfits'
+    cal_true_path = "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun9/ripple_initial_gains.calfits"
+    cal_diagonal_path = "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun9/ripple_gains_diagonal.calfits"
+    cal_dwcal_path = '/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun9/ripple_gains_dwcal.calfits'
 
     cal_true = pyuvdata.UVCal()
     cal_true.read_calfits(cal_true_path)
