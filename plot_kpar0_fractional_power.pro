@@ -19,7 +19,7 @@ pro plot_kpar0_fractional_power
   colors = ['Navy', 'YGB4', 'Dark Green', 'ORG4', 'Crimson'] ;Choose colors with cgPickColorName()
   linestyles = [0,0,0,0,0]
   linewidths = [3,3,3,3,3]
-  legend_labels = ['Cyg & Cas', 'm-mode map + Cyg & Cas', 'Gasperin', 'm-mode map + Gasperin', 'VLSSR']
+  legend_labels = ['Cyg & Cas', 'Gasperin', 'm-mode map + Cyg & Cas', 'm-mode map + Gasperin', 'VLSSR']
 
   for pol_ind=0,n_elements(pols)-1 do begin
     pol = pols[pol_ind]
