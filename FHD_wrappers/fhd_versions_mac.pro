@@ -159,6 +159,12 @@ pro fhd_versions_mac
       save_uvf = 1
     end
     
+    'rlb_test_max_baseline': begin
+      recalculate_all = 1
+      obs_id = '1061316296_small'
+      vis_file_list = '/Users/ruby/Astro/1061316296_small.uvfits'
+    end
+    
   endcase
 
   undefine, uvfits_subversion, uvfits_version
