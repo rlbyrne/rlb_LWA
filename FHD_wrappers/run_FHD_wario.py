@@ -3,7 +3,7 @@ import shlex
 import os
 
 obsids_list = ["1061316296"]
-versions_list = ["rlb_model_GLEAM_Jun2022"]
+versions_list = ["rlb_model_GLEAM_bright_sources_Jun2022"]
 uvfits_path = "/safepool/rbyrne/mwa_data"
 outdir = "/safepool/rbyrne/fhd_outputs"
 run_fhd = True

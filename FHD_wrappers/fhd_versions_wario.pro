@@ -217,6 +217,35 @@ pro fhd_versions_wario
       dimension = 8192
     end
 
+    'rlb_model_GLEAM_bright_sources_Jun2022': begin
+      recalculate_all = 0
+      in_situ_sim_input = '/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_Apr2022/vis_data'
+      return_cal_visibilities = 1
+      catalog_file_path = '/home/rbyrne/rlb_LWA/GLEAM_bright_sources.sav'
+      calibration_subtract_sidelobe_catalog = '/home/rbyrne/rlb_LWA/GLEAM_bright_sources.sav'
+      allow_sidelobe_cal_sources = 1
+      diffuse_calibrate = 0
+      diffuse_model = 0
+      calibrate_visibilities = 1
+      rephase_weights = 0
+      restrict_hpx_inds = 0
+      hpx_radius = 15
+      dft_threshold = 0
+      ring_radius = 0
+      n_pol = 2
+      unflag_all = 1  ; unflag for simulation
+      flag_visibilities = 0
+      beam_nfreq_avg = 384 ; use one beam for all frequencies
+      ; Force per-frequency calibration
+      sim_over_calibrate = 1
+      bandpass_calibrate = 0
+      cable_bandpass_fit = 0
+      cal_mode_fit = 0
+      calibration_polyfit = 0
+      max_baseline = 3000  ; try increasing max baseline to prevent baseline cutting
+      dimension = 8192
+    end
+
   endcase
 
   undefine, uvfits_subversion, uvfits_version
