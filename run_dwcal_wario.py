@@ -1158,45 +1158,44 @@ def test_gaussian_weights_Jun9():
         log_file_new.close()
 
 
-def unity_gains_test_Jun9():
+def unity_gains_test_Jun16():
 
-    ##### Unity gains #####
     dwcal.calibrate(
-        model_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Apr2022",
+        model_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Jun2022",
         model_use_model=True,
-        data_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_Apr2022",
+        data_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_Jun2022",
         data_use_model=True,
         obsid="1061316296",
         pol="XX",
         use_autos=False,
         weight_mat_option="diagonal",
-        cal_savefile="/safepool/rbyrne/calibration_outputs/caltest_Jun9/unity_gains_diagonal.calfits",
-        log_file_path="/safepool/rbyrne/calibration_outputs/caltest_Jun9/unity_gains_diagonal_log.txt",
+        cal_savefile="/safepool/rbyrne/calibration_outputs/caltest_Jun16/unity_gains_diagonal.calfits",
+        log_file_path="/safepool/rbyrne/calibration_outputs/caltest_Jun16/unity_gains_diagonal_log.txt",
     )
 
-    #dwcal.calibrate(
-    #    model_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Apr2022",
-    #    model_use_model=True,
-    #    data_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_Apr2022",
-    #    data_use_model=True,
-    #    obsid="1061316296",
-    #    pol="XX",
-    #    use_autos=False,
-    #    weight_mat_option="gaussian window fit",
-    #    cal_savefile="/safepool/rbyrne/calibration_outputs/caltest_Jun9/unity_gains_dwcal.calfits",
-    #    log_file_path="/safepool/rbyrne/calibration_outputs/caltest_Jun9/unity_gains_dwcal_log.txt",
-    #)
+    dwcal.calibrate(
+        model_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Jun2022",
+        model_use_model=True,
+        data_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_Jun2022",
+        data_use_model=True,
+        obsid="1061316296",
+        pol="XX",
+        use_autos=False,
+        weight_mat_option="gaussian window fit",
+        cal_savefile="/safepool/rbyrne/calibration_outputs/caltest_Jun16/unity_gains_dwcal.calfits",
+        log_file_path="/safepool/rbyrne/calibration_outputs/caltest_Jun16/unity_gains_dwcal_log.txt",
+    )
 
 
-def random_gains_test_Jun9():
+def random_gains_test_Jun16():
 
-    save_dir = "/safepool/rbyrne/calibration_outputs/caltest_Jun9"
+    save_dir = "/safepool/rbyrne/calibration_outputs/caltest_Jun16"
 
     model_path = (
-        "/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Apr2022"
+        "/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Jun2022"
     )
     model_use_model = True
-    data_path = "/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_Apr2022"
+    data_path = "/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_Jun2022"
     data_use_model = True
     obsid = "1061316296"
     pol = "XX"
@@ -1297,15 +1296,15 @@ def random_gains_test_Jun9():
         log_file_new.close()
 
 
-def ripple_gains_test_May19():
+def ripple_gains_test_Jun16():
 
-    save_dir = "/safepool/rbyrne/calibration_outputs/caltest_Jun9"
+    save_dir = "/safepool/rbyrne/calibration_outputs/caltest_Jun16"
 
     model_path = (
-        "/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Apr2022"
+        "/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Jun2022"
     )
     model_use_model = True
-    data_path = "/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_Apr2022"
+    data_path = "/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_Jun2022"
     data_use_model = True
     obsid = "1061316296"
     pol = "XX"
@@ -1418,6 +1417,6 @@ def ripple_gains_test_May19():
 
 if __name__ == "__main__":
 
-    unity_gains_test_Jun9()
-    random_gains_test_Jun9()
-    ripple_gains_test_May19()
+    unity_gains_test_Jun16()
+    random_gains_test_Jun16()
+    ripple_gains_test_Jun16()
