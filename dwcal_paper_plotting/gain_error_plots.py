@@ -78,9 +78,9 @@ def plot_gain_error(
 def plot_tests_individually():
 
     # Unity gains
-    cal_diagonal_path = "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun9/unity_gains_diagonal.calfits"
+    cal_diagonal_path = "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun16/unity_gains_diagonal.calfits"
     #cal_dwcal_path = '/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun6/unity_gains_dwcal.calfits'
-    cal_dwcal_path = '/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun9/unity_gains_dwcal.calfits'
+    cal_dwcal_path = '/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun16/unity_gains_dwcal.calfits'
 
     cal_diagonal = pyuvdata.UVCal()
     cal_diagonal.read_calfits(cal_diagonal_path)
