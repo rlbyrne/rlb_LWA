@@ -13,8 +13,8 @@ def fft_visibilities(uv):
     return fft_abs, delay_array
 
 
-def calculate_binned_rms(
-    vis_array, uvw_array, Nfreqs, nbins=100, min_val=None, max_val=None
+def calculate_binned_variance(
+    vis_array, uvw_array, Nfreqs, nbins=300, min_val=None, max_val=None
 ):
 
     bl_lengths = np.sqrt(np.sum(uvw_array**2.0, axis=1))
@@ -23,19 +23,18 @@ def calculate_binned_rms(
     if max_val is None:
         max_val = np.max(bl_lengths)
     bl_bin_edges = np.linspace(min_val, max_val, num=nbins + 1)
-    binned_rms_squared = np.full([nbins, Nfreqs], np.nan, dtype="float")
+    binned_variance = np.full([nbins, Nfreqs], np.nan, dtype="float")
     for bin_ind in range(nbins):
         bl_inds = np.where(
             (bl_lengths > bl_bin_edges[bin_ind])
             & (bl_lengths <= bl_bin_edges[bin_ind + 1])
         )[0]
         if len(bl_inds) > 0:
-            binned_rms_squared[bin_ind, :] = np.mean(
+            binned_variance[bin_ind, :] = np.mean(
                 vis_array[bl_inds, 0, :, 0] ** 2.0, axis=0
             )
 
-    binned_rms = binned_rms_squared**0.5
-    return binned_rms, bl_bin_edges
+    return binned_variance, bl_bin_edges
 
 
 def plot_delay_spectra(
@@ -100,9 +99,11 @@ def plot_delay_spectra(
         )
 
     cbar = plt.colorbar(extend="both")
-    cbar.ax.set_ylabel("Visibility Error RMS (Jy)", rotation=270, labelpad=15)
+    cbar.ax.set_ylabel(
+        "Visibility Error Variance (Jy$^{-2}$)", rotation=270, labelpad=15
+    )
     plt.xlabel("Baseline Length (m)")
-    plt.ylim([-3, 3])
+    plt.ylim([np.min(delay_array) * 1e6, np.max(delay_array) * 1e6])
     plt.ylabel("Delay ($\mu$s)")
     plt.title(title)
     if savepath is not None:
@@ -178,14 +179,104 @@ def plot_weighting_function(bin_edges, delay_array):
     plt.close()
 
 
+def plot_weighting_function_exponential(bin_edges, delay_array):
+
+    wedge_slope_factor_inner = 0.23
+    wedge_slope_factor_outer = 0.7
+    wedge_delay_buffer = 6.5e-8
+    wedge_variance_inner = 1084.9656666412166
+    wedge_variance_outer = 28.966173241799588
+    window_min_variance = 5.06396954e-01
+    window_exp_amp = 1.19213736e03
+    window_exp_width = 6.93325643e-08
+
+    c = 3e8
+
+    exp_function = (
+        window_exp_amp * np.exp(-np.abs(delay_array) / window_exp_width / 2)
+        + window_min_variance
+    )
+    exp_function[
+        np.where(exp_function > wedge_variance_outer)[0]
+    ] = wedge_variance_outer
+    weighting_func_delay_vals = np.repeat(exp_function[np.newaxis, :], len(bin_edges) - 1, axis=0)
+
+    bl_lengths = np.array(
+        [
+            (bin_edges[bin_ind] + bin_edges[bin_ind + 1]) / 2.0
+            for bin_ind in range(len(bin_edges) - 1)
+        ]
+    )
+    for delay_ind, delay_val in enumerate(delay_array):
+        wedge_bls_outer = np.where(
+            wedge_slope_factor_outer * bl_lengths / c + wedge_delay_buffer
+            > np.abs(delay_val)
+        )[0]
+        weighting_func_delay_vals[wedge_bls_outer, delay_ind] = wedge_variance_outer
+        wedge_bls_inner = np.where(
+            wedge_slope_factor_inner * bl_lengths / c + wedge_delay_buffer
+            > np.abs(delay_val)
+        )[0]
+        weighting_func_delay_vals[wedge_bls_inner, delay_ind] = wedge_variance_inner
+
+    use_cmap = matplotlib.cm.get_cmap("plasma").copy()
+    use_cmap.set_bad(color="whitesmoke")
+    plt.imshow(
+        weighting_func_delay_vals.T,
+        origin="lower",
+        interpolation="none",
+        cmap=use_cmap,
+        extent=[
+            np.min(bin_edges),
+            np.max(bin_edges),
+            np.min(delay_array) * 1e6,
+            np.max(delay_array) * 1e6,
+        ],
+        aspect="auto",
+        norm=matplotlib.colors.LogNorm(vmin=window_min_variance, vmax=wedge_variance_inner),
+    )
+    cbar = plt.colorbar(extend="both")
+    cbar.ax.set_ylabel(
+        "Weighting Function Value (Jy$^{-2}$)", rotation=270, labelpad=15
+    )
+    for line_slope in [1.0]:
+        plt.plot(
+            [np.min(bin_edges), np.max(bin_edges)],
+            [
+                np.min(bin_edges) / c * line_slope * 1e6,
+                np.max(bin_edges) / c * line_slope * 1e6,
+            ],
+            "--",
+            color="white",
+            linewidth=1.0,
+        )
+        plt.plot(
+            [np.min(bin_edges), np.max(bin_edges)],
+            [
+                -np.min(bin_edges) / c * line_slope * 1e6,
+                -np.max(bin_edges) / c * line_slope * 1e6,
+            ],
+            "--",
+            color="white",
+            linewidth=1.0,
+        )
+    plt.xlabel("Baseline Length (m)")
+    plt.ylim([np.min(delay_array) * 1e6, np.max(delay_array) * 1e6])
+    plt.ylabel("Delay ($\mu$s)")
+    plt.savefig(
+        "/Users/ruby/Astro/dwcal_paper_plots/weighting_func_exponential.png", dpi=600
+    )
+    plt.close()
+
+
 def plot_model_visibility_error():
 
     data, model = dwcal.get_test_data(
-        #model_path="/Users/ruby/Astro/FHD_outputs/fhd_rlb_model_GLEAM_bright_sources_Apr2022",
-        model_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Jun2022",
+        model_path="/Users/ruby/Astro/FHD_outputs/fhd_rlb_model_GLEAM_bright_sources_Jun2022",
+        # model_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Jun2022",
         model_use_model=True,
-        #data_path="/Users/ruby/Astro/FHD_outputs/fhd_rlb_model_GLEAM_Apr2022",
-        data_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_Jun2022",
+        data_path="/Users/ruby/Astro/FHD_outputs/fhd_rlb_model_GLEAM_Jun2022",
+        # data_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_Jun2022",
         data_use_model=True,
         obsid="1061316296",
         pol="XX",
@@ -198,7 +289,7 @@ def plot_model_visibility_error():
     diff_vis = data.diff_vis(model, inplace=False)
 
     fft_abs_diff, delay_array = fft_visibilities(diff_vis)
-    binned_delay_spec_diff, bin_edges = calculate_binned_rms(
+    binned_delay_spec_diff, bin_edges = calculate_binned_variance(
         fft_abs_diff, diff_vis.uvw_array, diff_vis.Nfreqs
     )
     plot_delay_spectra(
@@ -208,12 +299,12 @@ def plot_model_visibility_error():
         title="Model Visibility Error",
         add_lines=[1.0],
         vmin=1e-2,
-        vmax=1e1,
-        #savepath="/Users/ruby/Astro/dwcal_paper_plots/model_vis_error.png",
-        savepath="/home/rbyrne/model_vis_error.png"
+        vmax=1e2,
+        savepath="/Users/ruby/Astro/dwcal_paper_plots/model_vis_error_Jun2022.png",
+        # savepath="/home/rbyrne/model_vis_error.png"
     )
 
-    #plot_weighting_function(bin_edges, delay_array)
+    plot_weighting_function_exponential(bin_edges, delay_array)
 
 
 def plot_example_baseline_weights():
@@ -281,7 +372,9 @@ def plot_example_baseline_weights():
     ax[1].grid()
     ax[1].legend(title="Baseline Length")
 
-    plt.savefig("/Users/ruby/Astro/dwcal_paper_plots/weighting_func_select_bls.png", dpi=600)
+    plt.savefig(
+        "/Users/ruby/Astro/dwcal_paper_plots/weighting_func_select_bls.png", dpi=600
+    )
     plt.close()
 
     plot_mat_bl_inds = [0, 2]

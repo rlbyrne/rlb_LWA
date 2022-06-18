@@ -57,12 +57,12 @@ def plot_gain_error(
             label=legend_labels[cal_ind]
         )
         print(np.mean(mean_gains_fft))
-    ylim = [2e-5, 2e-1]
+    ylim = [0, .5]
     plt.plot([0, 0], ylim, color="grey", linestyle="dashed", linewidth=.5)
     for line in add_lines:
         plt.plot([line, line], ylim, color="black", linestyle="dashed", linewidth=.8)
     plt.ylim(ylim)
-    plt.yscale("log")
+    #plt.yscale("log")
     plt.xlim([np.min(delay_array), np.max(delay_array)])
     plt.xlabel("Delay ($\mu$s)")
     plt.ylabel("Gain Error Amp.")
@@ -80,7 +80,7 @@ def plot_tests_individually():
     # Unity gains
     cal_diagonal_path = "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun16/unity_gains_diagonal.calfits"
     #cal_dwcal_path = '/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun6/unity_gains_dwcal.calfits'
-    cal_dwcal_path = '/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun16/unity_gains_dwcal.calfits'
+    cal_dwcal_path = '/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun17/unity_gains_dwcal.calfits'
 
     cal_diagonal = pyuvdata.UVCal()
     cal_diagonal.read_calfits(cal_diagonal_path)
