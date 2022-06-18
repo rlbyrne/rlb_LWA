@@ -2,12 +2,12 @@ import subprocess
 import shlex
 import os
 
-obsids_list = ["1061316296"]
-versions_list = ["rlb_model_GLEAM_bright_sources_Jun2022"]
-uvfits_path = "/safepool/rbyrne/mwa_data"
+obsids_list = ["unity_gains_uncalib", "unity_gains_dwcal", "unity_gains_diagonal"]
+versions_list = ["rlb_cal_sims_Jun2022"]
+uvfits_path = "/safepool/rbyrne/calibration_outputs/caltest_Jun17"
 outdir = "/safepool/rbyrne/fhd_outputs"
 run_fhd = True
-run_eppsilon = False
+run_eppsilon = True
 
 # Define wrappers
 fhd_versions_script = "fhd_versions_wario"
