@@ -36,6 +36,10 @@ data.write_uvfits(f"{uvfits_output_dir}/unity_gains_uncalib_2pol.uvfits")
 for ind in range(len(cal_filenames)):
     cal = pyuvdata.UVCal()
     cal.read_calfits(cal_filenames[ind])
+    # Transfer calibration to the YY pol
+    cal.jones_array = np.append(cal.jones_array, [-6])
+    cal.gain_array = np.repeat(cal.gain_array, 2, axis=4)
+    # Apply calibration
     data_calibrated = pyuvdata.utils.uvcalibrate(
         data, cal, inplace=False, time_check=False
     )
