@@ -4,14 +4,15 @@ from pyuvdata import utils
 data_path = "/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_Jun2022"
 data_use_model = True
 obsid = "1061316296"
-pol = "XX"
 
 data = pyuvdata.UVData()
 filelist = [
     "{}/{}".format(data_path, file)
     for file in [
-        "vis_data/{}_vis_{}.sav".format(obsid, pol),
-        "vis_data/{}_vis_model_{}.sav".format(obsid, pol),
+        "vis_data/{}_vis_XX.sav".format(obsid),
+        "vis_data/{}_vis_YY.sav".format(obsid),
+        "vis_data/{}_vis_model_XX.sav".format(obsid),
+        "vis_data/{}_vis_model_YY.sav".format(obsid),
         "vis_data/{}_flags.sav".format(obsid),
         "metadata/{}_params.sav".format(obsid),
         "metadata/{}_settings.txt".format(obsid),
@@ -28,10 +29,10 @@ cal_filenames = [
     "/safepool/rbyrne/calibration_outputs/caltest_Jun17/unity_gains_dwcal.calfits",
 ]
 uvfits_output_filenames = [
-    f"{uvfits_output_dir}/unity_gains_diagonal.uvfits",
-    f"{uvfits_output_dir}/unity_gains_dwcal.uvfits",
+    f"{uvfits_output_dir}/unity_gains_diagonal_2pol.uvfits",
+    f"{uvfits_output_dir}/unity_gains_dwcal_2pol.uvfits",
 ]
-data.write_uvfits(f"{uvfits_output_dir}/unity_gains_uncalib.uvfits")
+data.write_uvfits(f"{uvfits_output_dir}/unity_gains_uncalib_2pol.uvfits")
 for ind in range(len(cal_filenames)):
     cal = pyuvdata.UVCal()
     cal.read_calfits(cal_filenames[ind])
