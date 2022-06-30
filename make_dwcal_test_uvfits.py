@@ -41,6 +41,7 @@ for ind in range(len(cal_filenames)):
     cal.jones_array = np.append(cal.jones_array, [-6])
     cal.gain_array = np.repeat(cal.gain_array, 2, axis=4)
     cal.flag_array = np.repeat(cal.flag_array, 2, axis=4)
+    cal.quality_array = np.repeat(cal.quality_array, 2, axis=4)
     cal.Njones = 2
     # Apply calibration
     data_calibrated = pyuvdata.utils.uvcalibrate(
