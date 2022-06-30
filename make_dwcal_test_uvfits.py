@@ -1,5 +1,6 @@
 import pyuvdata
 from pyuvdata import utils
+import numpy as np
 
 data_path = "/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_Jun2022"
 data_use_model = True
