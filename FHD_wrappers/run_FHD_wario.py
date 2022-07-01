@@ -3,14 +3,17 @@ import shlex
 import os
 
 obsids_list = [
-    #"unity_gains_uncalib",
-    "unity_gains_dwcal",
-    "unity_gains_diagonal"
+    "random_gains_uncalib",
+    "random_gains_dwcal",
+    "random_gains_diagonal",
+    "ripple_gains_uncalib",
+    "ripple_gains_dwcal",
+    "ripple_gains_diagonal"
 ]
 versions_list = ["rlb_cal_sims_Jun2022"]
 uvfits_path = "/safepool/rbyrne/calibration_outputs/caltest_Jun17"
 outdir = "/safepool/rbyrne/fhd_outputs"
-run_fhd = False
+run_fhd = True
 run_eppsilon = True
 
 # Define wrappers
