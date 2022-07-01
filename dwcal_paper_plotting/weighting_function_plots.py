@@ -2,6 +2,7 @@ import numpy as np
 import pyuvdata
 import matplotlib.pyplot as plt
 import matplotlib
+import seaborn as sns
 import scipy.optimize
 from dwcal import delay_weighted_cal as dwcal
 
@@ -10,6 +11,7 @@ def fft_visibilities(uv):
     delay_array = np.fft.fftfreq(uv.Nfreqs, d=uv.channel_width)
     delay_array = np.fft.fftshift(delay_array)
     fft_abs = np.abs(np.fft.fftshift(np.fft.fft(uv.data_array, axis=2), axes=2))
+    fft_abs *= uv.channel_width  # Normalize FFT
     return fft_abs, delay_array
 
 
@@ -100,7 +102,7 @@ def plot_delay_spectra(
 
     cbar = plt.colorbar(extend="both")
     cbar.ax.set_ylabel(
-        "Visibility Error Variance (Jy$^{-2}$)", rotation=270, labelpad=15
+        "Visibility Variance (Jy$^{2}$/s$^2$)", rotation=270, labelpad=15
     )
     plt.xlabel("Baseline Length (m)")
     plt.ylim([np.min(delay_array) * 1e6, np.max(delay_array) * 1e6])
@@ -113,7 +115,7 @@ def plot_delay_spectra(
         plt.show()
 
 
-def plot_weighting_function(bin_edges, delay_array):
+def plot_weighting_function(bin_edges, delay_array, vmin=1e-1, vmax=1e3):
 
     wedge_val = 0.141634
     window_val = 10.7401
@@ -145,12 +147,10 @@ def plot_weighting_function(bin_edges, delay_array):
             np.max(delay_array) * 1e6,
         ],
         aspect="auto",
-        norm=matplotlib.colors.LogNorm(vmin=5e-2, vmax=20),
+        norm=matplotlib.colors.LogNorm(vmin=vmin, vmax=vmax),
     )
     cbar = plt.colorbar(extend="both")
-    cbar.ax.set_ylabel(
-        "Weighting Function Value (Jy$^{-2}$)", rotation=270, labelpad=15
-    )
+    cbar.ax.set_ylabel("Visibility Variance (Jy$^{2}$)", rotation=270, labelpad=15)
     for line_slope in [1.0]:
         plt.plot(
             [np.min(bin_edges), np.max(bin_edges)],
@@ -179,7 +179,9 @@ def plot_weighting_function(bin_edges, delay_array):
     plt.close()
 
 
-def plot_weighting_function_exponential(bin_edges, delay_array):
+def plot_weighting_function_exponential(
+    bin_edges, delay_array, channel_width, vmin=1e9, vmax=1e13
+):
 
     wedge_slope_factor_inner = 0.23
     wedge_slope_factor_outer = 0.7
@@ -199,7 +201,9 @@ def plot_weighting_function_exponential(bin_edges, delay_array):
     exp_function[
         np.where(exp_function > wedge_variance_outer)[0]
     ] = wedge_variance_outer
-    weighting_func_delay_vals = np.repeat(exp_function[np.newaxis, :], len(bin_edges) - 1, axis=0)
+    weighting_func_delay_vals = np.repeat(
+        exp_function[np.newaxis, :], len(bin_edges) - 1, axis=0
+    )
 
     bl_lengths = np.array(
         [
@@ -219,6 +223,10 @@ def plot_weighting_function_exponential(bin_edges, delay_array):
         )[0]
         weighting_func_delay_vals[wedge_bls_inner, delay_ind] = wedge_variance_inner
 
+    weighting_func_delay_vals *= (
+        channel_width**2
+    )  # Make normalization conform with delay spectra
+
     use_cmap = matplotlib.cm.get_cmap("plasma").copy()
     use_cmap.set_bad(color="whitesmoke")
     plt.imshow(
@@ -233,11 +241,11 @@ def plot_weighting_function_exponential(bin_edges, delay_array):
             np.max(delay_array) * 1e6,
         ],
         aspect="auto",
-        norm=matplotlib.colors.LogNorm(vmin=window_min_variance, vmax=wedge_variance_inner),
+        norm=matplotlib.colors.LogNorm(vmin=vmin, vmax=vmax),
     )
     cbar = plt.colorbar(extend="both")
     cbar.ax.set_ylabel(
-        "Weighting Function Value (Jy$^{-2}$)", rotation=270, labelpad=15
+        "Visibility Variance (Jy$^{2}$/s$^2$)", rotation=270, labelpad=15
     )
     for line_slope in [1.0]:
         plt.plot(
@@ -296,45 +304,79 @@ def plot_model_visibility_error():
         binned_delay_spec_diff,
         bin_edges,
         delay_array,
-        title="Model Visibility Error",
+        title="",
         add_lines=[1.0],
-        vmin=1e-2,
-        vmax=1e2,
+        vmin=1e9,
+        vmax=1e13,
         savepath="/Users/ruby/Astro/dwcal_paper_plots/model_vis_error_Jun2022.png",
         # savepath="/home/rbyrne/model_vis_error.png"
     )
 
-    plot_weighting_function_exponential(bin_edges, delay_array)
+    plot_weighting_function_exponential(bin_edges, delay_array, diff_vis.channel_width)
 
 
 def plot_example_baseline_weights():
 
-    bl_lengths = [10, 50, 200, 500]
-
-    wedge_val = 0.141634
-    window_val = 10.7401
-    wedge_slope_factor = 0.628479
-    wedge_delay_buffer = 6.5e-8
-    c = 3e8
+    bl_lengths = [2500, 500, 5]
 
     Nfreqs = 384
     channel_width = 80000.0
     min_freq_mhz = 167075000.0 / 1e6
     max_freq_mhz = 197715000.0 / 1e6
+    c = 3e8
 
+    matplotlib.rcParams["axes.prop_cycle"] = matplotlib.cycler(
+        color=sns.color_palette("CMRmap_r", len(bl_lengths))
+    )
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(16, 6))
 
     delay_array = np.fft.fftshift(np.fft.fftfreq(Nfreqs, d=channel_width))
 
-    delay_weighting = np.full((len(bl_lengths), Nfreqs), window_val)
-    for bl_ind, bl_len in enumerate(bl_lengths):
-        wedge_delays = np.where(
-            np.abs(delay_array) < wedge_slope_factor * bl_len / c + wedge_delay_buffer
-        )[0]
-        delay_weighting[bl_ind, wedge_delays] = wedge_val
+    # Simple wedge exclusion
+    # wedge_val = 0.141634
+    # window_val = 10.7401
+    # wedge_slope_factor = 0.628479
+    # wedge_delay_buffer = 6.5e-8
+    # delay_weighting = np.full((len(bl_lengths), Nfreqs), window_val)
+    # for bl_ind, bl_len in enumerate(bl_lengths):
+    #    wedge_delays = np.where(
+    #        np.abs(delay_array) < wedge_slope_factor * bl_len / c + wedge_delay_buffer
+    #    )[0]
+    #    delay_weighting[bl_ind, wedge_delays] = wedge_val
 
-    linewidth = 2.0
-    delta_linewidth = 0.3
+    # Exponential weighting function
+    wedge_slope_factor_inner = 0.23
+    wedge_slope_factor_outer = 0.7
+    wedge_delay_buffer = 6.5e-8
+    wedge_variance_inner = 1084.9656666412166
+    wedge_variance_outer = 28.966173241799588
+    window_min_variance = 5.06396954e-01
+    window_exp_amp = 1.19213736e03
+    window_exp_width = 6.93325643e-08
+    exp_function = (
+        window_exp_amp * np.exp(-np.abs(delay_array) / window_exp_width / 2)
+        + window_min_variance
+    )
+    exp_function[
+        np.where(exp_function > wedge_variance_outer)[0]
+    ] = wedge_variance_outer
+    delay_weighting = np.repeat(exp_function[np.newaxis, :], len(bl_lengths), axis=0)
+
+    for delay_ind, delay_val in enumerate(delay_array):
+        wedge_bls_outer = np.where(
+            wedge_slope_factor_outer * np.array(bl_lengths) / c + wedge_delay_buffer
+            > np.abs(delay_val)
+        )[0]
+        delay_weighting[wedge_bls_outer, delay_ind] = wedge_variance_outer
+        wedge_bls_inner = np.where(
+            wedge_slope_factor_inner * np.array(bl_lengths) / c + wedge_delay_buffer
+            > np.abs(delay_val)
+        )[0]
+        delay_weighting[wedge_bls_inner, delay_ind] = wedge_variance_inner
+    delay_weighting = 1.0 / (delay_weighting * channel_width**2.0)
+
+    linewidth = 1.2
+    delta_linewidth = 0
     for bl_ind in range(len(bl_lengths)):
         ax[0].plot(
             delay_array * 1e6,
@@ -344,18 +386,22 @@ def plot_example_baseline_weights():
         )
         linewidth -= delta_linewidth
     ax[0].set_xlim(np.min(delay_array) * 1e6, np.max(delay_array) * 1e6)
-    ax[0].set_ylim(0, 12)
+    ax[0].set_yscale("log")
+    ax[0].set_ylim(5e-4 / (8e4) ** 2, 4 / (8e4) ** 2)
     ax[0].set_xlabel("Delay ($\mu$s)")
-    ax[0].set_ylabel("Weighting Function Value (Jy$^{-2}$)")
+    ax[0].set_ylabel("Weighting Function Value (s$^2$/Jy$^2$)")
+    ax[0].grid()
     ax[0].legend(title="Baseline Length")
 
-    freq_weighting = np.fft.ifft(np.fft.ifftshift(delay_weighting, axes=1), axis=1)
+    freq_weighting = np.fft.ifft(
+        np.fft.ifftshift(delay_weighting * channel_width**2.0, axes=1), axis=1
+    )
     freq_weighting_shifted = np.fft.fftshift(freq_weighting, axes=1)
     freqs = np.array([channel_width * freq_ind for freq_ind in range(Nfreqs)])
     freqs = np.fft.fftshift(freqs)
     freqs[np.where(freqs > freqs[-1])[0]] -= np.max(freqs) + channel_width
-    linewidth = 2.0
-    delta_linewidth = 0.3
+    linewidth = 1.2
+    delta_linewidth = 0
     for bl_ind in range(len(bl_lengths)):
         ax[1].plot(
             freqs / 1e6,
@@ -365,9 +411,9 @@ def plot_example_baseline_weights():
         )
         linewidth -= delta_linewidth
     ax[1].set_xlim(np.min(freqs) / 1e6, np.max(freqs) / 1e6)
-    ax[1].set_ylim(-4, 20)
+    ax[1].set_ylim(-0.5, 2)
     ax[1].set_xlabel("$\Delta$ Frequency (MHz)")
-    ax[1].set_yscale("symlog", linthresh=5e-1)
+    ax[1].set_yscale("symlog", linthresh=1e-3)
     ax[1].set_ylabel("Weighting Function Value (Jy$^{-2}$)")
     ax[1].grid()
     ax[1].legend(title="Baseline Length")
@@ -377,7 +423,7 @@ def plot_example_baseline_weights():
     )
     plt.close()
 
-    plot_mat_bl_inds = [0, 2]
+    plot_mat_bl_inds = [2, 1, 0]
     fig, ax = plt.subplots(nrows=1, ncols=len(plot_mat_bl_inds), figsize=(16, 6))
     subplot_ind = 0
     for bl in plot_mat_bl_inds:
@@ -400,7 +446,7 @@ def plot_example_baseline_weights():
                 np.max(max_freq_mhz),
             ],
             aspect="auto",
-            norm=matplotlib.colors.SymLogNorm(linthresh=2e-2, vmin=-10, vmax=10),
+            norm=matplotlib.colors.SymLogNorm(linthresh=1e-3, vmin=-1, vmax=1),
         )
         ax[subplot_ind].set_xlabel("Frequency 1 (MHz)")
         ax[subplot_ind].set_ylabel("Frequency 2 (MHz)")
@@ -418,4 +464,4 @@ def plot_example_baseline_weights():
 
 if __name__ == "__main__":
 
-    plot_model_visibility_error()
+    plot_example_baseline_weights()
