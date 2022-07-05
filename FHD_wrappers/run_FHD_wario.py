@@ -8,12 +8,15 @@ obsids_list = [
     "random_gains_diagonal",
     "ripple_gains_uncalib",
     "ripple_gains_dwcal",
-    "ripple_gains_diagonal"
+    "ripple_gains_diagonal",
+    "unity_gains_uncalib",
+    "unity_gains_dwcal",
+    #"unity_gains_diagonal"
 ]
 versions_list = ["rlb_cal_sims_Jun2022"]
 uvfits_path = "/safepool/rbyrne/calibration_outputs/caltest_Jun17"
 outdir = "/safepool/rbyrne/fhd_outputs"
-run_fhd = True
+run_fhd = False
 run_eppsilon = True
 
 # Define wrappers
@@ -21,7 +24,7 @@ fhd_versions_script = "fhd_versions_wario"
 eppsilon_script = "ps_single_obs_wrapper"
 
 # Set eppsilon options
-refresh_ps = 1
+refresh_ps = 0
 uvf_input = 1
 
 for version in versions_list:

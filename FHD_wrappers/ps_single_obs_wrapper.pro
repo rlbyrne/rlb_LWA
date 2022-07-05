@@ -21,7 +21,7 @@ pro ps_single_obs_wrapper
   if refresh_ps eq 0 then undefine, refresh_ps
   if uvf_input eq 0 then undefine, uvf_input
 
-  ps_wrapper, outdir+'/fhd_'+fhd_version, obs_id, /png, /plot_kpar_power, /refresh_info, refresh_ps=refresh_ps, uvf_input=uvf_input, pol_inc=["xx"]
+  ps_wrapper, outdir+'/fhd_'+fhd_version, obs_id, /png, /plot_kpar_power, refresh_ps=refresh_ps, uvf_input=uvf_input, pol_inc=["xx"]
 
 
 end
