@@ -1,6 +1,26 @@
 import numpy as np
 import pyuvdata
 import matplotlib.pyplot as plt
+import matplotlib
+import scipy.stats
+
+
+def diff_gains(cal1, cal2):
+
+    cal_diff = cal1.copy()
+    if cal2 is None:
+        cal_diff.gain_array -= 1.
+    else:
+        cal1_ant_names = cal1.antenna_names[cal1.ant_array]
+        cal2_ant_names = cal2.antenna_names[cal2.ant_array]
+        for ant_ind, ant_name in enumerate(cal1_ant_names):
+            gains = cal1.gain_array[ant_ind, :, :, :, :]
+            true_gains = cal2.gain_array[
+                np.where(cal2_ant_names == ant_name)[0][0], :, :, :, :
+            ]
+            cal_diff.gain_array[ant_ind, :, :, :, :] = gains - true_gains
+
+    return cal_diff
 
 
 def get_median_range(vals, frac_included=0.5):
@@ -44,22 +64,11 @@ def plot_gain_error_frequency(
         legend_labels = np.full(len(cal_list), "Average", dtype=object)
 
     for cal_ind, cal in enumerate(cal_list):
-        cal_error = cal.copy()
         if cal_true_list is None:
-            cal_error.gain_array -= 1.0
+            cal_error = diff_gains(cal, None)
         else:
             cal_true = cal_true_list[cal_ind]
-            if cal_true is None:
-                cal_error.gain_array -= 1.0
-            else:
-                cal_ant_names = cal.antenna_names[cal.ant_array]
-                true_ant_names = cal_true.antenna_names[cal_true.ant_array]
-                for ant_ind, ant_name in enumerate(cal_ant_names):
-                    gains = cal.gain_array[ant_ind, :, :, :, :]
-                    true_gains = cal_true.gain_array[
-                        np.where(true_ant_names == ant_name)[0][0], :, :, :, :
-                    ]
-                    cal_error.gain_array[ant_ind, :, :, :, :] = gains - true_gains
+            cal_error = diff_gains(cal, cal_true)
         freq_array = cal_error.freq_array[0, :] / 1e6
         if plot_indiv_ants:
             for ant_ind in range(cal.Nants_data):
@@ -200,7 +209,7 @@ def plot_gain_error(
         plt.close()
 
 
-def plot_tests_individually():
+def plot_gain_errors():
 
     # Unity gains
     cal_diagonal_path = "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun16/unity_gains_diagonal.calfits"
@@ -353,72 +362,160 @@ def plot_tests_individually():
     )
 
 
-def plot_tests_together():
+def produce_kde(data, xvals, yvals):
 
-    cal_unity_diagonal_path = "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_May19/unity_gains_diagonal.calfits"
-    cal_unity_diagonal = pyuvdata.UVCal()
-    cal_unity_diagonal.read_calfits(cal_unity_diagonal_path)
-    cal_unity_dwcal_path = (
-        "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_May19/unity_gains_dwcal.calfits"
+    data_real = np.real(data).flatten()
+    data_imag = np.imag(data).flatten()
+    rvs = np.append(data_real[:, np.newaxis], data_imag[:, np.newaxis], axis=1)
+
+    kde = scipy.stats.kde.gaussian_kde(rvs.T)
+
+    # Regular grid to evaluate KDE upon
+    x, y = np.meshgrid(xvals, yvals)
+    grid_coords = np.append(x.reshape(-1, 1), y.reshape(-1, 1), axis=1)
+
+    kde_vals = kde(grid_coords.T)
+    kde_vals = kde_vals.reshape(len(xvals), len(yvals))
+
+    percent_vals = np.zeros_like(kde_vals)
+    kde_total = np.sum(kde_vals)
+    running_total = 0.0
+    # Sort values in reverse order
+    for val in np.sort(kde_vals.flatten())[::-1]:
+        percent_vals[np.where(kde_vals == val)] = running_total / kde_total
+        running_total += val
+
+    return kde_vals, percent_vals
+
+
+def histogram_plot_2d(
+    plot_data,
+    plot_range=0.03,
+    nbins=50,
+    colorbar_range=None,
+    plot_contours=True,
+    savepath=None,
+    title="",
+    axis_label="Gain",
+    center_on_one=False,
+    mark_center=False,
+):
+
+    matplotlib.rcParams.update({'font.size': 14})
+
+    bins_imag = np.linspace(-plot_range, plot_range, num=nbins + 1)
+    if center_on_one:
+        bins_real = bins_imag + 1
+    else:
+        bins_real = bins_imag
+
+    hist, x_edges, y_edges = np.histogram2d(
+        np.real(plot_data).flatten(),
+        np.imag(plot_data).flatten(),
+        bins=[bins_real, bins_imag],
     )
-    cal_unity_dwcal = pyuvdata.UVCal()
-    cal_unity_dwcal.read_calfits(cal_unity_dwcal_path)
+    #hist /= np.sum(hist)
+    if plot_contours:
+        kde, percent_plot = produce_kde(plot_data, bins_real, bins_imag)
 
-    cal_random_true_path = "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_May19/random_initial_gains.calfits"
-    cal_random_true = pyuvdata.UVCal()
-    cal_random_true.read_calfits(cal_random_true_path)
-    cal_random_diagonal_path = "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_May19/random_gains_diagonal.calfits"
-    cal_random_diagonal = pyuvdata.UVCal()
-    cal_random_diagonal.read_calfits(cal_random_diagonal_path)
-    cal_random_dwcal_path = (
-        "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_May19/random_gains_dwcal.calfits"
+    if colorbar_range is None:
+        colorbar_range = [0, np.max(hist)]
+
+    plt.figure(figsize=[7, 5.5])
+    plt.imshow(
+        hist.T,
+        interpolation="none",
+        origin="lower",
+        extent=[x_edges[0], x_edges[-1], y_edges[0], y_edges[-1]],
+        aspect="equal",
+        cmap="inferno",
+        vmin=colorbar_range[0],
+        vmax=colorbar_range[1],
     )
-    cal_random_dwcal = pyuvdata.UVCal()
-    cal_random_dwcal.read_calfits(cal_random_dwcal_path)
+    cbar = plt.colorbar(extend="max")
+    cbar.ax.set_ylabel("Histogram Count", rotation=270, labelpad=20)
+    if plot_contours:
+        plt.contour(
+            bins_real,
+            bins_imag,
+            percent_plot,
+            levels=[0.5, 0.9],
+            colors="white",
+            linestyles=["solid", "dashed"],
+            linewidths=.7,
+        )
+    if mark_center:
+        plt.scatter([1], [0], marker="P", color="white", edgecolors="black", s=150)
+    plt.xlabel("{}, Real Part".format(axis_label))
+    # plt.xticks(rotation=45)
+    plt.ylabel("{}, Imaginary Part".format(axis_label))
+    plt.title(title)
+    plt.tight_layout()  # Ensure that axes labels don't get cut off
+    plt.grid(linewidth=0.2, color="white")
+    if savepath is None:
+        plt.show()
+    else:
+        plt.savefig(savepath, dpi=600)
+    plt.close()
 
-    cal_ripple_true_path = "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_May19/ripple_initial_gains.calfits"
-    cal_ripple_true = pyuvdata.UVCal()
-    cal_ripple_true.read_calfits(cal_ripple_true_path)
-    cal_ripple_diagonal_path = "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_May19/ripple_gains_diagonal.calfits"
-    cal_ripple_diagonal = pyuvdata.UVCal()
-    cal_ripple_diagonal.read_calfits(cal_ripple_diagonal_path)
-    cal_ripple_dwcal_path = (
-        "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_May19/ripple_gains_dwcal.calfits"
+
+def plot_gain_error_hists():
+
+    # Randomized gains
+    cal_true_path = "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun17/random_initial_gains.calfits"
+    cal_diagonal_path = "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun17/random_gains_diagonal.calfits"
+    cal_dwcal_path = (
+        "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun17/random_gains_dwcal.calfits"
     )
-    cal_ripple_dwcal = pyuvdata.UVCal()
-    cal_ripple_dwcal.read_calfits(cal_ripple_dwcal_path)
 
-    plot_gain_error(
-        [
-            cal_unity_diagonal,
-            cal_unity_dwcal,
-            cal_random_diagonal,
-            cal_random_dwcal,
-            cal_ripple_diagonal,
-            cal_ripple_dwcal,
-        ],
-        cal_true_list=[
-            None,
-            None,
-            cal_random_true,
-            cal_random_true,
-            cal_ripple_true,
-            cal_ripple_true,
-        ],
-        save_path="/Users/ruby/Astro/dwcal_paper_plots/all_tests_comparison.png",
-        avg_line_color=[
-            "tab:blue",
-            "tab:blue",
-            "tab:red",
-            "tab:red",
-            "tab:purple",
-            "tab:purple",
-        ],
-        plot_indiv_ants=False,
-        add_lines=[1.0],
+    cal_true = pyuvdata.UVCal()
+    cal_true.read_calfits(cal_true_path)
+    cal_diagonal = pyuvdata.UVCal()
+    cal_diagonal.read_calfits(cal_diagonal_path)
+    cal_dwcal = pyuvdata.UVCal()
+    cal_dwcal.read_calfits(cal_dwcal_path)
+
+    histogram_plot_2d(
+        cal_true.gain_array.flatten(),
+        plot_range=0.03,
+        nbins=50,
+        plot_contours=True,
+        savepath="/Users/ruby/Astro/dwcal_paper_plots/true_gains_hist.png",
+        title="",
+        axis_label="Gain Value",
+        center_on_one=True,
+        mark_center=False
+    )
+
+    cal_diag_error = diff_gains(cal_diagonal, cal_true)
+    histogram_plot_2d(
+        cal_diag_error.gain_array.flatten(),
+        plot_range=0.005,
+        nbins=50,
+        plot_contours=True,
+        colorbar_range=[0,350],
+        savepath="/Users/ruby/Astro/dwcal_paper_plots/diagonal_gains_hist.png",
+        title="Sky-Based Calibration",
+        axis_label="Gain Error",
+        center_on_one=False,
+        mark_center=False
+    )
+
+    cal_dwcal_error = diff_gains(cal_dwcal, cal_true)
+    histogram_plot_2d(
+        cal_dwcal_error.gain_array.flatten(),
+        plot_range=0.005,
+        nbins=50,
+        plot_contours=True,
+        colorbar_range=[0,350],
+        savepath="/Users/ruby/Astro/dwcal_paper_plots/dwcal_gains_hist.png",
+        title="DWCal",
+        axis_label="Gain Error",
+        center_on_one=False,
+        mark_center=False
     )
 
 
 if __name__ == "__main__":
 
-    plot_tests_individually()
+    plot_gain_error_hists()

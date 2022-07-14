@@ -51,7 +51,7 @@ def plot_delay_spectra(
     savepath=None,
 ):
 
-    use_cmap = matplotlib.cm.get_cmap("plasma").copy()
+    use_cmap = matplotlib.cm.get_cmap("inferno").copy()
     use_cmap.set_bad(color="whitesmoke")
     if vmin is not None:
         if vmin < 0:
@@ -133,7 +133,7 @@ def plot_weighting_function(bin_edges, delay_array, vmin=1e-1, vmax=1e3):
         )[0]
         weighting_func_delay_vals[bin_ind, wedge_inds] = wedge_val
 
-    use_cmap = matplotlib.cm.get_cmap("plasma").copy()
+    use_cmap = matplotlib.cm.get_cmap("inferno").copy()
     use_cmap.set_bad(color="whitesmoke")
     plt.imshow(
         weighting_func_delay_vals.T,
@@ -227,7 +227,7 @@ def plot_weighting_function_exponential(
         channel_width**2
     )  # Make normalization conform with delay spectra
 
-    use_cmap = matplotlib.cm.get_cmap("plasma").copy()
+    use_cmap = matplotlib.cm.get_cmap("inferno").copy()
     use_cmap.set_bad(color="whitesmoke")
     plt.imshow(
         weighting_func_delay_vals.T,
@@ -464,4 +464,4 @@ def plot_example_baseline_weights():
 
 if __name__ == "__main__":
 
-    plot_example_baseline_weights()
+    plot_model_visibility_error()
