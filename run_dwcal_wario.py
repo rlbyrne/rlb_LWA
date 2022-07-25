@@ -1786,5 +1786,4 @@ def random_gains_test_Jul25():
 
 if __name__ == "__main__":
 
-    random_gains_test_Jun29()
-    ripple_gains_test_Jun29()
+    random_gains_test_Jul25()
