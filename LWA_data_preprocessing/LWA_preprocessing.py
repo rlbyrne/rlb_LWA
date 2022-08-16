@@ -6,8 +6,8 @@ import subprocess
 import shlex
 import matplotlib.pyplot as plt
 from matplotlib import cm
-import SSINS
-from SSINS import plot_lib
+#import SSINS
+#from SSINS import plot_lib
 
 
 def convert_raw_ms_to_uvdata(
@@ -148,7 +148,9 @@ def plot_autocorrelations(
                     plt.legend(prop={"size": 4})
                 plt.xlabel("Frequency (MHz)")
                 plt.ylabel("Autocorr. Power")
-                plt.xlim([np.nanmin(uvd_autos.freq_array), np.nanmax(uvd_autos.freq_array)])
+                plt.xlim(
+                    [np.nanmin(uvd_autos.freq_array), np.nanmax(uvd_autos.freq_array)]
+                )
                 plt.ylim(yrange)
                 plt.title(f"{pol_names[pol_ind]} Autocorrelations")
                 print(f"Saving figure to {plot_save_dir}/{plot_name}")
@@ -167,7 +169,9 @@ def plot_autocorrelations(
                 plot_values = np.nanmean(
                     np.abs(uvd_autos.data_array[bl_inds, 0, :, :]), axis=0
                 )
-                if not np.isnan(np.nanmean(plot_values)):  # Check if antenna is completely flagged
+                if not np.isnan(
+                    np.nanmean(plot_values)
+                ):  # Check if antenna is completely flagged
                     for pol_ind in range(uvd_autos.Npols):
                         plt.plot(
                             uvd_autos.freq_array[0, :],
@@ -180,7 +184,12 @@ def plot_autocorrelations(
                     plt.legend(prop={"size": 4})
                     plt.xlabel("Frequency (MHz)")
                     plt.ylabel("Autocorr. Power")
-                    plt.xlim([np.nanmin(uvd_autos.freq_array), np.nanmax(uvd_autos.freq_array)])
+                    plt.xlim(
+                        [
+                            np.nanmin(uvd_autos.freq_array),
+                            np.nanmax(uvd_autos.freq_array),
+                        ]
+                    )
                     plt.ylim(yrange)
                     plt.title(f"Antenna {ant_name} Autocorrelations")
                     print(f"Saving figure to {plot_save_dir}/{plot_name}")
@@ -230,8 +239,8 @@ def flag_outriggers(
 def flag_antennas(
     uvd,
     antenna_names=[],
-    flag_pol = "all",  # Options are "all", "X", "Y", "XX", "YY", "XY", or "YX"
-    inplace=False
+    flag_pol="all",  # Options are "all", "X", "Y", "XX", "YY", "XY", or "YX"
+    inplace=False,
 ):
 
     flag_arr = np.copy(uvd.flag_array)

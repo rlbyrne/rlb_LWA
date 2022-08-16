@@ -284,14 +284,14 @@ def process_data_Apr6():
 
 def pipeline_comparison_Apr8():
 
-    ms_filename = "/lustre/mmanders/stageiii/phaseiii/20220307/calint/20220307_175923_61MHz.ms"
+    ms_filename = (
+        "/lustre/mmanders/stageiii/phaseiii/20220307/calint/20220307_175923_61MHz.ms"
+    )
     output_dir = "/lustre/rbyrne/LWA_data_20220307"
     output_path = f"{output_dir}/uvfits"
 
     uvd_uncalib = LWA_preprocessing.convert_raw_ms_to_uvdata(
-        ms_filename,
-        untar_dir=output_dir,
-        data_column='DATA'
+        ms_filename, untar_dir=output_dir, data_column="DATA"
     )
 
     # Write uvfits
@@ -302,9 +302,7 @@ def pipeline_comparison_Apr8():
     )
 
     uvd_calib = LWA_preprocessing.convert_raw_ms_to_uvdata(
-        ms_filename,
-        untar_dir=output_dir,
-        data_column='CORRECTED_DATA'
+        ms_filename, untar_dir=output_dir, data_column="CORRECTED_DATA"
     )
 
     # Write uvfits
@@ -317,14 +315,14 @@ def pipeline_comparison_Apr8():
 
 def process_data_Apr15():
 
-    ms_filename = "/lustre/mmanders/stageiii/phaseiii/20220307/calint/20220307_175923_61MHz.ms"
+    ms_filename = (
+        "/lustre/mmanders/stageiii/phaseiii/20220307/calint/20220307_175923_61MHz.ms"
+    )
     output_dir = "/lustre/rbyrne/LWA_data_20220307"
     output_path = f"{output_dir}/uvfits"
 
     uvd_uncalib = LWA_preprocessing.convert_raw_ms_to_uvdata(
-        ms_filename,
-        untar_dir=output_dir,
-        data_column='DATA'
+        ms_filename, untar_dir=output_dir, data_column="DATA"
     )
 
     LWA_preprocessing.flag_outriggers(
@@ -500,7 +498,9 @@ def get_rfi_occupancy_Jun6():
                 sig_thresh=ssins_thresh,  # Flagging threshold in std. dev.
                 inplace=False,
             )
-            flagging_frac = np.sum(uvd_ssins_flagged.flag_array)/np.size(uvd_ssins_flagged.flag_array)
+            flagging_frac = np.sum(uvd_ssins_flagged.flag_array) / np.size(
+                uvd_ssins_flagged.flag_array
+            )
             txtfile.write(f"{obsid}, {ssins_thresh}, {flagging_frac}\n")
 
     txtfile.close()
@@ -512,7 +512,11 @@ def plot_autocorrelations_Aug16():
     autos_plot_dir = f"{data_dir}/autocorrelation_plots"
 
     # Find raw ms files
-    ms_filenames = [f"{data_dir}/{filename}" for filename in os.listdir(data_dir) if filenames.endswith(".ms")]
+    ms_filenames = [
+        f"{data_dir}/{filename}"
+        for filename in os.listdir(data_dir)
+        if filenames.endswith(".ms")
+    ]
     uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(ms_filenames)
     plot_autocorrelations(
         uvd,
