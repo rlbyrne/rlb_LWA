@@ -506,5 +506,26 @@ def get_rfi_occupancy_Jun6():
     txtfile.close()
 
 
+def plot_autocorrelations_Aug16():
+
+    data_dir = "/safepool/rbyrne/lwa_data"
+    autos_plot_dir = f"{data_dir}/autocorrelation_plots"
+
+    # Find raw ms files
+    ms_filenames = [f"{data_dir}/{filename}" for filename in os.listdir(data_dir) if filenames.endswith(".ms")]
+    uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(ms_filenames)
+    plot_autocorrelations(
+        uvd,
+        plot_save_dir=autos_plot_dir,
+        plot_file_prefix="20220812_000008",
+        time_average=True,
+        plot_legend=False,
+        plot_flagged_data=False,
+        yrange=[0, 100],
+        plot_antennas_together=False,
+        plot_antennas_individually=True,
+    )
+
+
 if __name__ == "__main__":
-    get_rfi_occupancy_Jun6()
+    plot_autocorrelations_Aug16()
