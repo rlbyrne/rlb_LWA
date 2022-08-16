@@ -512,9 +512,10 @@ def plot_autocorrelations_Aug16():
     autos_plot_dir = f"{data_dir}/autocorrelation_plots"
 
     # Find raw ms files
+    filenames = os.listdir(data_dir)
     ms_filenames = [
         f"{data_dir}/{filename}"
-        for filename in os.listdir(data_dir)
+        for filename in filenames
         if filenames.endswith(".ms")
     ]
     uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(ms_filenames)
