@@ -516,7 +516,7 @@ def plot_autocorrelations_Aug16():
     ms_filenames = [
         f"{data_dir}/{filename}"
         for filename in filenames
-        if filenames.endswith(".ms")
+        if filename.endswith(".ms")
     ]
     uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(ms_filenames)
     plot_autocorrelations(
