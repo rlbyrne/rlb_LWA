@@ -530,6 +530,7 @@ def plot_autocorrelations_Aug16():
         plot_antennas_together=False,
         plot_antennas_individually=True,
     )
+    uvd.write_uvfits(f"{data_dir}/20220812_000008.uvfits")
 
 
 if __name__ == "__main__":
