@@ -513,15 +513,13 @@ def plot_autocorrelations_Aug16():
 
     # Find raw ms files
     filenames = os.listdir(data_dir)
-    ms_filenames = [
-        f"{data_dir}/{filename}"
-        for filename in filenames
-        if filename.endswith(".ms")
-    ]
+    ms_filenames = [filename for filename in filenames if filename.endswith(".ms")]
     timestamps = np.unique(np.array([filename[:15] for filename in ms_filenames]))
     for time in timestamps:
         use_filenames = [filename for filename in ms_filenames if filename.startswith(time)]
-        uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(use_filenames)
+        uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(
+            [f"{data_dir}/{filename} for filename in use_filenames"]
+        )
         LWA_preprocessing.plot_autocorrelations(
             uvd,
             plot_save_dir=autos_plot_dir,
