@@ -518,7 +518,7 @@ def plot_autocorrelations_Aug16():
     for time in timestamps:
         use_filenames = [filename for filename in ms_filenames if filename.startswith(time)]
         uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(
-            [f"{data_dir}/{filename} for filename in use_filenames"]
+            [f"{data_dir}/{filename}" for filename in use_filenames]
         )
         LWA_preprocessing.plot_autocorrelations(
             uvd,
