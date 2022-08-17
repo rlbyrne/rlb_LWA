@@ -518,19 +518,21 @@ def plot_autocorrelations_Aug16():
         for filename in filenames
         if filename.endswith(".ms")
     ]
-    uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(ms_filenames)
-    plot_autocorrelations(
-        uvd,
-        plot_save_dir=autos_plot_dir,
-        plot_file_prefix="20220812_000008",
-        time_average=True,
-        plot_legend=False,
-        plot_flagged_data=False,
-        yrange=[0, 100],
-        plot_antennas_together=False,
-        plot_antennas_individually=True,
-    )
-    uvd.write_uvfits(f"{data_dir}/20220812_000008.uvfits")
+    timestamps = np.unique(np.array([filename[:15] for filename in ms_filenames]))
+    for time in timestamps:
+        use_filenames = [filename for filename in ms_filenames if filename.startswith(time)]
+        uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(use_filenames)
+        LWA_preprocessing.plot_autocorrelations(
+            uvd,
+            plot_save_dir=autos_plot_dir,
+            plot_file_prefix=time,
+            time_average=True,
+            plot_legend=False,
+            plot_flagged_data=False,
+            yrange=[0, 100],
+            plot_antennas_together=False,
+            plot_antennas_individually=True,
+        )
 
 
 if __name__ == "__main__":
