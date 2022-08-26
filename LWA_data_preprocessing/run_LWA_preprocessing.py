@@ -516,7 +516,9 @@ def plot_autocorrelations_Aug16():
     ms_filenames = [filename for filename in filenames if filename.endswith(".ms")]
     timestamps = np.unique(np.array([filename[:15] for filename in ms_filenames]))
     for time in timestamps:
-        use_filenames = [filename for filename in ms_filenames if filename.startswith(time)]
+        use_filenames = [
+            filename for filename in ms_filenames if filename.startswith(time)
+        ]
         uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(
             [f"{data_dir}/{filename}" for filename in use_filenames]
         )
@@ -533,5 +535,38 @@ def plot_autocorrelations_Aug16():
         )
 
 
+def ssins_flagging_Aug26():
+
+    data_dir = "/safepool/rbyrne/lwa_data"
+    ssins_flags_dir = f"{data_dir}/ssins_flags"
+    ssins_plot_dir = f"{data_dir}/ssins_plots"
+
+    # Find raw ms files
+    filenames = os.listdir(data_dir)
+    ms_filenames = [filename for filename in filenames if filename.endswith(".ms")]
+    uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(
+        [f"{data_dir}/{filename}" for filename in ms_filenames]
+    )
+    LWA_preprocessing.flag_outriggers(uvd, inplace=True)
+    uvd.write_uvfits(f"{data_dir}/20220812_000008_000158.uvfits")
+
+    for ssins_thresh in [5, 10, 20]:
+        uvd_ssins_flagged = LWA_preprocessing.ssins_flagging(
+            uvd,
+            sig_thresh=ssins_thresh,  # Flagging threshold in std. dev.
+            inplace=False,
+            save_flags_filepath=f"{ssins_flags_dir}/flags_thresh_{ssins_thresh}.hdf5",
+            plot_no_flags=False,
+            plot_orig_flags=False,
+            plot_ssins_flags=True,
+            plot_save_dir=ssins_plot_dir,
+            plot_file_prefix=f"{file_split}",
+        )
+        flagging_frac = (
+            np.sum(uvd_ssins_flagged.flag_array) - np.sum(uvd.flag_array)
+        ) / (np.size(uvd.flag_array) - np.sum(uvd.flag_array))
+        print(f"Flagging fraction {flagging_frac} at SSINS threshold {ssins_thresh}")
+
+
 if __name__ == "__main__":
-    plot_autocorrelations_Aug16()
+    ssins_flagging_Aug26()
