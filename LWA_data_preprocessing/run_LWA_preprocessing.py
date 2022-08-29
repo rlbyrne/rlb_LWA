@@ -547,6 +547,7 @@ def ssins_flagging_Aug26():
     uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(
         [f"{data_dir}/{filename}" for filename in ms_filenames]
     )
+    uvd.phase_to_time(np.mean(uvd.time_array))
     LWA_preprocessing.flag_outriggers(uvd, inplace=True)
     uvd.write_uvfits(
         f"{data_dir}/20220812_000008_000158.uvfits",
