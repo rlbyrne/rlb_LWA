@@ -548,7 +548,11 @@ def ssins_flagging_Aug26():
         [f"{data_dir}/{filename}" for filename in ms_filenames]
     )
     LWA_preprocessing.flag_outriggers(uvd, inplace=True)
-    uvd.write_uvfits(f"{data_dir}/20220812_000008_000158.uvfits")
+    uvd.write_uvfits(
+        f"{data_dir}/20220812_000008_000158.uvfits",
+        force_phase=True,
+        spoof_nonessential=True,
+    )
 
     for ssins_thresh in [5, 10, 20]:
         uvd_ssins_flagged = LWA_preprocessing.ssins_flagging(
