@@ -555,6 +555,7 @@ def ssins_flagging_Aug26():
         spoof_nonessential=True,
     )
 
+    plot_orig_flags = True
     for ssins_thresh in [5, 10, 20]:
         uvd_ssins_flagged = LWA_preprocessing.ssins_flagging(
             uvd,
@@ -562,15 +563,16 @@ def ssins_flagging_Aug26():
             inplace=False,
             save_flags_filepath=f"{ssins_flags_dir}/flags_thresh_{ssins_thresh}.hdf5",
             plot_no_flags=False,
-            plot_orig_flags=False,
+            plot_orig_flags=plot_orig_flags,
             plot_ssins_flags=True,
             plot_save_dir=ssins_plot_dir,
-            plot_file_prefix=f"{file_split}",
+            plot_file_prefix=f"{ssins_thresh}",
         )
         flagging_frac = (
             np.sum(uvd_ssins_flagged.flag_array) - np.sum(uvd.flag_array)
         ) / (np.size(uvd.flag_array) - np.sum(uvd.flag_array))
         print(f"Flagging fraction {flagging_frac} at SSINS threshold {ssins_thresh}")
+        plot_orig_flags = False
 
 
 if __name__ == "__main__":
