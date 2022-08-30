@@ -121,7 +121,9 @@ def plot_autocorrelations(
 
         # Do not plot both XY and YX (autocorrelation amplitude is identical)
         if -7 in uvd_autos.polarization_array and -8 in uvd_autos.polarization_array:
-            uvd_autos.select(polarizations=list(uvd_autos.polarization_array).remove(-8))
+            uvd_autos.select(
+                polarizations=[pol for pol in uvd_autos.polarization_array if pol != -8]
+            )
 
         pol_names = get_pol_names(uvd_autos.polarization_array)
         ant_inds = np.intersect1d(uvd_autos.ant_1_array, uvd_autos.ant_2_array)
