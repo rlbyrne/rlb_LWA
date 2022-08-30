@@ -567,7 +567,7 @@ def ssins_flagging_Aug26():
             plot_orig_flags=plot_orig_flags,
             plot_ssins_flags=True,
             plot_save_dir=ssins_plot_dir,
-            plot_file_prefix=f"ssins_thresh_{ssins_thresh}",
+            plot_file_prefix=f"20220812_000008_000158",
         )
         flagging_frac = (
             np.sum(uvd_ssins_flagged.flag_array) - np.sum(uvd.flag_array)
@@ -577,5 +577,26 @@ def ssins_flagging_Aug26():
         plot_no_flags = False
 
 
+def plot_autocorrelations_Aug30():
+
+    data_dir = "/safepool/rbyrne/lwa_data"
+    autos_plot_dir = f"{data_dir}/autocorrelation_plots"
+
+    uvd = pyuvdata.UVData()
+    uvd.read(f"{data_dir}/20220812_000008_000158.uvfits", ant_str="auto")
+
+    LWA_preprocessing.plot_autocorrelations(
+        uvd,
+        plot_save_dir=autos_plot_dir,
+        plot_file_prefix="20220812_000008_000158",
+        time_average=True,
+        plot_legend=False,
+        plot_flagged_data=False,
+        yrange=[0, 100],
+        plot_antennas_together=False,
+        plot_antennas_individually=True,
+    )
+
+
 if __name__ == "__main__":
-    ssins_flagging_Aug26()
+    plot_autocorrelations_Aug30()
