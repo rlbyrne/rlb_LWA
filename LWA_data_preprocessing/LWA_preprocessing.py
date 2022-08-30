@@ -119,6 +119,10 @@ def plot_autocorrelations(
         if not plot_flagged_data:
             uvd_autos.data_array[np.where(uvd_autos.flag_array)] = np.nan
 
+        # Do not plot both XY and YX (autocorrelation amplitude is identical)
+        if -7 in uvd_autos.polarization_array and -8 in uvd_autos.polarization_array:
+            uvd_autos.select(polarizations=uvd_autos.polarization_array.remove(-8))
+
         pol_names = get_pol_names(uvd_autos.polarization_array)
         ant_inds = np.intersect1d(uvd_autos.ant_1_array, uvd_autos.ant_2_array)
 
@@ -134,7 +138,7 @@ def plot_autocorrelations(
                     ant_name = uvd_autos.antenna_names[ant_ind]
                     bl_inds = np.where(uvd_autos.ant_1_array == ant_ind)[0]
                     plt.plot(
-                        uvd_autos.freq_array[0, :],
+                        uvd_autos.freq_array[0, :] / 1e6,  # Convert to MHz
                         np.nanmean(
                             np.abs(uvd_autos.data_array[bl_inds, 0, :, pol_ind]), axis=0
                         ),
@@ -149,7 +153,10 @@ def plot_autocorrelations(
                 plt.xlabel("Frequency (MHz)")
                 plt.ylabel("Autocorr. Power")
                 plt.xlim(
-                    [np.nanmin(uvd_autos.freq_array), np.nanmax(uvd_autos.freq_array)]
+                    [
+                        np.nanmin(uvd_autos.freq_array) / 1e6,
+                        np.nanmax(uvd_autos.freq_array) / 1e6,
+                    ]
                 )
                 plt.ylim(yrange)
                 plt.title(f"{pol_names[pol_ind]} Autocorrelations")
@@ -174,7 +181,7 @@ def plot_autocorrelations(
                 ):  # Check if antenna is completely flagged
                     for pol_ind in range(uvd_autos.Npols):
                         plt.plot(
-                            uvd_autos.freq_array[0, :],
+                            uvd_autos.freq_array[0, :] / 1e6,  # Convert to MHz
                             plot_values[:, pol_ind],
                             "-o",
                             markersize=0.5,
@@ -186,8 +193,8 @@ def plot_autocorrelations(
                     plt.ylabel("Autocorr. Power")
                     plt.xlim(
                         [
-                            np.nanmin(uvd_autos.freq_array),
-                            np.nanmax(uvd_autos.freq_array),
+                            np.nanmin(uvd_autos.freq_array) / 1e6,
+                            np.nanmax(uvd_autos.freq_array) / 1e6,
                         ]
                     )
                     plt.ylim(yrange)

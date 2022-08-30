@@ -580,7 +580,7 @@ def ssins_flagging_Aug26():
 def plot_autocorrelations_Aug30():
 
     data_dir = "/safepool/rbyrne/lwa_data"
-    autos_plot_dir = f"{data_dir}/autocorrelation_plots"
+    autos_plot_dir = f"{data_dir}/autocorrelation_plots/time_averaged"
 
     uvd = pyuvdata.UVData()
     uvd.read(f"{data_dir}/20220812_000008_000158.uvfits", ant_str="auto")
