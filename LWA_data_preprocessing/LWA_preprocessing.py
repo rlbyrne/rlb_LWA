@@ -207,7 +207,7 @@ def plot_autocorrelation_waterfalls(
             pol_names = get_pol_names(uvd_autos.polarization_array)
             for pol_ind in range(uvd_autos.Npols):
                 cax = ax[pol_ind].imshow(
-                    autocorr_vals[ant_ind, :, :, pol_ind],
+                    autocorr_vals[ant_ind, ::-1, :, pol_ind],
                     origin="lower",
                     interpolation="none",
                     cmap=use_cmap,
@@ -216,8 +216,8 @@ def plot_autocorrelation_waterfalls(
                     extent=[
                         np.nanmin(uvd_autos.freq_array) / 1e6,
                         np.nanmax(uvd_autos.freq_array) / 1e6,
-                        np.nanmin(uvd_autos.time_array),
                         np.nanmax(uvd_autos.time_array),
+                        np.nanmin(uvd_autos.time_array),
                     ],
                     aspect="auto",
                 )
@@ -229,7 +229,7 @@ def plot_autocorrelation_waterfalls(
             cbar.set_label("Autocorrelation Value", rotation=270, labelpad=15)
             fig.suptitle(f"Antenna {ant_name} Autocorrelations")
             print(f"Saving figure to {plot_save_dir}/{plot_name}")
-            plt.savefig(f"{plot_save_dir}/{plot_name}", dpi=200)
+            plt.savefig(f"{plot_save_dir}/{plot_name}", dpi=200, bbox_inches='tight')
             plt.close()
 
 
