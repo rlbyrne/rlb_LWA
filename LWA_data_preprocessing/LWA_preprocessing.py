@@ -179,6 +179,7 @@ def plot_autocorrelation_waterfalls(
         uvd_autos.select(polarizations=use_pols, inplace=True)
 
     ant_inds = np.intersect1d(uvd_autos.ant_1_array, uvd_autos.ant_2_array)
+    times = np.unique(uvd_autos.time_array)
     autocorr_vals = np.full(
         (np.size(ant_inds), uvd_autos.Ntimes, uvd_autos.Nfreqs, uvd.Npols), np.nan
     )
