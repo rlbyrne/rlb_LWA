@@ -204,7 +204,7 @@ def plot_autocorrelation_waterfalls(
             plot_name = f"{plot_file_prefix}_autocorr_waterfall_ant_{ant_name}.png"
             fig, ax = plt.subplots(nrows=1, ncols=uvd.Npols, figsize=(16, 6))
             pol_names = get_pol_names(uvd_autos.polarization_array)
-            for pol_ind in uvd.Npols:
+            for pol_ind in range(uvd.Npols):
                 cax = ax[pol_ind].imshow(
                     autocorr_vals[ant_ind, :, :, pol_ind].T,
                     origin="lower",
