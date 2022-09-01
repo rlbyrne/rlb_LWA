@@ -180,6 +180,7 @@ def plot_autocorrelation_waterfalls(
 
     ant_inds = np.intersect1d(uvd_autos.ant_1_array, uvd_autos.ant_2_array)
     times = np.unique(uvd_autos.time_array)
+    ant_names = np.unique(uvd_autos.antenna_names)
     autocorr_vals = np.full(
         (np.size(ant_inds), uvd_autos.Ntimes, uvd_autos.Nfreqs, uvd_autos.Npols), np.nan
     )
@@ -189,16 +190,16 @@ def plot_autocorrelation_waterfalls(
         if not plot_flagged_data:
             uvd_timestep.data_array[np.where(uvd_timestep.flag_array)] = np.nan
         ant_inds = np.intersect1d(uvd_timestep.ant_1_array, uvd_timestep.ant_2_array)
-        for ant_ind in ant_inds:
-            ant_name = uvd_timestep.antenna_names[ant_ind]
+        for ant_name_ind, ant_name in enumerate(ant_names):
+            ant_ind = np.where(uvd_timestap.antenna_names == ant_name)[0]
             bl_inds = np.where(uvd_timestep.ant_1_array == ant_ind)[0]
-            autocorr_vals[ant_ind, time_plot_ind, :, :] = np.nanmean(
+            autocorr_vals[ant_name_ind, time_plot_ind, :, :] = np.nanmean(
                 np.abs(uvd_timestep.data_array[bl_inds, 0, :, :]), axis=0
             )
 
     use_cmap = cm.get_cmap("inferno").copy()
     use_cmap.set_bad(color="whitesmoke")
-    for ant_ind in ant_inds:
+    for ant_ind, ant_name in enumerate(ant_names):
 
         if not np.isnan(np.nanmean(autocorr_vals[ant_ind, :, :, :])):
             plot_name = f"{plot_file_prefix}_autocorr_waterfall_ant_{ant_name}.png"
@@ -227,6 +228,7 @@ def plot_autocorrelation_waterfalls(
             cbar = fig.colorbar(cax, ax=ax.ravel().tolist(), extend="max")
             cbar.set_label("Autocorrelation Value", rotation=270, labelpad=15)
             fig.suptitle(f"Antenna {ant_name} Autocorrelations")
+            print(f"Saving figure to {plot_save_dir}/{plot_name}")
             plt.savefig(f"{plot_save_dir}/{plot_name}", dpi=200)
             plt.close()
 
