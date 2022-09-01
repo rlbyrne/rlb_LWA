@@ -196,7 +196,7 @@ def plot_autocorrelation_waterfalls(
                 np.abs(uvd_timestep.data_array[bl_inds, 0, :, :]), axis=0
             )
 
-    use_cmap = matplotlib.cm.get_cmap("inferno").copy()
+    use_cmap = cm.get_cmap("inferno").copy()
     use_cmap.set_bad(color="whitesmoke")
     for ant_ind in ant_inds:
 
