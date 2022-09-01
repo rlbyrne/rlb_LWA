@@ -191,7 +191,7 @@ def plot_autocorrelation_waterfalls(
             uvd_timestep.data_array[np.where(uvd_timestep.flag_array)] = np.nan
         ant_inds = np.intersect1d(uvd_timestep.ant_1_array, uvd_timestep.ant_2_array)
         for ant_name_ind, ant_name in enumerate(ant_names):
-            ant_ind = np.where(uvd_timestap.antenna_names == ant_name)[0]
+            ant_ind = np.where(uvd_timestep.antenna_names == ant_name)[0]
             bl_inds = np.where(uvd_timestep.ant_1_array == ant_ind)[0]
             autocorr_vals[ant_name_ind, time_plot_ind, :, :] = np.nanmean(
                 np.abs(uvd_timestep.data_array[bl_inds, 0, :, :]), axis=0
@@ -203,7 +203,7 @@ def plot_autocorrelation_waterfalls(
 
         if not np.isnan(np.nanmean(autocorr_vals[ant_ind, :, :, :])):
             plot_name = f"{plot_file_prefix}_autocorr_waterfall_ant_{ant_name}.png"
-            fig, ax = plt.subplots(nrows=1, ncols=uvd.Npols, figsize=(16, 6))
+            fig, ax = plt.subplots(nrows=1, ncols=uvd_autos.Npols, figsize=(16, 6))
             pol_names = get_pol_names(uvd_autos.polarization_array)
             for pol_ind in range(uvd_autos.Npols):
                 cax = ax[pol_ind].imshow(
