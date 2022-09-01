@@ -171,12 +171,12 @@ def plot_autocorrelation_waterfalls(
     colorbar_range=[0, 100],
 ):
 
+    uvd_autos = uvd.select(ant_str="auto", inplace=False)
+
     # Do not plot both XY and YX (autocorrelation amplitude is identical)
     if -7 in uvd.polarization_array and -8 in uvd.polarization_array:
         use_pols = [pol for pol in uvd.polarization_array if pol != -8]
-    else:
-        use_pols = uvd.polarization_array
-    uvd_autos = uvd.select(ant_str="auto", polarizations=use_pols, inplace=False)
+        uvd_autos.select(polarizations=use_pols, inplace=True)
 
     ant_inds = np.intersect1d(uvd_autos.ant_1_array, uvd_autos.ant_2_array)
     autocorr_vals = np.full(
