@@ -229,7 +229,7 @@ def plot_autocorrelation_waterfalls(
             cbar.set_label("Autocorrelation Value", rotation=270, labelpad=15)
             fig.suptitle(f"Antenna {ant_name} Autocorrelations")
             print(f"Saving figure to {plot_save_dir}/{plot_name}")
-            plt.savefig(f"{plot_save_dir}/{plot_name}", dpi=200, bbox_inches='tight')
+            plt.savefig(f"{plot_save_dir}/{plot_name}", dpi=200, bbox_inches="tight")
             plt.close()
 
 
