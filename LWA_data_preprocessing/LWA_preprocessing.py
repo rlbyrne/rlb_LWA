@@ -94,11 +94,8 @@ def plot_autocorrelations(
     plot_save_dir="",
     plot_file_prefix="",
     time_average=True,
-    plot_legend=False,
     plot_flagged_data=False,
     yrange=[0, 100],
-    plot_antennas_together=True,
-    plot_antennas_individually=True,
 ):
 
     if time_average:
@@ -128,30 +125,29 @@ def plot_autocorrelations(
         pol_names = get_pol_names(uvd_autos.polarization_array)
         ant_inds = np.intersect1d(uvd_autos.ant_1_array, uvd_autos.ant_2_array)
 
-        if plot_antennas_together:
-            for pol_ind in range(uvd_autos.Npols):
-
-                if time_average:
-                    plot_name = f"{plot_file_prefix}_autocorr_{pol_names[pol_ind]}.png"
-                else:
-                    plot_name = f"{plot_file_prefix}_autocorr_{pol_names[pol_ind]}_time{time_plot_ind:05d}.png"
-
-                for ant_ind in ant_inds:
-                    ant_name = uvd_autos.antenna_names[ant_ind]
-                    bl_inds = np.where(uvd_autos.ant_1_array == ant_ind)[0]
+        for ant_ind in ant_inds:
+            ant_name = uvd_autos.antenna_names[ant_ind]
+            if time_average:
+                plot_name = f"{plot_file_prefix}_autocorr_ant_{ant_name}.png"
+            else:
+                plot_name = f"{plot_file_prefix}_autocorr_ant_{ant_name}_time{time_plot_ind:05d}.png"
+            bl_inds = np.where(uvd_autos.ant_1_array == ant_ind)[0]
+            plot_values = np.nanmean(
+                np.abs(uvd_autos.data_array[bl_inds, 0, :, :]), axis=0
+            )
+            if not np.isnan(
+                np.nanmean(plot_values)
+            ):  # Check if antenna is completely flagged
+                for pol_ind in range(uvd_autos.Npols):
                     plt.plot(
                         uvd_autos.freq_array[0, :] / 1e6,  # Convert to MHz
-                        np.nanmean(
-                            np.abs(uvd_autos.data_array[bl_inds, 0, :, pol_ind]), axis=0
-                        ),
+                        plot_values[:, pol_ind],
                         "-o",
                         markersize=0.5,
                         linewidth=0.3,
-                        label=ant_name,
+                        label=pol_names[pol_ind],
                     )
-
-                if plot_legend:
-                    plt.legend(prop={"size": 4})
+                plt.legend(prop={"size": 4})
                 plt.xlabel("Frequency (MHz)")
                 plt.ylabel("Autocorr. Power")
                 plt.xlim(
@@ -161,49 +157,75 @@ def plot_autocorrelations(
                     ]
                 )
                 plt.ylim(yrange)
-                plt.title(f"{pol_names[pol_ind]} Autocorrelations")
+                plt.title(f"Antenna {ant_name} Autocorrelations")
                 print(f"Saving figure to {plot_save_dir}/{plot_name}")
                 plt.savefig(f"{plot_save_dir}/{plot_name}", dpi=200)
                 plt.close()
 
-        if plot_antennas_individually:
 
-            for ant_ind in ant_inds:
-                ant_name = uvd_autos.antenna_names[ant_ind]
-                if time_average:
-                    plot_name = f"{plot_file_prefix}_autocorr_ant_{ant_name}.png"
-                else:
-                    plot_name = f"{plot_file_prefix}_autocorr_ant_{ant_name}_time{time_plot_ind:05d}.png"
-                bl_inds = np.where(uvd_autos.ant_1_array == ant_ind)[0]
-                plot_values = np.nanmean(
-                    np.abs(uvd_autos.data_array[bl_inds, 0, :, :]), axis=0
+def plot_autocorrelation_waterfalls(
+    uvd,
+    plot_save_dir="",
+    plot_file_prefix="",
+    plot_flagged_data=False,
+    colorbar_range=[0, 100],
+):
+
+    # Do not plot both XY and YX (autocorrelation amplitude is identical)
+    if -7 in uvd.polarization_array and -8 in uvd.polarization_array:
+        use_pols = [pol for pol in uvd_autos.polarization_array if pol != -8]
+    uvd_autos = uvd.select(ant_str="auto", polarizations=use_pols, inplace=False)
+
+    ant_inds = np.intersect1d(uvd_autos.ant_1_array, uvd_autos.ant_2_array)
+    autocorr_vals = np.full(
+        (np.size(ant_inds), uvd_autos.Ntimes, uvd_autos.Nfreqs, uvd.Npols), np.nan
+    )
+
+    for time_plot_ind in range(uvd.Ntimes):
+        uvd_timestep = uvd_autos.select(times=times[time_plot_ind], inplace=False)
+        if not plot_flagged_data:
+            uvd_timestep.data_array[np.where(uvd_timestep.flag_array)] = np.nan
+        ant_inds = np.intersect1d(uvd_timestep.ant_1_array, uvd_timestep.ant_2_array)
+        for ant_ind in ant_inds:
+            ant_name = uvd_timestep.antenna_names[ant_ind]
+            bl_inds = np.where(uvd_timestep.ant_1_array == ant_ind)[0]
+            autocorr_vals[ant_ind, time_plot_ind, :, :] = np.nanmean(
+                np.abs(uvd_timestep.data_array[bl_inds, 0, :, :]), axis=0
+            )
+
+    use_cmap = matplotlib.cm.get_cmap("inferno").copy()
+    use_cmap.set_bad(color="whitesmoke")
+    for ant_ind in ant_inds:
+
+        if not np.isnan(np.nanmean(autocorr_vals[ant_ind, :, :, :])):
+            plot_name = f"{plot_file_prefix}_autocorr_waterfall_ant_{ant_name}.png"
+            fig, ax = plt.subplots(nrows=1, ncols=uvd.Npols, figsize=(16, 6))
+            pol_names = get_pol_names(uvd_autos.polarization_array)
+            for pol_ind in uvd.Npols:
+                cax = ax[pol_ind].imshow(
+                    autocorr_vals[ant_ind, :, :, pol_ind].T,
+                    origin="lower",
+                    interpolation="none",
+                    cmap=use_cmap,
+                    vmin=np.min(colorbar_range),
+                    vmax=np.max(colorbar_range),
+                    extent=[
+                        np.nanmin(uvd_autos.freq_array) / 1e6,
+                        np.nanmax(uvd_autos.freq_array) / 1e6,
+                        np.nanmin(uvd_autos.time_array),
+                        np.nanmax(uvd_autos.time_array),
+                    ],
+                    aspect="equal",
                 )
-                if not np.isnan(
-                    np.nanmean(plot_values)
-                ):  # Check if antenna is completely flagged
-                    for pol_ind in range(uvd_autos.Npols):
-                        plt.plot(
-                            uvd_autos.freq_array[0, :] / 1e6,  # Convert to MHz
-                            plot_values[:, pol_ind],
-                            "-o",
-                            markersize=0.5,
-                            linewidth=0.3,
-                            label=pol_names[pol_ind],
-                        )
-                    plt.legend(prop={"size": 4})
-                    plt.xlabel("Frequency (MHz)")
-                    plt.ylabel("Autocorr. Power")
-                    plt.xlim(
-                        [
-                            np.nanmin(uvd_autos.freq_array) / 1e6,
-                            np.nanmax(uvd_autos.freq_array) / 1e6,
-                        ]
-                    )
-                    plt.ylim(yrange)
-                    plt.title(f"Antenna {ant_name} Autocorrelations")
-                    print(f"Saving figure to {plot_save_dir}/{plot_name}")
-                    plt.savefig(f"{plot_save_dir}/{plot_name}", dpi=200)
-                    plt.close()
+                ax[pol_ind].set_xlabel("Frequency (MHz)")
+                ax[pol_ind].set_ylabel("Time (JD)")
+                ax[pol_ind].set_title(pol_names[pol_ind])
+
+            cbar = fig.colorbar(cax, ax=ax.ravel().tolist(), extend="max")
+            cbar.set_label("Autocorrelation Value", rotation=270, labelpad=15)
+            fig.suptitle(f"Antenna {ant_name} Autocorrelations")
+            plt.savefig(f"{plot_save_dir}/{plot_name}", dpi=200)
+            plt.close()
 
 
 def flag_outriggers(

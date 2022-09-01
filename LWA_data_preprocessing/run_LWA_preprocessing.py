@@ -580,21 +580,26 @@ def ssins_flagging_Aug26():
 def plot_autocorrelations_Aug30():
 
     data_dir = "/safepool/rbyrne/lwa_data"
-    autos_plot_dir = f"{data_dir}/autocorrelation_plots/time_averaged"
+    autos_plot_dir = f"{data_dir}/autocorrelation_plots"
 
     uvd = pyuvdata.UVData()
     uvd.read(f"{data_dir}/20220812_000008_000158.uvfits", ant_str="auto")
+
+    LWA_preprocessing.plot_autocorrelation_waterfalls(
+        uvd,
+        plot_save_dir=autos_plot_dir,
+        plot_file_prefix="20220812_000008_000158",
+        plot_flagged_data=False,
+        colorbar_range=[0, 100],
+    )
 
     LWA_preprocessing.plot_autocorrelations(
         uvd,
         plot_save_dir=autos_plot_dir,
         plot_file_prefix="20220812_000008_000158",
         time_average=True,
-        plot_legend=False,
         plot_flagged_data=False,
         yrange=[0, 100],
-        plot_antennas_together=False,
-        plot_antennas_individually=True,
     )
 
 
