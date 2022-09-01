@@ -191,7 +191,7 @@ def plot_autocorrelation_waterfalls(
             uvd_timestep.data_array[np.where(uvd_timestep.flag_array)] = np.nan
         ant_inds = np.intersect1d(uvd_timestep.ant_1_array, uvd_timestep.ant_2_array)
         for ant_name_ind, ant_name in enumerate(ant_names):
-            ant_ind = np.where(uvd_timestep.antenna_names == ant_name)[0]
+            ant_ind = np.where(np.array(uvd_timestep.antenna_names) == ant_name)[0]
             bl_inds = np.where(uvd_timestep.ant_1_array == ant_ind)[0]
             autocorr_vals[ant_name_ind, time_plot_ind, :, :] = np.nanmean(
                 np.abs(uvd_timestep.data_array[bl_inds, 0, :, :]), axis=0
@@ -207,7 +207,7 @@ def plot_autocorrelation_waterfalls(
             pol_names = get_pol_names(uvd_autos.polarization_array)
             for pol_ind in range(uvd_autos.Npols):
                 cax = ax[pol_ind].imshow(
-                    autocorr_vals[ant_ind, :, :, pol_ind].T,
+                    autocorr_vals[ant_ind, :, :, pol_ind],
                     origin="lower",
                     interpolation="none",
                     cmap=use_cmap,
@@ -219,7 +219,7 @@ def plot_autocorrelation_waterfalls(
                         np.nanmin(uvd_autos.time_array),
                         np.nanmax(uvd_autos.time_array),
                     ],
-                    aspect="equal",
+                    aspect="auto",
                 )
                 ax[pol_ind].set_xlabel("Frequency (MHz)")
                 ax[pol_ind].set_ylabel("Time (JD)")
