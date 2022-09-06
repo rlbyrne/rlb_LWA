@@ -603,5 +603,47 @@ def plot_autocorrelations_Aug30():
     )
 
 
+def flagging_Sept6():
+
+    data_dir = "/safepool/rbyrne/lwa_data"
+    ssins_flags_dir = f"{data_dir}/ssins_flags"
+    ssins_plot_dir = f"{data_dir}/ssins_plots"
+
+    uvd = pyuvdata.UVData()
+    uvd.read(f"{data_dir}/20220812_000008_000158.uvfits", ant_str="auto")
+
+    LWA_preprocessing.flag_antennas(
+        uvd,
+        antenna_names=[
+            "LWA009", "LWA147", "LWA187", "LWA038", "LWA149", "LWA195", "LWA040",
+            "LWA150", "LWA211", "LWA041", "LWA151", "LWA212", "LWA071", "LWA176",
+            "LWA215", "LWA095", "LWA177", "LWA221", "LWA108", "LWA178", "LWA246",
+            "LWA109", "LWA179", "LWA247", "LWA126", "LWA180"
+        ],
+        inplace=True,
+    )
+
+    plot_orig_flags = True
+    plot_no_flags = True
+    for ssins_thresh in [5, 10, 20]:
+        uvd_ssins_flagged = LWA_preprocessing.ssins_flagging(
+            uvd,
+            sig_thresh=ssins_thresh,  # Flagging threshold in std. dev.
+            inplace=False,
+            save_flags_filepath=f"{ssins_flags_dir}/20220812_000008_000158_flags_thresh_{ssins_thresh}.hdf5",
+            plot_no_flags=plot_no_flags,
+            plot_orig_flags=plot_orig_flags,
+            plot_ssins_flags=True,
+            plot_save_dir=ssins_plot_dir,
+            plot_file_prefix=f"20220812_000008_000158",
+        )
+        flagging_frac = (
+            np.sum(uvd_ssins_flagged.flag_array) - np.sum(uvd.flag_array)
+        ) / (np.size(uvd.flag_array) - np.sum(uvd.flag_array))
+        print(f"Flagging fraction {flagging_frac} at SSINS threshold {ssins_thresh}")
+        plot_orig_flags = False
+        plot_no_flags = False
+
+
 if __name__ == "__main__":
-    plot_autocorrelations_Aug30()
+    flagging_Sept6()
