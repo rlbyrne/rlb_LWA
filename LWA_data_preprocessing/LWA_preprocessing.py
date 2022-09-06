@@ -280,7 +280,7 @@ def flag_antennas(
 ):
 
     flag_arr = np.copy(uvd.flag_array)
-    pol_names = get_pol_names(uvd_autos.polarization_array)
+    pol_names = get_pol_names(uvd.polarization_array)
 
     for ant_name in antenna_names:
         ant_ind = np.where(np.array(uvd.antenna_names) == ant_name)[0]
