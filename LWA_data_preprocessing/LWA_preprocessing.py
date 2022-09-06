@@ -287,8 +287,8 @@ def flag_antennas(
         if np.size(ant_ind) == 0:
             print(f"WARNING: Antenna {ant_name} not found in antenna_names.")
         else:
-            flag_bls_1 = np.where(uvd.ant_1_array == ant_ind_full_array)[0]
-            flag_bls_2 = np.where(uvd.ant_2_array == ant_ind_full_array)[0]
+            flag_bls_1 = np.where(uvd.ant_1_array == ant_ind)[0]
+            flag_bls_2 = np.where(uvd.ant_2_array == ant_ind)[0]
             flag_bls = np.unique(np.concatenate((flag_bls_1, flag_bls_2)))
             if flag_pol == "all":
                 flag_arr[flag_bls, :, :, :] = True
