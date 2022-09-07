@@ -610,7 +610,7 @@ def flagging_Sept6():
     ssins_plot_dir = f"{data_dir}/ssins_plots"
 
     uvd = pyuvdata.UVData()
-    uvd.read(f"{data_dir}/20220812_000008_000158.uvfits", ant_str="auto")
+    uvd.read(f"{data_dir}/20220812_000008_000158.uvfits")
 
     LWA_preprocessing.flag_antennas(
         uvd,
