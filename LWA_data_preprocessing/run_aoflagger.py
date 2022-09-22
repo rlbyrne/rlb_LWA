@@ -51,7 +51,7 @@ def flag_ms_file():
     flag_data = flagger.make_image_set(uvd.Ntimes, uvd.Nfreqs, uvd.Nbls*uvd.Npols)
 
     bl_pol_ind = 0
-    for pol in uvd.polarization_array():
+    for pol in uvd.polarization_array:
         for bl in np.unique(uvd.baseline_array):
             blt_inds = np.where(uvd.baseline_array == bl)[0]
             uvd_copy = uvd.select(polarizations=pol, blt_inds=blt_inds, inplace=False)
