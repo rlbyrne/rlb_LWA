@@ -1,5 +1,6 @@
 import numpy as np
 import aoflagger
+import pyuvdata
 
 
 def tutorial():
@@ -22,7 +23,6 @@ def tutorial():
             data.set_image_buffer(imgindex, values)
 
         flags = strategy.run(data)
-        print(np.shape(flags))
         flagvalues = flags.get_buffer()
         ratio = float(sum(sum(flagvalues))) / (nch*ntimes)
         ratiosum += ratio
@@ -34,5 +34,36 @@ def tutorial():
             (ratiosumsq/count - ratiosum*ratiosum / (count*count) )
             ) * 100.0) )
 
+
+def flag_ms_file():
+
+    ms_file = "/home/rbyrne/20220812_000158_84MHz.ms"
+    uvd = pyuvdata.UVData()
+    uvd.read_ms(ms_file, data_column="DATA")
+    uvd.instrument = "OVRO-LWA"
+    uvd.telescope_name = "OVRO-LWA"
+    uvd.set_telescope_params()
+    uvd.check()
+
+    flagger = aoflagger.AOFlagger()
+    path = flagger.find_strategy_file(aoflagger.TelescopeId.Generic)
+    strategy = flagger.load_strategy_file(path)
+    flag_data = flagger.make_image_set(uvd.Ntimes, uvd.Nfreqs, uvd.Nbls*uvd.Npols)
+
+    bl_pol_ind = 0
+    for pol in uvd.polarization_array():
+        for bl in np.unique(uvd.baseline_array):
+            blt_inds = np.where(uvd.baseline_array == bl)[0]
+            uvd_copy = uvd.select(polarizations=pol, blt_inds=blt_inds, inplace=False)
+            uvd_copy.reorder_freqs(channel_order="freq")
+            flag_data.set_image_buffer(bl_pol_ind, uvd_copy.data_array)
+            bl_pol_ind += 1
+
+    flags = strategy.run(flag_data)
+    flagvalues = flags.get_buffer()
+    print(np.shape(flagvalues))
+    print(np.sum(flagvalues))
+
+
 if __name__=="__main__":
-    tutorial()
+    flag_ms_file()
