@@ -9,6 +9,7 @@ import yaml
 import logging
 import numpy as np
 from lwa_f import snap2_fengine
+from lwa_antpos import mapping
 
 N_ANTS_PER_BOARD = 32
 
@@ -338,12 +339,33 @@ def main(args):
 
     if args.allzero:
         logger.info("Checking input stats and autocorrs with all channels zeroed")
-        zero_chans = np.arange(f.input.nstreams)
+        zero_chans = np.arange(f.input.n_streams)
         if test_zeros(f, zero_chans) == SUCCESS:
             logger.info("PASS")
         else:
             logger.error("FAIL")
             exit()
+
+    if args.zeropols:
+
+        # define pol_a_chans and pol_b_chans
+
+        logger.info("Checking input stats and autocorrs with A pols zeroed")
+        zero_chans = np.arange(f.input.n_streams)
+        if test_zeros(f, pol_a_chans) == SUCCESS:
+            logger.info("PASS")
+        else:
+            logger.error("FAIL")
+            exit()
+
+        logger.info("Checking input stats and autocorrs with B pols zeroed")
+        zero_chans = np.arange(f.input.n_streams)
+        if test_zeros(f, pol_b_chans) == SUCCESS:
+            logger.info("PASS")
+        else:
+            logger.error("FAIL")
+            exit()
+
 
     if args.delay:
         logger.info("Checking phase between delayed noise sources")
@@ -373,6 +395,8 @@ if __name__ == "__main__":
                         help='Skip "Zeroing out" tests')
     parser.add_argument('--allzero', action='store_true',
                         help='Skip "Zeroing everything" tests')
+    parser.add_argument('--zeropols', action='store_true',
+                        help='Skip "Zeroing polarizations" tests')
     parser.add_argument('--delay', action='store_true',
                         help='Skip "Delay phase" tests')
     parser.add_argument('host', type=str,
