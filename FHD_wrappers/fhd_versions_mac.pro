@@ -3,11 +3,11 @@ pro fhd_versions_mac
   !except=0
   heap_gc
 
-  version = 'rlb_cal_sims_Apr2022'
+  version = 'rlb_test_flagging'
   output_directory = '/Users/ruby/Astro/FHD_outputs'
-  
+
   case version of
-    
+
     'rlb_test_run_Jul2021': begin
       obs_id = '1061316296'
       vis_file_list = '/Users/ruby/Astro/1061316296.uvfits'
@@ -38,7 +38,7 @@ pro fhd_versions_mac
       beam_nfreq_avg = 384 ; use one beam for all frequencies
       save_uvf = 1
     end
-    
+
     'rlb_test_HERA_beam': begin
       obs_id = '1061316296'
       vis_file_list = '/Users/ruby/Astro/1061316296.uvfits'
@@ -47,7 +47,7 @@ pro fhd_versions_mac
       unflag_all = 1
       calibrate_visibilities = 0
     end
-    
+
     'rlb_test_LWA_beam': begin
       obs_id = '1061316296_small'
       vis_file_list = '/Users/ruby/Astro/'+obs_id+'.uvfits'
@@ -57,7 +57,7 @@ pro fhd_versions_mac
       unflag_all = 1
       calibrate_visibilities = 0
     end
-    
+
     'rlb_test_LWA_data_one_beam': begin
       recalculate_all = 1
       obs_id = '2019-11-21T23:00:08'
@@ -71,7 +71,7 @@ pro fhd_versions_mac
       psf_resolution = 8
       snapshot_healpix_export = 0
     end
-    
+
     'rlb_test_LWA_data': begin
       recalculate_all = 1
       obs_id = '2019-11-21T23:00:08'
@@ -85,7 +85,7 @@ pro fhd_versions_mac
       psf_resolution = 8
       snapshot_healpix_export = 0
     end
-    
+
     'rlb_test_LWA_data_rephased': begin
       recalculate_all = 1
       obs_id = '2019-11-21T23_00_08_rephased'
@@ -99,7 +99,7 @@ pro fhd_versions_mac
       ;psf_resolution = 8
       snapshot_healpix_export = 0
     end
-    
+
     'rlb_test_skyh5_sky_model': begin
       recalculate_all = 1
       export_images = 1
@@ -121,7 +121,7 @@ pro fhd_versions_mac
       stokes_low = -2e6
       mark_zenith = 1
     end
-    
+
     'rlb_LWA_imaging_Apr2022': begin
       obs_id = '20220307_175923_61MHz_uncalib'
       vis_file_list = '/Users/ruby/Astro/LWA_data/LWA_data_20220307/'+obs_id+'.uvfits'
@@ -141,7 +141,7 @@ pro fhd_versions_mac
       flag_calibration = 0 ;Try turning off calibration flagging
       snapshot_healpix_export = 0 ;Healpix export does not work with just one time step
     end
-    
+
     'rlb_cal_sims_Apr2022': begin
       obs_id = 'vanilla_cal'
       vis_file_list = '/Users/ruby/Astro/dwcal_tests_Apr2022/caltest_Apr12/'+obs_id+'.uvfits'
@@ -158,13 +158,39 @@ pro fhd_versions_mac
       export_images = 0 ;Cannot export images with just one polarization
       save_uvf = 1
     end
-    
+
     'rlb_test_max_baseline': begin
       recalculate_all = 1
       obs_id = '1061316296_small'
       vis_file_list = '/Users/ruby/Astro/1061316296_small.uvfits'
     end
-    
+
+    'rlb_test_flagging': begin
+      obs_id = '1061316296_small'
+      vis_file_list = '/Users/ruby/Astro/1061316296_small.uvfits'
+      recalculate_all = 1
+      return_cal_visibilities = 0
+      catalog_file_path = 0
+      diffuse_calibrate = 0
+      diffuse_model = 0
+      model_visibilities = 1
+      model_catalog_file_path = filepath('GLEAM_v2_plus_rlb2019.sav',root=rootdir('FHD'),subdir='catalog_data')
+      model_subtract_sidelobe_catalog = filepath('GLEAM_v2_plus_rlb2019.sav',root=rootdir('FHD'),subdir='catalog_data')
+      allow_sidelobe_model_sources = 1
+      calibrate_visibilities = 0
+      rephase_weights = 0
+      restrict_hpx_inds = 0
+      hpx_radius = 15
+      dft_threshold = 0
+      ring_radius = 0
+      n_pol = 1
+      unflag_all = 1  ; unflag for simulation
+      flag_visibilities = 0  ; try turning this off
+      beam_nfreq_avg = 384 ; use one beam for all frequencies
+      max_baseline = 3000  ; try increasing max baseline to prevent baseline cutting
+      dimension = 8192/2
+    end
+
   endcase
 
   undefine, uvfits_subversion, uvfits_version
