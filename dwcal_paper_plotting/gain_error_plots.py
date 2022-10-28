@@ -192,7 +192,9 @@ def plot_gain_error(
             linewidth=1,
             label=legend_labels[cal_ind],
         )
-    ylim = [0, 3.5e4]
+    #ylim = [0, 3.5e4]
+    ylim = [1e1, 3.5e4]
+    plt.yscale("log")
     for line in add_lines:
         plt.plot([line, line], ylim, color="black", linestyle="dashed", linewidth=0.5)
     plt.ylim(ylim)
@@ -265,10 +267,15 @@ def plot_gain_errors():
     )
 
     # Randomized gains
-    cal_true_path = "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun17/random_initial_gains.calfits"
-    cal_diagonal_path = "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun17/random_gains_diagonal.calfits"
+    #cal_true_path = "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun17/random_initial_gains.calfits"
+    #cal_diagonal_path = "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun17/random_gains_diagonal.calfits"
+    #cal_dwcal_path = (
+    #    "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun17/random_gains_dwcal.calfits"
+    #)
+    cal_true_path = "/Users/ruby/Astro/dwcal_tests_Jul2022/caltest_Jul25/random_initial_gains.calfits"
+    cal_diagonal_path = "/Users/ruby/Astro/dwcal_tests_Jul2022/caltest_Jul25/random_gains_diagonal.calfits"
     cal_dwcal_path = (
-        "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun17/random_gains_dwcal.calfits"
+        "/Users/ruby/Astro/dwcal_tests_Jul2022/caltest_Jul25/random_gains_dwcal.calfits"
     )
 
     cal_true = pyuvdata.UVCal()
@@ -518,4 +525,4 @@ def plot_gain_error_hists():
 
 if __name__ == "__main__":
 
-    plot_gain_error_hists()
+    plot_gain_errors()
