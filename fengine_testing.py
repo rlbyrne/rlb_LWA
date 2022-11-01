@@ -348,7 +348,15 @@ def main(args):
 
     if args.zeropols:
 
-        # define pol_a_chans and pol_b_chans
+        pol_a_chans = np.array([])
+        pol_b_chans = np.array([])
+        snap2num = int(args.host.lstrip("snap"))
+        for chan in range(N_ANTS_PER_BOARD*2):
+            antname = mapping.snap2_to_antpol(snap2num, chan)
+            if antname.endswith("A"):
+                pol_a_chans = np.append(pol_a_chans, chan)
+            else:
+                pol_b_chans = np.append(pol_b_chans, chan)
 
         logger.info("Checking input stats and autocorrs with A pols zeroed")
         zero_chans = np.arange(f.input.n_streams)
