@@ -354,12 +354,11 @@ def main(args):
         for chan in range(N_ANTS_PER_BOARD*2):
             antname = mapping.snap2_to_antpol(snap2num, chan)
             if antname.endswith("A"):
-                pol_a_chans = np.append(pol_a_chans, chan)
+                pol_a_chans = np.append(pol_a_chans, int(chan))
             else:
-                pol_b_chans = np.append(pol_b_chans, chan)
+                pol_b_chans = np.append(pol_b_chans, int(chan))
 
         logger.info("Checking input stats and autocorrs with A pols zeroed")
-        zero_chans = np.arange(f.input.n_streams)
         if test_zeros(f, pol_a_chans) == SUCCESS:
             logger.info("PASS")
         else:
@@ -367,7 +366,6 @@ def main(args):
             exit()
 
         logger.info("Checking input stats and autocorrs with B pols zeroed")
-        zero_chans = np.arange(f.input.n_streams)
         if test_zeros(f, pol_b_chans) == SUCCESS:
             logger.info("PASS")
         else:
