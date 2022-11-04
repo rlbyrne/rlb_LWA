@@ -1812,7 +1812,7 @@ def random_gains_test_Nov4():
     )
 
     # Restore previously created randomized gains
-    randomized_gains_cal_savefile = f"{save_dir}/random_initial_gains.calfits"
+    randomized_gains_cal_savefile = f"/safepool/rbyrne/calibration_outputs/caltest_Jul25/random_initial_gains.calfits"
     random_gains_cal = pyuvdata.UVCal()
     random_gains_cal.read_calfits(randomized_gains_cal_savefile)
 
