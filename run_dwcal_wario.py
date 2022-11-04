@@ -1784,6 +1784,69 @@ def random_gains_test_Jul25():
         log_file_new.close()
 
 
+def random_gains_test_Nov4():
+
+    save_dir = "/safepool/rbyrne/calibration_outputs/caltest_Nov4"
+
+    model_path = (
+        "/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Jun2022"
+    )
+    model_use_model = True
+    data_path = "/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_Jun2022"
+    data_use_model = True
+    obsid = "1061316296"
+    pol = "XX"
+    use_autos = False
+
+    data, model = dwcal.get_test_data(
+        model_path=model_path,
+        model_use_model=model_use_model,
+        data_path=data_path,
+        data_use_model=data_use_model,
+        obsid=obsid,
+        pol=pol,
+        use_autos=use_autos,
+        debug_limit_freqs=None,
+        use_antenna_list=None,
+        use_flagged_baselines=False,
+    )
+
+    # Restore previously created randomized gains
+    randomized_gains_cal_savefile = f"{save_dir}/random_initial_gains.calfits"
+    random_gains_cal = read_calfits(randomized_gains_cal_savefile)
+
+    # Apply gains to data
+    pyuvdata.utils.uvcalibrate(data, random_gains_cal, inplace=True, time_check=False)
+
+    # Do wedge excluded cal
+    cal_savefile = f"{save_dir}/random_gains_dwcal.calfits"
+    log_file_path = f"{save_dir}/random_gains_dwcal_log.txt"
+
+    if log_file_path is not None:
+        stdout_orig = sys.stdout
+        stderr_orig = sys.stderr
+        sys.stdout = sys.stderr = log_file_new = open(log_file_path, "w")
+
+    cal = dwcal.calibration_optimization(
+        data,
+        model,
+        weight_mat_option="exponential window fit oversampled",
+        log_file_path=log_file_path,
+        use_blackman_harris=True,
+    )
+
+    if cal_savefile is not None:
+        print(f"Saving calibration solutions to {cal_savefile}")
+        sys.stdout.flush()
+        cal.write_calfits(cal_savefile, clobber=True)
+
+    if log_file_path is not None:
+        sys.stdout = stdout_orig
+        sys.stderr = stderr_orig
+        log_file_new.close()
+
+
+
 if __name__ == "__main__":
 
-    random_gains_test_Jul25()
+    random_gains_test_Nov4()
