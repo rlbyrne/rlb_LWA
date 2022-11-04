@@ -1833,7 +1833,6 @@ def random_gains_test_Nov4():
         model,
         weight_mat_option="exponential window fit oversampled",
         log_file_path=log_file_path,
-        use_blackman_harris=True,
     )
 
     if cal_savefile is not None:
