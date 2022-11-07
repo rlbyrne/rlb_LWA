@@ -525,4 +525,33 @@ def plot_gain_error_hists():
 
 if __name__ == "__main__":
 
-    plot_gain_errors()
+    #plot_gain_errors()
+
+    cal_true = pyuvdata.UVCal()
+    cal_true.read_calfits("/Users/ruby/Astro/dwcal_tests_Jul2022/caltest_Jul25/random_initial_gains.calfits")
+    cal_diagonal = pyuvdata.UVCal()
+    cal_diagonal.read_calfits("/Users/ruby/Astro/dwcal_tests_Jul2022/caltest_Jul25/random_gains_diagonal.calfits")
+    cal_dwcal = pyuvdata.UVCal()
+    cal_dwcal.read_calfits("/Users/ruby/Astro/caltest_Nov4/random_gains_dwcal.calfits")
+
+    plot_gain_error_frequency(
+        [cal_diagonal, cal_dwcal],
+        cal_true_list=[cal_true, cal_true],
+        save_path=None,
+        title="",
+        avg_line_color=["tab:blue", "tab:red"],
+        plot_indiv_ants=False,
+        legend_labels=["Sky-Based Cal", "DWCal"],
+        plot_distribution=True,
+    )
+
+    plot_gain_error(
+        [cal_diagonal, cal_dwcal],
+        cal_true_list=[cal_true, cal_true],
+        save_path=None,
+        title="",
+        avg_line_color=["tab:blue", "tab:red"],
+        plot_indiv_ants=False,
+        legend_labels=["Sky-Based Cal", "DWCal"],
+        plot_distribution=True,
+    )
