@@ -1882,7 +1882,9 @@ def multiple_times_tests_Nov7():
         random_gains_cal.read_calfits(randomized_gains_cal_savefile)
 
         # Apply gains to data
-        pyuvdata.utils.uvcalibrate(data, random_gains_cal, inplace=True, time_check=False)
+        pyuvdata.utils.uvcalibrate(
+            data, random_gains_cal, inplace=True, time_check=False
+        )
 
         # Do wedge excluded cal
         cal_savefile = f"{save_dir}/random_gains_dwcal_ntimes{use_Ntimes}.calfits"
@@ -1935,7 +1937,6 @@ def multiple_times_tests_Nov7():
             sys.stdout = stdout_orig
             sys.stderr = stderr_orig
             log_file_new.close()
-
 
 
 if __name__ == "__main__":
