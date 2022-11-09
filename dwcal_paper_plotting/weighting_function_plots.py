@@ -324,13 +324,16 @@ def plot_example_baseline_weights():
     min_freq_mhz = 167075000.0 / 1e6
     max_freq_mhz = 197715000.0 / 1e6
     c = 3e8
+    oversample_factor = 128
 
     matplotlib.rcParams["axes.prop_cycle"] = matplotlib.cycler(
         color=sns.color_palette("CMRmap_r", len(bl_lengths))
     )
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(16, 6))
 
-    delay_array = np.fft.fftshift(np.fft.fftfreq(Nfreqs, d=channel_width))
+    delay_array = np.fft.fftshift(
+        np.fft.fftfreq(Nfreqs * int(oversample_factor), d=channel_width)
+    )
 
     # Simple wedge exclusion
     # wedge_val = 0.141634
@@ -397,7 +400,9 @@ def plot_example_baseline_weights():
         np.fft.ifftshift(delay_weighting * channel_width**2.0, axes=1), axis=1
     )
     freq_weighting_shifted = np.fft.fftshift(freq_weighting, axes=1)
-    freqs = np.array([channel_width * freq_ind for freq_ind in range(Nfreqs)])
+    freqs = np.array(
+        [channel_width * freq_ind for freq_ind in range(Nfreqs * oversample_factor)]
+    )
     freqs = np.fft.fftshift(freqs)
     freqs[np.where(freqs > freqs[-1])[0]] -= np.max(freqs) + channel_width
     linewidth = 1.2
@@ -410,7 +415,8 @@ def plot_example_baseline_weights():
             label=f"{bl_lengths[bl_ind]} m",
         )
         linewidth -= delta_linewidth
-    ax[1].set_xlim(np.min(freqs) / 1e6, np.max(freqs) / 1e6)
+    # ax[1].set_xlim(np.min(freqs) / 1e6, np.max(freqs) / 1e6)
+    ax[1].set_xlim(0, max_freq_mhz - min_freq_mhz)
     ax[1].set_ylim(-0.5, 2)
     ax[1].set_xlabel("$\Delta$ Frequency (MHz)")
     ax[1].set_yscale("symlog", linthresh=1e-3)
@@ -423,7 +429,7 @@ def plot_example_baseline_weights():
     )
     plt.close()
 
-    plot_mat_bl_inds = [2, 1, 0]
+    plot_mat_bl_inds = [2, 1]
     fig, ax = plt.subplots(nrows=1, ncols=len(plot_mat_bl_inds), figsize=(16, 6))
     subplot_ind = 0
     for bl in plot_mat_bl_inds:
@@ -464,4 +470,4 @@ def plot_example_baseline_weights():
 
 if __name__ == "__main__":
 
-    plot_model_visibility_error()
+    plot_example_baseline_weights()
