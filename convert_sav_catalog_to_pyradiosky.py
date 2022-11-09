@@ -6,6 +6,8 @@ from astropy.units import Quantity
 from astropy.coordinates import Latitude, Longitude
 import sys
 
+# Deprecated function, use pyuvdata's read_fhd_catalog instead
+
 
 def convert_sav_catalog_to_pyradiosky(sav_path):
 
