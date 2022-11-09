@@ -13,8 +13,8 @@ def create_random_array(
     uv_extent_wavelengths=100.0,
     frequency_mhz=182.0,
     min_antenna_spacing_m=14.0,
-    c = 3e8,
-    plot = False,
+    c=3e8,
+    plot=False,
 ):
 
     # Calculate random baseline locations in the uv plane
@@ -166,7 +166,7 @@ def create_random_array(
     return uv
 
 
-def get_airy_beam(diameter_m=14.):
+def get_airy_beam(diameter_m=14.0):
 
     airy_beam = pyuvsim.AnalyticBeam("airy", diameter=diameter_m)
     airy_beam.peak_normalize()
@@ -176,40 +176,46 @@ def get_airy_beam(diameter_m=14.):
 
 if __name__ == "__main__":
 
-    uv = pyuvdata.UVData()
-    uv.read_uvfits("/Users/ruby/Astro/1061316296_small.uvfits")
-    uv = create_random_array(uv, 20.)
-    uv.write_uvfits("/Users/ruby/Astro/sim_tests_Nov2022/antenna_layout.uvfits")
+    for uv_density in [10, 5, 1, 0.5]:
 
-    airy_beam = get_airy_beam()
+        uv = pyuvdata.UVData()
+        uv.read_uvfits("/safepool/rbyrne/mwa_data/1061316296.uvfits")
+        uv = create_random_array(uv, 20.0)
+        uv.write_uvfits(
+            f"/safepool/rbyrne/uv_density_simulations/antenna_layout_uv_density_{uv_density}.uvfits"
+        )
 
-    # Run catalog sim
-    catalog_path = "/Users/ruby/Astro/FHD/catalog_data/GLEAM_v2_plus_rlb2019.sav"
-    catalog = pyradiosky.SkyModel()
-    print("Reading catalog")
-    catalog.read_fhd_catalog(catalog_path)
-    print("Starting catalog simulation")
-    catalog_sim_uv = pyuvsim.uvsim.run_uvdata_uvsim(
-        input_uv=uv,
-        beam_list=BeamList(beam_list=[airy_beam]),
-        beam_dict=None,  # Same beam for all ants
-        catalog=pyuvsim.simsetup.SkyModelData(catalog),
-        quiet=False,
-    )
+        airy_beam = get_airy_beam()
 
-    # Run healpix sim
-    healpix_map_path = "/Users/ruby/Astro/stab3276_supplemental_file/diffuse_map.skyh5"
-    diffuse_map = pyradiosky.SkyModel()
-    print("Reading map")
-    diffuse_map.read_skyh5(healpix_map_path)
-    print("Starting diffuse simulation")
-    diffuse_sim_uv = pyuvsim.uvsim.run_uvdata_uvsim(
-        input_uv=uv,
-        beam_list=BeamList(beam_list=[airy_beam]),
-        beam_dict=None,  # Same beam for all ants
-        catalog=pyuvsim.simsetup.SkyModelData(diffuse_map),
-        quiet=False,
-    )
+        # Run catalog sim
+        catalog_path = "/home/rbyrne/FHD/catalog_data/GLEAM_v2_plus_rlb2019.sav"
+        catalog = pyradiosky.SkyModel()
+        print("Reading catalog")
+        catalog.read_fhd_catalog(catalog_path)
+        print("Starting catalog simulation")
+        catalog_sim_uv = pyuvsim.uvsim.run_uvdata_uvsim(
+            input_uv=uv,
+            beam_list=BeamList(beam_list=[airy_beam]),
+            beam_dict=None,  # Same beam for all ants
+            catalog=pyuvsim.simsetup.SkyModelData(catalog),
+            quiet=False,
+        )
 
-    catalog_sim_uv.sum_vis(diffuse_sim_uv, inplace=True)
-    catalog_sim_uv.write_uvfits("/Users/ruby/Astro/sim_tests_Nov2022/sim_output.uvfits")
+        # Run healpix sim
+        healpix_map_path = "/home/rbyrne/diffuse_map.skyh5"
+        diffuse_map = pyradiosky.SkyModel()
+        print("Reading map")
+        diffuse_map.read_skyh5(healpix_map_path)
+        print("Starting diffuse simulation")
+        diffuse_sim_uv = pyuvsim.uvsim.run_uvdata_uvsim(
+            input_uv=uv,
+            beam_list=BeamList(beam_list=[airy_beam]),
+            beam_dict=None,  # Same beam for all ants
+            catalog=pyuvsim.simsetup.SkyModelData(diffuse_map),
+            quiet=False,
+        )
+
+        catalog_sim_uv.sum_vis(diffuse_sim_uv, inplace=True)
+        catalog_sim_uv.write_uvfits(
+            f"/safepool/rbyrne/uv_density_simulations/sim_output_uv_density_{uv_density}.uvfits"
+        )
