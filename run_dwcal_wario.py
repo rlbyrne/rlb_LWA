@@ -1860,7 +1860,7 @@ def multiple_times_tests_Nov7():
     pol = "XX"
     use_autos = False
 
-    for use_Ntimes in [56]:
+    for use_Ntimes in [1]:
 
         data, model = dwcal.get_test_data(
             model_path=model_path,
@@ -1886,31 +1886,32 @@ def multiple_times_tests_Nov7():
             data, random_gains_cal, inplace=True, time_check=False
         )
 
-        # Do wedge excluded cal
-        cal_savefile = f"{save_dir}/random_gains_dwcal_ntimes{use_Ntimes}.calfits"
-        log_file_path = f"{save_dir}/random_gains_dwcal_ntimes{use_Ntimes}_log.txt"
+        if False:
+            # Do wedge excluded cal
+            cal_savefile = f"{save_dir}/random_gains_dwcal_ntimes{use_Ntimes}.calfits"
+            log_file_path = f"{save_dir}/random_gains_dwcal_ntimes{use_Ntimes}_log.txt"
 
-        if log_file_path is not None:
-            stdout_orig = sys.stdout
-            stderr_orig = sys.stderr
-            sys.stdout = sys.stderr = log_file_new = open(log_file_path, "w")
+            if log_file_path is not None:
+                stdout_orig = sys.stdout
+                stderr_orig = sys.stderr
+                sys.stdout = sys.stderr = log_file_new = open(log_file_path, "w")
 
-        cal = dwcal.calibration_optimization(
-            data,
-            model,
-            weight_mat_option="exponential window fit",
-            log_file_path=log_file_path,
-        )
+            cal = dwcal.calibration_optimization(
+                data,
+                model,
+                weight_mat_option="exponential window fit",
+                log_file_path=log_file_path,
+            )
 
-        if cal_savefile is not None:
-            print(f"Saving calibration solutions to {cal_savefile}")
-            sys.stdout.flush()
-            cal.write_calfits(cal_savefile, clobber=True)
+            if cal_savefile is not None:
+                print(f"Saving calibration solutions to {cal_savefile}")
+                sys.stdout.flush()
+                cal.write_calfits(cal_savefile, clobber=True)
 
-        if log_file_path is not None:
-            sys.stdout = stdout_orig
-            sys.stderr = stderr_orig
-            log_file_new.close()
+            if log_file_path is not None:
+                sys.stdout = stdout_orig
+                sys.stderr = stderr_orig
+                log_file_new.close()
 
         # Do vanilla cal
         cal_savefile = f"{save_dir}/random_gains_diagonal_ntimes{use_Ntimes}.calfits"
