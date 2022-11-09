@@ -1860,7 +1860,7 @@ def multiple_times_tests_Nov7():
     pol = "XX"
     use_autos = False
 
-    for use_Ntimes in [2, 4]:
+    for use_Ntimes in [56]:
 
         data, model = dwcal.get_test_data(
             model_path=model_path,
