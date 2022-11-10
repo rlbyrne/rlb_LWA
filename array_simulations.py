@@ -2,7 +2,7 @@ import pyuvsim
 import pyuvdata
 import pyradiosky
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import sys
 from pyuvsim.telescope import BeamList
 from astropy.units import Quantity
@@ -52,15 +52,15 @@ def create_random_array(
                     baseline_locs_u.append(u_loc)
                     baseline_locs_v.append(v_loc)
 
-    if plot:
-        fig = plt.figure()
-        plt.plot(baseline_locs_u, baseline_locs_v, ".")
-        ax = plt.gca()
-        ax.set_aspect("equal")
-        ax.set_xticks(ticks=u_coords, minor=True)
-        ax.set_yticks(ticks=v_coords, minor=True)
-        ax.grid(which="minor")
-        plt.show()
+    #if plot:
+    #    fig = plt.figure()
+    #    plt.plot(baseline_locs_u, baseline_locs_v, ".")
+    #    ax = plt.gca()
+    #    ax.set_aspect("equal")
+    #    ax.set_xticks(ticks=u_coords, minor=True)
+    #    ax.set_yticks(ticks=v_coords, minor=True)
+    #    ax.grid(which="minor")
+    #    plt.show()
 
     # Calculate the corresponding antenna locations
     Nbls = len(baseline_locs_u)
@@ -111,12 +111,12 @@ def create_random_array(
     # Convert to m
     antenna_locs *= c / frequency_mhz / 1e6
 
-    if plot:
-        fig = plt.figure()
-        plt.plot(antenna_locs[:, 0], antenna_locs[:, 1], ".")
-        ax = plt.gca()
-        ax.set_aspect("equal")
-        plt.show()
+    #if plot:
+    #    fig = plt.figure()
+    #    plt.plot(antenna_locs[:, 0], antenna_locs[:, 1], ".")
+    #    ax = plt.gca()
+    #    ax.set_aspect("equal")
+    #    plt.show()
 
     # Generate uvdata object
     antenna_locs_ENU = np.zeros((Nants, 3))
