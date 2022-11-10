@@ -20,73 +20,24 @@ filelist = [
 ]
 data.read_fhd(filelist, use_model=data_use_model)
 
-uvfits_output_dir = "/safepool/rbyrne/calibration_outputs/caltest_Jun17"
-
-# Unity gains
-cal_filenames = [
-    "/safepool/rbyrne/calibration_outputs/caltest_Jun16/unity_gains_diagonal.calfits",
-    "/safepool/rbyrne/calibration_outputs/caltest_Jun17/unity_gains_dwcal.calfits",
-]
-uvfits_output_filenames = [
-    f"{uvfits_output_dir}/unity_gains_diagonal.uvfits",
-    f"{uvfits_output_dir}/unity_gains_dwcal.uvfits",
-]
-data.write_uvfits(f"{uvfits_output_dir}/unity_gains_uncalib.uvfits")
-for ind in range(len(cal_filenames)):
-    cal = pyuvdata.UVCal()
-    cal.read_calfits(cal_filenames[ind])
-    # Transfer calibration to the YY pol
-    #cal.jones_array = np.append(cal.jones_array, [-6])
-    #cal.gain_array = np.repeat(cal.gain_array, 2, axis=4)
-    #cal.flag_array = np.repeat(cal.flag_array, 2, axis=4)
-    #cal.quality_array = np.repeat(cal.quality_array, 2, axis=4)
-    #cal.Njones = 2
-    # Apply calibration
-    data_calibrated = pyuvdata.utils.uvcalibrate(
-        data, cal, inplace=False, time_check=False
-    )
-    data_calibrated.write_uvfits(uvfits_output_filenames[ind])
+uvfits_output_dir = "/safepool/rbyrne/calibration_outputs/caltest_Nov4"
 
 # Random gains
 cal_filenames = [
-    "/safepool/rbyrne/calibration_outputs/caltest_Jun17/random_gains_diagonal.calfits",
-    "/safepool/rbyrne/calibration_outputs/caltest_Jun17/random_gains_dwcal.calfits",
+    "/safepool/rbyrne/calibration_outputs/caltest_Nov4/random_gains_diagonal_ntimes1.calfits",
+    "/safepool/rbyrne/calibration_outputs/caltest_Nov4/random_gains_dwcal.calfits",
 ]
 uvfits_output_filenames = [
     f"{uvfits_output_dir}/random_gains_diagonal.uvfits",
     f"{uvfits_output_dir}/random_gains_dwcal.uvfits",
 ]
-true_gains_calfits = "/safepool/rbyrne/calibration_outputs/caltest_Jun17/random_initial_gains.calfits"
+true_gains_calfits = "/safepool/rbyrne/calibration_outputs/caltest_Jul25/random_initial_gains.calfits"
 true_gains_cal = pyuvdata.UVCal()
 true_gains_cal.read_calfits(true_gains_calfits)
 data_orig = pyuvdata.utils.uvcalibrate(
     data, true_gains_cal, inplace=False, time_check=False
 )
 data_orig.write_uvfits(f"{uvfits_output_dir}/random_gains_uncalib.uvfits")
-for ind in range(len(cal_filenames)):
-    cal = pyuvdata.UVCal()
-    cal.read_calfits(cal_filenames[ind])
-    data_calibrated = pyuvdata.utils.uvcalibrate(
-        data_orig, cal, inplace=False, time_check=False
-    )
-    data_calibrated.write_uvfits(uvfits_output_filenames[ind])
-
-# Ripple gains
-cal_filenames = [
-    "/safepool/rbyrne/calibration_outputs/caltest_Jun17/ripple_gains_diagonal.calfits",
-    "/safepool/rbyrne/calibration_outputs/caltest_Jun17/ripple_gains_dwcal.calfits",
-]
-uvfits_output_filenames = [
-    f"{uvfits_output_dir}/ripple_gains_diagonal.uvfits",
-    f"{uvfits_output_dir}/ripple_gains_dwcal.uvfits",
-]
-true_gains_calfits = "/safepool/rbyrne/calibration_outputs/caltest_Jun17/ripple_initial_gains.calfits"
-true_gains_cal = pyuvdata.UVCal()
-true_gains_cal.read_calfits(true_gains_calfits)
-data_orig = pyuvdata.utils.uvcalibrate(
-    data, true_gains_cal, inplace=False, time_check=False
-)
-data_orig.write_uvfits(f"{uvfits_output_dir}/ripple_gains_uncalib.uvfits")
 for ind in range(len(cal_filenames)):
     cal = pyuvdata.UVCal()
     cal.read_calfits(cal_filenames[ind])
