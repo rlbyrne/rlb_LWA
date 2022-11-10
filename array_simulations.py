@@ -197,7 +197,7 @@ if __name__ == "__main__":
         diffuse_map.spectral_type = "spectral_index"
         diffuse_map.spectral_index = np.full(diffuse_map.Ncomponents, -0.8)
         diffuse_map.reference_frequency = Quantity(
-            np.full(diffuse_map.Ncomponents, diffuse_map.freq_array[0]), "Hz"
+            np.full(diffuse_map.Ncomponents, diffuse_map.freq_array[0].value), "Hz"
         )
         print("Starting diffuse simulation")
         diffuse_sim_uv = pyuvsim.uvsim.run_uvdata_uvsim(
