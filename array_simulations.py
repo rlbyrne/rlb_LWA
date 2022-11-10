@@ -187,20 +187,6 @@ if __name__ == "__main__":
 
         airy_beam = get_airy_beam()
 
-        # Run catalog sim
-        catalog_path = "/home/rbyrne/FHD/catalog_data/GLEAM_v2_plus_rlb2019.sav"
-        catalog = pyradiosky.SkyModel()
-        print("Reading catalog")
-        catalog.read_fhd_catalog(catalog_path)
-        print("Starting catalog simulation")
-        catalog_sim_uv = pyuvsim.uvsim.run_uvdata_uvsim(
-            input_uv=uv,
-            beam_list=BeamList(beam_list=[airy_beam]),
-            beam_dict=None,  # Same beam for all ants
-            catalog=pyuvsim.simsetup.SkyModelData(catalog),
-            quiet=False,
-        )
-
         # Run healpix sim
         healpix_map_path = "/home/rbyrne/diffuse_map.skyh5"
         diffuse_map = pyradiosky.SkyModel()
@@ -212,6 +198,20 @@ if __name__ == "__main__":
             beam_list=BeamList(beam_list=[airy_beam]),
             beam_dict=None,  # Same beam for all ants
             catalog=pyuvsim.simsetup.SkyModelData(diffuse_map),
+            quiet=False,
+        )
+
+        # Run catalog sim
+        catalog_path = "/home/rbyrne/FHD/catalog_data/GLEAM_v2_plus_rlb2019.sav"
+        catalog = pyradiosky.SkyModel()
+        print("Reading catalog")
+        catalog.read_fhd_catalog(catalog_path)
+        print("Starting catalog simulation")
+        catalog_sim_uv = pyuvsim.uvsim.run_uvdata_uvsim(
+            input_uv=uv,
+            beam_list=BeamList(beam_list=[airy_beam]),
+            beam_dict=None,  # Same beam for all ants
+            catalog=pyuvsim.simsetup.SkyModelData(catalog),
             quiet=False,
         )
 
