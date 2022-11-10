@@ -128,7 +128,7 @@ def create_random_array(
     uv.Nbls = Nbls
     uv.Nblts = Nbls * uv.Ntimes
     uv.use_future_array_shapes = False
-    uv.future_array_shapes = False
+    uv.use_current_array_shapes()
     uv.antenna_numbers = np.arange(Nants)
     uv.antenna_names = np.array([str(ind) for ind in np.arange(Nants)])
     uv.ant_1_array = np.tile(ant_1_array, uv.Ntimes)
