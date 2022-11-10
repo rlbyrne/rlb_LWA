@@ -127,7 +127,7 @@ def create_random_array(
     uv.Nants_telescope = Nants
     uv.Nbls = Nbls
     uv.Nblts = Nbls * uv.Ntimes
-    uv.future_array_shapes = False
+    uv.use_future_array_shapes = False
     uv.antenna_numbers = np.arange(Nants)
     uv.antenna_names = np.array([str(ind) for ind in np.arange(Nants)])
     uv.ant_1_array = np.tile(ant_1_array, uv.Ntimes)
