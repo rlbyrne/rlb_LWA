@@ -199,6 +199,7 @@ if __name__ == "__main__":
         diffuse_map.reference_frequency = Quantity(
             np.full(diffuse_map.Ncomponents, diffuse_map.freq_array[0].value), "Hz"
         )
+        diffuse_map.freq_array = None
         print("Starting diffuse simulation")
         diffuse_sim_uv = pyuvsim.uvsim.run_uvdata_uvsim(
             input_uv=uv,
