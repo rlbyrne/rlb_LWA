@@ -7,7 +7,7 @@ obsids_list = [
     "random_gains_dwcal",
     "random_gains_diagonal",
 ]
-versions_list = ["rlb_cal_sims_2pol_Nov2022"]
+versions_list = ["rlb_cal_sims_Nov2022"]
 uvfits_path = "/safepool/rbyrne/calibration_outputs/caltest_Jun17"
 outdir = "/safepool/rbyrne/fhd_outputs"
 run_fhd = True

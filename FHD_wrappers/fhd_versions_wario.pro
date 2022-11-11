@@ -260,7 +260,7 @@ pro fhd_versions_wario
       save_uvf = 1
     end
 
-    'rlb_cal_sims_2pol_Nov2022': begin
+    'rlb_cal_sims_Nov2022': begin
       recalculate_all = 1
       calibrate_visibilities = 0
       return_cal_visibilities = 0
@@ -270,7 +270,8 @@ pro fhd_versions_wario
       allow_sidelobe_model_sources = 1
       unflag_all = 1
       beam_nfreq_avg = 384
-      n_pol = 2
+      n_pol = 1
+      export_images = 0 ;Cannot export images with just one polarization
       save_uvf = 1
     end
 
