@@ -191,7 +191,7 @@ if __name__ == "__main__":
         airy_beam = get_airy_beam()
 
         # Run healpix sim
-        healpix_map_path = "/home/rbyrne/diffuse_map.skyh5"
+        healpix_map_path = "/safepool/rbyrne/diffuse_map.skyh5"
         diffuse_map = pyradiosky.SkyModel()
         print("Reading map")
         diffuse_map.read_skyh5(healpix_map_path)
