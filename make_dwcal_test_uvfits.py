@@ -37,11 +37,17 @@ true_gains_cal.read_calfits(true_gains_calfits)
 data_orig = pyuvdata.utils.uvcalibrate(
     data, true_gains_cal, inplace=False, time_check=False
 )
-data_orig.write_uvfits(f"{uvfits_output_dir}/random_gains_uncalib.uvfits")
+if data_orig.check():
+    data_orig.write_uvfits(f"{uvfits_output_dir}/random_gains_uncalib.uvfits")
+else:
+    print("ERROR: data formatting issue.")
 for ind in range(len(cal_filenames)):
     cal = pyuvdata.UVCal()
     cal.read_calfits(cal_filenames[ind])
     data_calibrated = pyuvdata.utils.uvcalibrate(
         data_orig, cal, inplace=False, time_check=False
     )
-    data_calibrated.write_uvfits(uvfits_output_filenames[ind])
+    if data_calibrated.check():
+        data_calibrated.write_uvfits(uvfits_output_filenames[ind])
+    else:
+        print("ERROR: data formatting issue.")
