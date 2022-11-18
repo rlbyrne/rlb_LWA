@@ -8,6 +8,9 @@ from pyuvsim.telescope import BeamList
 from astropy.units import Quantity
 
 
+uv = pyuvdata.UVData()
+uv.read_uvfits("/safepool/rbyrne/mwa_data/1061316296.uvfits")
+
 healpix_map_path = "/safepool/rbyrne/diffuse_map.skyh5"
 diffuse_map = pyradiosky.SkyModel()
 print("Reading map")
