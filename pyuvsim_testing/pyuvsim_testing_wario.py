@@ -31,7 +31,7 @@ if not diffuse_map.check():
 
 diffuse_map_pyuvsim_formatted = pyuvsim.simsetup.SkyModelData(diffuse_map)
 # The formatted map has the reference frequency stripped; correct this
-diffuse_map_pyuvsim_formatted.reference_frequency = diffuse_map.reference_frequency
+diffuse_map_pyuvsim_formatted.reference_frequency = diffuse_map.reference_frequency.value
 
 print("Starting diffuse simulation")
 diffuse_sim_uv = pyuvsim.uvsim.run_uvdata_uvsim(
