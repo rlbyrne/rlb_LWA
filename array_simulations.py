@@ -181,7 +181,7 @@ if __name__ == "__main__":
 
         uv = pyuvdata.UVData()
         uv.read_uvfits("/safepool/rbyrne/mwa_data/1061316296.uvfits")
-        uv = create_random_array(uv, 20.0)
+        uv = create_random_array(uv, uv_density)
         uv.write_uvfits(
             f"/safepool/rbyrne/uv_density_simulations/antenna_layout_uv_density_{uv_density}.uvfits"
         )
