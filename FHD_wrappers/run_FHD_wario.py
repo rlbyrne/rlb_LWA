@@ -3,15 +3,13 @@ import shlex
 import os
 
 obsids_list = [
-    "random_gains_uncalib",
-    "random_gains_dwcal",
-    "random_gains_diagonal",
+    "20221128_052946_70MHz"
 ]
-versions_list = ["rlb_cal_sims_Nov2022"]
-uvfits_path = "/safepool/rbyrne/calibration_outputs/caltest_Nov4"
+versions_list = ["rlb_image_LWA_data_Nov2022"]
+uvfits_path = "/safepool/rbyrne/lwa_data/Nov2022"
 outdir = "/safepool/rbyrne/fhd_outputs"
-run_fhd = False
-run_eppsilon = True
+run_fhd = True
+run_eppsilon = False
 
 # Define wrappers
 fhd_versions_script = "fhd_versions_wario"
