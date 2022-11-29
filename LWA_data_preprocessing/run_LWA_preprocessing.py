@@ -648,9 +648,9 @@ def flagging_Sept6():
 def ssins_flagging_Nov28():
 
     data_dir = "/data06/slow"
-data_output_dir = "/home/rbyrne/lwa_testing_Nov2022"
-ssins_flags_dir = "/home/rbyrne/lwa_testing_Nov2022"
-ssins_plot_dir = "/home/rbyrne/lwa_testing_Nov2022"
+    data_output_dir = "/home/rbyrne/lwa_testing_Nov2022"
+    ssins_flags_dir = "/home/rbyrne/lwa_testing_Nov2022"
+    ssins_plot_dir = "/home/rbyrne/lwa_testing_Nov2022"
 
     # Find raw ms files
     ms_filenames = [
