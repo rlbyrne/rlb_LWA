@@ -674,10 +674,10 @@ def ssins_flagging_Nov28():
     LWA_preprocessing.flag_outriggers(uvd, inplace=True)
 
     ssins_thresh = 10.
-    LWA_preprocessing.ssins_flagging(
+    uvd_ssins_flagged = LWA_preprocessing.ssins_flagging(
         uvd,
         sig_thresh=ssins_thresh,  # Flagging threshold in std. dev.
-        inplace=True,
+        inplace=False,
         save_flags_filepath=f"{ssins_flags_dir}/flags_thresh_{ssins_thresh}.hdf5",
         plot_no_flags=True,
         plot_orig_flags=True,
@@ -690,7 +690,7 @@ def ssins_flagging_Nov28():
     ) / (np.size(uvd.flag_array) - np.sum(uvd.flag_array))
     print(f"Flagging fraction {flagging_frac} at SSINS threshold {ssins_thresh}")
 
-    uvd.write_uvfits(
+    uvd_ssins_flagged.write_uvfits(
         f"{data_output_dir}/20221128_052946_70MHz.uvfits",
         force_phase=True,
         spoof_nonessential=True,
