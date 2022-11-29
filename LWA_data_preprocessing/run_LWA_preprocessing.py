@@ -645,5 +645,44 @@ def flagging_Sept6():
         plot_no_flags = False
 
 
+def ssins_flagging_Nov28():
+
+    data_dir = "/data06/slow"
+    data_output_dir = "/home/rbyrne/lwa_testing_Nov2022"
+    ssins_flags_dir = "/home/rbyrne/lwa_testing_Nov2022"
+    ssins_plot_dir = "/home/rbyrne/lwa_testing_Nov2022"
+
+    # Find raw ms files
+    ms_filenames = ["20221128_053136_70MHz.ms"]
+    uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(
+        [f"{data_dir}/{filename}" for filename in ms_filenames]
+    )
+    uvd.phase_to_time(np.mean(uvd.time_array))
+    LWA_preprocessing.flag_outriggers(uvd, inplace=True)
+
+    ssins_thresh = 10.
+    LWA_preprocessing.ssins_flagging(
+        uvd,
+        sig_thresh=ssins_thresh,  # Flagging threshold in std. dev.
+        inplace=True,
+        save_flags_filepath=f"{ssins_flags_dir}/flags_thresh_{ssins_thresh}.hdf5",
+        plot_no_flags=True,
+        plot_orig_flags=True,
+        plot_ssins_flags=True,
+        plot_save_dir=ssins_plot_dir,
+        plot_file_prefix=f"20221128_053136_70MHz",
+    )
+    flagging_frac = (
+        np.sum(uvd_ssins_flagged.flag_array) - np.sum(uvd.flag_array)
+    ) / (np.size(uvd.flag_array) - np.sum(uvd.flag_array))
+    print(f"Flagging fraction {flagging_frac} at SSINS threshold {ssins_thresh}")
+
+    uvd.write_uvfits(
+        f"{data_output_dir}/20221128_053136_70MHz.uvfits",
+        force_phase=True,
+        spoof_nonessential=True,
+    )
+
+
 if __name__ == "__main__":
-    flagging_Sept6()
+    ssins_flagging_Nov28()
