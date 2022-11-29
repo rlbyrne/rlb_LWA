@@ -647,13 +647,26 @@ def flagging_Sept6():
 
 def ssins_flagging_Nov28():
 
-    data_dir = "/data06/slow"
-    data_output_dir = "/home/rbyrne/lwa_testing_Nov2022"
-    ssins_flags_dir = "/home/rbyrne/lwa_testing_Nov2022"
-    ssins_plot_dir = "/home/rbyrne/lwa_testing_Nov2022"
+    data_dir = "/safepool/rbyrne/lwa_data/Nov2022"
+    data_output_dir = "/safepool/rbyrne/lwa_data/Nov2022"
+    ssins_flags_dir = "/safepool/rbyrne/lwa_data/Nov2022/ssins_flags"
+    ssins_plot_dir = "/safepool/rbyrne/lwa_data/Nov2022/ssins_plots"
 
     # Find raw ms files
-    ms_filenames = ["20221128_053136_70MHz.ms"]
+    ms_filenames = [
+    "20221128_052946_70MHz.ms",
+    "20221128_052956_70MHz.ms",
+    "20221128_053006_70MHz.ms",
+    "20221128_053016_70MHz.ms",
+    "20221128_053026_70MHz.ms",
+    "20221128_053036_70MHz.ms",
+    "20221128_053046_70MHz.ms",
+    "20221128_053056_70MHz.ms",
+    "20221128_053106_70MHz.ms",
+    "20221128_053116_70MHz.ms",
+    "20221128_053126_70MHz.ms",
+    "20221128_053136_70MHz.ms"
+    ]
     uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(
         [f"{data_dir}/{filename}" for filename in ms_filenames]
     )
