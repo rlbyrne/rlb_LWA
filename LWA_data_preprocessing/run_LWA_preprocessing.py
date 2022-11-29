@@ -647,10 +647,10 @@ def flagging_Sept6():
 
 def ssins_flagging_Nov28():
 
-    data_dir = "/safepool/rbyrne/lwa_data/Nov2022"
-    data_output_dir = "/safepool/rbyrne/lwa_data/Nov2022"
-    ssins_flags_dir = "/safepool/rbyrne/lwa_data/Nov2022/ssins_flags"
-    ssins_plot_dir = "/safepool/rbyrne/lwa_data/Nov2022/ssins_plots"
+    data_dir = "/data06/slow"
+data_output_dir = "/home/rbyrne/lwa_testing_Nov2022"
+ssins_flags_dir = "/home/rbyrne/lwa_testing_Nov2022"
+ssins_plot_dir = "/home/rbyrne/lwa_testing_Nov2022"
 
     # Find raw ms files
     ms_filenames = [
@@ -683,7 +683,7 @@ def ssins_flagging_Nov28():
         plot_orig_flags=True,
         plot_ssins_flags=True,
         plot_save_dir=ssins_plot_dir,
-        plot_file_prefix=f"20221128_053136_70MHz",
+        plot_file_prefix=f"20221128_052946_70MHz",
     )
     flagging_frac = (
         np.sum(uvd_ssins_flagged.flag_array) - np.sum(uvd.flag_array)
@@ -691,7 +691,7 @@ def ssins_flagging_Nov28():
     print(f"Flagging fraction {flagging_frac} at SSINS threshold {ssins_thresh}")
 
     uvd.write_uvfits(
-        f"{data_output_dir}/20221128_053136_70MHz.uvfits",
+        f"{data_output_dir}/20221128_052946_70MHz.uvfits",
         force_phase=True,
         spoof_nonessential=True,
     )
