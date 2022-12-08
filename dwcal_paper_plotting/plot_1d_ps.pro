@@ -1,19 +1,15 @@
 pro plot_1d_ps
 
   yrange = [1.e1, 1.e8]
-  data_path = "/Users/ruby/Astro/fhd_outputs/fhd_rlb_cal_sims_Jun2022/data/1d_binning"
-  data_filenames = ["unity_gains_gridded_uvf_even_odd_joint_noimgclip__diagonal_minus_uncalib__res_xx_noimgclip_dft_averemove_swbh_dencorr_no_horizon_wedge_1dkpower.idlsave",$
-    "unity_gains_gridded_uvf_even_odd_joint_noimgclip__dwcal_minus_uncalib__res_xx_noimgclip_dft_averemove_swbh_dencorr_no_horizon_wedge_1dkpower.idlsave",$
-    "gains_gridded_uvf_even_odd_joint_noimgclip__randomdiagonal_minus_unityuncalib__res_xx_noimgclip_dft_averemove_swbh_dencorr_no_horizon_wedge_1dkpower.idlsave",$
-    "gains_gridded_uvf_even_odd_joint_noimgclip__randomdwcal_minus_unityuncalib__res_xx_noimgclip_dft_averemove_swbh_dencorr_no_horizon_wedge_1dkpower.idlsave",$
-    "gains_gridded_uvf_even_odd_joint_noimgclip__ripplediagonal_minus_unityuncalib__res_xx_noimgclip_dft_averemove_swbh_dencorr_no_horizon_wedge_1dkpower.idlsave",$
-    "gains_gridded_uvf_even_odd_joint_noimgclip__rippledwcal_minus_unityuncalib__res_xx_noimgclip_dft_averemove_swbh_dencorr_no_horizon_wedge_1dkpower.idlsave"]
+  data_path = "/Users/ruby/Astro/caltest_Nov4/ps_differences"
+  data_filenames = ["gains_gridded_uvf_even_odd_joint_noimgclip__randomdiagonal_minus_unityuncalib__res_xx_noimgclip_dft_averemove_swbh_dencorr_no_horizon_wedge_1dkpower.idlsave", $
+    "gains_gridded_uvf_even_odd_joint_noimgclip__randomdwcal_minus_unityuncalib__res_xx_noimgclip_dft_averemove_swbh_dencorr_no_horizon_wedge_1dkpower.idlsave"]
   datafiles = []
   for file_ind=0,n_elements(data_filenames)-1 do datafiles=[datafiles, data_path+"/"+data_filenames[file_ind]]
     
-  colors = ['cyan', 'salmon', 'dodger blue', 'red', 'Blu8', 'red7']
-  linestyles = [0,0,2,2,1,1]
-  linewidths = [4,4,4,4,5,5]
+  colors = ['blue', 'red']
+  linestyles = [0,0]
+  linewidths = [4,4]
   
   eor_file = '/Users/ruby/Astro/FHD/catalog_data/simulation/eor_power_1d.idlsave'
   eor_k_centers = getvar_savefile(eor_file, 'k_centers')

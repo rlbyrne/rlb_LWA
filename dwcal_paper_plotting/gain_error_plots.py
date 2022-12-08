@@ -193,7 +193,7 @@ def plot_gain_error(
             label=legend_labels[cal_ind],
         )
     #ylim = [0, 3.5e4]
-    ylim = [1e1, 3.5e4]
+    ylim = [4e1, 3.5e4]
     plt.yscale("log")
     for line in add_lines:
         plt.plot([line, line], ylim, color="black", linestyle="dashed", linewidth=0.5)
@@ -211,162 +211,7 @@ def plot_gain_error(
         plt.close()
 
 
-def plot_gain_errors():
 
-    # Unity gains
-    cal_diagonal_path = "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun16/unity_gains_diagonal.calfits"
-    # cal_dwcal_path = '/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun6/unity_gains_dwcal.calfits'
-    cal_dwcal_path = (
-        "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun17/unity_gains_dwcal.calfits"
-    )
-
-    cal_diagonal = pyuvdata.UVCal()
-    cal_diagonal.read_calfits(cal_diagonal_path)
-    cal_dwcal = pyuvdata.UVCal()
-    cal_dwcal.read_calfits(cal_dwcal_path)
-
-    plot_gain_error(
-        [cal_diagonal],
-        save_path="/Users/ruby/Astro/dwcal_paper_plots/unity_gains_diagonal.png",
-        avg_line_color=["tab:blue"],
-        title="Sky-Based Calibration",
-    )
-    plot_gain_error_frequency(
-        [cal_diagonal],
-        save_path="/Users/ruby/Astro/dwcal_paper_plots/unity_gains_diagonal_freq.png",
-        avg_line_color=["tab:blue"],
-        title="Sky-Based Calibration",
-    )
-    plot_gain_error(
-        [cal_dwcal],
-        save_path="/Users/ruby/Astro/dwcal_paper_plots/unity_gains_dwcal.png",
-        avg_line_color=["tab:red"],
-        title="Delay Weighted Calibration",
-    )
-    plot_gain_error_frequency(
-        [cal_dwcal],
-        save_path="/Users/ruby/Astro/dwcal_paper_plots/unity_gains_dwcal_freq.png",
-        avg_line_color=["tab:red"],
-        title="Delay Weighted Calibration",
-    )
-    plot_gain_error(
-        [cal_diagonal, cal_dwcal],
-        save_path="/Users/ruby/Astro/dwcal_paper_plots/unity_gains_comparison.png",
-        avg_line_color=["tab:blue", "tab:red"],
-        plot_indiv_ants=False,
-        legend_labels=["Sky-Based Cal", "DWCal"],
-        plot_distribution=True,
-    )
-    plot_gain_error_frequency(
-        [cal_diagonal, cal_dwcal],
-        save_path="/Users/ruby/Astro/dwcal_paper_plots/unity_gains_comparison_freq.png",
-        avg_line_color=["tab:blue", "tab:red"],
-        plot_indiv_ants=False,
-        legend_labels=["Sky-Based Cal", "DWCal"],
-        plot_distribution=True,
-    )
-
-    # Randomized gains
-    #cal_true_path = "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun17/random_initial_gains.calfits"
-    #cal_diagonal_path = "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun17/random_gains_diagonal.calfits"
-    #cal_dwcal_path = (
-    #    "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun17/random_gains_dwcal.calfits"
-    #)
-    cal_true_path = "/Users/ruby/Astro/dwcal_tests_Jul2022/caltest_Jul25/random_initial_gains.calfits"
-    cal_diagonal_path = "/Users/ruby/Astro/dwcal_tests_Jul2022/caltest_Jul25/random_gains_diagonal.calfits"
-    cal_dwcal_path = (
-        "/Users/ruby/Astro/dwcal_tests_Jul2022/caltest_Jul25/random_gains_dwcal.calfits"
-    )
-
-    cal_true = pyuvdata.UVCal()
-    cal_true.read_calfits(cal_true_path)
-    cal_diagonal = pyuvdata.UVCal()
-    cal_diagonal.read_calfits(cal_diagonal_path)
-    cal_dwcal = pyuvdata.UVCal()
-    cal_dwcal.read_calfits(cal_dwcal_path)
-
-    plot_gain_error(
-        [cal_diagonal],
-        cal_true_list=[cal_true],
-        save_path="/Users/ruby/Astro/dwcal_paper_plots/random_gains_diagonal.png",
-        avg_line_color=["tab:blue"],
-        title="Sky-Based Calibration",
-    )
-    plot_gain_error(
-        [cal_dwcal],
-        cal_true_list=[cal_true],
-        save_path="/Users/ruby/Astro/dwcal_paper_plots/random_gains_dwcal.png",
-        avg_line_color=["tab:red"],
-        title="Delay Weighted Calibration",
-    )
-    plot_gain_error(
-        [cal_diagonal, cal_dwcal],
-        cal_true_list=[cal_true, cal_true],
-        save_path="/Users/ruby/Astro/dwcal_paper_plots/random_gains_comparison.png",
-        avg_line_color=["tab:blue", "tab:red"],
-        plot_indiv_ants=False,
-        legend_labels=["Sky-Based Cal", "DWCal"],
-        plot_distribution=True,
-    )
-    plot_gain_error_frequency(
-        [cal_diagonal, cal_dwcal],
-        cal_true_list=[cal_true, cal_true],
-        save_path="/Users/ruby/Astro/dwcal_paper_plots/random_gains_comparison_freq.png",
-        avg_line_color=["tab:blue", "tab:red"],
-        plot_indiv_ants=False,
-        legend_labels=["Sky-Based Cal", "DWCal"],
-        plot_distribution=True,
-    )
-
-    # Ripple gains
-    cal_true_path = "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun17/ripple_initial_gains.calfits"
-    cal_diagonal_path = "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun17/ripple_gains_diagonal.calfits"
-    cal_dwcal_path = (
-        "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun17/ripple_gains_dwcal.calfits"
-    )
-
-    cal_true = pyuvdata.UVCal()
-    cal_true.read_calfits(cal_true_path)
-    cal_diagonal = pyuvdata.UVCal()
-    cal_diagonal.read_calfits(cal_diagonal_path)
-    cal_dwcal = pyuvdata.UVCal()
-    cal_dwcal.read_calfits(cal_dwcal_path)
-
-    plot_gain_error(
-        [cal_diagonal],
-        cal_true_list=[cal_true],
-        save_path="/Users/ruby/Astro/dwcal_paper_plots/ripple_gains_diagonal.png",
-        avg_line_color=["tab:blue"],
-        title="Sky-Based Calibration",
-        add_lines=[1.0],
-    )
-    plot_gain_error(
-        [cal_dwcal],
-        cal_true_list=[cal_true],
-        save_path="/Users/ruby/Astro/dwcal_paper_plots/ripple_gains_dwcal.png",
-        avg_line_color=["tab:red"],
-        title="Delay Weighted Calibration",
-        add_lines=[1.0],
-    )
-    plot_gain_error(
-        [cal_diagonal, cal_dwcal],
-        cal_true_list=[cal_true, cal_true],
-        save_path="/Users/ruby/Astro/dwcal_paper_plots/ripple_gains_comparison.png",
-        avg_line_color=["tab:blue", "tab:red"],
-        plot_indiv_ants=False,
-        legend_labels=["Sky-Based Cal", "DWCal"],
-        add_lines=[1.0],
-        plot_distribution=True,
-    )
-    plot_gain_error_frequency(
-        [cal_diagonal, cal_dwcal],
-        cal_true_list=[cal_true, cal_true],
-        save_path="/Users/ruby/Astro/dwcal_paper_plots/ripple_gains_comparison_freq.png",
-        avg_line_color=["tab:blue", "tab:red"],
-        plot_indiv_ants=False,
-        legend_labels=["Sky-Based Cal", "DWCal"],
-        plot_distribution=True,
-    )
 
 
 def produce_kde(data, xvals, yvals):
@@ -466,14 +311,44 @@ def histogram_plot_2d(
     plt.close()
 
 
+def plot_gain_errors():
+
+    cal_true = pyuvdata.UVCal()
+    cal_true.read_calfits("/Users/ruby/Astro/caltest_Nov4/random_initial_gains.calfits")
+    cal_diagonal = pyuvdata.UVCal()
+    cal_diagonal.read_calfits("/Users/ruby/Astro/caltest_Nov4/random_gains_diagonal_ntimes1.calfits")
+    cal_dwcal = pyuvdata.UVCal()
+    cal_dwcal.read_calfits("/Users/ruby/Astro/caltest_Nov4/random_gains_dwcal.calfits")
+
+    plot_gain_error_frequency(
+        [cal_diagonal, cal_dwcal],
+        cal_true_list=[cal_true, cal_true],
+        title="",
+        avg_line_color=["tab:blue", "tab:red"],
+        plot_indiv_ants=False,
+        legend_labels=["Sky-Based Cal", "DWCal"],
+        plot_distribution=True,
+        save_path="/Users/ruby/Astro/dwcal_paper_plots/random_gains_comparison_freq.png"
+    )
+
+    plot_gain_error(
+        [cal_diagonal, cal_dwcal],
+        cal_true_list=[cal_true, cal_true],
+        title="",
+        avg_line_color=["tab:blue", "tab:red"],
+        plot_indiv_ants=False,
+        legend_labels=["Sky-Based Cal", "DWCal"],
+        plot_distribution=True,
+        save_path="/Users/ruby/Astro/dwcal_paper_plots/random_gains_comparison.png"
+    )
+
+
 def plot_gain_error_hists():
 
     # Randomized gains
-    cal_true_path = "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun17/random_initial_gains.calfits"
-    cal_diagonal_path = "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun17/random_gains_diagonal.calfits"
-    cal_dwcal_path = (
-        "/Users/ruby/Astro/dwcal_tests_Jun2022/caltest_Jun17/random_gains_dwcal.calfits"
-    )
+    cal_true_path = "/Users/ruby/Astro/caltest_Nov4/random_initial_gains.calfits"
+    cal_diagonal_path = "/Users/ruby/Astro/caltest_Nov4/random_gains_diagonal_ntimes1.calfits"
+    cal_dwcal_path = "/Users/ruby/Astro/caltest_Nov4/random_gains_dwcal.calfits"
 
     cal_true = pyuvdata.UVCal()
     cal_true.read_calfits(cal_true_path)
@@ -523,35 +398,28 @@ def plot_gain_error_hists():
     )
 
 
+def get_gain_error_rms():
+
+    path = "/Users/ruby/Astro/caltest_Nov4"
+    cal_true_filename = "random_initial_gains.calfits"
+    cal_true = pyuvdata.UVCal()
+    cal_true.read_calfits(f"{path}/{cal_true_filename}")
+    cal_filenames = [
+        "random_gains_diagonal_ntimes1.calfits",
+        "random_gains_diagonal_ntimes2.calfits",
+        "random_gains_diagonal_ntimes4.calfits",
+        "random_gains_dwcal.calfits",
+        "random_gains_dwcal_ntimes2.calfits",
+        "random_gains_dwcal_ntimes4.calfits"
+    ]
+    for filename in cal_filenames:
+        cal = pyuvdata.UVCal()
+        cal.read_calfits(f"{path}/{filename}")
+        cal_error = diff_gains(cal, cal_true)
+        rms = np.sqrt(np.mean(np.abs(cal_error.gain_array.flatten())**2.))
+        print(f"File {filename} RMS: {rms}")
+
+
 if __name__ == "__main__":
 
-    #plot_gain_errors()
-
-    cal_true = pyuvdata.UVCal()
-    cal_true.read_calfits("/Users/ruby/Astro/dwcal_tests_Jul2022/caltest_Jul25/random_initial_gains.calfits")
-    cal_diagonal = pyuvdata.UVCal()
-    cal_diagonal.read_calfits("/Users/ruby/Astro/dwcal_tests_Jul2022/caltest_Jul25/random_gains_diagonal.calfits")
-    cal_dwcal = pyuvdata.UVCal()
-    cal_dwcal.read_calfits("/Users/ruby/Astro/caltest_Nov4/random_gains_dwcal.calfits")
-
-    plot_gain_error_frequency(
-        [cal_diagonal, cal_dwcal],
-        cal_true_list=[cal_true, cal_true],
-        save_path=None,
-        title="",
-        avg_line_color=["tab:blue", "tab:red"],
-        plot_indiv_ants=False,
-        legend_labels=["Sky-Based Cal", "DWCal"],
-        plot_distribution=True,
-    )
-
-    plot_gain_error(
-        [cal_diagonal, cal_dwcal],
-        cal_true_list=[cal_true, cal_true],
-        save_path=None,
-        title="",
-        avg_line_color=["tab:blue", "tab:red"],
-        plot_indiv_ants=False,
-        legend_labels=["Sky-Based Cal", "DWCal"],
-        plot_distribution=True,
-    )
+    get_gain_error_rms()
