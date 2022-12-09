@@ -2,7 +2,8 @@ import pyuvsim
 import pyuvdata
 import pyradiosky
 import numpy as np
-#import matplotlib.pyplot as plt
+
+# import matplotlib.pyplot as plt
 import sys
 from pyuvsim.telescope import BeamList
 from astropy.units import Quantity
@@ -52,7 +53,7 @@ def create_random_array(
                     baseline_locs_u.append(u_loc)
                     baseline_locs_v.append(v_loc)
 
-    #if plot:
+    # if plot:
     #    fig = plt.figure()
     #    plt.plot(baseline_locs_u, baseline_locs_v, ".")
     #    ax = plt.gca()
@@ -111,7 +112,7 @@ def create_random_array(
     # Convert to m
     antenna_locs *= c / frequency_mhz / 1e6
 
-    #if plot:
+    # if plot:
     #    fig = plt.figure()
     #    plt.plot(antenna_locs[:, 0], antenna_locs[:, 1], ".")
     #    ax = plt.gca()
