@@ -91,10 +91,10 @@ def create_random_array(
             ):
                 # Random walk
                 ang = np.random.uniform(0, 2 * np.pi)
-                ant_1_u += min_antenna_spacing_wavelengths * bl_ind / 2 * np.cos(ang)
-                ant_2_u += min_antenna_spacing_wavelengths * bl_ind / 2 * np.cos(ang)
-                ant_1_v += min_antenna_spacing_wavelengths * bl_ind / 2 * np.sin(ang)
-                ant_2_v += min_antenna_spacing_wavelengths * bl_ind / 2 * np.sin(ang)
+                ant_1_u += min_antenna_spacing_wavelengths * 2 * np.cos(ang)
+                ant_2_u += min_antenna_spacing_wavelengths * 2 * np.cos(ang)
+                ant_1_v += min_antenna_spacing_wavelengths * 2 * np.sin(ang)
+                ant_2_v += min_antenna_spacing_wavelengths * 2 * np.sin(ang)
                 # Recalculate spacings
                 antenna_1_spacings = np.sqrt(
                     (antenna_locs[:, 0] - ant_1_u) ** 2.0
@@ -120,6 +120,7 @@ def create_random_array(
     #    plt.show()
 
     # Generate uvdata object
+    print("Generating uvdata object")
     antenna_locs_ENU = np.zeros((Nants, 3))
     antenna_locs_ENU[:, 0] = antenna_locs[:, 0]
     antenna_locs_ENU[:, 1] = antenna_locs[:, 1]
@@ -175,6 +176,7 @@ if __name__ == "__main__":
         uv = pyuvdata.UVData()
         uv.read_uvfits("/safepool/rbyrne/mwa_data/1061316296.uvfits")
         uv = create_random_array(uv, uv_density)
+        print("Writing uvfits")
         uv.write_uvfits(
             f"/safepool/rbyrne/uv_density_simulations/antenna_layout_uv_density_{uv_density}.uvfits"
         )
