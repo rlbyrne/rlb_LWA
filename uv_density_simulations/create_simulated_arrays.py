@@ -85,6 +85,7 @@ def create_random_array(
                 (antenna_locs[:, 0] - ant_2_u) ** 2.0
                 + (antenna_locs[:, 1] - ant_2_v) ** 2.0
             )
+            count = 0
             while (
                 np.nanmin(antenna_1_spacings) < min_antenna_spacing_wavelengths
                 or np.nanmin(antenna_2_spacings) < min_antenna_spacing_wavelengths
@@ -104,6 +105,8 @@ def create_random_array(
                     (antenna_locs[:, 0] - ant_2_u) ** 2.0
                     + (antenna_locs[:, 1] - ant_2_v) ** 2.0
                 )
+                print(count)
+                count += 1
 
         antenna_locs[ant_1_array[bl_ind], 0] = ant_1_u
         antenna_locs[ant_2_array[bl_ind], 0] = ant_2_u
@@ -170,7 +173,7 @@ def create_random_array(
 
 if __name__ == "__main__":
 
-    for uv_density in [10, 5, 1, 0.5]:
+    for uv_density in [1, 0.5]:
 
         uv = pyuvdata.UVData()
         uv.read_uvfits("/safepool/rbyrne/mwa_data/1061316296.uvfits")

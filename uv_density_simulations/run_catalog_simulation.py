@@ -5,6 +5,7 @@ import pyuvdata
 import pyuvsim
 from pyuvsim import mpi
 import sys
+import time
 
 
 args = str(sys.argv)
@@ -41,6 +42,7 @@ beam_list = comm.bcast(beam_list, root=0)
 catalog_formatted.share(root=0)
 
 # Run simulation
+start_time = time.time()
 diffuse_sim_uv = pyuvsim.uvsim.run_uvdata_uvsim(
     input_uv=uv,
     beam_list=beam_list,
@@ -48,3 +50,5 @@ diffuse_sim_uv = pyuvsim.uvsim.run_uvdata_uvsim(
     catalog=catalog_formatted,
     quiet=False,
 )
+if rank == 0:
+    print(f"Simulation time: {(time.time() - start_time)/60.} minutes")
