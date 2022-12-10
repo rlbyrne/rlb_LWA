@@ -70,6 +70,7 @@ def create_random_array(
     ant_2_array = np.arange(1, Nants, 2)
     antenna_locs = np.full((Nants, 2), np.nan, dtype=float)
     for bl_ind in range(Nbls):
+        print(f"{bl_ind}/{Nbls}")
         ant_1_u = -baseline_locs_u[bl_ind] / 2.0
         ant_1_v = -baseline_locs_v[bl_ind] / 2.0
         ant_2_u = baseline_locs_u[bl_ind] / 2.0
