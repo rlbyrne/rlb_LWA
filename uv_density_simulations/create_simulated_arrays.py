@@ -75,7 +75,6 @@ def create_random_array(
         ant_2_u = baseline_locs_u[bl_ind] / 2.0
         ant_2_v = baseline_locs_v[bl_ind] / 2.0
 
-        # if False:
         if bl_ind > 0:
             antenna_1_spacings = np.sqrt(
                 (antenna_locs[:, 0] - ant_1_u) ** 2.0
@@ -85,17 +84,16 @@ def create_random_array(
                 (antenna_locs[:, 0] - ant_2_u) ** 2.0
                 + (antenna_locs[:, 1] - ant_2_v) ** 2.0
             )
-            count = 0
             while (
                 np.nanmin(antenna_1_spacings) < min_antenna_spacing_wavelengths
                 or np.nanmin(antenna_2_spacings) < min_antenna_spacing_wavelengths
             ):
                 # Random walk
                 ang = np.random.uniform(0, 2 * np.pi)
-                ant_1_u += min_antenna_spacing_wavelengths * np.cos(ang)
-                ant_2_u += min_antenna_spacing_wavelengths * np.cos(ang)
-                ant_1_v += min_antenna_spacing_wavelengths * np.sin(ang)
-                ant_2_v += min_antenna_spacing_wavelengths * np.sin(ang)
+                ant_1_u += min_antenna_spacing_wavelengths * bl_ind / 2 * np.cos(ang)
+                ant_2_u += min_antenna_spacing_wavelengths * bl_ind / 2 * np.cos(ang)
+                ant_1_v += min_antenna_spacing_wavelengths * bl_ind / 2 * np.sin(ang)
+                ant_2_v += min_antenna_spacing_wavelengths * bl_ind / 2 * np.sin(ang)
                 # Recalculate spacings
                 antenna_1_spacings = np.sqrt(
                     (antenna_locs[:, 0] - ant_1_u) ** 2.0
@@ -105,8 +103,6 @@ def create_random_array(
                     (antenna_locs[:, 0] - ant_2_u) ** 2.0
                     + (antenna_locs[:, 1] - ant_2_v) ** 2.0
                 )
-                print(count)
-                count += 1
 
         antenna_locs[ant_1_array[bl_ind], 0] = ant_1_u
         antenna_locs[ant_2_array[bl_ind], 0] = ant_2_u
