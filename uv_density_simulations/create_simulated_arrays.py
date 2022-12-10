@@ -69,12 +69,14 @@ def create_random_array(
     ant_1_array = np.arange(0, Nants, 2)
     ant_2_array = np.arange(1, Nants, 2)
     antenna_locs = np.full((Nants, 2), np.nan, dtype=float)
+    baseline_center_dist = 0.0
     for bl_ind in range(Nbls):
-        print(f"{bl_ind}/{Nbls}")
-        ant_1_u = -baseline_locs_u[bl_ind] / 2.0
-        ant_1_v = -baseline_locs_v[bl_ind] / 2.0
-        ant_2_u = baseline_locs_u[bl_ind] / 2.0
-        ant_2_v = baseline_locs_v[bl_ind] / 2.0
+        print(f"Placing baseline {bl_ind+1}/{Nbls}")
+        ang = np.random.uniform(0, 2 * np.pi)
+        ant_1_u = -baseline_locs_u[bl_ind] / 2.0 + (baseline_center_dist * np.cos(ang))
+        ant_1_v = -baseline_locs_v[bl_ind] / 2.0 + (baseline_center_dist * np.sin(ang))
+        ant_2_u = baseline_locs_u[bl_ind] / 2.0 + (baseline_center_dist * np.cos(ang))
+        ant_2_v = baseline_locs_v[bl_ind] / 2.0 + (baseline_center_dist * np.sin(ang))
 
         if bl_ind > 0:
             antenna_1_spacings = np.sqrt(
@@ -91,10 +93,10 @@ def create_random_array(
             ):
                 # Random walk
                 ang = np.random.uniform(0, 2 * np.pi)
-                ant_1_u += min_antenna_spacing_wavelengths * 2 * np.cos(ang)
-                ant_2_u += min_antenna_spacing_wavelengths * 2 * np.cos(ang)
-                ant_1_v += min_antenna_spacing_wavelengths * 2 * np.sin(ang)
-                ant_2_v += min_antenna_spacing_wavelengths * 2 * np.sin(ang)
+                ant_1_u += min_antenna_spacing_wavelengths * np.cos(ang)
+                ant_2_u += min_antenna_spacing_wavelengths * np.cos(ang)
+                ant_1_v += min_antenna_spacing_wavelengths * np.sin(ang)
+                ant_2_v += min_antenna_spacing_wavelengths * np.sin(ang)
                 # Recalculate spacings
                 antenna_1_spacings = np.sqrt(
                     (antenna_locs[:, 0] - ant_1_u) ** 2.0
@@ -104,6 +106,9 @@ def create_random_array(
                     (antenna_locs[:, 0] - ant_2_u) ** 2.0
                     + (antenna_locs[:, 1] - ant_2_v) ** 2.0
                 )
+            baseline_center_dist = np.sqrt(
+                np.mean([ant_1_u, ant_2_u]) ** 2.0 + np.mean([ant_1_v, ant_2_v]) ** 2.0
+            )
 
         antenna_locs[ant_1_array[bl_ind], 0] = ant_1_u
         antenna_locs[ant_2_array[bl_ind], 0] = ant_2_u
