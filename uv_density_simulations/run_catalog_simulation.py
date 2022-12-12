@@ -48,7 +48,7 @@ diffuse_sim_uv = pyuvsim.uvsim.run_uvdata_uvsim(
     input_uv=uv,
     beam_list=beam_list,
     beam_dict=None,  # Same beam for all ants
-    catalog=catalog,
+    catalog=catalog_formatted,
     quiet=False,
 )
 if rank == 0:
