@@ -19,7 +19,7 @@ comm = mpi.get_comm()
 
 uv = pyuvdata.UVData()
 beam_list = None
-catalog = pyradiosky.SkyModel()
+catalog_formatted = pyradiosky.SkyModel()
 
 if rank == 0:
     # Read uvfits
