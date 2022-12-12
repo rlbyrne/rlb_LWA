@@ -16,11 +16,11 @@ output_uvfits_path = args[3]
 # Start MPI
 mpi.start_mpi(block_nonroot_stdout=False)
 rank = mpi.get_rank()
-comm = mpi.get_comm()
+comm = mpi.world_comm
 
 uv = pyuvdata.UVData()
 beam_list = None
-diffuse_map = pyradiosky.SkyModel()
+diffuse_map_formatted = pyradiosky.SkyModel()
 
 if rank == 0:
     # Read uvfits
@@ -32,6 +32,7 @@ if rank == 0:
     beam_list = pyuvsim.BeamList(beam_list=[airy_beam])
 
     # Read and format diffuse
+    diffuse_map = pyradiosky.SkyModel()
     diffuse_map.read_skyh5(diffuse_map_path)
     # Reformat the map with a spectral index
     diffuse_map.spectral_type = "spectral_index"
@@ -46,20 +47,22 @@ if rank == 0:
     if not diffuse_map.check():
         print("Error: Diffuse map fails check.")
     # Format diffuse map to be pyuvsim-compatible
-    diffuse_map = pyuvsim.simsetup.SkyModelData(diffuse_map)
+    diffuse_map_formatted = pyuvsim.simsetup.SkyModelData(diffuse_map)
 
 uv = comm.bcast(uv, root=0)
 beam_list = comm.bcast(beam_list, root=0)
-diffuse_map.share(root=0)
+diffuse_map_formatted.share(root=0)
 
 # Run simulation
 start_time = time.time()
-diffuse_sim_uv = pyuvsim.uvsim.run_uvdata_uvsim(
+output_uv = pyuvsim.uvsim.run_uvdata_uvsim(
     input_uv=uv,
     beam_list=beam_list,
     beam_dict=None,  # Same beam for all ants
-    catalog=diffuse_map,
+    catalog=diffuse_map_formatted,
     quiet=False,
 )
 if rank == 0:
     print(f"Simulation time: {(time.time() - start_time)/60.} minutes")
+    sys.stdout.flush()
+output_uv.write_uvfits(output_uvfits_path)

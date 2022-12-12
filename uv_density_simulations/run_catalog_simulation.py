@@ -44,7 +44,7 @@ catalog_formatted.share(root=0)
 
 # Run simulation
 start_time = time.time()
-diffuse_sim_uv = pyuvsim.uvsim.run_uvdata_uvsim(
+output_uv = pyuvsim.uvsim.run_uvdata_uvsim(
     input_uv=uv,
     beam_list=beam_list,
     beam_dict=None,  # Same beam for all ants
@@ -53,3 +53,5 @@ diffuse_sim_uv = pyuvsim.uvsim.run_uvdata_uvsim(
 )
 if rank == 0:
     print(f"Simulation time: {(time.time() - start_time)/60.} minutes")
+    sys.stdout.flush()
+output_uv.write_uvfits(output_uvfits_path)
