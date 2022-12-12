@@ -34,12 +34,12 @@ if rank == 0:
     catalog.read_fhd_catalog(catalog_path)
     if not catalog.check():
         print("Error: Catalog fails check.")
-    # Format catalog to be pyuvsim-compatible
-    catalog = pyuvsim.simsetup.SkyModelData(catalog)
 
 uv = comm.bcast(uv, root=0)
 beam_list = comm.bcast(beam_list, root=0)
-catalog = comm.bcast(catalog, root=0)
+# Format catalog to be pyuvsim-compatible
+catalog = pyuvsim.simsetup.SkyModelData(catalog)
+catalog.share(root=0)
 
 # Run simulation
 start_time = time.time()
