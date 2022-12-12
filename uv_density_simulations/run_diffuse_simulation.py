@@ -20,7 +20,7 @@ comm = mpi.get_comm()
 
 uv = pyuvdata.UVData()
 beam_list = None
-diffuse_map_formatted = pyradiosky.SkyModel()
+diffuse_map = pyradiosky.SkyModel()
 
 if rank == 0:
     # Read uvfits
@@ -46,11 +46,11 @@ if rank == 0:
     if not diffuse_map.check():
         print("Error: Diffuse map fails check.")
     # Format diffuse map to be pyuvsim-compatible
-    diffuse_map_formatted = pyuvsim.simsetup.SkyModelData(diffuse_map)
+    diffuse_map = pyuvsim.simsetup.SkyModelData(diffuse_map)
 
 uv = comm.bcast(uv, root=0)
 beam_list = comm.bcast(beam_list, root=0)
-diffuse_map_formatted.share(root=0)
+diffuse_map.share(root=0)
 
 # Run simulation
 start_time = time.time()
@@ -58,7 +58,7 @@ diffuse_sim_uv = pyuvsim.uvsim.run_uvdata_uvsim(
     input_uv=uv,
     beam_list=beam_list,
     beam_dict=None,  # Same beam for all ants
-    catalog=diffuse_map_formatted,
+    catalog=diffuse_map,
     quiet=False,
 )
 if rank == 0:

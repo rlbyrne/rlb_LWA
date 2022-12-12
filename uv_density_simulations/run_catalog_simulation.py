@@ -19,7 +19,7 @@ comm = mpi.get_comm()
 
 uv = pyuvdata.UVData()
 beam_list = None
-catalog_formatted = pyradiosky.SkyModel()
+catalog = pyradiosky.SkyModel()
 
 if rank == 0:
     # Read uvfits
@@ -35,11 +35,11 @@ if rank == 0:
     if not catalog.check():
         print("Error: Catalog fails check.")
     # Format catalog to be pyuvsim-compatible
-    catalog_formatted = pyuvsim.simsetup.SkyModelData(catalog)
+    catalog = pyuvsim.simsetup.SkyModelData(catalog)
 
 uv = comm.bcast(uv, root=0)
 beam_list = comm.bcast(beam_list, root=0)
-catalog_formatted.share(root=0)
+catalog.share(root=0)
 
 # Run simulation
 start_time = time.time()
@@ -47,7 +47,7 @@ diffuse_sim_uv = pyuvsim.uvsim.run_uvdata_uvsim(
     input_uv=uv,
     beam_list=beam_list,
     beam_dict=None,  # Same beam for all ants
-    catalog=catalog_formatted,
+    catalog=catalog,
     quiet=False,
 )
 if rank == 0:
