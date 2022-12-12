@@ -39,7 +39,7 @@ if rank == 0:
 
 uv = comm.bcast(uv, root=0)
 beam_list = comm.bcast(beam_list, root=0)
-catalog.share(root=0)
+catalog = comm.bcast(catalog, root=0)
 
 # Run simulation
 start_time = time.time()
