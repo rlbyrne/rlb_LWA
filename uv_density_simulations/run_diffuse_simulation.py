@@ -8,10 +8,10 @@ import sys
 import time
 
 
-args = str(sys.argv)
-input_uvfits_path = args[0]
-diffuse_map_path = args[1]
-output_uvfits_path = args[2]
+args = sys.argv
+input_uvfits_path = args[1]
+diffuse_map_path = args[2]
+output_uvfits_path = args[3]
 
 # Start MPI
 mpi.start_mpi(block_nonroot_stdout=False)
@@ -29,7 +29,7 @@ if rank == 0:
     # Get beam
     airy_beam = pyuvsim.AnalyticBeam("airy", diameter=14.0)
     airy_beam.peak_normalize()
-    beam_list = BeamList(beam_list=[airy_beam])
+    beam_list = pyuvsim.BeamList(beam_list=[airy_beam])
 
     # Read and format diffuse
     diffuse_map.read_skyh5(diffuse_map_path)

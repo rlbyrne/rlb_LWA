@@ -8,10 +8,10 @@ import sys
 import time
 
 
-args = str(sys.argv)
-input_uvfits_path = args[0]
-catalog_path = args[1]
-output_uvfits_path = args[2]
+args = sys.argv
+input_uvfits_path = args[1]
+catalog_path = args[2]
+output_uvfits_path = args[3]
 
 mpi.start_mpi(block_nonroot_stdout=False)
 rank = mpi.get_rank()
@@ -28,14 +28,14 @@ if rank == 0:
     # Get beam
     airy_beam = pyuvsim.AnalyticBeam("airy", diameter=14.0)
     airy_beam.peak_normalize()
-    beam_list = BeamList(beam_list=[airy_beam])
+    beam_list = pyuvsim.BeamList(beam_list=[airy_beam])
 
     # Read and format catalog
     catalog.read_fhd_catalog(catalog_path)
     if not catalog.check():
         print("Error: Catalog fails check.")
     # Format catalog to be pyuvsim-compatible
-    catalog_formatted = pyuvsim.simsetup.SkyModelData(catalog_formatted)
+    catalog_formatted = pyuvsim.simsetup.SkyModelData(catalog)
 
 uv = comm.bcast(uv, root=0)
 beam_list = comm.bcast(beam_list, root=0)
