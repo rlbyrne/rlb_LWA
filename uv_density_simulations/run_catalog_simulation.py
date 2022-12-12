@@ -19,7 +19,7 @@ comm = mpi.world_comm
 
 uv = pyuvdata.UVData()
 beam_list = None
-catalog = pyradiosky.SkyModel()
+catalog_formatted = pyuvsim.simsetup.SkyModelData()
 
 if rank == 0:
     # Read uvfits
@@ -31,15 +31,16 @@ if rank == 0:
     beam_list = pyuvsim.BeamList(beam_list=[airy_beam])
 
     # Read and format catalog
+    catalog = pyradiosky.SkyModel()
     catalog.read_fhd_catalog(catalog_path)
     if not catalog.check():
         print("Error: Catalog fails check.")
     # Format catalog to be pyuvsim-compatible
-    catalog = pyuvsim.simsetup.SkyModelData(catalog)
+    catalog_formatted = pyuvsim.simsetup.SkyModelData(catalog)
 
 uv = comm.bcast(uv, root=0)
 beam_list = comm.bcast(beam_list, root=0)
-catalog = mpi.shared_mem_bcast(catalog, root=0)
+catalog_formatted.share(root=0)
 
 # Run simulation
 start_time = time.time()
