@@ -35,6 +35,8 @@ if rank == 0:
     catalog.read_fhd_catalog(catalog_path)
     if not catalog.check():
         print("Error: Catalog fails check.")
+    # For testing, only use a few sources
+    catalog.select(min_brightness=Quantity(10, "Jy"))
     # Format catalog to be pyuvsim-compatible
     catalog_formatted = pyuvsim.simsetup.SkyModelData(catalog)
 
@@ -54,4 +56,4 @@ output_uv = pyuvsim.uvsim.run_uvdata_uvsim(
 if rank == 0:
     print(f"Simulation time: {(time.time() - start_time)/60.} minutes")
     sys.stdout.flush()
-output_uv.write_uvfits(output_uvfits_path)
+    output_uv.write_uvfits(output_uvfits_path)

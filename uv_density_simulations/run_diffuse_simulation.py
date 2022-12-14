@@ -65,4 +65,4 @@ output_uv = pyuvsim.uvsim.run_uvdata_uvsim(
 if rank == 0:
     print(f"Simulation time: {(time.time() - start_time)/60.} minutes")
     sys.stdout.flush()
-output_uv.write_uvfits(output_uvfits_path)
+    output_uv.write_uvfits(output_uvfits_path)

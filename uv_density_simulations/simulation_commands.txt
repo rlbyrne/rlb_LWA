@@ -2,6 +2,7 @@
 python create_simulated_arrays.py
 # Run catalog simulation for a uv density of 10
 # Note that using the --use-hwthread-cpus flag causes a memory error
-mpirun -n 7 python run_catalog_simulation.py /safepool/rbyrne/uv_density_simulations/antenna_layout_uv_density_10.uvfits /home/rbyrne/FHD/catalog_data/GLEAM_v2_plus_rlb2019.sav /safepool/rbyrne/uv_density_simulations/catalog_sim_output_uv_density_10.uvfits
+# 15 seemed to work, now try 20
+mpirun -n 20 python run_catalog_simulation.py /safepool/rbyrne/uv_density_simulations/antenna_layout_uv_density_10.uvfits /home/rbyrne/FHD/catalog_data/GLEAM_v2_plus_rlb2019.sav /safepool/rbyrne/uv_density_simulations/catalog_sim_output_uv_density_10.uvfits
 # Run diffuse simulation for a uv density of 10
 mpirun --use-hwthread-cpus python run_diffuse_simulation.py /safepool/rbyrne/uv_density_simulations/antenna_layout_uv_density_10.uvfits /safepool/rbyrne/diffuse_map.skyh5 /safepool/rbyrne/uv_density_simulations/diffuse_sim_output_uv_density_10.uvfits
