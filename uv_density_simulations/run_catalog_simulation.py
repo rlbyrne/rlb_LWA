@@ -36,8 +36,8 @@ if rank == 0:
     if not catalog.check():
         print("Error: Catalog fails check.")
     # For testing, only use a few sources
-    use_inds = np.where(catalog.stokes[0, :, :].value >= 10)[1]
-    catalog.select(component_inds=use_inds)
+    #use_inds = np.where(catalog.stokes[0, :, :].value >= 10)[1]
+    #catalog.select(component_inds=use_inds)
     # Format catalog to be pyuvsim-compatible
     catalog_formatted = pyuvsim.simsetup.SkyModelData(catalog)
 
