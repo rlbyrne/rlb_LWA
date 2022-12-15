@@ -121,7 +121,7 @@ def flag_bad_ants(msfile: str) -> str:
     datacolxxampdb = 10*np.log10(datacolxxamp/1.e2)
     datacolyyampdb = 10*np.log10(datacolyyamp/1.e2)
 
-    offline_flags = np.genfromtxt('/lustre/mmanders/stageiii/phaseiii/offline_phaseiii.ants', delimiter=',', dtype=int)
+    offline_flags = np.genfromtxt('offline_phaseiii.ants', delimiter=',', dtype=int)
     flagmask0 = np.zeros((Nants, Nchans_perspw*Nspws))
     flagmask0[offline_flags,:] = 1
 
