@@ -43,7 +43,7 @@ if rank == 0:
     diffuse_map._reference_frequency.required = True
     diffuse_map.freq_array = None
     # Convert map to units of K
-    diffuse_map.jansky_to_kevin()
+    diffuse_map.jansky_to_kelvin()
     if not diffuse_map.check():
         print("Error: Diffuse map fails check.")
     # Format diffuse map to be pyuvsim-compatible
