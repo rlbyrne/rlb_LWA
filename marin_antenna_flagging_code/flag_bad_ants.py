@@ -165,7 +165,7 @@ def flag_bad_ants(msfile: str) -> str:
         flagsallstr = [str(flag) for flag in flaglist]
         flagallstr2 = ",".join(flagsallstr)
 
-        antflagfile = f'{os.path.dirname(os.path.abspath(msfile))}/{flagfilename}'
+        antflagfile = f'/home/rbyrne/antenna_flags/{flagfilename}'
         with open(antflagfile,'w') as f:
             f.write(flagallstr2)
 
