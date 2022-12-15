@@ -20,7 +20,7 @@ comm = mpi.world_comm
 
 uv = pyuvdata.UVData()
 beam_list = None
-diffuse_map_formatted = pyradiosky.SkyModel()
+diffuse_map_formatted = pyuvsim.simsetup.SkyModelData()
 
 if rank == 0:
     # Read uvfits
