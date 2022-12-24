@@ -4,6 +4,7 @@ python create_simulated_arrays.py
 # Note that using the --use-hwthread-cpus flag causes a memory error, so I use -n 20 instead (would higher numbers work too?)
 mpirun -n 20 python run_catalog_simulation.py /safepool/rbyrne/uv_density_simulations/antenna_layout_uv_density_10.uvfits /home/rbyrne/FHD/catalog_data/GLEAM_v2_plus_rlb2019.sav /safepool/rbyrne/uv_density_simulations/catalog_sim_output_uv_density_10.uvfits
 mpirun -n 18 python run_catalog_simulation.py /safepool/rbyrne/uv_density_simulations/antenna_layout_uv_density_5.uvfits /home/rbyrne/FHD/catalog_data/GLEAM_v2_plus_rlb2019.sav /safepool/rbyrne/uv_density_simulations/catalog_sim_output_uv_density_5.uvfits
+mpirun -n 18 python run_catalog_simulation.py /safepool/rbyrne/uv_density_simulations/antenna_layout_uv_density_1_time1.uvfits /home/rbyrne/FHD/catalog_data/GLEAM_v2_plus_rlb2019.sav /safepool/rbyrne/uv_density_simulations/catalog_sim_output_uv_density_1_time1.uvfits
 # Run diffuse simulation for a uv density of 10
 # n -20 caused a memory error
 mpirun -n 15 python run_diffuse_simulation.py /safepool/rbyrne/uv_density_simulations/antenna_layout_uv_density_10.uvfits /safepool/rbyrne/diffuse_map.skyh5 /safepool/rbyrne/uv_density_simulations/diffuse_sim_output_uv_density_10.uvfits
