@@ -3,7 +3,7 @@ import shlex
 import os
 
 obsids_list = [
-    "alldata"
+    "20230103_alldata"
 ]
 versions_list = ["rlb_image_LWA_data_Jan2023"]
 uvfits_path = "/safepool/rbyrne/lwa_data/20230103"
