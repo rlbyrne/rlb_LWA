@@ -3,10 +3,10 @@ import shlex
 import os
 
 obsids_list = [
-    "20221128_052946_70MHz"
+    "alldata"
 ]
-versions_list = ["rlb_image_LWA_data_Nov2022"]
-uvfits_path = "/safepool/rbyrne/lwa_data/Nov2022"
+versions_list = ["rlb_image_LWA_data_Jan2023"]
+uvfits_path = "/safepool/rbyrne/lwa_data/20230103"
 outdir = "/safepool/rbyrne/fhd_outputs"
 run_fhd = True
 run_eppsilon = False
