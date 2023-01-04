@@ -615,10 +615,32 @@ def flagging_Sept6():
     LWA_preprocessing.flag_antennas(
         uvd,
         antenna_names=[
-            "LWA009", "LWA147", "LWA187", "LWA038", "LWA149", "LWA195", "LWA040",
-            "LWA150", "LWA211", "LWA041", "LWA151", "LWA212", "LWA071", "LWA176",
-            "LWA215", "LWA095", "LWA177", "LWA221", "LWA108", "LWA178", "LWA246",
-            "LWA109", "LWA179", "LWA247", "LWA126", "LWA180"
+            "LWA009",
+            "LWA147",
+            "LWA187",
+            "LWA038",
+            "LWA149",
+            "LWA195",
+            "LWA040",
+            "LWA150",
+            "LWA211",
+            "LWA041",
+            "LWA151",
+            "LWA212",
+            "LWA071",
+            "LWA176",
+            "LWA215",
+            "LWA095",
+            "LWA177",
+            "LWA221",
+            "LWA108",
+            "LWA178",
+            "LWA246",
+            "LWA109",
+            "LWA179",
+            "LWA247",
+            "LWA126",
+            "LWA180",
         ],
         inplace=True,
     )
@@ -654,18 +676,18 @@ def ssins_flagging_Nov28():
 
     # Find raw ms files
     ms_filenames = [
-    "20221128_052946_70MHz.ms",
-    "20221128_052956_70MHz.ms",
-    "20221128_053006_70MHz.ms",
-    "20221128_053016_70MHz.ms",
-    "20221128_053026_70MHz.ms",
-    "20221128_053036_70MHz.ms",
-    "20221128_053046_70MHz.ms",
-    "20221128_053056_70MHz.ms",
-    "20221128_053106_70MHz.ms",
-    "20221128_053116_70MHz.ms",
-    "20221128_053126_70MHz.ms",
-    "20221128_053136_70MHz.ms"
+        "20221128_052946_70MHz.ms",
+        "20221128_052956_70MHz.ms",
+        "20221128_053006_70MHz.ms",
+        "20221128_053016_70MHz.ms",
+        "20221128_053026_70MHz.ms",
+        "20221128_053036_70MHz.ms",
+        "20221128_053046_70MHz.ms",
+        "20221128_053056_70MHz.ms",
+        "20221128_053106_70MHz.ms",
+        "20221128_053116_70MHz.ms",
+        "20221128_053126_70MHz.ms",
+        "20221128_053136_70MHz.ms",
     ]
     uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(
         [f"{data_dir}/{filename}" for filename in ms_filenames]
@@ -673,7 +695,7 @@ def ssins_flagging_Nov28():
     uvd.phase_to_time(np.mean(uvd.time_array))
     LWA_preprocessing.flag_outriggers(uvd, inplace=True)
 
-    ssins_thresh = 10.
+    ssins_thresh = 10.0
     uvd_ssins_flagged = LWA_preprocessing.ssins_flagging(
         uvd,
         sig_thresh=ssins_thresh,  # Flagging threshold in std. dev.
@@ -685,9 +707,9 @@ def ssins_flagging_Nov28():
         plot_save_dir=ssins_plot_dir,
         plot_file_prefix=f"20221128_052946_70MHz",
     )
-    flagging_frac = (
-        np.sum(uvd_ssins_flagged.flag_array) - np.sum(uvd.flag_array)
-    ) / (np.size(uvd.flag_array) - np.sum(uvd.flag_array))
+    flagging_frac = (np.sum(uvd_ssins_flagged.flag_array) - np.sum(uvd.flag_array)) / (
+        np.size(uvd.flag_array) - np.sum(uvd.flag_array)
+    )
     print(f"Flagging fraction {flagging_frac} at SSINS threshold {ssins_thresh}")
 
     uvd_ssins_flagged.write_uvfits(

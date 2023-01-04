@@ -14,6 +14,7 @@ def convert_raw_ms_to_uvdata(
     ms_filenames,  # String or list of strings
     untar_dir=None,  # Used if files are tar-ed. None defaults to original data dir.
     data_column="DATA",  # Other options are "CORRECTED_DATA" or "MODEL_DATA"
+    combine_spws=True,  # Option to combine all spectral windows for compatibility
 ):
 
     if type(ms_filenames) == str:
@@ -47,7 +48,13 @@ def convert_raw_ms_to_uvdata(
     uvd.instrument = "OVRO-LWA"
     uvd.telescope_name = "OVRO-LWA"
     uvd.set_telescope_params()
+
+    if combine_spws and uvd.Nspws > 1:
+        uvd.Nspws = 1
+        uvd.spw_array = np.array([0])
+        uvd.flex_spw_id_array[:] = 0
     uvd.check()
+
     return uvd
 
 
