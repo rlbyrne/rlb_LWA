@@ -29,7 +29,7 @@ srcs = [{'label': 'CasA', 'flux': '16530', 'alpha': -0.72,
 	 'position': 'SUN'}]
 
 if len(sys.argv) != 2:
-	print(>> sys.stderr, 'Usage: %s <MS>' % sys.argv[0])
+	print(f"Usage: {sys.argv[0]} <MS>", file=sys.stderr)
 	sys.exit()
 
 t0 = table(sys.argv[1], ack=False).getcell('TIME', 0)
