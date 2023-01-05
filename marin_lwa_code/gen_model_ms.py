@@ -29,7 +29,7 @@ srcs = [{'label': 'CasA', 'flux': '16530', 'alpha': -0.72,
 	 'position': 'SUN'}]
 
 if len(sys.argv) != 2:
-	print >> sys.stderr, 'Usage: %s <MS>' % sys.argv[0]
+	print(>> sys.stderr, 'Usage: %s <MS>' % sys.argv[0])
 	sys.exit()
 
 t0 = table(sys.argv[1], ack=False).getcell('TIME', 0)
@@ -75,8 +75,8 @@ for s in range(len(srcs)-1,-1,-1):
 		scale = math.sin(elev) ** 1.6
 		srcs[s]['flux'] = str(flux80_47(float(srcs[s]['flux']), srcs[s]['alpha']) * scale)
 
-print "cl.done()"
+print("cl.done()")
 for s in srcs:
 	print "cl.addcomponent(flux=%s, dir='%s', index=%s, freq='47MHz', label='%s')" % (s['flux'], s['position'], s['alpha'], s['label'])
-print "cl.rename('%s.cl')" % sys.argv[1][:-3]
-print "cl.done()"
+print("cl.rename('%s.cl')" % sys.argv[1][:-3])
+print("cl.done()")
