@@ -77,6 +77,6 @@ for s in range(len(srcs)-1,-1,-1):
 
 print("cl.done()")
 for s in srcs:
-	print "cl.addcomponent(flux=%s, dir='%s', index=%s, freq='47MHz', label='%s')" % (s['flux'], s['position'], s['alpha'], s['label'])
+	print("cl.addcomponent(flux=%s, dir='%s', index=%s, freq='47MHz', label='%s')" % (s['flux'], s['position'], s['alpha'], s['label']))
 print("cl.rename('%s.cl')" % sys.argv[1][:-3])
 print("cl.done()")
