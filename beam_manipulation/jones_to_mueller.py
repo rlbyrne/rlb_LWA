@@ -65,7 +65,7 @@ def plot_beam(
 
     use_cmap = matplotlib.cm.get_cmap("Spectral").copy()
     use_cmap.set_bad(color="whitesmoke")
-    r_plot, theta_plot = np.meshgrid(za_axis, az_axis)
+    za_vals, az_vals = np.meshgrid(za_axis, az_axis)
 
     fig, ax = plt.subplots(
         nrows=2, ncols=2, subplot_kw=dict(projection="polar"), figsize=(9, 9)
@@ -73,8 +73,8 @@ def plot_beam(
     for pol1 in [0, 1]:
         for pol2 in [0, 1]:
             contourplot = ax[pol1, pol2].contourf(
-                np.radians(theta_plot),
-                r_plot,
+                np.radians(az_vals),
+                za_vals,
                 (plot_jones_vals[pol1, 0, pol2, 0, :, :]).T,
                 vmin=vmin,
                 vmax=vmax,
@@ -139,9 +139,16 @@ def parallactic_angle(az_vals, za_vals, latitude=37.23):
     return ra_vals, dec_vals, parallactic_angle
 
 
-def rotate_azza_to_radec():
+def rotate_azza_to_radec(beam, latitude=37.23):
 
-    print("")
+    za_vals, az_vals = np.meshgrid(beam.axis2_array, beam.axis1_array)
+    ra_vals, dec_vals, parallactic_angle = parallactic_angle(az_vals, za_vals, latitude=latitude)
+
+    rot_matrix = np.zeros((2, 2, beam.Naxes1, beam.Naxes2), dtype=float)
+    rot_matrix[0, 0, :, :] = np.sin(parallactic_angle)
+    rot_matrix[1, 0, :, :] = -np.cos(parallactic_angle)
+    rot_matrix[0, 1, :, :] = -np.cos(parallactic_angle)
+    rot_matrix[1, 1, :, :] = -np.sin(parallactic_angle)
 
 
 if __name__ == "__main__":
@@ -155,9 +162,9 @@ if __name__ == "__main__":
     za_vals, az_vals = np.meshgrid(beam.axis2_array, beam.axis1_array)
     ra_vals, dec_vals, parallactic_angle = parallactic_angle(az_vals, za_vals)
     polar_plot(
-        dec_vals,
+        parallactic_angle,
         az_vals,
         za_vals,
-        vmin=-np.pi,
-        vmax=np.pi,
+        vmin=-2*np.pi,
+        vmax=2*np.pi,
     )
