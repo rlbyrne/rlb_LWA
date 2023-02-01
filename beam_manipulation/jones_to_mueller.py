@@ -3,8 +3,11 @@ import matplotlib
 import matplotlib.pyplot as plt
 import pyuvdata
 
+matplotlib.interactive(False)
 
-def polar_plot(
+
+def make_polar_plot(
+    ax,
     plot_vals,
     az_vals,
     za_vals,
@@ -14,8 +17,6 @@ def polar_plot(
 
     use_cmap = matplotlib.cm.get_cmap("Spectral").copy()
     use_cmap.set_bad(color="whitesmoke")
-
-    fig, ax = plt.subplots(subplot_kw=dict(projection="polar"), figsize=(9, 9))
 
     # Fill in plotting gap by copying az=0 values to az=2Pi
     az_zeros = np.where(az_vals == 0.0)
@@ -39,6 +40,26 @@ def polar_plot(
         cmap=use_cmap,
     )
     contourplot.set_clim(vmin=vmin, vmax=vmax)
+    return contourplot
+
+
+def simple_polar_plot(
+    plot_vals,
+    az_vals,
+    za_vals,
+    vmin=-1,
+    vmax=1,
+):
+
+    fig, ax = plt.subplots(subplot_kw=dict(projection="polar"), figsize=(9, 9))
+    contourplot = make_polar_plot(
+        ax,
+        plot_vals,
+        az_vals,
+        za_vals,
+        vmin=vmin,
+        vmax=vmax,
+    )
     fig.colorbar(contourplot, ax=ax)
     fig.tight_layout()
     plt.show()
@@ -72,52 +93,14 @@ def plot_beam(
     )
     for pol1 in [0, 1]:
         for pol2 in [0, 1]:
-            contourplot = ax[pol1, pol2].contourf(
+            contourplot = make_polar_plot(
+                ax[pol1, pol2],
+                (plot_jones_vals[pol1, 0, pol2, 0, :, :]).T,
                 np.radians(az_vals),
                 za_vals,
-                (plot_jones_vals[pol1, 0, pol2, 0, :, :]).T,
-                vmin=vmin,
-                vmax=vmax,
-                cmap=use_cmap,
+                vmin=-1,
+                vmax=1,
             )
-            contourplot.set_clim(vmin=vmin, vmax=vmax)
-            fig.colorbar(contourplot, ax=ax[pol1, pol2])
-            ax[pol1, pol2].set_title(f"J[{pol1},{pol2}]")
-    fig.suptitle(title)
-    fig.tight_layout()
-    plt.show()
-
-
-def plot_coordinate_transform():
-
-    az_axis = np.degrees(beam.axis1_array)
-    za_axis = np.degrees(beam.axis2_array)
-
-    if real_part:
-        plot_jones_vals = np.real(beam.data_array)
-        title = f"Jones Matrix Components at {plot_freq} MHz, Real Part"
-    else:
-        plot_jones_vals = np.imag(beam.data_array)
-        title = f"Jones Matrix Components at {plot_freq} MHz, Imaginary Part"
-
-    use_cmap = matplotlib.cm.get_cmap("Spectral").copy()
-    use_cmap.set_bad(color="whitesmoke")
-    r_plot, theta_plot = np.meshgrid(za_axis, az_axis)
-
-    fig, ax = plt.subplots(
-        nrows=2, ncols=2, subplot_kw=dict(projection="polar"), figsize=(9, 9)
-    )
-    for pol1 in [0, 1]:
-        for pol2 in [0, 1]:
-            contourplot = ax[pol1, pol2].contourf(
-                np.radians(theta_plot),
-                r_plot,
-                (plot_jones_vals[pol1, 0, pol2, 0, :, :]).T,
-                vmin=vmin,
-                vmax=vmax,
-                cmap=use_cmap,
-            )
-            contourplot.set_clim(vmin=-1, vmax=1)
             fig.colorbar(contourplot, ax=ax[pol1, pol2])
             ax[pol1, pol2].set_title(f"J[{pol1},{pol2}]")
     fig.suptitle(title)
@@ -155,13 +138,13 @@ if __name__ == "__main__":
 
     beam = pyuvdata.UVBeam()
     beam.read_beamfits("/Users/ruby/Astro/rlb_LWA/LWAbeam_2015.fits")
-    # plot_beam(beam)
-    # plot_beam(beam, real_part=False)
+    plot_beam(beam)
+    plot_beam(beam, real_part=False)
 
     # Test coordinate transformation
     za_vals, az_vals = np.meshgrid(beam.axis2_array, beam.axis1_array)
     ra_vals, dec_vals, parallactic_angle = parallactic_angle(az_vals, za_vals)
-    polar_plot(
+    simple_polar_plot(
         parallactic_angle,
         az_vals,
         za_vals,
