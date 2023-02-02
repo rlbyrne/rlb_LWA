@@ -111,12 +111,12 @@ def plot_beam(
 def coordinate_transfrom_azza_to_radec(az_vals, za_vals, latitude, hour_angle=0.0):
 
     ra_vals = hour_angle - np.arctan2(
-        -np.sin(za_vals) * np.sin(az_vals - np.pi/2),
-        -np.sin(np.radians(latitude)) * np.sin(za_vals) * np.cos(az_vals - np.pi/2)
+        -np.sin(za_vals) * np.sin(az_vals - np.pi / 2),
+        -np.sin(np.radians(latitude)) * np.sin(za_vals) * np.cos(az_vals - np.pi / 2)
         + np.cos(np.radians(latitude)) * np.cos(za_vals),
-    )
+    )  # Signs of all terms are determined empirically
     dec_vals = np.pi / 2 - np.arccos(
-        np.cos(np.radians(latitude)) * np.sin(za_vals) * np.cos(az_vals - np.pi/2)
+        np.cos(np.radians(latitude)) * np.sin(za_vals) * np.cos(az_vals - np.pi / 2)
         + np.sin(np.radians(latitude)) * np.cos(za_vals)
     )
 
@@ -144,10 +144,10 @@ def rotate_azza_to_radec(beam, latitude=37.23, inplace=False):
     )
 
     rot_matrix = np.zeros((2, 2, beam.Naxes1, beam.Naxes2), dtype=float)
-    rot_matrix[0, 0, :, :] = np.sin(-parallactic_angle)
-    rot_matrix[1, 0, :, :] = -np.cos(-parallactic_angle)
-    rot_matrix[0, 1, :, :] = -np.cos(-parallactic_angle)
-    rot_matrix[1, 1, :, :] = -np.sin(-parallactic_angle)
+    rot_matrix[0, 0, :, :] = -np.sin(parallactic_angle)
+    rot_matrix[1, 0, :, :] = -np.cos(parallactic_angle)
+    rot_matrix[0, 1, :, :] = -np.cos(parallactic_angle)
+    rot_matrix[1, 1, :, :] = np.sin(parallactic_angle)
 
     print(np.shape(beam.data_array))
     print(np.shape(rot_matrix))
