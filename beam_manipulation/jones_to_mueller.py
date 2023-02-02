@@ -33,7 +33,7 @@ def make_polar_plot(
 
     contourplot = ax.contourf(
         az_vals,
-        za_vals,
+        np.degrees(za_vals),
         plot_vals,
         vmin=vmin,
         vmax=vmax,
@@ -108,10 +108,24 @@ def plot_beam(
     plt.show()
 
 
-def parallactic_angle(az_vals, za_vals, latitude=37.23):
+def coordinate_transfrom_azza_to_radec(az_vals, za_vals, latitude, hour_angle=0.0):
 
-    ra_vals = za_vals * np.cos(az_vals)
-    dec_vals = za_vals * np.sin(az_vals) + np.radians(latitude)
+    ra_vals = hour_angle - np.arctan2(
+        -np.sin(za_vals) * np.sin(az_vals - np.pi/2),
+        -np.sin(np.radians(latitude)) * np.sin(za_vals) * np.cos(az_vals - np.pi/2)
+        + np.cos(np.radians(latitude)) * np.cos(za_vals),
+    )
+    dec_vals = np.pi / 2 - np.arccos(
+        np.cos(np.radians(latitude)) * np.sin(za_vals) * np.cos(az_vals - np.pi/2)
+        + np.sin(np.radians(latitude)) * np.cos(za_vals)
+    )
+
+    return ra_vals, dec_vals
+
+
+def get_parallactic_angle(az_vals, za_vals, latitude=37.23):
+
+    ra_vals, dec_vals = coordinate_transfrom_azza_to_radec(az_vals, za_vals, latitude)
 
     parallactic_angle = np.arctan2(
         -np.sin(ra_vals),
@@ -122,32 +136,53 @@ def parallactic_angle(az_vals, za_vals, latitude=37.23):
     return ra_vals, dec_vals, parallactic_angle
 
 
-def rotate_azza_to_radec(beam, latitude=37.23):
+def rotate_azza_to_radec(beam, latitude=37.23, inplace=False):
 
     za_vals, az_vals = np.meshgrid(beam.axis2_array, beam.axis1_array)
-    ra_vals, dec_vals, parallactic_angle = parallactic_angle(az_vals, za_vals, latitude=latitude)
+    ra_vals, dec_vals, parallactic_angle = get_parallactic_angle(
+        az_vals, za_vals, latitude=latitude
+    )
 
     rot_matrix = np.zeros((2, 2, beam.Naxes1, beam.Naxes2), dtype=float)
-    rot_matrix[0, 0, :, :] = np.sin(parallactic_angle)
-    rot_matrix[1, 0, :, :] = -np.cos(parallactic_angle)
-    rot_matrix[0, 1, :, :] = -np.cos(parallactic_angle)
-    rot_matrix[1, 1, :, :] = -np.sin(parallactic_angle)
+    rot_matrix[0, 0, :, :] = np.sin(-parallactic_angle)
+    rot_matrix[1, 0, :, :] = -np.cos(-parallactic_angle)
+    rot_matrix[0, 1, :, :] = -np.cos(-parallactic_angle)
+    rot_matrix[1, 1, :, :] = -np.sin(-parallactic_angle)
+
+    print(np.shape(beam.data_array))
+    print(np.shape(rot_matrix))
+    new_jones_vals = np.einsum("jion,jklmno->iklmno", rot_matrix, beam.data_array)
+    new_basis_array = np.einsum("ijon,jlno->ilno", rot_matrix, beam.basis_vector_array)
+
+    if inplace:
+        beam.data_array = new_jones_vals
+        beam.basis_vector_array = new_basis_array
+    else:
+        beam_new = beam.copy()
+        beam_new.data_array = new_jones_vals
+        beam_new.basis_vector_array = new_basis_array
+        return beam_new
 
 
 if __name__ == "__main__":
 
     beam = pyuvdata.UVBeam()
     beam.read_beamfits("/Users/ruby/Astro/rlb_LWA/LWAbeam_2015.fits")
-    plot_beam(beam)
-    plot_beam(beam, real_part=False)
+    # plot_beam(beam)
+    # plot_beam(beam, real_part=False)
 
-    # Test coordinate transformation
-    za_vals, az_vals = np.meshgrid(beam.axis2_array, beam.axis1_array)
-    ra_vals, dec_vals, parallactic_angle = parallactic_angle(az_vals, za_vals)
-    simple_polar_plot(
-        parallactic_angle,
-        az_vals,
-        za_vals,
-        vmin=-2*np.pi,
-        vmax=2*np.pi,
-    )
+    if False:  # Test coordinate transformation
+        za_vals, az_vals = np.meshgrid(beam.axis2_array, beam.axis1_array)
+        ra_vals, dec_vals, parallactic_angle = get_parallactic_angle(az_vals, za_vals)
+        simple_polar_plot(
+            parallactic_angle,
+            az_vals,
+            za_vals,
+            vmin=-np.pi,
+            vmax=np.pi,
+        )
+
+    # Test Jones rotation
+    beam_new = rotate_azza_to_radec(beam, latitude=37.23, inplace=False)
+    plot_beam(beam_new)
+    plot_beam(beam_new, real_part=False)
