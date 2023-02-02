@@ -3,10 +3,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 import pyuvdata
 
-matplotlib.interactive(False)
 
-
-def make_polar_plot(
+def make_polar_contour_plot(
     ax,
     plot_vals,
     az_vals,
@@ -33,7 +31,7 @@ def make_polar_plot(
 
     contourplot = ax.contourf(
         az_vals,
-        np.degrees(za_vals),
+        za_vals,
         plot_vals,
         vmin=vmin,
         vmax=vmax,
@@ -43,7 +41,8 @@ def make_polar_plot(
     return contourplot
 
 
-def simple_polar_plot(
+def make_polar_scatter_plot(
+    ax,
     plot_vals,
     az_vals,
     za_vals,
@@ -51,8 +50,52 @@ def simple_polar_plot(
     vmax=1,
 ):
 
+    use_cmap = matplotlib.cm.get_cmap("Spectral").copy()
+    use_cmap.set_bad(color="whitesmoke")
+
+    # Fill in plotting gap by copying az=0 values to az=2Pi
+    az_zeros = np.where(az_vals == 0.0)
+    az_vals = np.concatenate(
+        (az_vals, (az_vals[az_zeros[0], az_zeros[1]] + 2 * np.pi)[np.newaxis, :]),
+        axis=0,
+    )
+    za_vals = np.concatenate(
+        (za_vals, (za_vals[az_zeros[0], az_zeros[1]])[np.newaxis, :]), axis=0
+    )
+    plot_vals = np.concatenate(
+        (plot_vals, (plot_vals[az_zeros[0], az_zeros[1]])[np.newaxis, :]), axis=0
+    )
+
+    scatterplot = ax.scatter(
+        az_vals,
+        za_vals,
+        c=plot_vals,
+        cmap=use_cmap,
+        s=5,
+        edgecolors="black",
+        linewidth=0.1,
+    )
+    ax.set_axisbelow(True)
+    scatterplot.set_clim(vmin=vmin, vmax=vmax)
+    return scatterplot
+
+
+def simple_polar_plot(
+    plot_vals,
+    az_vals,
+    za_vals,
+    vmin=-1,
+    vmax=1,
+    contour_plot=True,
+):
+
+    if contour_plot:
+        plot_function = make_polar_contour_plot
+    else:
+        plot_function = make_polar_scatter_plot
+
     fig, ax = plt.subplots(subplot_kw=dict(projection="polar"), figsize=(9, 9))
-    contourplot = make_polar_plot(
+    contourplot = plot_function(
         ax,
         plot_vals,
         az_vals,
@@ -71,6 +114,7 @@ def plot_beam(
     real_part=True,
     vmin=-1,
     vmax=1,
+    contour_plot=True,
 ):
 
     use_beam = beam.select(frequencies=[plot_freq * 1e6], inplace=False)
@@ -84,6 +128,11 @@ def plot_beam(
         plot_jones_vals = np.imag(beam.data_array)
         title = f"Jones Matrix Components at {plot_freq} MHz, Imaginary Part"
 
+    if contour_plot:
+        plot_function = make_polar_contour_plot
+    else:
+        plot_function = make_polar_scatter_plot
+
     use_cmap = matplotlib.cm.get_cmap("Spectral").copy()
     use_cmap.set_bad(color="whitesmoke")
     za_vals, az_vals = np.meshgrid(za_axis, az_axis)
@@ -93,7 +142,7 @@ def plot_beam(
     )
     for pol1 in [0, 1]:
         for pol2 in [0, 1]:
-            contourplot = make_polar_plot(
+            contourplot = plot_function(
                 ax[pol1, pol2],
                 (plot_jones_vals[pol1, 0, pol2, 0, :, :]).T,
                 np.radians(az_vals),
@@ -136,7 +185,7 @@ def get_parallactic_angle(az_vals, za_vals, latitude=37.23):
     return ra_vals, dec_vals, parallactic_angle
 
 
-def rotate_azza_to_radec(beam, latitude=37.23, inplace=False):
+def pol_basis_transform_azza_to_radec(beam, latitude=37.23, inplace=False):
 
     za_vals, az_vals = np.meshgrid(beam.axis2_array, beam.axis1_array)
     ra_vals, dec_vals, parallactic_angle = get_parallactic_angle(
@@ -164,14 +213,234 @@ def rotate_azza_to_radec(beam, latitude=37.23, inplace=False):
         return beam_new
 
 
+def convert_jones_to_mueller(beam, inplace=False):
+
+    mueller_mat = np.full(
+        (4, 1, 4, beam.Nfreqs, beam.Naxes2, beam.Naxes1), np.nan, dtype=complex
+    )
+
+    # XX pol
+    mueller_mat[0, 0, 0, :, :, :] = (
+        np.abs(beam.data_array[0, 0, 0, :, :, :]) ** 2.0
+    )  # RA-RA
+    mueller_mat[1, 0, 0, :, :, :] = (
+        np.abs(beam.data_array[1, 0, 0, :, :, :]) ** 2.0
+    )  # Dec-Dec
+    mueller_mat[2, 0, 0, :, :, :] = beam.data_array[0, 0, 0, :, :, :] * np.conj(
+        beam.data_array[1, 0, 0, :, :, :]
+    )  # RA-Dec
+    mueller_mat[3, 0, 0, :, :, :] = beam.data_array[1, 0, 0, :, :, :] * np.conj(
+        beam.data_array[0, 0, 0, :, :, :]
+    )  # Dec-RA
+
+    # YY pol
+    mueller_mat[0, 0, 1, :, :, :] = (
+        np.abs(beam.data_array[0, 0, 1, :, :, :]) ** 2.0
+    )  # RA-RA
+    mueller_mat[1, 0, 1, :, :, :] = (
+        np.abs(beam.data_array[1, 0, 1, :, :, :]) ** 2.0
+    )  # Dec-Dec
+    mueller_mat[2, 0, 1, :, :, :] = beam.data_array[0, 0, 1, :, :, :] * np.conj(
+        beam.data_array[1, 0, 1, :, :, :]
+    )  # RA-Dec
+    mueller_mat[3, 0, 1, :, :, :] = beam.data_array[1, 0, 1, :, :, :] * np.conj(
+        beam.data_array[0, 0, 1, :, :, :]
+    )  # Dec-RA
+
+    # XY pol
+    mueller_mat[0, 0, 2, :, :, :] = beam.data_array[0, 0, 0, :, :, :] * np.conj(
+        beam.data_array[0, 0, 1, :, :, :]
+    )  # RA-RA
+    mueller_mat[1, 0, 2, :, :, :] = beam.data_array[1, 0, 0, :, :, :] * np.conj(
+        beam.data_array[1, 0, 1, :, :, :]
+    )  # Dec-Dec
+    mueller_mat[2, 0, 2, :, :, :] = beam.data_array[0, 0, 0, :, :, :] * np.conj(
+        beam.data_array[1, 0, 1, :, :, :]
+    )  # RA-Dec
+    mueller_mat[3, 0, 2, :, :, :] = beam.data_array[1, 0, 0, :, :, :] * np.conj(
+        beam.data_array[0, 0, 1, :, :, :]
+    )  # Dec-RA
+
+    # YX pol
+    mueller_mat[0, 0, 3, :, :, :] = beam.data_array[0, 0, 1, :, :, :] * np.conj(
+        beam.data_array[0, 0, 0, :, :, :]
+    )  # RA-RA
+    mueller_mat[1, 0, 3, :, :, :] = beam.data_array[1, 0, 1, :, :, :] * np.conj(
+        beam.data_array[1, 0, 0, :, :, :]
+    )  # Dec-Dec
+    mueller_mat[2, 0, 3, :, :, :] = beam.data_array[0, 0, 1, :, :, :] * np.conj(
+        beam.data_array[1, 0, 0, :, :, :]
+    )  # RA-Dec
+    mueller_mat[3, 0, 3, :, :, :] = beam.data_array[1, 0, 1, :, :, :] * np.conj(
+        beam.data_array[0, 0, 0, :, :, :]
+    )  # Dec-RA
+
+
+def pol_basis_transform_radec_to_stokes(mueller_mat, inplace=False):
+
+    mueller_mat_new = np.full_like(mueller_mat, np.nan)
+    # Stokes I
+    mueller_mat_new[0, 0, :, :, :, :] = (
+        mueller_mat[0, 0, :, :, :, :] + mueller_mat[1, 0, :, :, :, :]
+    )
+    # Stokes Q
+    mueller_mat_new[1, 0, :, :, :, :] = (
+        mueller_mat[0, 0, :, :, :, :] - mueller_mat[1, 0, :, :, :, :]
+    )
+    # Stokes U
+    mueller_mat_new[2, 0, :, :, :, :] = (
+        mueller_mat[2, 0, :, :, :, :] + mueller_mat[3, 0, :, :, :, :]
+    )
+    # Stokes V
+    mueller_mat_new[3, 0, :, :, :, :] = (
+        1j * mueller_mat[2, 0, :, :, :, :] - 1j * mueller_mat[3, 0, :, :, :, :]
+    )
+
+    if inplace:
+        mueller_mat = mueller_mat_new
+    else:
+        return mueller_mat_new
+
+
+def read_beam_txt_file(path, header_line=6):
+
+    with open(path, "r") as f:
+        lines = f.readlines()
+    f.close()
+
+    header = lines[header_line]
+    npoints = len(lines) - (header_line + 1)
+
+    za_deg = np.zeros(npoints, dtype=float)
+    az_deg = np.zeros(npoints, dtype=float)
+    freq_mhz = np.zeros(npoints, dtype=float)
+    jones_theta = np.zeros(npoints, dtype=complex)
+    jones_phi = np.zeros(npoints, dtype=complex)
+
+    for point in range(npoints):
+        line_data = [float(value) for value in lines[point + 7].split()]
+        za_deg[point] = line_data[0]
+        az_deg[point] = line_data[1]
+        freq_mhz[point] = line_data[2]
+        jones_theta[point] = line_data[7] + 1j * line_data[8]
+        jones_phi[point] = line_data[9] + 1j * line_data[10]
+
+    za_axis = np.unique(za_deg)
+    freq_axis = np.unique(freq_mhz)
+    az_axis = np.unique(az_deg)
+    # Fill in other quadrants
+    az_axis = np.concatenate((az_axis, az_axis+90., az_axis+180., az_axis+270.))
+    az_axis[np.where(az_axis < 0.)] += 360.
+    az_axis[np.where(az_axis >= 360.)] -= 360.
+    az_axis = np.unique(az_axis)
+
+    jones = np.full(
+        (2, 2, len(freq_axis), len(za_axis), len(az_axis)),
+        np.nan + 1j * np.nan,
+        dtype=complex,
+    )
+
+    # Flip the Jones matrix in particular quadrants
+    multiply_factors = np.ones(
+        (2, 2, 4), dtype=float
+    )  # Shape (nfeeds, npols, nquadrants)
+    multiply_factors[0, 0, 0:2] = -1.0
+    multiply_factors[0, 1, 1:3] = -1.0
+    multiply_factors[1, 0, 0] = -1
+    multiply_factors[1, 0, 3] = -1
+    multiply_factors[1, 1, 0:2] = -1
+
+    for point in range(npoints):
+        za_ind = np.where(za_axis == za_deg[point])
+        freq_ind = np.where(freq_axis == freq_mhz[point])
+        for pol in [0, 1]:
+            use_az = az_deg[point]
+            if pol == 0:
+                use_az = 90.0 - use_az  # Q pol is rotated 90 degrees
+
+            az_ind_quad_1 = np.where(az_axis == use_az)
+            jones[0, pol, freq_ind, za_ind, az_ind_quad_1] = (
+                multiply_factors[0, pol, 0] * jones_theta[point]
+            )
+            jones[1, pol, freq_ind, za_ind, az_ind_quad_1] = (
+                multiply_factors[1, pol, 0] * jones_phi[point]
+            )
+
+            if za_deg[point] != 0:  # Don't overwrite zenith
+                az_ind_quad_2 = np.where(az_axis == 180.0 - use_az)
+                jones[0, pol, freq_ind, za_ind, az_ind_quad_2] = (
+                    multiply_factors[0, pol, 1] * jones_theta[point]
+                )
+                jones[1, pol, freq_ind, za_ind, az_ind_quad_2] = (
+                    multiply_factors[1, pol, 1] * jones_phi[point]
+                )
+
+                az_ind_quad_3 = np.where(az_axis == 180.0 + use_az)
+                jones[0, pol, freq_ind, za_ind, az_ind_quad_3] = (
+                    multiply_factors[0, pol, 2] * jones_theta[point]
+                )
+                jones[1, pol, freq_ind, za_ind, az_ind_quad_3] = (
+                    multiply_factors[1, pol, 2] * jones_phi[point]
+                )
+                az_ind_quad_4 = np.where(az_axis == 360.0 - use_az)
+                jones[0, pol, freq_ind, za_ind, az_ind_quad_4] = (
+                    multiply_factors[0, pol, 3] * jones_theta[point]
+                )
+                jones[1, pol, freq_ind, za_ind, az_ind_quad_4] = (
+                    multiply_factors[1, pol, 3] * jones_phi[point]
+                )
+
+    jones = np.transpose(jones, axes=(1, 0, 2, 3, 4))
+    jones = np.flip(jones, axis=0)
+
+    beam_obj = pyuvdata.UVBeam()
+    beam_obj.Naxes_vec = 2
+    beam_obj.Nfreqs = len(freq_axis)
+    beam_obj.Nspws = 1
+    beam_obj.antenna_type = 'simple'
+    beam_obj.bandpass_array = np.full((1, len(freq_axis)), 1.)
+    beam_obj.beam_type = 'efield'
+    beam_obj.data_array = np.copy(jones[:, np.newaxis, :, :, :, :])
+    beam_obj.data_normalization = 'physical'
+    beam_obj.feed_name = ''
+    beam_obj.feed_version = ''
+    beam_obj.freq_array = np.copy(freq_axis[np.newaxis, :])*1e6  # Convert from MHz to Hz
+    beam_obj.history = ''
+    beam_obj.model_name = ''
+    beam_obj.model_version = ''
+    beam_obj.pixel_coordinate_system = 'az_za'
+    beam_obj.spw_array = [0]
+    beam_obj.telescope_name = 'LWA'
+    beam_obj.Naxes1 = len(az_axis)
+    beam_obj.Naxes2 = len(za_axis)
+    beam_obj.Ncomponents_vec = 2
+    beam_obj.Nfeeds = 2
+    beam_obj.Npols = 2
+    beam_obj.axis1_array = np.radians(az_axis)
+    beam_obj.axis2_array = np.radians(za_axis)
+    beam_obj.basis_vector_array = np.repeat((np.repeat(
+        (np.identity(2, dtype=float))[:, :, np.newaxis], len(za_axis), axis=2
+    ))[:,:,:,np.newaxis], len(az_axis), axis=3)
+    beam_obj.feed_array = ['E', 'N']
+    beam_obj.x_orientation = 'east'
+    #beam_obj.peak_normalize()
+    beam_obj.check()
+
+    return beam_obj
+
+
 if __name__ == "__main__":
 
-    beam = pyuvdata.UVBeam()
-    beam.read_beamfits("/Users/ruby/Astro/rlb_LWA/LWAbeam_2015.fits")
+    #beam = pyuvdata.UVBeam()
+    #beam.read_beamfits("/Users/ruby/Astro/rlb_LWA/LWAbeam_2015.fits")
     # plot_beam(beam)
     # plot_beam(beam, real_part=False)
 
-    if False:  # Test coordinate transformation
+    beam = read_beam_txt_file('/Users/ruby/Astro/LWA_beams/DW_beamquadranttable20151110.txt', header_line=6)
+    plot_beam(beam, contour_plot=False, plot_freq=20.)
+    plot_beam(beam, real_part=False, plot_freq=20.)
+
+    if True:  # Test coordinate transformation
         za_vals, az_vals = np.meshgrid(beam.axis2_array, beam.axis1_array)
         ra_vals, dec_vals, parallactic_angle = get_parallactic_angle(az_vals, za_vals)
         simple_polar_plot(
@@ -180,9 +449,10 @@ if __name__ == "__main__":
             za_vals,
             vmin=-np.pi,
             vmax=np.pi,
+            contour_plot=False,
         )
 
     # Test Jones rotation
-    beam_new = rotate_azza_to_radec(beam, latitude=37.23, inplace=False)
-    plot_beam(beam_new)
-    plot_beam(beam_new, real_part=False)
+    #beam_new = pol_basis_transform_azza_to_radec(beam, latitude=37.23, inplace=False)
+    #plot_beam(beam_new, contour_plot=False, plot_freq=20.)
+    #plot_beam(beam_new, real_part=False, plot_freq=20.)
