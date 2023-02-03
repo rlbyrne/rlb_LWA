@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import pyuvdata
+import csv
 
 
 def make_polar_contour_plot(
@@ -186,10 +187,10 @@ def plot_mueller_matrix(
     use_mueller = mueller_mat[:, 0, :, freq_ind, :, :]
 
     if real_part:
-        plot_jones_vals = np.real(use_mueller)
+        use_mueller = np.real(use_mueller)
         title = f"Mueller Matrix Components at {plot_freq} MHz, Real Part"
     else:
-        plot_jones_vals = np.imag(use_mueller)
+        use_mueller = np.imag(use_mueller)
         title = f"Mueller Matrix Components at {plot_freq} MHz, Imaginary Part"
 
     if contour_plot:
@@ -440,33 +441,47 @@ def read_beam_txt_file(path, header_line=6):
                 multiply_factors[1, pol, 0] * jones_phi[point]
             )
 
-            if za_deg[point] != 0:  # Don't overwrite zenith
-                az_ind_quad_2 = np.where(az_axis == 180.0 - use_az)
-                jones[0, pol, freq_ind, za_ind, az_ind_quad_2] = (
-                    multiply_factors[0, pol, 1] * jones_theta[point]
-                )
-                jones[1, pol, freq_ind, za_ind, az_ind_quad_2] = (
-                    multiply_factors[1, pol, 1] * jones_phi[point]
-                )
+            az_ind_quad_2 = np.where(az_axis == 180.0 - use_az)
+            jones[0, pol, freq_ind, za_ind, az_ind_quad_2] = (
+                multiply_factors[0, pol, 1] * jones_theta[point]
+            )
+            jones[1, pol, freq_ind, za_ind, az_ind_quad_2] = (
+                multiply_factors[1, pol, 1] * jones_phi[point]
+            )
 
-                az_ind_quad_3 = np.where(az_axis == 180.0 + use_az)
-                jones[0, pol, freq_ind, za_ind, az_ind_quad_3] = (
-                    multiply_factors[0, pol, 2] * jones_theta[point]
-                )
-                jones[1, pol, freq_ind, za_ind, az_ind_quad_3] = (
-                    multiply_factors[1, pol, 2] * jones_phi[point]
-                )
+            az_ind_quad_3 = np.where(az_axis == 180.0 + use_az)
+            jones[0, pol, freq_ind, za_ind, az_ind_quad_3] = (
+                multiply_factors[0, pol, 2] * jones_theta[point]
+            )
+            jones[1, pol, freq_ind, za_ind, az_ind_quad_3] = (
+                multiply_factors[1, pol, 2] * jones_phi[point]
+            )
 
-                az_ind_quad_4 = np.where(az_axis == 360.0 - use_az)
-                jones[0, pol, freq_ind, za_ind, az_ind_quad_4] = (
-                    multiply_factors[0, pol, 3] * jones_theta[point]
-                )
-                jones[1, pol, freq_ind, za_ind, az_ind_quad_4] = (
-                    multiply_factors[1, pol, 3] * jones_phi[point]
-                )
+            az_ind_quad_4 = np.where(az_axis == 360.0 - use_az)
+            jones[0, pol, freq_ind, za_ind, az_ind_quad_4] = (
+                multiply_factors[0, pol, 3] * jones_theta[point]
+            )
+            jones[1, pol, freq_ind, za_ind, az_ind_quad_4] = (
+                multiply_factors[1, pol, 3] * jones_phi[point]
+            )
 
     jones = np.transpose(jones, axes=(1, 0, 2, 3, 4))
     jones = np.flip(jones, axis=0)
+
+    # Polarization mode at zenith is undefined
+    # Insert values that will make the conversion to RA/Dec work properly
+    # This discards any imaginary component. Is that ok?
+    zenith_points = np.where(za_axis == 0)[0]
+    jones[1, 0, :, zenith_points, :] = -np.sqrt(
+        jones[0, 0, :, zenith_points, :] ** 2.0
+        + jones[1, 0, :, zenith_points, :] ** 2.0
+    )
+    jones[0, 1, :, zenith_points, :] = np.sqrt(
+        jones[0, 1, :, zenith_points, :] ** 2.0
+        + jones[1, 1, :, zenith_points, :] ** 2.0
+    )
+    jones[0, 0, :, zenith_points, :] = 0.0
+    jones[1, 1, :, zenith_points, :] = 0.0
 
     beam_obj = pyuvdata.UVBeam()
     beam_obj.Naxes_vec = 2
@@ -506,7 +521,54 @@ def read_beam_txt_file(path, header_line=6):
     )
     beam_obj.feed_array = ["E", "N"]
     beam_obj.x_orientation = "east"
-    # beam_obj.peak_normalize()  # Ends up nan-ing the entire beam
+    # beam_obj.peak_normalize()  # Ends up nan-ing the entire beam. Why???
     beam_obj.check()
 
     return beam_obj
+
+
+def write_mueller_to_csv(
+    mueller_mat,
+    az_axis,
+    za_axis,
+    freq_axis,
+    output_path,
+    stokes=True,
+):
+
+    if stokes:
+        pol_names = ["I", "Q", "U", "V"]
+    else:
+        pol_names = ["RA-RA", "Dec-Dec", "RA-Dec", "Dec-RA"]
+    instr_pol_names = ["XX", "YY", "XY", "YX"]
+
+    mueller_dict = []
+    for sky_pol_ind, sky_pol_name in enumerate(pol_names):
+        for instr_pol_ind, instr_pol_name in enumerate(instr_pol_names):
+            for freq_ind, freq in enumerate(freq_axis):
+                for az_ind, az in enumerate(az_axis):
+                    for za_ind, za in enumerate(za_axis):
+                        mueller_dict.append(
+                            {
+                                "Instr Pol": instr_pol_name,
+                                "Sky Pol": sky_pol_name,
+                                "Freq (Hz)": freq,
+                                "Az": az,
+                                "ZA": za,
+                                "Value": mueller_mat[
+                                    sky_pol_ind,
+                                    0,
+                                    instr_pol_ind,
+                                    freq_ind,
+                                    za_ind,
+                                    az_ind,
+                                ],
+                            }
+                        )
+
+    fieldnames = ["Instr Pol", "Sky Pol", "Freq (Hz)", "Az", "ZA", "Value"]
+    with open(output_path, "w") as file:
+        file_contents = csv.DictWriter(file, fieldnames=fieldnames)
+        file_contents.writeheader()
+        file_contents.writerows(mueller_dict)
+    file.close()
