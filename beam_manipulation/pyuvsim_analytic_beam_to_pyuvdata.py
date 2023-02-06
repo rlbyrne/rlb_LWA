@@ -31,11 +31,11 @@ def pyuvsim_analytic_to_pyuvdata(
     beam_obj.antenna_type = "simple"
     beam_obj.bandpass_array = np.full((1, len(freq_axis)), 1.0)
     beam_obj.beam_type = "efield"
-    beam_obj.data_array = beam_values_interp
+    beam_obj.data_array = beam_values_interp + 0 * 1j  # Convert to complex type
     beam_obj.data_normalization = "physical"
     beam_obj.feed_name = ""
     beam_obj.feed_version = ""
-    beam_obj.freq_array = freq_axis[np.newaxis, :] + 0 * 1j  # Convert to complex type
+    beam_obj.freq_array = freq_axis[np.newaxis, :]
     beam_obj.history = "14 m Airy beam"
     beam_obj.model_name = ""
     beam_obj.model_version = ""
