@@ -8,17 +8,21 @@ def pyuvsim_analytic_to_pyuvdata(
     az_resolution_rad=0.01,
     za_resolution_rad=0.01,
     freq_resolution_hz=10000,
-    min_freq_hz=167.*1e6,
-    max_freq_hz=197.*1e6,
+    min_freq_hz=162.0 * 1e6,
+    max_freq_hz=202.0 * 1e6,
 ):
 
-    az_axis = np.arange(0., 2*np.pi, az_resolution_rad, dtype=float)
-    za_axis = np.arange(0., np.pi/2., za_resolution_rad, dtype=float)
+    az_axis = np.arange(0.0, 2 * np.pi, az_resolution_rad, dtype=float)
+    za_axis = np.arange(0.0, np.pi / 2.0, za_resolution_rad, dtype=float)
     freq_axis = np.arange(min_freq_hz, max_freq_hz, freq_resolution_hz, dtype=float)
 
     za_values, az_values = np.meshgrid(za_axis, az_axis)
-    beam_values_interp = analytic_beam.interp(az_values.flatten(), za_values.flatten(), freq_axis)
-    beam_values_interp = beam_values_interp[0].reshape(2, 1, 2, len(freq_axis), len(za_axis), len(az_axis))
+    beam_values_interp = analytic_beam.interp(
+        az_values.flatten(), za_values.flatten(), freq_axis
+    )
+    beam_values_interp = beam_values_interp[0].reshape(
+        2, 1, 2, len(freq_axis), len(za_axis), len(az_axis)
+    )
 
     beam_obj = pyuvdata.UVBeam()
     beam_obj.Naxes_vec = 2
@@ -31,7 +35,7 @@ def pyuvsim_analytic_to_pyuvdata(
     beam_obj.data_normalization = "physical"
     beam_obj.feed_name = ""
     beam_obj.feed_version = ""
-    beam_obj.freq_array = freq_axis[np.newaxis, :]
+    beam_obj.freq_array = freq_axis[np.newaxis, :] + 0 * 1j  # Convert to complex type
     beam_obj.history = "14 m Airy beam"
     beam_obj.model_name = ""
     beam_obj.model_version = ""
@@ -69,6 +73,6 @@ if __name__ == "__main__":
         az_resolution_rad=0.01,
         za_resolution_rad=0.01,
         freq_resolution_hz=10000,
-        min_freq_hz=167.*1e6,
-        max_freq_hz=197.*1e6,
+        min_freq_hz=162.0 * 1e6,
+        max_freq_hz=202.0 * 1e6,
     )
