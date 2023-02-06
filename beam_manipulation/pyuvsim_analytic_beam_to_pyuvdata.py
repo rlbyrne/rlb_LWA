@@ -18,7 +18,7 @@ def pyuvsim_analytic_to_pyuvdata(
 
     za_values, az_values = np.meshgrid(za_axis, az_axis)
     beam_values_interp = analytic_beam.interp(az_values.flatten(), za_values.flatten(), freq_axis)
-    beam_values_interp = beam_values_interp.reshape(2, 1, 2, len(freq_axis), len(za_axis), len(az_axis))
+    beam_values_interp = beam_values_interp[0].reshape(2, 1, 2, len(freq_axis), len(za_axis), len(az_axis))
 
     beam_obj = pyuvdata.UVBeam()
     beam_obj.Naxes_vec = 2
