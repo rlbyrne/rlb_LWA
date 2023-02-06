@@ -7,7 +7,7 @@ def pyuvsim_analytic_to_pyuvdata(
     analytic_beam,
     az_resolution_rad=0.01,
     za_resolution_rad=0.01,
-    freq_resolution_hz=1000,
+    freq_resolution_hz=10000,
     min_freq_hz=167.*1e6,
     max_freq_hz=197.*1e6,
 ):
@@ -68,7 +68,7 @@ if __name__ == "__main__":
         analytic_beam,
         az_resolution_rad=0.01,
         za_resolution_rad=0.01,
-        freq_resolution_hz=1000,
+        freq_resolution_hz=10000,
         min_freq_hz=167.*1e6,
         max_freq_hz=197.*1e6,
     )
