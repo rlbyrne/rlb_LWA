@@ -16,7 +16,7 @@ def pyuvsim_analytic_to_pyuvdata(
     za_axis = np.arange(0.0, np.pi / 2.0, za_resolution_rad, dtype=float)
     freq_axis = np.arange(min_freq_hz, max_freq_hz, freq_resolution_hz, dtype=float)
 
-    za_values, az_values = np.meshgrid(za_axis, az_axis)
+    az_values, za_values = np.meshgrid(az_axis, za_axis)
     beam_values_interp = analytic_beam.interp(
         az_values.flatten(), za_values.flatten(), freq_axis
     )
