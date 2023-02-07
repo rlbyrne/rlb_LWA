@@ -336,6 +336,17 @@ pro fhd_versions_wario
       save_uvf = 0
     end
 
+    'rlb_process_uv_density_sims_Feb2023': begin
+      recalculate_all = 1
+      import_pyuvdata_beam_filepath = '/home/rbyrne/airy_14m.beamfits'
+      calibrate_visibilities = 0
+      n_pol = 2
+      snapshot_healpix_export = 0
+      save_uvf = 1
+      flag_visibilities = 0
+      unflag_all = 1
+    end
+
   endcase
 
   undefine, uvfits_subversion, uvfits_version

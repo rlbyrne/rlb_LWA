@@ -3,13 +3,13 @@ import shlex
 import os
 
 obsids_list = [
-    "20230103_alldata"
+    "sim_uv_spacing_10"
 ]
-versions_list = ["rlb_image_LWA_data_Jan2023"]
-uvfits_path = "/safepool/rbyrne/lwa_data/20230103"
+versions_list = ["rlb_process_uv_density_sims_Feb2023"]
+uvfits_path = "/safepool/rbyrne/uv_density_simulations"
 outdir = "/safepool/rbyrne/fhd_outputs"
 run_fhd = True
-run_eppsilon = False
+run_eppsilon = True
 
 # Define wrappers
 fhd_versions_script = "fhd_versions_wario"
