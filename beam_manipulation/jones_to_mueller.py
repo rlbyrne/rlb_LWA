@@ -258,12 +258,15 @@ def get_parallactic_angle(az_vals, za_vals, latitude=37.23):
     return ra_vals, dec_vals, parallactic_angle
 
 
-def pol_basis_transform_azza_to_radec(beam, latitude=37.23, inplace=False):
+def pol_basis_transform_azza_to_radec(beam, latitude=37.23, inplace=False, reverse=False):
 
     za_vals, az_vals = np.meshgrid(beam.axis2_array, beam.axis1_array)
     ra_vals, dec_vals, parallactic_angle = get_parallactic_angle(
         az_vals, za_vals, latitude=latitude
     )
+
+    if reverse:
+        parallactic_angle *= -1
 
     rot_matrix = np.zeros((2, 2, beam.Naxes1, beam.Naxes2), dtype=float)
     rot_matrix[0, 0, :, :] = -np.sin(parallactic_angle)
@@ -572,3 +575,15 @@ def write_mueller_to_csv(
         file_contents.writeheader()
         file_contents.writerows(mueller_dict)
     file.close()
+
+
+def invert_mueller_matrix(mueller_mat, inplace=False):
+
+    mueller_inv = mueller_mat.copy()
+    mueller_inv = np.transpose(mueller_inv, axes=(1,3,4,5,2,0))
+    mueller_inv = np.linalg.inv(mueller_inv)
+    mueller_inv = np.transpose(mueller_inv, axes=(5,0,4,1,2,3))
+    if inplace:
+        mueller_mat = mueller_inv
+    else:
+        return mueller_mat
