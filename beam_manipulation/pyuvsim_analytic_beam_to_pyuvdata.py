@@ -26,6 +26,10 @@ def pyuvsim_analytic_to_pyuvdata(
     beam_values_interp = np.flip(
         beam_values_interp, axis=(0, 2)
     )  # Axes must be flipped for some reason
+    print(np.max(beam_values_interp[0, :, 0, 0,0,0]))
+    print(np.max(beam_values_interp[0, :, 1, 0,0,0]))
+    print(np.max(beam_values_interp[1, :, 0, 0,0,0]))
+    print(np.max(beam_values_interp[1, :, 1, 0,0,0]))
 
     beam_obj = pyuvdata.UVBeam()
     beam_obj.Naxes_vec = 2
