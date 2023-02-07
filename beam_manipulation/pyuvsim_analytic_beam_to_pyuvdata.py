@@ -66,7 +66,7 @@ def pyuvsim_analytic_to_pyuvdata(
     beam_obj.x_orientation = "east"
 
     jones_to_mueller.pol_basis_transform_azza_to_radec(
-        beam_obj, latitude=-26.7, inplace=True, reverse=True
+        beam_obj, latitude=0., inplace=True, reverse=True
     )
 
     beam_obj.peak_normalize()
