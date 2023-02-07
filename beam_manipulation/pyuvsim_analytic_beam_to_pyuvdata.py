@@ -61,7 +61,10 @@ def pyuvsim_analytic_to_pyuvdata(
     beam_obj.feed_array = ["E", "N"]
     beam_obj.x_orientation = "east"
     beam_obj.peak_normalize()
-    print(beam_obj.check())
+    if not beam_obj.check():
+        print("ERROR: Beam object fails check.")
+
+    return beam_obj
 
 
 if __name__ == "__main__":
@@ -76,3 +79,4 @@ if __name__ == "__main__":
         min_freq_hz=162.0 * 1e6,
         max_freq_hz=202.0 * 1e6,
     )
+    discrete_beam.write_beamfits("/home/rbyrne/airy_14m.beamfits")
