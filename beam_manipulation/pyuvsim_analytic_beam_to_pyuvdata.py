@@ -1,6 +1,7 @@
 import pyuvsim
 import pyuvdata
 import numpy as np
+import jones_to_mueller
 
 
 def pyuvsim_analytic_to_pyuvdata(
@@ -63,7 +64,13 @@ def pyuvsim_analytic_to_pyuvdata(
     )
     beam_obj.feed_array = ["E", "N"]
     beam_obj.x_orientation = "east"
+
+    jones_to_mueller.pol_basis_transform_azza_to_radec(
+        beam, latitude=-26.7, inplace=True, reverse=True
+    )
+
     beam_obj.peak_normalize()
+
     if not beam_obj.check():
         print("ERROR: Beam object fails check.")
 
