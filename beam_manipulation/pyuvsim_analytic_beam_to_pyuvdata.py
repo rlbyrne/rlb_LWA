@@ -23,6 +23,9 @@ def pyuvsim_analytic_to_pyuvdata(
     beam_values_interp = beam_values_interp[0].reshape(
         2, 1, 2, len(freq_axis), len(za_axis), len(az_axis)
     )
+    beam_values_interp = np.flip(
+        beam_values_interp, axis=(0, 2)
+    )  # Axes must be flipped for some reason
 
     beam_obj = pyuvdata.UVBeam()
     beam_obj.Naxes_vec = 2
