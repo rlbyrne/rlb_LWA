@@ -342,6 +342,7 @@ pro fhd_versions_wario
       calibrate_visibilities = 0
       n_pol = 2
       snapshot_healpix_export = 1  ;required for uvf output?
+      split_ps_export = 0  ;do not attempt even-odd splitting
       save_uvf = 1
       flag_visibilities = 0
       unflag_all = 1
