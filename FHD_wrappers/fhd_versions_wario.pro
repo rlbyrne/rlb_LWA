@@ -341,7 +341,7 @@ pro fhd_versions_wario
       import_pyuvdata_beam_filepath = '/home/rbyrne/airy_14m.beamfits'
       calibrate_visibilities = 0
       n_pol = 2
-      snapshot_healpix_export = 0
+      snapshot_healpix_export = 1  ;required for uvf output?
       save_uvf = 1
       flag_visibilities = 0
       unflag_all = 1
