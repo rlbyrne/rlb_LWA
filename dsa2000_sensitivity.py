@@ -139,7 +139,7 @@ if __name__ == "__main__":
     min_freq_hz = 0.7e9
     max_freq_hz = c / 0.21
     antenna_diameter_m = 5
-    freq_resolution_hz = 10e3
+    freq_resolution_hz = 162.5e3
     int_time_s = 1
     aperture_efficiency = 0.62
     tsys_k = 25
@@ -153,6 +153,7 @@ if __name__ == "__main__":
     baselines_m = get_baselines(antpos)
 
     for freq_ind, freq_hz in enumerate(freq_array_hz):
+        print(f"On frequency channel {freq_ind+1} of {len(freq_array_hz)}")
         u_coords, v_coords, weights_mat, weights_squared_mat = create_var_matrix(
             baselines_m,
             freq_hz=freq_hz,
@@ -172,7 +173,13 @@ if __name__ == "__main__":
 
         if freq_ind == 0:
             uv_plane_variance_arr = np.full(
-                (np.shape(uv_plane_variance)[0], np.shape(uv_plane_variance)[1], len(freq_array_hz)),
-                np.nan
+                (
+                    np.shape(uv_plane_variance)[0],
+                    np.shape(uv_plane_variance)[1],
+                    len(freq_array_hz),
+                ),
+                np.nan,
             )
         uv_plane_variance_arr[:, :, freq_ind] = uv_plane_variance
+
+    np.save("/Users/ruby/Astro/dsa2000_variance", uv_plane_variance_arr)
