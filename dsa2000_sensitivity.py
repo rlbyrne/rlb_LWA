@@ -79,11 +79,11 @@ def create_var_matrix(
     baselines_wl = baselines_m / wavelength
     ant_diameter_wl = antenna_diameter_m / wavelength
 
-    u_coords = np.arange(0, uv_extent, uv_spacing)
-    u_coords = np.append(-np.flip(u_coords[1:]), u_coords)
-    v_coords = np.copy(u_coords)
-    u_mesh, v_mesh = np.meshgrid(u_coords, v_coords)
-    u_pixels = len(u_coords)
+    u_coords_wl = np.arange(0, uv_extent, uv_spacing)
+    u_coords_wl = np.append(-np.flip(u_coords_wl[1:]), u_coords_wl)
+    v_coords_wl = np.copy(u_coords_wl)
+    u_mesh, v_mesh = np.meshgrid(u_coords_wl, v_coords_wl)
+    u_pixels = len(u_coords_wl)
 
     use_baselines = baselines_wl[
         np.where(
@@ -106,7 +106,7 @@ def create_var_matrix(
             weights_mat += beam_vals
             weights_squared_mat += beam_vals**2.0
 
-    return u_coords, v_coords, weights_mat, weights_squared_mat
+    return u_coords_wl, v_coords_wl, weights_mat, weights_squared_mat
 
 
 def get_visibility_stddev(
@@ -132,7 +132,7 @@ def get_visibility_stddev(
     return visibility_stddev
 
 
-if __name__ == "__main__":
+def generate_uvf_variance():
 
     # Set variables
     field_of_view_deg2 = 10.6
@@ -154,7 +154,7 @@ if __name__ == "__main__":
 
     for freq_ind, freq_hz in enumerate(freq_array_hz):
         print(f"On frequency channel {freq_ind+1} of {len(freq_array_hz)}")
-        u_coords, v_coords, weights_mat, weights_squared_mat = create_var_matrix(
+        u_coords_wl, v_coords_wl, weights_mat, weights_squared_mat = create_var_matrix(
             baselines_m,
             freq_hz=freq_hz,
             antenna_diameter_m=antenna_diameter_m,
@@ -183,3 +183,70 @@ if __name__ == "__main__":
         uv_plane_variance_arr[:, :, freq_ind] = uv_plane_variance
 
     np.save("/Users/ruby/Astro/dsa2000_variance", uv_plane_variance_arr)
+
+
+def generate_uvn_variance_simple_ft(uv_plane_variance_arr):
+
+    where_finite = np.isfinite(uv_plane_variance_arr)
+    uvn_variance = np.nansum(uv_plane_variance_arr, axis=2) / np.sum(
+        where_finite, axis=2
+    )
+    uvn_variance = np.repeat(
+        uvn_variance[:, :, np.newaxis], np.shape(uv_plane_variance_arr)[2], axis=2
+    )  # Assume all delays have equal variance
+    return uvn_variance
+
+
+def uvf_to_cosmology_axis_transform(
+    u_coords_wl,
+    v_coords_wl,
+    freq_array_hz,
+    freq_resolution_hz,
+):
+    # See "Cosmological Parameters and Conversions Memo"
+
+    # Set cosmological parameters
+    hubble_dist = 3000  # Units Mpc/h
+    hubble_const = c / hubble_dist
+    rest_frame_wl = 0.21  # Units m
+    omega_M = 0.27
+    omega_k = 0
+    omega_Lambda = 0.73
+
+    avg_freq_hz = np.mean(freq_array_hz)
+    avg_wl = c / avg_freq_hz
+    z = avg_wl / rest_frame_wl - 1
+
+    # Line-of-sight conversion
+    delay_array_s = np.fft.fftfreq(len(freq_array_hz), d=freq_resolution_hz)
+    e_func = np.sqrt(omega_M * (1 + z) ** 3.0 + omega_k * (1 + z) ** 2.0 + omega_Lambda)
+    kz = (
+        (2 * np.pi * hubble_const * e_func)
+        / ((1 + z) ** 2.0 * rest_frame_wl)
+        * delay_array_s
+    )  # units h/Mpc
+
+    # Perpendicular to line-of-sight conversion
+    dist_comoving_func = lambda z, omega_M, omega_k, omega_Lambda: 1 / np.sqrt(
+        omega_M * (1 + z) ** 3.0 + omega_k * (1 + z) ** 2.0 + omega_Lambda
+    )
+    dist_comoving_int, err = scipy.integrate.quad(
+        dist_comoving_func,
+        0,
+        7,
+        args=(
+            omega_M,
+            omega_k,
+            omega_Lambda,
+        ),
+    )
+    dist_comoving = hubble_dist * dist_comoving_int
+    kx = 2 * np.pi * u_coords_wl / dist_comoving  # units h/Mpc
+    ky = 2 * np.pi * v_coords_wl / dist_comoving  # units h/Mpc
+
+    return kx, ky, kz
+
+
+if __name__ == "__main__":
+
+    print("")
