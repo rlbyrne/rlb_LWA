@@ -2,6 +2,7 @@ import numpy as np
 import pyuvdata
 import matplotlib.pyplot as plt
 from matplotlib import cm
+import scipy
 
 
 c = 3e8
@@ -81,9 +82,10 @@ def create_var_matrix(
 
     u_coords_wl = np.arange(0, uv_extent, uv_spacing)
     u_coords_wl = np.append(-np.flip(u_coords_wl[1:]), u_coords_wl)
-    v_coords_wl = np.copy(u_coords_wl)
-    u_mesh, v_mesh = np.meshgrid(u_coords_wl, v_coords_wl)
+    v_coords_wl = np.arange(0, uv_extent, uv_spacing)
+    v_mesh, u_mesh = np.meshgrid(v_coords_wl, u_coords_wl)
     u_pixels = len(u_coords_wl)
+    v_pixels = len(v_coords_wl)
 
     use_baselines = baselines_wl[
         np.where(
@@ -94,12 +96,12 @@ def create_var_matrix(
     ]
     use_Nbls = np.shape(use_baselines)[0]
 
-    weights_mat = np.zeros((u_pixels, u_pixels))
-    weights_squared_mat = np.zeros((u_pixels, u_pixels))
+    weights_mat = np.zeros((u_pixels, v_pixels))
+    weights_squared_mat = np.zeros((u_pixels, v_pixels))
 
     for bl_ind in range(use_Nbls):
         for bl_coords in [use_baselines[bl_ind, :], -use_baselines[bl_ind, :]]:
-            uv_offset = np.zeros((u_pixels, u_pixels, 2))
+            uv_offset = np.zeros((u_pixels, v_pixels, 2))
             uv_offset[:, :, 0] = u_mesh - bl_coords[0]
             uv_offset[:, :, 1] = v_mesh - bl_coords[1]
             beam_vals = airy_beam_vals(uv_offset, freq_hz, antenna_diameter_m)
@@ -121,29 +123,30 @@ def get_visibility_stddev(
     wavelength_m = c / freq_hz
     eff_collecting_area = (
         np.pi * antenna_diameter_m**2.0 / 4 * aperture_efficiency
-    )  # Uses the single antenna aperture efficiency. Is this right?
+    )  # Assumes a circular aperture. Uses the single antenna aperture efficiency. Is this right?
     visibility_rms = (
         wavelength_m**2.0
         * tsys_k
         / (eff_collecting_area * np.sqrt(freq_resolution_hz * int_time_s))
     )
-    visibility_stddev = visibility_rms / np.sqrt(2)
+    visibility_stddev_k = visibility_rms / np.sqrt(2)
+    visibility_stddev_mk = 1e3 * visibility_stddev_k  # Convert from K to mK
 
-    return visibility_stddev
+    return visibility_stddev_mk
 
 
-def generate_uvf_variance():
-
-    # Set variables
-    field_of_view_deg2 = 10.6
-    min_freq_hz = 0.7e9
-    max_freq_hz = c / 0.21
-    antenna_diameter_m = 5
-    freq_resolution_hz = 162.5e3
-    int_time_s = 1
-    aperture_efficiency = 0.62
-    tsys_k = 25
-    uv_extent = 1000
+def generate_uvf_variance(
+    save_filepath=None,
+    field_of_view_deg2=None,
+    min_freq_hz=None,
+    max_freq_hz=None,
+    antenna_diameter_m=None,
+    freq_resolution_hz=None,
+    uv_extent=None,
+    tsys_k=None,
+    aperture_efficiency=None,
+    int_time_s=None,
+):
 
     field_of_view_diameter = 2 * np.sqrt(field_of_view_deg2 / np.pi)
     uv_spacing = 0.5 * 180 / field_of_view_diameter  # Nyquist sample the FoV
@@ -161,7 +164,8 @@ def generate_uvf_variance():
             uv_extent=uv_extent,
             uv_spacing=uv_spacing,
         )
-        visibility_stddev = get_visibility_stddev(
+
+        visibility_stddev_mk = get_visibility_stddev(
             freq_hz=freq_hz,
             tsys_k=tsys_k,
             aperture_efficiency=aperture_efficiency,
@@ -169,10 +173,15 @@ def generate_uvf_variance():
             freq_resolution_hz=freq_resolution_hz,
             int_time_s=int_time_s,
         )
-        uv_plane_variance = visibility_stddev**2.0 * weights_squared_mat / weights_mat
+
+        print(visibility_stddev_mk)
+
+        uv_plane_variance = (
+            visibility_stddev_mk**2.0 * weights_squared_mat / weights_mat**2.0
+        )
 
         if freq_ind == 0:
-            uv_plane_variance_arr = np.full(
+            uvf_variance = np.full(
                 (
                     np.shape(uv_plane_variance)[0],
                     np.shape(uv_plane_variance)[1],
@@ -180,21 +189,68 @@ def generate_uvf_variance():
                 ),
                 np.nan,
             )
-        uv_plane_variance_arr[:, :, freq_ind] = uv_plane_variance
+        uvf_variance[:, :, freq_ind] = uv_plane_variance
 
-    np.save("/Users/ruby/Astro/dsa2000_variance", uv_plane_variance_arr)
+    if save_filepath is not None:
+        np.save(save_filepath, uvf_variance)
+
+    return u_coords_wl, v_coords_wl, freq_array_hz, uvf_variance
 
 
-def generate_uvn_variance_simple_ft(uv_plane_variance_arr):
+def generate_uvn_variance_simple_ft(freq_array_hz, freq_resolution_hz, uvf_variance):
 
-    where_finite = np.isfinite(uv_plane_variance_arr)
-    uvn_variance = np.nansum(uv_plane_variance_arr, axis=2) / np.sum(
-        where_finite, axis=2
-    )
+    # where_finite = np.isfinite(uvf_variance)
+    # uvn_variance = np.nansum(uvf_variance, axis=2) / np.sum(where_finite, axis=2) ** 2.0
+    uvn_variance = np.nansum(uvf_variance, axis=2)
+    uvn_variance[np.where(~np.isfinite(np.nanmax(uvf_variance, axis=2)))] = np.nan
     uvn_variance = np.repeat(
-        uvn_variance[:, :, np.newaxis], np.shape(uv_plane_variance_arr)[2], axis=2
-    )  # Assume all delays have equal variance
-    return uvn_variance
+        uvn_variance[:, :, np.newaxis], np.shape(uvf_variance)[2], axis=2
+    )  # All delays have equal variance
+
+    delay_array_s = np.fft.fftshift(
+        np.fft.fftfreq(len(freq_array_hz), d=freq_resolution_hz)
+    )
+    return delay_array_s, uvn_variance
+
+
+def mask_foregrounds(
+    delay_array_s,
+    uvn_variance,
+    max_delay=2e-9,
+    wedge_slope=0,  # Doesn't support wedge masking yet
+    inplace=False,
+):
+    # Todo: edit this function to mask any modes that _contain_ foregrounds
+
+    mask_modes = np.where(np.abs(delay_array_s) < max_delay)
+
+    if inplace:
+        uvn_variance[:, :, mask_modes[0]] = np.nan
+    else:
+        uvn_variace_masked = np.copy(uvn_variance)
+        uvn_variace_masked[:, :, mask_modes[0]] = np.nan
+        return uvn_variace_masked
+
+
+def get_cosmological_parameters():
+
+    cosmological_parameter_dict = {
+        "D_H": 3000,  # Hubble distance, units Mpc/h
+        "HI rest frame wavelength": 0.21,  # 21 cm wavelength, units m
+        "omega_M": 0.27,  # Matter density
+        "omega_k": 0,  # Curvature
+        "omega_Lambda": 0.73,  # Cosmological constant
+        "omega_B": 0.04,  # Baryon density
+        "mass_frac_HI": 0.015,  # Mass fraction of neutral hydrogen
+        "bias": 0.75,  # Bias between matter PS and HI PS
+        "h": 0.71,
+    }
+    # Derived quantities
+    cosmological_parameter_dict["H_0"] = (
+        c / cosmological_parameter_dict["D_H"]
+    )  # Hubble constant, units h*s/(m Mpc)
+
+    return cosmological_parameter_dict
 
 
 def uvf_to_cosmology_axis_transform(
@@ -205,20 +261,22 @@ def uvf_to_cosmology_axis_transform(
 ):
     # See "Cosmological Parameters and Conversions Memo"
 
-    # Set cosmological parameters
-    hubble_dist = 3000  # Units Mpc/h
-    hubble_const = c / hubble_dist
-    rest_frame_wl = 0.21  # Units m
-    omega_M = 0.27
-    omega_k = 0
-    omega_Lambda = 0.73
+    cosmological_parameter_dict = get_cosmological_parameters()
+    hubble_dist = cosmological_parameter_dict["D_H"]
+    hubble_const = cosmological_parameter_dict["H_0"]
+    rest_frame_wl = cosmological_parameter_dict["HI rest frame wavelength"]
+    omega_M = cosmological_parameter_dict["omega_M"]
+    omega_k = cosmological_parameter_dict["omega_k"]
+    omega_Lambda = cosmological_parameter_dict["omega_Lambda"]
 
     avg_freq_hz = np.mean(freq_array_hz)
     avg_wl = c / avg_freq_hz
     z = avg_wl / rest_frame_wl - 1
 
     # Line-of-sight conversion
-    delay_array_s = np.fft.fftfreq(len(freq_array_hz), d=freq_resolution_hz)
+    delay_array_s = np.fft.fftshift(
+        np.fft.fftfreq(len(freq_array_hz), d=freq_resolution_hz)
+    )
     e_func = np.sqrt(omega_M * (1 + z) ** 3.0 + omega_k * (1 + z) ** 2.0 + omega_Lambda)
     kz = (
         (2 * np.pi * hubble_const * e_func)
@@ -247,6 +305,100 @@ def uvf_to_cosmology_axis_transform(
     return kx, ky, kz
 
 
+def get_binned_kcube_variance(
+    kx,
+    ky,
+    kz,
+    uvn_variance,
+    min_k=None,
+    max_k=None,
+    n_kbins=10,
+):
+
+    power_spectrum_cube_inv_variance = 1 / (4.0 * uvn_variance**2.0)
+
+    distance_mat = np.sqrt(
+        kx[:, np.newaxis, np.newaxis] ** 2.0
+        + ky[np.newaxis, :, np.newaxis] ** 2.0
+        + kz[np.newaxis, np.newaxis, :] ** 2.0
+    )
+    if min_k is None:
+        min_k = 0
+    if max_k is None:
+        max_k = np.max(distance_mat)
+    bin_size = (max_k - min_k) / n_kbins
+    bin_centers = np.linspace(min_k + bin_size / 2, max_k - bin_size / 2, num=n_kbins)
+    binned_ps_variance = np.full(n_kbins, np.nan, dtype=float)
+    for bin in range(n_kbins):
+        use_values = np.where(np.abs(distance_mat - bin_centers[bin]) <= bin_size / 2)
+        if len(use_values[0]) > 0:
+            binned_ps_variance[bin] = 1 / np.nansum(
+                power_spectrum_cube_inv_variance[use_values]
+            )
+
+    return bin_centers, binned_ps_variance
+
+
+def matter_ps_to_21cm_ps_conversion(
+    k_axis,  # Units h/Mpc
+    matter_ps,  # Units (Mpc/h)^3
+    z,  # redshift
+):
+    # See Pober et al. 2013
+    # Produces a slight difference from the paper results. Why?
+
+    cosmological_parameter_dict = get_cosmological_parameters()
+    omega_M = cosmological_parameter_dict["omega_M"]
+    omega_Lambda = cosmological_parameter_dict["omega_Lambda"]
+    omega_B = cosmological_parameter_dict["omega_B"]
+    mass_frac_HI = cosmological_parameter_dict["mass_frac_HI"]
+    bias = cosmological_parameter_dict["bias"]
+    h = cosmological_parameter_dict["h"]
+
+    brightness_temp = (
+        0.084
+        * h
+        * (1 + z) ** 2.0
+        * (omega_M * ((1 + z) ** 3.0) + omega_Lambda) ** -0.5
+        * (omega_B / 0.044)
+        * (mass_frac_HI / 0.01)
+    )  # Units mK
+    ps = brightness_temp**2.0 * bias**2.0 * matter_ps  # Units mK^2(Mpc/h)^3
+
+    # Convert to a dimensionless PS
+    ps *= k_axis**3.0 / (2 * np.pi**2.0)
+
+    return ps
+
+
 if __name__ == "__main__":
 
-    print("")
+    int_time_s = 1
+    aperture_efficiency = 0.62
+    tsys_k = 25
+    save_filepath = "/Users/ruby/Astro/dsa2000_variance"
+    field_of_view_deg2 = 10.6
+    min_freq_hz = 0.7e9
+    max_freq_hz = c / 0.21
+    antenna_diameter_m = 5
+    freq_resolution_hz = 162.5e3
+    uv_extent = 1000
+
+    visibility_stddev_mk = get_visibility_stddev(
+        freq_hz=freq_hz,
+        tsys_k=tsys_k,
+        aperture_efficiency=aperture_efficiency,
+        antenna_diameter_m=antenna_diameter_m,
+        freq_resolution_hz=freq_resolution_hz,
+        int_time_s=int_time_s,
+    )
+
+    generate_uvf_variance(
+        save_filepath=save_filepath,
+        field_of_view_deg2=field_of_view_deg2,
+        min_freq_hz=min_freq_hz,
+        max_freq_hz=max_freq_hz,
+        antenna_diameter_m=antenna_diameter_m,
+        freq_resolution_hz=freq_resolution_hz,
+        uv_extent=uv_extent,
+    )
