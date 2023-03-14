@@ -87,13 +87,17 @@ def create_var_matrix(
     u_pixels = len(u_coords_wl)
     v_pixels = len(v_coords_wl)
 
-    use_baselines = baselines_wl[
-        np.where(
-            np.sqrt(baselines_wl[:, 0] ** 2 + baselines_wl[:, 1] ** 2)
-            < np.sqrt(2) * uv_extent
-        )[0],
-        :,
-    ]
+    # use_baselines = baselines_wl[
+    #    np.where(
+    #        np.sqrt(baselines_wl[:, 0] ** 2 + baselines_wl[:, 1] ** 2)
+    #        < np.sqrt(2) * uv_extent
+    #    )[0],
+    #    :,
+    # ]
+    use_baselines_bool = (
+        np.abs(baselines_wl[:, 0]) < (uv_extent + antenna_diameter_m * c / freq_hz)
+    ) & (np.abs(baselines_wl[:, 1]) < (uv_extent + antenna_diameter_m * c / freq_hz))
+    use_baselines = baselines_wl[np.where(use_baselines_bool)[0], :]
     use_Nbls = np.shape(use_baselines)[0]
 
     weights_mat = np.zeros((u_pixels, v_pixels))
@@ -334,7 +338,7 @@ def get_binned_kcube_variance(
         if len(use_values[0]) > 0:
             binned_ps_variance[bin] = 1 / np.nansum(
                 power_spectrum_cube_inv_variance[use_values]
-            )
+            )  # Need to correct this so it doesn't return zero when all nans
 
     return bin_centers, binned_ps_variance
 
@@ -371,6 +375,159 @@ def matter_ps_to_21cm_ps_conversion(
     return ps
 
 
+def add_sample_variance_term(
+    uvn_variance,
+    kx,
+    ky,
+    kz,
+    ps_model,  # Units mK^2
+    model_k_axis,  # Units h/Mpc
+    inplace=False,
+):
+
+    k_dist = np.sqrt(
+        kx[:, np.newaxis, np.newaxis] ** 2.0
+        + ky[np.newaxis, :, np.newaxis] ** 2.0
+        + kz[np.newaxis, np.newaxis, :] ** 2.0
+    )
+    ps_vals_interp = np.interp(k_dist, model_k_axis, ps_model)
+    if inplace:
+        uvf_variance += ps_vals_interp
+    else:
+        uvf_variance_combined = np.copy(uvf_variance) + ps_vals_interp
+        return uvf_variance_combined
+
+
+def get_ps_model_Paul2023(z=0.32):
+    # Returns the model values from the Paul et al. 2023 MeerKAT analysis
+
+    if z == 0.32:
+        ps_model = np.array(
+            [
+                37.49011751,
+                6.45822706,
+                2.1502804,
+                0.92349697,
+                0.40971913,
+                0.23231663,
+                0.14804924,
+            ]
+        )
+        model_k_axis = np.array([0.43, 0.74, 1.25, 2.04, 3.30, 5.19, 7.96])
+    elif z == 0.44:
+        ps_model = np.array(
+            [
+                31.6840213,
+                6.93438621,
+                3.19883961,
+                1.79542739,
+                0.9431229,
+                0.62953508,
+                0.43315279,
+            ]
+        )
+        model_k_axis = np.array([0.34, 0.61, 1.01, 1.68, 2.81, 4.31, 7.04])
+    else:
+        print("Error: z options are 0.32 and 0.44.")
+
+    # Convert k from Mpc^-1 to h/Mpc
+    cosmological_parameter_dict = get_cosmological_parameters()
+    h = cosmological_parameter_dict["h"]
+    model_k_axis /= h
+
+    # Convert PS to units mK^2
+    ps_model *= model_k_axis**3.0 / (2.0 * np.pi**2.0)
+
+    return ps_model, model_k_axis
+
+
+def delay_ps_sensitivity_analysis():
+
+    min_freq_hz = 0.7e9
+    max_freq_hz = c / 0.21
+    freq_hz = np.mean([min_freq_hz, max_freq_hz])
+    tsys_k = 25
+    aperture_efficiency = 0.62
+    antenna_diameter_m = 5
+    freq_resolution_hz = 162.5e3
+    int_time_s = 1
+    min_k = 0
+    max_k = None
+    n_kbins=100
+    max_bl_m = 1700
+
+    visibility_stddev_mk = get_visibility_stddev(
+        freq_hz=freq_hz,
+        tsys_k=tsys_k,
+        aperture_efficiency=aperture_efficiency,
+        antenna_diameter_m=antenna_diameter_m,
+        freq_resolution_hz=freq_resolution_hz,
+        int_time_s=int_time_s,
+    )
+    freq_array_hz = np.arange(min_freq_hz, max_freq_hz, freq_resolution_hz)
+    delay_visibility_variance = visibility_stddev_mk**2.0 * len(freq_array_hz)
+    ps_variance = 4.0 * delay_visibility_variance**2.0
+
+    antpos = get_antpos()
+    baselines_m = get_baselines(antpos)
+    baselines_m = baselines_m[np.where(np.sqrt(np.sum(baselines_m**2., axis=1)) < max_bl_m)[0], :]
+    wavelength = c / freq_hz
+    baselines_wl = baselines_m / wavelength
+
+    kx, ky, kz = uvf_to_cosmology_axis_transform(
+        baselines_wl[:, 0],
+        baselines_wl[:, 1],
+        freq_array_hz,
+        freq_resolution_hz,
+    )
+
+    # 2d binning
+    kperp_dist = np.sqrt(kx ** 2.0 + ky ** 2.0)
+    min_kperp = min_kpar = 0
+    max_kperp = np.max(kperp_dist)
+    max_kpar = np.max(kz)
+    bin_size_kperp = (max_kperp - min_kperp) / n_kbins
+    bin_size_kpar = (max_kpar - min_kpar) / n_kbins
+    bin_centers_kperp = np.linspace(min_kperp + bin_size_kperp / 2, max_kperp - bin_size_kperp / 2, num=n_kbins)
+    bin_centers_kpar = np.linspace(min_kpar + bin_size_kpar / 2, max_kpar - bin_size_kpar / 2, num=n_kbins)
+
+    nsamples_kpar = np.zeros(n_kbins, dtype=int)
+    for kpar_bin in range(n_kbins):
+        use_values_kpar = np.where(np.abs(kz - bin_centers_kpar[kpar_bin]) <= bin_size_kpar / 2)
+        nsamples_kpar[kpar_bin] = len(use_values_kpar[0])
+    nsamples_kperp = np.zeros(n_kbins, dtype=int)
+    for kperp_bin in range(n_kbins):
+        use_values_kperp = np.where(np.abs(kperp_dist - bin_centers_kperp[kperp_bin]) <= bin_size_kperp / 2)
+        nsamples_kperp[kperp_bin] = len(use_values_kperp[0])
+    nsamples_2d = np.outer(nsamples_kperp, nsamples_kpar)
+
+    binned_ps_variance_2d = ps_variance / nsamples_2d
+
+    # 1d binning
+    kz = np.sort(kz)[10:]  # Remove first bins for foreground masking; need to validate which bins to remove
+
+    nsamples = np.zeros(n_kbins, dtype=int)
+    distance_mat = np.sqrt(
+        kx[:, np.newaxis] ** 2.0
+        + ky[:, np.newaxis] ** 2.0
+        + kz[np.newaxis, :] ** 2.0
+    )
+    if min_k is None:
+        min_k = 0
+    if max_k is None:
+        max_k = np.max(distance_mat)
+    bin_size = (max_k - min_k) / n_kbins
+    bin_centers = np.linspace(min_k + bin_size / 2, max_k - bin_size / 2, num=n_kbins)
+    binned_ps_variance = np.full(n_kbins, np.nan, dtype=float)
+    for bin in range(n_kbins):
+        use_values = np.where(np.abs(distance_mat - bin_centers[bin]) <= bin_size / 2)
+        nsamples[bin] = len(use_values[0])
+
+    binned_ps_variance = ps_variance / nsamples
+
+    return nsamples, bin_centers, binned_ps_variance, nsamples_2d, bin_centers_kperp, bin_centers_kpar, binned_ps_variance_2d
+
+
 if __name__ == "__main__":
 
     int_time_s = 1
@@ -382,16 +539,7 @@ if __name__ == "__main__":
     max_freq_hz = c / 0.21
     antenna_diameter_m = 5
     freq_resolution_hz = 162.5e3
-    uv_extent = 1000
-
-    visibility_stddev_mk = get_visibility_stddev(
-        freq_hz=freq_hz,
-        tsys_k=tsys_k,
-        aperture_efficiency=aperture_efficiency,
-        antenna_diameter_m=antenna_diameter_m,
-        freq_resolution_hz=freq_resolution_hz,
-        int_time_s=int_time_s,
-    )
+    uv_extent = 1e4
 
     generate_uvf_variance(
         save_filepath=save_filepath,
@@ -401,4 +549,7 @@ if __name__ == "__main__":
         antenna_diameter_m=antenna_diameter_m,
         freq_resolution_hz=freq_resolution_hz,
         uv_extent=uv_extent,
+        tsys_k=tsys_k,
+        aperture_efficiency=aperture_efficiency,
+        int_time_s=int_time_s,
     )
