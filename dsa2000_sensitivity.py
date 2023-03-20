@@ -375,27 +375,72 @@ def matter_ps_to_21cm_ps_conversion(
     return ps
 
 
-def add_sample_variance_term(
-    uvn_variance,
-    kx,
-    ky,
-    kz,
+def get_sample_variance(
     ps_model,  # Units mK^2
     model_k_axis,  # Units h/Mpc
-    inplace=False,
+    uv_extent=None,
+    field_of_view_deg2=None,
+    min_freq_hz=None,
+    max_freq_hz=None,
+    freq_resolution_hz=None,
+    kx=None,
+    ky=None,
+    kz=None,
+    k_bin_size=None,
+    k_bin_centers=None,
+    min_k=None,
+    max_k=None,
+    n_kbins=None,
 ):
+
+    if kx is None or ky is None or kz is None:  # Recalculate axes
+        field_of_view_diameter = 2 * np.sqrt(field_of_view_deg2 / np.pi)
+        uv_spacing = 0.5 * 180 / field_of_view_diameter  # Nyquist sample the FoV
+        freq_array_hz = np.arange(min_freq_hz, max_freq_hz, freq_resolution_hz)
+
+        u_coords_wl = np.arange(0, uv_extent, uv_spacing)
+        u_coords_wl = np.append(-np.flip(u_coords_wl[1:]), u_coords_wl)
+        v_coords_wl = np.arange(0, uv_extent, uv_spacing)
+
+        kx, ky, kz = uvf_to_cosmology_axis_transform(
+            u_coords_wl,
+            v_coords_wl,
+            freq_array_hz,
+            freq_resolution_hz,
+        )
 
     k_dist = np.sqrt(
         kx[:, np.newaxis, np.newaxis] ** 2.0
         + ky[np.newaxis, :, np.newaxis] ** 2.0
         + kz[np.newaxis, np.newaxis, :] ** 2.0
     )
-    ps_vals_interp = np.interp(k_dist, model_k_axis, ps_model)
-    if inplace:
-        uvf_variance += ps_vals_interp
+    sample_variance_cube = np.interp(k_dist, model_k_axis, ps_model)
+
+    distance_mat = np.sqrt(
+        kx[:, np.newaxis, np.newaxis] ** 2.0
+        + ky[np.newaxis, :, np.newaxis] ** 2.0
+        + kz[np.newaxis, np.newaxis, :] ** 2.0
+    )
+
+    if k_bin_size is None or k_bin_centers is None:  # Recalculate k bins
+        if min_k is None:
+            min_k = 0
+        if max_k is None:
+            max_k = np.max(distance_mat)
+        k_bin_size = (max_k - min_k) / n_kbins
+        k_bin_centers = np.linspace(min_k + k_bin_size / 2, max_k - k_bin_size / 2, num=n_kbins)
     else:
-        uvf_variance_combined = np.copy(uvf_variance) + ps_vals_interp
-        return uvf_variance_combined
+        n_kbins = len(k_bin_centers)
+
+    binned_ps_variance = np.full(n_kbins, np.nan, dtype=float)
+    for bin in range(n_kbins):
+        use_values = np.where(np.abs(distance_mat - k_bin_centers[bin]) <= k_bin_size / 2)
+        if len(use_values[0]) > 0:
+            binned_ps_variance[bin] = (
+                np.nansum(sample_variance_cube[use_values]) / len(use_values[0]) ** 2.0
+            )
+
+    return sample_variance_cube, k_bin_centers, binned_ps_variance
 
 
 def get_ps_model_Paul2023(z=0.32):
@@ -441,7 +486,7 @@ def get_ps_model_Paul2023(z=0.32):
     return ps_model, model_k_axis
 
 
-def delay_ps_sensitivity_analysis():
+def delay_ps_sensitivity_analysis(zenith_angle=0):
 
     min_freq_hz = 0.7e9
     max_freq_hz = c / 0.21
@@ -450,11 +495,12 @@ def delay_ps_sensitivity_analysis():
     aperture_efficiency = 0.62
     antenna_diameter_m = 5
     freq_resolution_hz = 162.5e3
-    int_time_s = 1
+    # int_time_s = 1
+    int_time_s = 15.0 * 60  # 15 minutes in each survey field
     min_k = 0
     max_k = None
-    n_kbins=100
-    max_bl_m = 1700
+    n_kbins = 50
+    max_bl_m = 1000
 
     visibility_stddev_mk = get_visibility_stddev(
         freq_hz=freq_hz,
@@ -470,7 +516,11 @@ def delay_ps_sensitivity_analysis():
 
     antpos = get_antpos()
     baselines_m = get_baselines(antpos)
-    baselines_m = baselines_m[np.where(np.sqrt(np.sum(baselines_m**2., axis=1)) < max_bl_m)[0], :]
+    baselines_m = baselines_m[
+        np.where(np.sqrt(np.sum(baselines_m**2.0, axis=1)) < max_bl_m)[0], :
+    ]
+    if zenith_angle != 0:
+        baselines_m[:, 0] *= np.cos(np.radians(zenith_angle))
     wavelength = c / freq_hz
     baselines_wl = baselines_m / wavelength
 
@@ -482,35 +532,43 @@ def delay_ps_sensitivity_analysis():
     )
 
     # 2d binning
-    kperp_dist = np.sqrt(kx ** 2.0 + ky ** 2.0)
+    kperp_dist = np.sqrt(kx**2.0 + ky**2.0)
     min_kperp = min_kpar = 0
     max_kperp = np.max(kperp_dist)
     max_kpar = np.max(kz)
     bin_size_kperp = (max_kperp - min_kperp) / n_kbins
     bin_size_kpar = (max_kpar - min_kpar) / n_kbins
-    bin_centers_kperp = np.linspace(min_kperp + bin_size_kperp / 2, max_kperp - bin_size_kperp / 2, num=n_kbins)
-    bin_centers_kpar = np.linspace(min_kpar + bin_size_kpar / 2, max_kpar - bin_size_kpar / 2, num=n_kbins)
+    bin_centers_kperp = np.linspace(
+        min_kperp + bin_size_kperp / 2, max_kperp - bin_size_kperp / 2, num=n_kbins
+    )
+    bin_centers_kpar = np.linspace(
+        min_kpar + bin_size_kpar / 2, max_kpar - bin_size_kpar / 2, num=n_kbins
+    )
 
     nsamples_kpar = np.zeros(n_kbins, dtype=int)
     for kpar_bin in range(n_kbins):
-        use_values_kpar = np.where(np.abs(kz - bin_centers_kpar[kpar_bin]) <= bin_size_kpar / 2)
+        use_values_kpar = np.where(
+            np.abs(kz - bin_centers_kpar[kpar_bin]) <= bin_size_kpar / 2
+        )
         nsamples_kpar[kpar_bin] = len(use_values_kpar[0])
     nsamples_kperp = np.zeros(n_kbins, dtype=int)
     for kperp_bin in range(n_kbins):
-        use_values_kperp = np.where(np.abs(kperp_dist - bin_centers_kperp[kperp_bin]) <= bin_size_kperp / 2)
+        use_values_kperp = np.where(
+            np.abs(kperp_dist - bin_centers_kperp[kperp_bin]) <= bin_size_kperp / 2
+        )
         nsamples_kperp[kperp_bin] = len(use_values_kperp[0])
     nsamples_2d = np.outer(nsamples_kperp, nsamples_kpar)
 
     binned_ps_variance_2d = ps_variance / nsamples_2d
 
     # 1d binning
-    kz = np.sort(kz)[10:]  # Remove first bins for foreground masking; need to validate which bins to remove
+    kz = np.sort(kz)[
+        10:
+    ]  # Remove first bins for foreground masking; need to validate which bins to remove
 
     nsamples = np.zeros(n_kbins, dtype=int)
     distance_mat = np.sqrt(
-        kx[:, np.newaxis] ** 2.0
-        + ky[:, np.newaxis] ** 2.0
-        + kz[np.newaxis, :] ** 2.0
+        kx[:, np.newaxis] ** 2.0 + ky[:, np.newaxis] ** 2.0 + kz[np.newaxis, :] ** 2.0
     )
     if min_k is None:
         min_k = 0
@@ -525,7 +583,15 @@ def delay_ps_sensitivity_analysis():
 
     binned_ps_variance = ps_variance / nsamples
 
-    return nsamples, bin_centers, binned_ps_variance, nsamples_2d, bin_centers_kperp, bin_centers_kpar, binned_ps_variance_2d
+    return (
+        nsamples,
+        bin_centers,
+        binned_ps_variance,
+        nsamples_2d,
+        bin_centers_kperp,
+        bin_centers_kpar,
+        binned_ps_variance_2d,
+    )
 
 
 if __name__ == "__main__":
