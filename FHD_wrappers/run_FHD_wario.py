@@ -21,6 +21,7 @@ eppsilon_script = "ps_single_obs_wrapper"
 # Set eppsilon options
 refresh_ps = 1
 uvf_input = 1
+no_evenodd = 1  # Use this option if only one time step is present
 
 for version in versions_list:
     # Create directories
@@ -55,7 +56,7 @@ for version in versions_list:
             ) as err:
                 process = subprocess.Popen(
                     shlex.split(
-                        f"/opt/idl/idl88/bin/idl -e {eppsilon_script} -args {obsid} {outdir} {version} {refresh_ps} {uvf_input}"
+                        f"/opt/idl/idl88/bin/idl -e {eppsilon_script} -args {obsid} {outdir} {version} {refresh_ps} {uvf_input} {no_evenodd}"
                     ),
                     stdout=out,
                     stderr=err,
