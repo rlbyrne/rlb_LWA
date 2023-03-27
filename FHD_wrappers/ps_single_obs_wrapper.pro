@@ -23,7 +23,7 @@ pro ps_single_obs_wrapper
   if uvf_input eq 0 then undefine, uvf_input
   if no_evenodd eq 0 then undefine, no_evenodd
 
-  ps_wrapper, outdir+'/fhd_'+fhd_version, obs_id, /png, /plot_kpar_power, refresh_ps=refresh_ps, uvf_input=uvf_input, pol_inc=["xx"], no_evenodd=no_evenodd
+  ps_wrapper, outdir+'/fhd_'+fhd_version, obs_id, /png, /plot_kpar_power, refresh_ps=refresh_ps, uvf_input=uvf_input, pol_inc=["xx"], no_evenodd=no_evenodd, refresh_info=refresh_ps
 
 
 end
