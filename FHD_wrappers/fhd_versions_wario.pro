@@ -341,11 +341,12 @@ pro fhd_versions_wario
       import_pyuvdata_beam_filepath = '/home/rbyrne/airy_14m.beamfits'
       calibrate_visibilities = 0
       n_pol = 2
-      snapshot_healpix_export = 1  ;required to activate save_uvf 
+      snapshot_healpix_export = 1  ;required to activate save_uvf
       split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
       save_uvf = 1
       flag_visibilities = 0
       unflag_all = 1
+      instrument = "ovro-lwa"  ;try adding this keyword to stop flagging coarse bands
     end
 
   endcase
