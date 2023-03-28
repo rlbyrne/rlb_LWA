@@ -346,7 +346,8 @@ pro fhd_versions_wario
       save_uvf = 1
       flag_visibilities = 0
       unflag_all = 1
-      instrument = "ovro-lwa"  ;try adding this keyword to stop flagging coarse bands
+      instrument = "ovro-lwa"
+      beam_nfreq_avg = 1  ;do not average beam
     end
 
   endcase
