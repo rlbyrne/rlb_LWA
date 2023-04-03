@@ -3,10 +3,10 @@ import shlex
 import os
 
 obsids_list = [
-    "sim_uv_spacing_10",
-    "sim_uv_spacing_5",
-    "sim_uv_spacing_1",
-    "sim_uv_spacing_0.5"
+    #"sim_uv_spacing_10",
+    #"sim_uv_spacing_5",
+    #"sim_uv_spacing_1",
+    "sim_uv_spacing_0p5"
 ]
 versions_list = ["rlb_process_uv_density_sims_Mar2023"]
 uvfits_path = "/safepool/rbyrne/uv_density_simulations"
