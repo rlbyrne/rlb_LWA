@@ -12,12 +12,17 @@ from astropy.units import Quantity
 def create_random_array(
     uvdata_template,
     uv_density_wavelengths,
-    uv_extent_wavelengths=100.0,
-    frequency_mhz=182.0,
+    uv_extent_wavelengths=50.0,
+    freq_min_mhz=150.0,
+    freq_max_mhz=200.0,
     min_antenna_spacing_m=14.0,
     c=3e8,
     plot=False,
+    include_autocorrelation=True,
+    Ntimes=1,
 ):
+
+    frequency_mhz = np.mean([freq_min_mhz, freq_max_mhz])
 
     # Calculate random baseline locations in the uv plane
     coord_extent = (
@@ -53,15 +58,15 @@ def create_random_array(
                     baseline_locs_u.append(u_loc)
                     baseline_locs_v.append(v_loc)
 
-    # if plot:
-    #    fig = plt.figure()
-    #    plt.plot(baseline_locs_u, baseline_locs_v, ".")
-    #    ax = plt.gca()
-    #    ax.set_aspect("equal")
-    #    ax.set_xticks(ticks=u_coords, minor=True)
-    #    ax.set_yticks(ticks=v_coords, minor=True)
-    #    ax.grid(which="minor")
-    #    plt.show()
+    if plot:
+        fig = plt.figure()
+        plt.plot(baseline_locs_u, baseline_locs_v, ".")
+        ax = plt.gca()
+        ax.set_aspect("equal")
+        ax.set_xticks(ticks=u_coords, minor=True)
+        ax.set_yticks(ticks=v_coords, minor=True)
+        ax.grid(which="minor")
+        plt.show()
 
     # Calculate the corresponding antenna locations
     Nbls = len(baseline_locs_u)
@@ -117,18 +122,27 @@ def create_random_array(
     # Convert to m
     antenna_locs *= c / frequency_mhz / 1e6
 
-    # if plot:
-    #    fig = plt.figure()
-    #    plt.plot(antenna_locs[:, 0], antenna_locs[:, 1], ".")
-    #    ax = plt.gca()
-    #    ax.set_aspect("equal")
-    #    plt.show()
+    if plot:
+        fig = plt.figure()
+        plt.plot(antenna_locs[:, 0], antenna_locs[:, 1], ".")
+        ax = plt.gca()
+        ax.set_aspect("equal")
+        plt.show()
+
+    # Add an autocorrelation value
+    if include_autocorrelation:
+        ant_1_array = np.append(ant_1_array, 0)
+        ant_2_array = np.append(ant_2_array, 0)
+        Nbls += 1
 
     # Generate uvdata object
     print("Generating uvdata object")
     antenna_locs_ENU = np.zeros((Nants, 3))
     antenna_locs_ENU[:, 0] = antenna_locs[:, 0]
     antenna_locs_ENU[:, 1] = antenna_locs[:, 1]
+
+    times = np.unique(uvdata_template.time_array)
+    uv = uvdata_template.select(times=times[0:Ntimes], inplace=False)
 
     uv.Nants_data = Nants
     uv.Nants_telescope = Nants
@@ -145,6 +159,10 @@ def create_random_array(
     uv.lst_array = np.array(
         [uv.lst_array[np.where(old_time_array == time)[0][0]] for time in uv.time_array]
     )
+    uv.freq_array = np.arange(freq_min_mhz * 1e6, freq_max_mhz * 1e6, uv.channel_width)[
+        np.newaxis, :
+    ]
+    uv.Nfreqs = np.shape(uv.freq_array)[1]
     uv.nsample_array = np.full(
         (uv.Nblts, uv.Nspws, uv.Nfreqs, uv.Npols), 1.0, dtype=float
     )
@@ -176,12 +194,12 @@ def create_random_array(
 
 if __name__ == "__main__":
 
-    for uv_density in [1, 0.5]:
+    for uv_density in [10, 5, 1, 0.5]:
 
         uv = pyuvdata.UVData()
         uv.read_uvfits("/safepool/rbyrne/mwa_data/1061316296.uvfits")
         uv = create_random_array(uv, uv_density)
         print("Writing uvfits")
         uv.write_uvfits(
-            f"/safepool/rbyrne/uv_density_simulations/antenna_layout_uv_density_{uv_density}.uvfits"
+            f"/safepool/rbyrne/uv_density_simulations_Apr2023/antenna_layout_uv_density_{uv_density}.uvfits"
         )
