@@ -2,17 +2,12 @@ import subprocess
 import shlex
 import os
 
-obsids_list = [
-    #"sim_uv_spacing_10",
-    #"sim_uv_spacing_5",
-    #"sim_uv_spacing_1",
-    "sim_uv_spacing_0.5"
-]
-versions_list = ["rlb_process_uv_density_sims_Mar2023"]
-uvfits_path = "/safepool/rbyrne/uv_density_simulations"
+obsids_list = ["20230415_050552_70MHz"]
+versions_list = ["rlb_image_LWA_data_Apr2023"]
+uvfits_path = "/safepool/rbyrne/lwa_data/lwa_testing_20230415"
 outdir = "/safepool/rbyrne/fhd_outputs"
 run_fhd = True
-run_eppsilon = True
+run_eppsilon = False
 
 # Define wrappers
 fhd_versions_script = "fhd_versions_wario"
