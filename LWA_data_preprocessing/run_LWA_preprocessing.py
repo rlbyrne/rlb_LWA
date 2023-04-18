@@ -750,8 +750,8 @@ def ssins_flagging_Apr17():
     )
     uvd.phase_to_time(np.mean(uvd.time_array))
 
-    flag_ants1 = np.loadtxt(flag_ants_file1, delimiter=",", dtype=str)[:, 0]
-    flag_ants2 = np.loadtxt(flag_ants_file2, delimiter=",", dtype=str)[:, 0]
+    flag_ants1 = np.loadtxt(flag_ants_file1, delimiter=",", dtype=str)[:, 0][:-1]
+    flag_ants2 = np.loadtxt(flag_ants_file2, delimiter=",", dtype=str)[:, 0][:-1]
     LWA_preprocessing.flag_antennas(
         uvd,
         antenna_names=np.concatenate((flag_ants1, flag_ants2)),
