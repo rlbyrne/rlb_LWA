@@ -753,7 +753,7 @@ def ssins_flagging_Apr17():
     flag_ants1 = np.loadtxt(flag_ants_file1, delimiter=",", dtype=str)[:, 0]
     flag_ants2 = np.loadtxt(flag_ants_file2, delimiter=",", dtype=str)[:, 0]
     flag_ants = np.concatenate((flag_ants1, flag_ants2))
-    flag_ants = np.array([antname[:-1] for antname in flag_ants])  # Strip pol name
+    flag_ants = np.array([antname[:-1].strip("-") for antname in flag_ants])  # Strip pol name
     LWA_preprocessing.flag_antennas(
         uvd,
         antenna_names=flag_ants,
