@@ -387,6 +387,27 @@ pro fhd_versions_wario
       save_uvf = 0
     end
 
+    'rlb_image_LWA_data_VLSS_Apr2023': begin
+      recalculate_all = 1
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      calibrate_visibilities = 1
+      n_pol = 4
+      calibration_catalog_file_path = '/home/rbyrne/FullVLSSCatalog.skyh5'
+      allow_sidelobe_cal_sources = 1
+      sim_over_calibrate = 1
+      bandpass_calibrate = 0
+      cable_bandpass_fit = 0
+      cal_mode_fit = 0
+      calibration_polyfit = 0
+      snapshot_healpix_export = 0
+      min_cal_baseline = 30
+      image_filter_fn = "filter_uv_optimal"
+      flag_calibration = 0 ;allow calibration to flag antennas
+      calibration_flag_iterate = 0 ;repeat calibration after flagging
+      save_uvf = 0
+    end
+
   endcase
 
   undefine, uvfits_subversion, uvfits_version

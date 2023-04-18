@@ -3,7 +3,7 @@ import shlex
 import os
 
 obsids_list = ["20230415_050552_70MHz"]
-versions_list = ["rlb_image_LWA_data_Apr2023"]
+versions_list = ["rlb_image_LWA_data_VLSS_Apr2023"]
 uvfits_path = "/safepool/rbyrne/lwa_data/lwa_testing_20230415"
 outdir = "/safepool/rbyrne/fhd_outputs"
 run_fhd = True
