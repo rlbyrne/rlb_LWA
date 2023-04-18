@@ -719,5 +719,68 @@ def ssins_flagging_Nov28():
     )
 
 
+def ssins_flagging_Apr17():
+
+    data_dir = "/safepool/rbyrne/lwa_data"
+    data_output_dir = "/safepool/rbyrne/lwa_data/lwa_testing_20230415"
+    ssins_flags_dir = "/safepool/rbyrne/lwa_data/lwa_testing_20230415"
+    ssins_plot_dir = "/safepool/rbyrne/lwa_data/lwa_testing_20230415"
+    flag_ants_file1 = "/safepool/rbyrne/lwa_data/lwa_testing_20230415/zero_ant.csv"
+    flag_ants_file2 = (
+        "/safepool/rbyrne/lwa_data/lwa_testing_20230415/misbehaving_ant.csv"
+    )
+
+    # Find raw ms files
+    ms_filenames = [
+        "20230415_050552_70MHz.ms",
+        "20230415_050602_70MHz.ms",
+        "20230415_050612_70MHz.ms",
+        "20230415_050622_70MHz.ms",
+        "20230415_050632_70MHz.ms",
+        "20230415_050642_70MHz.ms",
+        "20230415_050653_70MHz.ms",
+        "20230415_050703_70MHz.ms",
+        "20230415_050713_70MHz.ms",
+        "20230415_050723_70MHz.ms",
+        "20230415_050733_70MHz.ms",
+        "20230415_050743_70MHz.ms",
+    ]
+    uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(
+        [f"{data_dir}/{filename}" for filename in ms_filenames]
+    )
+    uvd.phase_to_time(np.mean(uvd.time_array))
+
+    flag_ants1 = np.loadtxt(flag_ants_file1, delimiter=",", dtype=str)[:, 0]
+    flag_ants2 = np.loadtxt(flag_ants_file2, delimiter=",", dtype=str)[:, 0]
+    LWA_preprocessing.flag_antennas(
+        uvd,
+        antenna_names=np.concatenate((flag_ants1, flag_ants2)),
+        inplace=True,
+    )
+
+    ssins_thresh = 10.0
+    uvd_ssins_flagged = LWA_preprocessing.ssins_flagging(
+        uvd,
+        sig_thresh=ssins_thresh,  # Flagging threshold in std. dev.
+        inplace=False,
+        save_flags_filepath=f"{ssins_flags_dir}/flags_thresh_{ssins_thresh}.hdf5",
+        plot_no_flags=True,
+        plot_orig_flags=True,
+        plot_ssins_flags=True,
+        plot_save_dir=ssins_plot_dir,
+        plot_file_prefix=f"20230415_050552_70MHz",
+    )
+    flagging_frac = (np.sum(uvd_ssins_flagged.flag_array) - np.sum(uvd.flag_array)) / (
+        np.size(uvd.flag_array) - np.sum(uvd.flag_array)
+    )
+    print(f"Flagging fraction {flagging_frac} at SSINS threshold {ssins_thresh}")
+
+    uvd_ssins_flagged.write_uvfits(
+        f"{data_output_dir}/20230415_050552_70MHz.uvfits",
+        force_phase=True,
+        spoof_nonessential=True,
+    )
+
+
 if __name__ == "__main__":
-    ssins_flagging_Nov28()
+    ssins_flagging_Apr17()
