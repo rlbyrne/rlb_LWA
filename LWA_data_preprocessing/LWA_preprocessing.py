@@ -559,7 +559,7 @@ def ssins_flagging(
     if save_flags_filepath is not None:
         if not save_flags_filepath.endswith(".hdf5"):
             save_flags_filepath = save_flags_filepath + ".hdf5"
-        uvf.write(save_flags_filepath)
+        uvf.write(save_flags_filepath, clobber=True)
 
     if inplace:
         pyuvdata.utils.apply_uvflag(uvd, uvf, inplace=True)
