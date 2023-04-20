@@ -2,8 +2,8 @@ import subprocess
 import shlex
 import os
 
-obsids_list = ["sim_uv_spacing_0.5_short_bls"]
-versions_list = ["rlb_process_uv_density_sims_Mar2023"]
+obsids_list = ["sim_uv_spacing_10"]
+versions_list = ["rlb_process_uv_density_sims_Mar2023_2"]
 uvfits_path = "/safepool/rbyrne/uv_density_simulations"
 outdir = "/safepool/rbyrne/fhd_outputs"
 run_fhd = True
