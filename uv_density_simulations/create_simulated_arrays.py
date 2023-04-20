@@ -13,16 +13,14 @@ def create_random_array(
     uvdata_template,
     uv_density_wavelengths,
     uv_extent_wavelengths=50.0,
-    freq_min_mhz=150.0,
-    freq_max_mhz=200.0,
+    frequency_mhz=182.0,
+    custom_frequency_range=None,
     min_antenna_spacing_m=14.0,
     c=3e8,
     plot=False,
     include_autocorrelation=True,
     Ntimes=1,
 ):
-
-    frequency_mhz = np.mean([freq_min_mhz, freq_max_mhz])
 
     # Calculate random baseline locations in the uv plane
     coord_extent = (
@@ -159,10 +157,13 @@ def create_random_array(
     uv.lst_array = np.array(
         [uv.lst_array[np.where(old_time_array == time)[0][0]] for time in uv.time_array]
     )
-    uv.freq_array = np.arange(freq_min_mhz * 1e6, freq_max_mhz * 1e6, uv.channel_width)[
-        np.newaxis, :
-    ]
-    uv.Nfreqs = np.shape(uv.freq_array)[1]
+    if custom_frequency_range is not None:
+        uv.freq_array = np.arange(
+            custom_frequency_range[0] * 1e6,
+            custom_frequency_range[1] * 1e6,
+            uv.channel_width,
+        )[np.newaxis, :]
+        uv.Nfreqs = np.shape(uv.freq_array)[1]
     uv.nsample_array = np.full(
         (uv.Nblts, uv.Nspws, uv.Nfreqs, uv.Npols), 1.0, dtype=float
     )
