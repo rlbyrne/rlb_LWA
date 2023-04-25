@@ -19,13 +19,11 @@ for spacing in uv_spacings:
         f"Reducing total number of antennas from {uv.Nants_telescope} to {uv.Nants_data}."
     )
     use_ants = np.unique(np.concatenate((uv.ant_1_array, uv.ant_2_array)))
-    use_ant_inds = np.array(
-        [
-            ind
-            for ind in range(uv.Nants_telescope)
-            if uv.antenna_numbers[ind] in use_ants
-        ]
-    )
+    use_ant_inds = [
+        ind
+        for ind in range(uv.Nants_telescope)
+        if uv.antenna_numbers[ind] in use_ants
+    ]
     uv.Nants_telescope = uv.Nants_data
     uv.antenna_numbers = uv.antenna_numbers[use_ant_inds]
     uv.antenna_names = uv.antenna_names[use_ant_inds]
