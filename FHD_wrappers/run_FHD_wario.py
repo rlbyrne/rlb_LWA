@@ -3,7 +3,6 @@ import shlex
 import os
 
 obsids_list = [
-    "sim_uv_spacing_1_short_bls",
     "sim_uv_spacing_1"
 ]
 versions_list = ["rlb_process_uv_density_sims_Apr2023"]
