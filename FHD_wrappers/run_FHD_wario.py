@@ -5,7 +5,7 @@ import os
 obsids_list = [
     "sim_uv_spacing_1"
 ]
-versions_list = ["rlb_process_uv_density_sims_Apr2023"]
+versions_list = ["rlb_process_uv_density_sims_Apr2023_2"]
 uvfits_path = "/safepool/rbyrne/uv_density_simulations"
 outdir = "/safepool/rbyrne/fhd_outputs"
 run_fhd = True
