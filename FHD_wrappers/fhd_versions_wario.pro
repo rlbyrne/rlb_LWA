@@ -462,8 +462,9 @@ pro fhd_versions_wario
       unflag_all = 1
       instrument = "ovro-lwa"
       beam_nfreq_avg = 1  ;do not average beam
+   end
 
-      'rlb_process_uv_density_sims_Apr2023_4': begin
+   'rlb_process_uv_density_sims_Apr2023_4': begin
         recalculate_all = 1
         import_pyuvdata_beam_filepath = '/home/rbyrne/airy_14m.beamfits'
         calibrate_visibilities = 0
