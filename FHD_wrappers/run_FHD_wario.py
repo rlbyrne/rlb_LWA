@@ -8,7 +8,7 @@ obsids_list = [
 versions_list = ["rlb_process_uv_density_sims_Apr2023_6"]
 uvfits_path = "/safepool/rbyrne/uv_density_simulations"
 outdir = "/safepool/rbyrne/fhd_outputs"
-run_fhd = True
+run_fhd = False
 run_eppsilon = True
 
 # Define wrappers
