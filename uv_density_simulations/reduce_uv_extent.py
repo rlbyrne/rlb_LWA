@@ -2,7 +2,7 @@ import pyuvdata
 import numpy as np
 
 
-uv_spacings = ["1"]
+uv_spacings = ["10", "5", "1", "0.5"]
 max_bl_wl = 50.0
 for spacing in uv_spacings:
     filename = (

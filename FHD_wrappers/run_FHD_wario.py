@@ -3,9 +3,12 @@ import shlex
 import os
 
 obsids_list = [
-    "sim_uv_spacing_1"
+    "sim_uv_spacing_10_short_bls",
+    "sim_uv_spacing_5_short_bls",
+    "sim_uv_spacing_1_short_bls",
+    "sim_uv_spacing_0.5_short_bls"
 ]
-versions_list = ["rlb_process_uv_density_sims_Apr2023_6"]
+versions_list = ["rlb_process_uv_density_sims_May2023"]
 uvfits_path = "/safepool/rbyrne/uv_density_simulations"
 outdir = "/safepool/rbyrne/fhd_outputs"
 run_fhd = True
