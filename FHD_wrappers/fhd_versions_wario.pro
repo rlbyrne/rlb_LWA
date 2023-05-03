@@ -520,6 +520,20 @@ pro fhd_versions_wario
            beam_nfreq_avg = 1  ;do not average beam
        end
 
+       'rlb_uv_density_sims_beam_error_May2023': begin
+            recalculate_all = 1
+            import_pyuvdata_beam_filepath = '/home/rbyrne/airy_13m.beamfits'
+            calibrate_visibilities = 0
+            n_pol = 2
+            snapshot_healpix_export = 1  ;required to activate save_uvf
+            split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
+            save_uvf = 1
+            flag_visibilities = 0
+            unflag_all = 1
+            instrument = "ovro-lwa"
+            beam_nfreq_avg = 1  ;do not average beam
+        end
+
   endcase
 
   undefine, uvfits_subversion, uvfits_version
