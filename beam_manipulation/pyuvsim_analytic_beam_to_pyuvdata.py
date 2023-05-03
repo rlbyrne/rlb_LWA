@@ -79,7 +79,7 @@ def pyuvsim_analytic_to_pyuvdata(
 
 if __name__ == "__main__":
 
-    analytic_beam = pyuvsim.AnalyticBeam("airy", diameter=14.0)
+    analytic_beam = pyuvsim.AnalyticBeam("airy", diameter=13.0)
     analytic_beam.peak_normalize()
     discrete_beam = pyuvsim_analytic_to_pyuvdata(
         analytic_beam,
@@ -89,4 +89,4 @@ if __name__ == "__main__":
         min_freq_hz=162.0 * 1e6,
         max_freq_hz=202.0 * 1e6,
     )
-    discrete_beam.write_beamfits("/home/rbyrne/airy_14m.beamfits")
+    discrete_beam.write_beamfits("/home/rbyrne/airy_13m.beamfits")
