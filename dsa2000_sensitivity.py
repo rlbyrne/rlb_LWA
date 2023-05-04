@@ -50,7 +50,7 @@ def airy_beam_vals(
     wavelength = c / freq_hz
     ant_diameter_wl = antenna_diameter_m / wavelength
     uv_offset_dist = np.sqrt(
-        uv_offset_wl[:, :, 0] ** 2.0 + uv_offset_wl[:, :, 1] ** 2.0
+        np.abs(uv_offset_wl[:, :, 0]) ** 2.0 + np.abs(uv_offset_wl[:, :, 1]) ** 2.0
     )
     beam_vals = np.zeros_like(uv_offset_wl[:, :, 0])
     nonzero_locs = np.where(uv_offset_dist <= ant_diameter_wl)
@@ -61,7 +61,10 @@ def airy_beam_vals(
             ant_diameter_wl**2.0
             * np.arccos(uv_offset_dist[nonzero_locs] / ant_diameter_wl)
             - uv_offset_dist[nonzero_locs]
-            * np.sqrt(ant_diameter_wl**2.0 - uv_offset_dist[nonzero_locs] ** 2.0)
+            * np.sqrt(
+                np.abs(ant_diameter_wl) ** 2.0
+                - np.abs(uv_offset_dist[nonzero_locs]) ** 2.0
+            )
         )
     )
 
@@ -257,12 +260,7 @@ def get_cosmological_parameters():
     return cosmological_parameter_dict
 
 
-def uvf_to_cosmology_axis_transform(
-    u_coords_wl,
-    v_coords_wl,
-    freq_array_hz,
-    freq_resolution_hz,
-):
+def get_kpar_conversion_factor(avg_freq_hz):
     # See "Cosmological Parameters and Conversions Memo"
 
     cosmological_parameter_dict = get_cosmological_parameters()
@@ -273,22 +271,31 @@ def uvf_to_cosmology_axis_transform(
     omega_k = cosmological_parameter_dict["omega_k"]
     omega_Lambda = cosmological_parameter_dict["omega_Lambda"]
 
-    avg_freq_hz = np.mean(freq_array_hz)
     avg_wl = c / avg_freq_hz
     z = avg_wl / rest_frame_wl - 1
 
     # Line-of-sight conversion
-    delay_array_s = np.fft.fftshift(
-        np.fft.fftfreq(len(freq_array_hz), d=freq_resolution_hz)
-    )
     e_func = np.sqrt(omega_M * (1 + z) ** 3.0 + omega_k * (1 + z) ** 2.0 + omega_Lambda)
-    kz = (
-        (2 * np.pi * hubble_const * e_func)
-        / ((1 + z) ** 2.0 * rest_frame_wl)
-        * delay_array_s
-    )  # units h/Mpc
+    kpar_conv_factor = (2 * np.pi * hubble_const * e_func) / (
+        (1 + z) ** 2.0 * rest_frame_wl
+    )
+    return kpar_conv_factor
 
-    # Perpendicular to line-of-sight conversion
+
+def get_kperp_conversion_factor(avg_freq_hz):
+    # See "Cosmological Parameters and Conversions Memo"
+
+    cosmological_parameter_dict = get_cosmological_parameters()
+    hubble_dist = cosmological_parameter_dict["D_H"]
+    hubble_const = cosmological_parameter_dict["H_0"]
+    rest_frame_wl = cosmological_parameter_dict["HI rest frame wavelength"]
+    omega_M = cosmological_parameter_dict["omega_M"]
+    omega_k = cosmological_parameter_dict["omega_k"]
+    omega_Lambda = cosmological_parameter_dict["omega_Lambda"]
+
+    avg_wl = c / avg_freq_hz
+    z = avg_wl / rest_frame_wl - 1
+
     dist_comoving_func = lambda z, omega_M, omega_k, omega_Lambda: 1 / np.sqrt(
         omega_M * (1 + z) ** 3.0 + omega_k * (1 + z) ** 2.0 + omega_Lambda
     )
@@ -303,8 +310,25 @@ def uvf_to_cosmology_axis_transform(
         ),
     )
     dist_comoving = hubble_dist * dist_comoving_int
-    kx = 2 * np.pi * u_coords_wl / dist_comoving  # units h/Mpc
-    ky = 2 * np.pi * v_coords_wl / dist_comoving  # units h/Mpc
+    kperp_conv_factor = 2 * np.pi / dist_comoving
+    return kperp_conv_factor
+
+
+def uvn_to_cosmology_axis_transform(
+    u_coords_wl,
+    v_coords_wl,
+    delay_array_s,
+    avg_freq_hz,
+):
+
+    # Line-of-sight conversion
+    kpar_conv_factor = get_kpar_conversion_factor(avg_freq_hz)
+    kz = kpar_conv_factor * delay_array_s  # units h/Mpc
+
+    # Perpendicular to the line-of-sight conversion
+    kperp_conv_factor = get_kperp_conversion_factor(avg_freq_hz)
+    kx = kperp_conv_factor * u_coords_wl
+    ky = kperp_conv_factor * u_coords_wl
 
     return kx, ky, kz
 
@@ -322,9 +346,9 @@ def get_binned_kcube_variance(
     power_spectrum_cube_inv_variance = 1 / (4.0 * uvn_variance**2.0)
 
     distance_mat = np.sqrt(
-        kx[:, np.newaxis, np.newaxis] ** 2.0
-        + ky[np.newaxis, :, np.newaxis] ** 2.0
-        + kz[np.newaxis, np.newaxis, :] ** 2.0
+        np.abs(kx[:, np.newaxis, np.newaxis]) ** 2.0
+        + np.abs(ky[np.newaxis, :, np.newaxis]) ** 2.0
+        + np.abs(kz[np.newaxis, np.newaxis, :]) ** 2.0
     )
     if min_k is None:
         min_k = 0
@@ -402,25 +426,19 @@ def get_sample_variance(
         u_coords_wl = np.append(-np.flip(u_coords_wl[1:]), u_coords_wl)
         v_coords_wl = np.arange(0, uv_extent, uv_spacing)
 
-        kx, ky, kz = uvf_to_cosmology_axis_transform(
-            u_coords_wl,
-            v_coords_wl,
-            freq_array_hz,
-            freq_resolution_hz,
+        delay_array_s = np.fft.fftshift(
+            np.fft.fftfreq(len(freq_array_hz), d=freq_resolution_hz)
+        )
+        kx, ky, kz = uvn_to_cosmology_axis_transform(
+            u_coords_wl, v_coords_wl, delay_array_s, np.mean(freq_array_hz)
         )
 
-    k_dist = np.sqrt(
-        kx[:, np.newaxis, np.newaxis] ** 2.0
-        + ky[np.newaxis, :, np.newaxis] ** 2.0
-        + kz[np.newaxis, np.newaxis, :] ** 2.0
-    )
-    sample_variance_cube = np.interp(k_dist, model_k_axis, ps_model)
-
     distance_mat = np.sqrt(
-        kx[:, np.newaxis, np.newaxis] ** 2.0
-        + ky[np.newaxis, :, np.newaxis] ** 2.0
-        + kz[np.newaxis, np.newaxis, :] ** 2.0
+        np.abs(kx[:, np.newaxis, np.newaxis]) ** 2.0
+        + np.abs(ky[np.newaxis, :, np.newaxis]) ** 2.0
+        + np.abs(kz[np.newaxis, np.newaxis, :]) ** 2.0
     )
+    sample_variance_cube = np.interp(distance_mat, model_k_axis, ps_model)
 
     if k_bin_size is None or k_bin_centers is None:  # Recalculate k bins
         if min_k is None:
@@ -428,13 +446,17 @@ def get_sample_variance(
         if max_k is None:
             max_k = np.max(distance_mat)
         k_bin_size = (max_k - min_k) / n_kbins
-        k_bin_centers = np.linspace(min_k + k_bin_size / 2, max_k - k_bin_size / 2, num=n_kbins)
+        k_bin_centers = np.linspace(
+            min_k + k_bin_size / 2, max_k - k_bin_size / 2, num=n_kbins
+        )
     else:
         n_kbins = len(k_bin_centers)
 
     binned_ps_variance = np.full(n_kbins, np.nan, dtype=float)
     for bin in range(n_kbins):
-        use_values = np.where(np.abs(distance_mat - k_bin_centers[bin]) <= k_bin_size / 2)
+        use_values = np.where(
+            np.abs(distance_mat - k_bin_centers[bin]) <= k_bin_size / 2
+        )
         if len(use_values[0]) > 0:
             binned_ps_variance[bin] = (
                 np.nansum(sample_variance_cube[use_values]) / len(use_values[0]) ** 2.0
@@ -486,6 +508,29 @@ def get_ps_model_Paul2023(z=0.32):
     return ps_model, model_k_axis
 
 
+def get_wedge_mask_array(
+    baselines_m,
+    delay_array_s,
+    wedge_slope=1,
+):
+    # Note that this only works for evenly spaced delay values
+
+    uv_dist_s = (
+        np.sqrt(np.abs(baselines_m[:, 0]) ** 2.0 + np.abs(baselines_m[:, 1]) ** 2.0) / c
+    )
+    delay_spacing = (np.max(delay_array_s) - np.min(delay_array_s)) / (
+        len(delay_array_s) - 1
+    )
+    delay_array_lower_bounds = delay_array_s - (delay_spacing / 2)
+    wedge_dist = (
+        np.abs(delay_array_lower_bounds[np.newaxis, :])
+        - wedge_slope * uv_dist_s[:, np.newaxis]
+    )
+    wedge_mask_array = wedge_dist > 0
+
+    return wedge_mask_array
+
+
 def delay_ps_sensitivity_analysis(zenith_angle=0):
 
     min_freq_hz = 0.7e9
@@ -517,22 +562,28 @@ def delay_ps_sensitivity_analysis(zenith_angle=0):
     antpos = get_antpos()
     baselines_m = get_baselines(antpos)
     baselines_m = baselines_m[
-        np.where(np.sqrt(np.sum(baselines_m**2.0, axis=1)) < max_bl_m)[0], :
+        np.where(np.sqrt(np.sum(np.abs(baselines_m) ** 2.0, axis=1)) < max_bl_m)[0], :
     ]
     if zenith_angle != 0:
         baselines_m[:, 0] *= np.cos(np.radians(zenith_angle))
     wavelength = c / freq_hz
     baselines_wl = baselines_m / wavelength
 
-    kx, ky, kz = uvf_to_cosmology_axis_transform(
+    delay_array_s = np.fft.fftshift(
+        np.fft.fftfreq(len(freq_array_hz), d=freq_resolution_hz)
+    )
+    kx, ky, kz = uvn_to_cosmology_axis_transform(
         baselines_wl[:, 0],
         baselines_wl[:, 1],
-        freq_array_hz,
-        freq_resolution_hz,
+        delay_array_s,
+        np.mean(freq_array_hz),
     )
+    print(f"kx: {kx}")
+    print(f"ky: {ky}")
+    print(f"kz: {kz}")
 
     # 2d binning
-    kperp_dist = np.sqrt(kx**2.0 + ky**2.0)
+    kperp_dist = np.sqrt(np.abs(kx) ** 2.0 + np.abs(ky) ** 2.0)
     min_kperp = min_kpar = 0
     max_kperp = np.max(kperp_dist)
     max_kpar = np.max(kz)
@@ -557,18 +608,24 @@ def delay_ps_sensitivity_analysis(zenith_angle=0):
             np.abs(kperp_dist - bin_centers_kperp[kperp_bin]) <= bin_size_kperp / 2
         )
         nsamples_kperp[kperp_bin] = len(use_values_kperp[0])
+    print(f"bin_centers_kperp: {bin_centers_kperp}")
+    print(f"nsamples_kperp: {nsamples_kperp}")
+    print(f"nsamples_kpar: {nsamples_kpar}")
     nsamples_2d = np.outer(nsamples_kperp, nsamples_kpar)
 
     binned_ps_variance_2d = ps_variance / nsamples_2d
 
     # 1d binning
-    kz = np.sort(kz)[
-        10:
-    ]  # Remove first bins for foreground masking; need to validate which bins to remove
-
+    wedge_mask_array = get_wedge_mask_array(
+        baselines_m,
+        delay_array_s,
+        wedge_slope=1,
+    )
     nsamples = np.zeros(n_kbins, dtype=int)
     distance_mat = np.sqrt(
-        kx[:, np.newaxis] ** 2.0 + ky[:, np.newaxis] ** 2.0 + kz[np.newaxis, :] ** 2.0
+        np.abs(kx[:, np.newaxis]) ** 2.0
+        + np.abs(ky[:, np.newaxis]) ** 2.0
+        + np.abs(kz[np.newaxis, :]) ** 2.0
     )
     if min_k is None:
         min_k = 0
@@ -578,7 +635,9 @@ def delay_ps_sensitivity_analysis(zenith_angle=0):
     bin_centers = np.linspace(min_k + bin_size / 2, max_k - bin_size / 2, num=n_kbins)
     binned_ps_variance = np.full(n_kbins, np.nan, dtype=float)
     for bin in range(n_kbins):
-        use_values = np.where(np.abs(distance_mat - bin_centers[bin]) <= bin_size / 2)
+        use_values = np.where(
+            (np.abs(distance_mat - bin_centers[bin]) <= bin_size / 2) & wedge_mask_array
+        )
         nsamples[bin] = len(use_values[0])
 
     binned_ps_variance = ps_variance / nsamples
