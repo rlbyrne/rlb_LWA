@@ -34,6 +34,6 @@ pro normalize_uvf_cubes
     endfor
   endfor
 
-  save, dirty_uv_arr, obs_out, variance_uv_arr, weights_uv_arr, filename="normalized_run_path + "/" + cube_name"
+  save, dirty_uv_arr, obs_out, variance_uv_arr, weights_uv_arr, filename=normalized_run_path + "/" + cube_name
 
 end
