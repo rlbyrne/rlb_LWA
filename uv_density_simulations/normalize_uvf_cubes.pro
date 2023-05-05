@@ -10,8 +10,8 @@ pro normalize_uvf_cubes
 
   npols = 2
   nfreqs = 192
-  ref_total_power = 0
-  norm_total_power = 0
+  ref_total_var = 0
+  norm_total_var = 0
   for pol_ind=0,npols-1 do begin
     for freq_ind=0,nfreqs-1 do begin
       ref_total_var += total(abs(*variance_uv_arr_ref[pol_ind, freq_ind]))
@@ -19,7 +19,7 @@ pro normalize_uvf_cubes
     endfor
   endfor
 
-  norm_factor = sqrt(ref_total_power/norm_total_power)
+  norm_factor = sqrt(ref_total_var/norm_total_var)
   print, "Normalization factor: " + string(norm_factor)
 
   dirty_uv_arr = getvar_savefile(normalized_run_path + "/" + cube_name, "DIRTY_UV_ARR")
