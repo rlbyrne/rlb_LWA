@@ -1,7 +1,7 @@
 pro normalize_uvf_cubes
 
   reference_run_path = "/safepool/rbyrne/fhd_outputs/fhd_rlb_process_uv_density_sims_May2023"
-  normalized_run_path = "/safepool/rbyrne/fhd_outputs/fhd_rlb_uv_density_sims_beam_error_May2023"
+  normalized_run_path = "/safepool/rbyrne/fhd_outputs/fhd_rlb_uv_density_sims_beam_error_normalized_May2023"
 
   cube_name = "sim_uv_spacing_10_short_bls__gridded_uvf.sav"
 
@@ -20,7 +20,7 @@ pro normalize_uvf_cubes
   endfor
 
   norm_factor = sqrt(ref_total_power/norm_total_power)
-  print, "Normalization factor: " + norm_factor
+  print, "Normalization factor: " + str(norm_factor)
 
   variance_uv_arr = getvar_savefile(normalized_run_path + "/" + cube_name, "VARIANCE_UV_ARR")
   weights_uv_arr = getvar_savefile(normalized_run_path + "/" + cube_name, "WEIGHTS_UV_ARR")
@@ -29,8 +29,9 @@ pro normalize_uvf_cubes
   for pol_ind=0,npols-1 do begin
     for freq_ind=0,nfreqs-1 do begin
       *dirty_uv_arr[pol_ind, freq_ind] *= norm_factor
-      *variance_uv_arr[pol_ind, freq_ind] *= norm_factor^2
-      *weights_uv_arr[pol_ind, freq_ind] *= norm_factor
+      ; Should the weights and variances be changed too? Need to look into this.
+      ;*variance_uv_arr[pol_ind, freq_ind] *= norm_factor^2
+      ;*weights_uv_arr[pol_ind, freq_ind] *= norm_factor
     endfor
   endfor
 
