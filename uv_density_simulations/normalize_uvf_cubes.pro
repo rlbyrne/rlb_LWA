@@ -20,20 +20,17 @@ pro normalize_uvf_cubes
   endfor
 
   norm_factor = sqrt(ref_total_power/norm_total_power)
-  print, "Normalization factor: " + str(norm_factor)
-
-  variance_uv_arr = getvar_savefile(normalized_run_path + "/" + cube_name, "VARIANCE_UV_ARR")
-  weights_uv_arr = getvar_savefile(normalized_run_path + "/" + cube_name, "WEIGHTS_UV_ARR")
-  obs_out = getvar_savefile(normalized_run_path + "/" + cube_name, "OBS_OUT")
+  print, "Normalization factor: " + string(norm_factor)
 
   for pol_ind=0,npols-1 do begin
     for freq_ind=0,nfreqs-1 do begin
       *dirty_uv_arr[pol_ind, freq_ind] *= norm_factor
-      ; Should the weights and variances be changed too? Need to look into this.
-      ;*variance_uv_arr[pol_ind, freq_ind] *= norm_factor^2
-      ;*weights_uv_arr[pol_ind, freq_ind] *= norm_factor
     endfor
   endfor
+
+  variance_uv_arr = getvar_savefile(normalized_run_path + "/" + cube_name, "VARIANCE_UV_ARR")
+  weights_uv_arr = getvar_savefile(normalized_run_path + "/" + cube_name, "WEIGHTS_UV_ARR")
+  obs_out = getvar_savefile(normalized_run_path + "/" + cube_name, "OBS_OUT")
 
   save, dirty_uv_arr, obs_out, variance_uv_arr, weights_uv_arr, "normalized_run_path + "/" + cube_name"
 
