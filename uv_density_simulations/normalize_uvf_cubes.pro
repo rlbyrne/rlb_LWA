@@ -13,7 +13,7 @@ pro normalize_uvf_cubes
   ref_total_power = 0
   norm_total_power = 0
   for pol_ind=0,npols-1 do begin
-    for freq_ind=nfreqs-1 do begin
+    for freq_ind=0,nfreqs-1 do begin
       ref_total_power += total(abs(*dirty_uv_arr_ref[pol_ind, freq_ind])^2)
       norm_total_power += total(abs(*dirty_uv_arr[pol_ind, freq_ind])^2)
     endfor
@@ -27,7 +27,7 @@ pro normalize_uvf_cubes
   obs_out = getvar_savefile(normalized_run_path + "/" + cube_name, "OBS_OUT")
 
   for pol_ind=0,npols-1 do begin
-    for freq_ind=nfreqs-1 do begin
+    for freq_ind=0,nfreqs-1 do begin
       *dirty_uv_arr[pol_ind, freq_ind] *= norm_factor
       *variance_uv_arr[pol_ind, freq_ind] *= norm_factor^2
       *weights_uv_arr[pol_ind, freq_ind] *= norm_factor
