@@ -21,12 +21,28 @@ pro normalize_uvf_from_kpar0
   weights_uv_arr = getvar_savefile(uvf_cube_path, "WEIGHTS_UV_ARR")
   variance_uv_arr = getvar_savefile(uvf_cube_path, "VARIANCE_UV_ARR")
   obs_out = getvar_savefile(uvf_cube_path, "OBS_OUT")
+  
+  total_power_prev = 0
+  for pol_ind=0,npols-1 do begin
+    for freq_ind=0,nfreqs-1 do begin
+      total_power_prev += total(abs(*dirty_uv_arr[pol_ind, freq_ind]))
+    endfor
+  endfor
+  print, "Total uvf power, initial: " + string(total_power_prev)
 
   for pol_ind=0,npols-1 do begin
     for freq_ind=0,nfreqs-1 do begin
       *dirty_uv_arr[pol_ind, freq_ind] *= sqrt(norm_factor)
     endfor
   endfor
+  
+  total_power_new = 0
+  for pol_ind=0,npols-1 do begin
+    for freq_ind=0,nfreqs-1 do begin
+      total_power_new += total(abs(*dirty_uv_arr[pol_ind, freq_ind]))
+    endfor
+  endfor
+  print, "Total uvf power, normalized: " + string(total_power_new)
 
   save, dirty_uv_arr, obs_out, variance_uv_arr, weights_uv_arr, filename=uvf_cube_path
 
