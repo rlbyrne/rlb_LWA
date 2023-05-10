@@ -7,8 +7,8 @@ pro normalize_uvf_from_kpar0
   npols = 2
   nfreqs = 192
   
-  reference_kpar0_path = reference_run_path+'/ps/data/1d_binning/'+obsid+'_gridded_uvf__even_odd_joint_noimgclip_dirty_'+pol+'_dft_averemove_swbh_dencorr_k0power.idlsave'
-  unnormalized_kpar0_path = unnormalized_run_path+'/ps/data/1d_binning/'+obsid+'_gridded_uvf__even_odd_joint_noimgclip_dirty_'+pol+'_dft_averemove_swbh_dencorr_k0power.idlsave'
+  reference_kpar0_path = reference_run_path+'/ps/data/1d_binning/'+obsid+'__gridded_uvf_noimgclip_dirty_'+pol+'_dft_averemove_swbh_dencorr_k0power.idlsave'
+  unnormalized_kpar0_path = unnormalized_run_path+'/ps/data/1d_binning/'+obsid+'__gridded_uvf_noimgclip_dirty_'+pol+'_dft_averemove_swbh_dencorr_k0power.idlsave'
   
   reference_power = getvar_savefile(reference_kpar0_path, 'power')
   unnormalized_power = getvar_savefile(unnormalized_kpar0_path, 'power')
