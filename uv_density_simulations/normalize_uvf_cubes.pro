@@ -1,4 +1,5 @@
 pro normalize_uvf_cubes
+; This didn't actually work to correct the PS offset
 
   reference_run_path = "/safepool/rbyrne/fhd_outputs/fhd_rlb_process_uv_density_sims_May2023"
   normalized_run_path = "/safepool/rbyrne/fhd_outputs/fhd_rlb_uv_density_sims_beam_error_normalized_May2023"
