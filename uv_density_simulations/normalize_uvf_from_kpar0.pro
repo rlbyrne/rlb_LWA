@@ -14,7 +14,7 @@ pro normalize_uvf_from_kpar0
   reference_power = getvar_savefile(reference_kpar0_path, 'power')
   unnormalized_power = getvar_savefile(unnormalized_kpar0_path, 'power')
   
-  norm_factor = total(reference_power*unnormalized_power)/total(unnormalized_power**2.)
+  norm_factor = total(reference_power*unnormalized_power)/total(unnormalized_power^2)
   print, "Normalization factor: " + string(norm_factor)
   
   uvf_cube_path = unnormalized_run_path+"/"+obsid+"__gridded_uvf.sav"
