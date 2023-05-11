@@ -4,9 +4,9 @@ import os
 
 obsids_list = [
     "sim_uv_spacing_10_short_bls",
-    "sim_uv_spacing_5_short_bls",
-    "sim_uv_spacing_1_short_bls",
-    "sim_uv_spacing_0.5_short_bls"
+    #"sim_uv_spacing_5_short_bls",
+    #"sim_uv_spacing_1_short_bls",
+    #"sim_uv_spacing_0.5_short_bls"
 ]
 versions_list = ["rlb_uv_density_sims_beam_error_May2023"]
 uvfits_path = "/safepool/rbyrne/uv_density_simulations"
