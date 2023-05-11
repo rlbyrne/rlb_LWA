@@ -521,7 +521,7 @@ pro fhd_versions_wario
        end
 
        'rlb_uv_density_sims_beam_error_May2023': begin
-            recalculate_all = 0
+            recalculate_all = 1
             import_pyuvdata_beam_filepath = '/home/rbyrne/airy_13m.beamfits'
             calibrate_visibilities = 0
             n_pol = 2
