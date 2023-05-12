@@ -30,6 +30,7 @@ pro normalize_uvf_from_kpar0
   endfor
 
   uvf_out_path = out_path+"/"+obsid+"__gridded_uvf.sav"
+  print, "Saving normalized uvf cube to "+uvf_out_path
   save, dirty_uv_arr, obs_out, variance_uv_arr, weights_uv_arr, filename=uvf_out_path
 
 end
