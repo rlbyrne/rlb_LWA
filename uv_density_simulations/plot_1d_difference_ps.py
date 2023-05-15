@@ -30,8 +30,10 @@ def calculate_fractional_power(kpar0_power, k_edges_kpar0, ps, k_edges_ps):
 
     diff_vals = np.full((len(ps)), np.nan, dtype=float)
     for ind in range(len(ps)):
-        k_bin_center = np.mean([k_edges_ps[ind], k_edges_ps[ind+1]])
-        kpar0_ind = np.where(k_edges_kpar0[:-1] < k_bin_center & k_edges_kpar0[1:] > k_bin_center)[0]
+        k_bin_center = np.mean([k_edges_ps[ind], k_edges_ps[ind + 1]])
+        kpar0_ind = np.where(
+            (k_edges_kpar0[:-1] < k_bin_center) & (k_edges_kpar0[1:] > k_bin_center)
+        )[0]
         if len(kpar0_ind) > 0:
             if kpar0_power[kpar0_ind] != 0:
                 diff_vals[ind] = ps[ind] / kpar0_power[kpar0_ind]
@@ -60,7 +62,9 @@ def plot_difference_ratio_ps():
         k_edges_kpar0 = scipy.io.readsav(cal_error_kpar0_path)["k_edges"]
         cal_error_ps = scipy.io.readsav(cal_error_ps_path)["power"]
         k_edges_ps = scipy.io.readsav(cal_error_ps_path)["k_edges"]
-        cal_error_fractional_power = calculate_fractional_power(cal_error_kpar0_power, k_edges_kpar0, cal_error_ps, k_edges_ps)
+        cal_error_fractional_power = calculate_fractional_power(
+            cal_error_kpar0_power, k_edges_kpar0, cal_error_ps, k_edges_ps
+        )
 
         reference_kpar0_power = scipy.io.readsav(reference_kpar0_path)["power"]
         k_edges_kpar0 = scipy.io.readsav(reference_kpar0_path)["k_edges"]
@@ -70,7 +74,9 @@ def plot_difference_ratio_ps():
             print("ERROR: k_edges mismatch!")
             print(f"Old k_edges: {k_edges_ps}")
             print(f"New k_edges: {k_edges_ps_new}")
-        reference_fractional_power = calculate_fractional_power(reference_kpar0_power, k_edges_kpar0, reference_ps, k_edges_ps)
+        reference_fractional_power = calculate_fractional_power(
+            reference_kpar0_power, k_edges_kpar0, reference_ps, k_edges_ps
+        )
 
         diff_ratio = cal_error_fractional_power - reference_fractional_power
 
