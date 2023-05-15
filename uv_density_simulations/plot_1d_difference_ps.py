@@ -55,8 +55,8 @@ def plot_difference_ratio_ps():
     for file_ind, spacing in enumerate(uv_spacings):
         cal_error_kpar0_path = f"{cal_error_path}/ps/data/1d_binning/sim_uv_spacing_{spacing}_short_bls_cal_error__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_k0power.idlsave"
         cal_error_ps_path = f"{cal_error_path}/ps/data/1d_binning/sim_uv_spacing_{spacing}_short_bls_cal_error__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_no_horizon_wedge_kperplambda10-50_1dkpower.idlsave"
-        reference_kpar0_path = f"{reference_path}/ps/data/1d_binning/sim_uv_spacing_{spacing}_short_bls_cal_error__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_k0power.idlsave"
-        reference_ps_path = f"{reference_path}/ps/data/1d_binning/sim_uv_spacing_{spacing}_short_bls_cal_error__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_no_horizon_wedge_kperplambda10-50_1dkpower.idlsave"
+        reference_kpar0_path = f"{reference_path}/ps/data/1d_binning/sim_uv_spacing_{spacing}_short_bls__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_k0power.idlsave"
+        reference_ps_path = f"{reference_path}/ps/data/1d_binning/sim_uv_spacing_{spacing}_short_bls__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_no_horizon_wedge_kperplambda10-50_1dkpower.idlsave"
 
         cal_error_kpar0_power = scipy.io.readsav(cal_error_kpar0_path)["power"]
         k_edges_kpar0 = scipy.io.readsav(cal_error_kpar0_path)["k_edges"]
