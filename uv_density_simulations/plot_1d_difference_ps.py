@@ -82,7 +82,7 @@ def plot_difference_ratio_ps():
 
         plot_vals = np.repeat(diff_ratio, 2)
         k_edges_plot = np.concatenate(
-            ([k_edges[0]], np.repeat(k_edges[1:-1], 2), [k_edges[-1]])
+            ([k_edges_ps[0]], np.repeat(k_edges_ps[1:-1], 2), [k_edges_ps[-1]])
         )
         plt.plot(k_edges_plot, plot_vals, color=colors[file_ind], label=names[file_ind])
         plt.xscale("log")
