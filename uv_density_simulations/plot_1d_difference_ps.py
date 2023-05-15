@@ -135,7 +135,7 @@ def plot_ratio_ps():
         k_edges_plot = np.concatenate(
             ([k_edges_ps[0]], np.repeat(k_edges_ps[1:-1], 2), [k_edges_ps[-1]])
         )
-        plt.plot(k_edges_plot, plot_vals, color=colors[file_ind], label=names[file_ind], "-.")
+        plt.plot(k_edges_plot, plot_vals, color=colors[file_ind], label=names[file_ind], linestyle="dashed")
         plot_vals = np.repeat(cal_error_fractional_power, 2)
         plt.plot(k_edges_plot, plot_vals, color=colors[file_ind], label=names[file_ind])
         plt.xscale("log")
