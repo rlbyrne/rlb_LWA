@@ -8,7 +8,7 @@ uv_spacings = ["10", "5", "1", "0.5"]
 
 colors = ["tab:blue", "tab:orange", "tab:green", "tab:purple"]
 names = uv_spacings
-for spacing in uv_spacings:
+for file_ind, spacing in enumerate(uv_spacings):
     filename = f"{data_path}/sim_uv_spacing_{spacing}_short_bls__calerrorgridded_minus_griddeduvfnoimgclip__dirty_xx_noimgclip_dft_averemove_swbh_dencorr_no_horizon_wedge_1dkpower.idlsave"
     power = scipy.io.readsav(filename)["power"]
     k_edges = scipy.io.readsav(filename)["k_edges"]
