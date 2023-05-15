@@ -86,7 +86,6 @@ def plot_difference_ratio_ps():
         )
         plt.plot(k_edges_plot, plot_vals, color=colors[file_ind], label=names[file_ind])
         plt.xscale("log")
-        plt.yscale("log")
     plt.legend()
     plt.savefig("/home/rbyrne/uv_density_sim_plots/cal_error_diff_ratio.png")
 
@@ -146,4 +145,4 @@ def plot_ratio_ps():
 
 if __name__ == "__main__":
 
-    plot_ratio_ps()
+    plot_difference_ratio_ps()
