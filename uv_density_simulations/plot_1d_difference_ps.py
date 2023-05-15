@@ -139,6 +139,7 @@ def plot_ratio_ps():
         plot_vals = np.repeat(cal_error_fractional_power, 2)
         plt.plot(k_edges_plot, plot_vals, color=colors[file_ind], label=names[file_ind])
         plt.xscale("log")
+        plt.yscale("log")
     plt.legend()
     plt.savefig("/home/rbyrne/uv_density_sim_plots/cal_error_ratio.png")
 
