@@ -70,7 +70,7 @@ def plot_difference_ratio_ps():
         k_edges_kpar0 = scipy.io.readsav(reference_kpar0_path)["k_edges"]
         reference_ps = scipy.io.readsav(reference_ps_path)["power"]
         k_edges_ps_new = scipy.io.readsav(reference_ps_path)["k_edges"]
-        if np.max(np.abs(k_edges_new - k_edges)) > 0:
+        if np.max(np.abs(k_edges_ps_new - k_edges_ps)) > 0:
             print("ERROR: k_edges mismatch!")
             print(f"Old k_edges: {k_edges_ps}")
             print(f"New k_edges: {k_edges_ps_new}")
