@@ -151,7 +151,8 @@ def plot_ps():
     reference_path = (
         "/safepool/rbyrne/fhd_outputs/fhd_rlb_process_uv_density_sims_May2023"
     )
-    uv_spacings = ["10", "5", "1", "0.5"]
+    #uv_spacings = ["10", "5", "1", "0.5"]
+    uv_spacings = ["0.5"]
 
     colors = ["tab:blue", "tab:orange", "tab:green", "tab:purple"]
     names = uv_spacings
@@ -177,7 +178,8 @@ def plot_ps():
 
     # Plot with cal error
     for file_ind, spacing in enumerate(uv_spacings):
-        data_path = f"{cal_error_path}/ps/data/1d_binning/sim_uv_spacing_{spacing}_short_bls_cal_error__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_no_horizon_wedge_kperplambda10-50_1dkpower.idlsave"
+        #data_path = f"{cal_error_path}/ps/data/1d_binning/sim_uv_spacing_{spacing}_short_bls_cal_error__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_no_horizon_wedge_kperplambda10-50_1dkpower.idlsave"
+        data_path = f"{cal_error_path}/ps/data/1d_binning/sim_uv_spacing_{spacing}_short_bls_cal_error__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_no_horizon_wedge_kperplambda1-45_1dkpower.idlsave"
 
         k_edges = scipy.io.readsav(data_path)["k_edges"]
         power = scipy.io.readsav(data_path)["power"]
@@ -250,4 +252,3 @@ def plot_kpar0():
 if __name__ == "__main__":
 
     plot_ps()
-    plot_kpar0()
