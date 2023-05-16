@@ -151,15 +151,14 @@ def plot_ps():
     reference_path = (
         "/safepool/rbyrne/fhd_outputs/fhd_rlb_process_uv_density_sims_May2023"
     )
-    #uv_spacings = ["10", "5", "1", "0.5"]
-    uv_spacings = ["0.5"]
+    uv_spacings = ["10", "5", "1", "0.5"]
 
     colors = ["tab:blue", "tab:orange", "tab:green", "tab:purple"]
     names = uv_spacings
 
     # Plot error-free version
     for file_ind, spacing in enumerate(uv_spacings):
-        data_path = f"{reference_path}/ps/data/1d_binning/sim_uv_spacing_{spacing}_short_bls__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_no_horizon_wedge_kperplambda10-50_1dkpower.idlsave"
+        data_path = f"{reference_path}/ps/data/1d_binning/sim_uv_spacing_{spacing}_short_bls__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_no_horizon_wedge_kperplambda1-45_1dkpower.idlsave"
 
         k_edges = scipy.io.readsav(data_path)["k_edges"]
         power = scipy.io.readsav(data_path)["power"]
@@ -171,7 +170,7 @@ def plot_ps():
         plt.plot(k_edges_plot, plot_vals, color=colors[file_ind], label=names[file_ind])
         plt.xscale("log")
         plt.yscale("log")
-        plt.ylim([1e4, 2e10])
+        plt.ylim([1e4, 2e12])
     plt.legend()
     plt.savefig("/home/rbyrne/uv_density_sim_plots/ps_no_cal_error.png")
     plt.close()
@@ -191,7 +190,7 @@ def plot_ps():
         plt.plot(k_edges_plot, plot_vals, color=colors[file_ind], label=names[file_ind])
         plt.xscale("log")
         plt.yscale("log")
-        plt.ylim([1e4, 2e10])
+        plt.ylim([1e4, 2e12])
     plt.legend()
     plt.savefig("/home/rbyrne/uv_density_sim_plots/ps_cal_error.png")
     plt.close()
