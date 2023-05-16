@@ -549,6 +549,26 @@ pro fhd_versions_wario
              export_images = 0 ;for some reason image exporting is crashing
          end
 
+         'rlb_process_uv_density_sims_cal_error_modified_kernel_May2023': begin
+              recalculate_all = 1
+              import_pyuvdata_beam_filepath = '/home/rbyrne/airy_14m.beamfits'
+              calibrate_visibilities = 0
+              n_pol = 2
+              snapshot_healpix_export = 1  ;required to activate save_uvf
+              split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
+              save_uvf = 1
+              flag_visibilities = 0
+              unflag_all = 1
+              instrument = "ovro-lwa"
+              beam_nfreq_avg = 1  ;do not average beam
+              export_images = 0 ;for some reason image exporting is crashing
+              ;kernel-related keywords
+              kernel_window = 1
+              debug_dim = 1
+              beam_mask_threshold = 1e3
+              interpolate_kernel = 1
+          end
+
   endcase
 
   undefine, uvfits_subversion, uvfits_version

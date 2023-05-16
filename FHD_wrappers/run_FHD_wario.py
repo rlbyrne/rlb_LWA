@@ -8,7 +8,7 @@ obsids_list = [
     "sim_uv_spacing_1_short_bls_cal_error",
     "sim_uv_spacing_0.5_short_bls_cal_error"
 ]
-versions_list = ["rlb_process_uv_density_sims_cal_error_May2023"]
+versions_list = ["rlb_process_uv_density_sims_cal_error_modified_kernel_May2023"]
 uvfits_path = "/safepool/rbyrne/uv_density_simulations/calibration_error_sim"
 outdir = "/safepool/rbyrne/fhd_outputs"
 run_fhd = True
