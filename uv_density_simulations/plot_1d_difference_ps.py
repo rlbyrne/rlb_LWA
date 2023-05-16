@@ -143,6 +143,99 @@ def plot_ratio_ps():
     plt.savefig("/home/rbyrne/uv_density_sim_plots/cal_error_ratio.png")
 
 
+def plot_ps():
+
+    cal_error_path = (
+        "/safepool/rbyrne/fhd_outputs/fhd_rlb_process_uv_density_sims_cal_error_May2023"
+    )
+    reference_path = (
+        "/safepool/rbyrne/fhd_outputs/fhd_rlb_process_uv_density_sims_May2023"
+    )
+    uv_spacings = ["10", "5", "1", "0.5"]
+
+    colors = ["tab:blue", "tab:orange", "tab:green", "tab:purple"]
+    names = uv_spacings
+
+    # Plot error-free version
+    for file_ind, spacing in enumerate(uv_spacings):
+        data_path = f"{reference_path}/ps/data/1d_binning/sim_uv_spacing_{spacing}_short_bls__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_no_horizon_wedge_kperplambda10-50_1dkpower.idlsave"
+
+        k_edges = scipy.io.readsav(data_path)["k_edges"]
+        power = scipy.io.readsav(data_path)["power"]
+
+        plot_vals = np.repeat(power, 2)
+        k_edges_plot = np.concatenate(
+            ([k_edges[0]], np.repeat(k_edges[1:-1], 2), [k_edges[-1]])
+        )
+        plt.plot(k_edges_plot, plot_vals, color=colors[file_ind], label=names[file_ind])
+        plt.xscale("log")
+    plt.legend()
+    plt.savefig("/home/rbyrne/uv_density_sim_plots/ps_no_cal_error.png")
+
+    # Plot with cal error
+    for file_ind, spacing in enumerate(uv_spacings):
+        data_path = f"{cal_error_path}/ps/data/1d_binning/sim_uv_spacing_{spacing}_short_bls_cal_error__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_no_horizon_wedge_kperplambda10-50_1dkpower.idlsave"
+
+        k_edges = scipy.io.readsav(data_path)["k_edges"]
+        power = scipy.io.readsav(data_path)["power"]
+
+        plot_vals = np.repeat(power, 2)
+        k_edges_plot = np.concatenate(
+            ([k_edges[0]], np.repeat(k_edges[1:-1], 2), [k_edges[-1]])
+        )
+        plt.plot(k_edges_plot, plot_vals, color=colors[file_ind], label=names[file_ind])
+        plt.xscale("log")
+    plt.legend()
+    plt.savefig("/home/rbyrne/uv_density_sim_plots/ps_cal_error.png")
+
+
+def plot_kpar0():
+
+    cal_error_path = (
+        "/safepool/rbyrne/fhd_outputs/fhd_rlb_process_uv_density_sims_cal_error_May2023"
+    )
+    reference_path = (
+        "/safepool/rbyrne/fhd_outputs/fhd_rlb_process_uv_density_sims_May2023"
+    )
+    uv_spacings = ["10", "5", "1", "0.5"]
+
+    colors = ["tab:blue", "tab:orange", "tab:green", "tab:purple"]
+    names = uv_spacings
+
+    # Plot error-free version
+    for file_ind, spacing in enumerate(uv_spacings):
+        data_path = f"{reference_path}/ps/data/1d_binning/sim_uv_spacing_{spacing}_short_bls__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_k0power.idlsave"
+
+        k_edges = scipy.io.readsav(data_path)["k_edges"]
+        power = scipy.io.readsav(data_path)["power"]
+
+        plot_vals = np.repeat(power, 2)
+        k_edges_plot = np.concatenate(
+            ([k_edges[0]], np.repeat(k_edges[1:-1], 2), [k_edges[-1]])
+        )
+        plt.plot(k_edges_plot, plot_vals, color=colors[file_ind], label=names[file_ind])
+        plt.xscale("log")
+    plt.legend()
+    plt.savefig("/home/rbyrne/uv_density_sim_plots/kpar0_no_cal_error.png")
+
+    # Plot with cal error
+    for file_ind, spacing in enumerate(uv_spacings):
+        data_path = f"{cal_error_path}/ps/data/1d_binning/sim_uv_spacing_{spacing}_short_bls_cal_error__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_k0power.idlsave"
+
+        k_edges = scipy.io.readsav(data_path)["k_edges"]
+        power = scipy.io.readsav(data_path)["power"]
+
+        plot_vals = np.repeat(power, 2)
+        k_edges_plot = np.concatenate(
+            ([k_edges[0]], np.repeat(k_edges[1:-1], 2), [k_edges[-1]])
+        )
+        plt.plot(k_edges_plot, plot_vals, color=colors[file_ind], label=names[file_ind])
+        plt.xscale("log")
+    plt.legend()
+    plt.savefig("/home/rbyrne/uv_density_sim_plots/kpar0_cal_error.png")
+
+
 if __name__ == "__main__":
 
-    plot_difference_ratio_ps()
+    plot_ps()
+    plot_kpar0()
