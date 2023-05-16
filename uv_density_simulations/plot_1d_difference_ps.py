@@ -171,6 +171,7 @@ def plot_ps():
         plt.xscale("log")
     plt.legend()
     plt.savefig("/home/rbyrne/uv_density_sim_plots/ps_no_cal_error.png")
+    plt.close()
 
     # Plot with cal error
     for file_ind, spacing in enumerate(uv_spacings):
@@ -187,6 +188,7 @@ def plot_ps():
         plt.xscale("log")
     plt.legend()
     plt.savefig("/home/rbyrne/uv_density_sim_plots/ps_cal_error.png")
+    plt.close()
 
 
 def plot_kpar0():
@@ -217,6 +219,7 @@ def plot_kpar0():
         plt.xscale("log")
     plt.legend()
     plt.savefig("/home/rbyrne/uv_density_sim_plots/kpar0_no_cal_error.png")
+    plt.close()
 
     # Plot with cal error
     for file_ind, spacing in enumerate(uv_spacings):
@@ -233,6 +236,7 @@ def plot_kpar0():
         plt.xscale("log")
     plt.legend()
     plt.savefig("/home/rbyrne/uv_density_sim_plots/kpar0_cal_error.png")
+    plt.close()
 
 
 if __name__ == "__main__":
