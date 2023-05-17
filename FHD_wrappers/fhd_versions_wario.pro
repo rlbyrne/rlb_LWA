@@ -561,7 +561,7 @@ pro fhd_versions_wario
               unflag_all = 1
               instrument = "ovro-lwa"
               beam_nfreq_avg = 1  ;do not average beam
-              export_images = 0 ;for some reason image exporting is crashing
+              export_images = 1 ;try to see if exporting images works
               ;kernel-related keywords
               kernel_window = 1
               debug_dim = 1
