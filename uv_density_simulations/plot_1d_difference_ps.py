@@ -254,31 +254,41 @@ def plot_ps_modified_kernel():
         "/safepool/rbyrne/fhd_outputs/fhd_rlb_process_uv_density_sims_cal_error_modified_kernel_May2023"
     )
     uv_spacings = ["10", "5", "1", "0.5"]
+    plot_ps_versions = [
+        "gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_no_horizon_wedge_kperplambda1-45_1dkpower",
+        "gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_no_fov_wedge_kperplambda1-45_1dkpower",
+        "gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_kperplambda1-45_1dkpower",
+    ]
+    plot_names = [
+        "ps_cal_error_modified_kernel_no_horizon_wedge.png",
+        "ps_cal_error_modified_kernel_no_fov_wedge.png",
+        "ps_cal_error_modified_kernel_no_wedge_cut.png",
+    ]
 
     colors = ["tab:blue", "tab:orange", "tab:green", "tab:purple"]
     names = [f"{1/(float(spacing)**2.)} baselines/wavelength$^2$" for spacing in uv_spacings]
 
-    # Plot with cal error
-    for file_ind, spacing in enumerate(uv_spacings):
-        #data_path = f"{cal_error_path}/ps/data/1d_binning/sim_uv_spacing_{spacing}_short_bls_cal_error__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_no_horizon_wedge_kperplambda10-50_1dkpower.idlsave"
-        data_path = f"{cal_error_path}/ps/data/1d_binning/sim_uv_spacing_{spacing}_short_bls_cal_error__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_no_horizon_wedge_kperplambda1-45_1dkpower.idlsave"
+    for plot_ind, plot_version in plot_ps_versions:
+        for file_ind, spacing in enumerate(uv_spacings):
+            #data_path = f"{cal_error_path}/ps/data/1d_binning/sim_uv_spacing_{spacing}_short_bls_cal_error__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_no_horizon_wedge_kperplambda10-50_1dkpower.idlsave"
+            data_path = f"{cal_error_path}/ps/data/1d_binning/sim_uv_spacing_{spacing}_short_bls_cal_error__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_no_horizon_wedge_kperplambda1-45_1dkpower.idlsave"
 
-        k_edges = scipy.io.readsav(data_path)["k_edges"]
-        power = scipy.io.readsav(data_path)["power"]
+            k_edges = scipy.io.readsav(data_path)["k_edges"]
+            power = scipy.io.readsav(data_path)["power"]
 
-        plot_vals = np.repeat(power, 2)
-        k_edges_plot = np.concatenate(
-            ([k_edges[0]], np.repeat(k_edges[1:-1], 2), [k_edges[-1]])
-        )
-        plt.plot(k_edges_plot, plot_vals, color=colors[file_ind], label=names[file_ind])
-        plt.xscale("log")
-        plt.yscale("log")
-        plt.ylim([1e4, 1e15])
-    plt.legend()
-    plt.xlabel("k (h Mpc$^{-1}$)")
-    plt.ylabel("P$_k$ (mK$^2$ h$^{-3}$ Mpc$^3$)")
-    plt.savefig("/home/rbyrne/uv_density_sim_plots/ps_cal_error_modified_kernel.png")
-    plt.close()
+            plot_vals = np.repeat(power, 2)
+            k_edges_plot = np.concatenate(
+                ([k_edges[0]], np.repeat(k_edges[1:-1], 2), [k_edges[-1]])
+            )
+            plt.plot(k_edges_plot, plot_vals, color=colors[file_ind], label=names[file_ind])
+            plt.xscale("log")
+            plt.yscale("log")
+            plt.ylim([1e4, 1e15])
+        plt.legend()
+        plt.xlabel("k (h Mpc$^{-1}$)")
+        plt.ylabel("P$_k$ (mK$^2$ h$^{-3}$ Mpc$^3$)")
+        plt.savefig(f"/home/rbyrne/uv_density_sim_plots/{plot_names[plot_ind]}")
+        plt.close()
 
 
 if __name__ == "__main__":
