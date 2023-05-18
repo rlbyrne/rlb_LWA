@@ -4,7 +4,7 @@ pro fhd_versions_wario_debug
   heap_gc
 
   output_directory = "/safepool/rbyrne/fhd_outputs"
-  version = "rlb_debug_modified_gridding_kernel_default_beam_May2023"
+  version = "rlb_debug_modified_gridding_kernel_uvbeam_May2023"
   vis_file_list = "/safepool/rbyrne/uv_density_simulations/calibration_error_sim/sim_uv_spacing_10_short_bls_cal_error.uvfits"
 
   case version of
@@ -55,6 +55,25 @@ pro fhd_versions_wario_debug
              beam_mask_threshold = 1e3
              interpolate_kernel = 1
          end
+
+         'rlb_debug_modified_gridding_kernel_uvbeam_May2023': begin
+              recalculate_all = 1
+              import_pyuvdata_beam_filepath = '/home/rbyrne/airy_14m.beamfits'
+              calibrate_visibilities = 0
+              n_pol = 2
+              snapshot_healpix_export = 1  ;required to activate save_uvf
+              split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
+              save_uvf = 1
+              flag_visibilities = 0
+              unflag_all = 1
+              instrument = "ovro-lwa"
+              beam_nfreq_avg = 1  ;do not average beam
+              ;kernel-related keywords
+              kernel_window = 1
+              debug_dim = 1
+              beam_mask_threshold = 1e3
+              interpolate_kernel = 1
+          end
 
   endcase
 
