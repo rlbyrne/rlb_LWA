@@ -268,7 +268,7 @@ def plot_ps_modified_kernel():
     colors = ["tab:blue", "tab:orange", "tab:green", "tab:purple"]
     names = [f"{1/(float(spacing)**2.)} baselines/wavelength$^2$" for spacing in uv_spacings]
 
-    for plot_ind, plot_version in plot_ps_versions:
+    for plot_ind, plot_version in enumerate(plot_ps_versions):
         for file_ind, spacing in enumerate(uv_spacings):
             #data_path = f"{cal_error_path}/ps/data/1d_binning/sim_uv_spacing_{spacing}_short_bls_cal_error__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_no_horizon_wedge_kperplambda10-50_1dkpower.idlsave"
             data_path = f"{cal_error_path}/ps/data/1d_binning/sim_uv_spacing_{spacing}_short_bls_cal_error__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_no_horizon_wedge_kperplambda1-45_1dkpower.idlsave"
