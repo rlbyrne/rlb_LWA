@@ -248,6 +248,37 @@ def plot_kpar0():
     plt.close()
 
 
+def plot_ps_modified_kernel():
+
+    cal_error_path = (
+        "/safepool/rbyrne/fhd_outputs/fhd_rlb_process_uv_density_sims_cal_error_modified_kernel_May2023"
+    )
+    uv_spacings = ["10", "5", "1", "0.5"]
+
+    colors = ["tab:blue", "tab:orange", "tab:green", "tab:purple"]
+    names = uv_spacings
+
+    # Plot with cal error
+    for file_ind, spacing in enumerate(uv_spacings):
+        #data_path = f"{cal_error_path}/ps/data/1d_binning/sim_uv_spacing_{spacing}_short_bls_cal_error__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_no_horizon_wedge_kperplambda10-50_1dkpower.idlsave"
+        data_path = f"{cal_error_path}/ps/data/1d_binning/sim_uv_spacing_{spacing}_short_bls_cal_error__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_no_horizon_wedge_kperplambda1-45_1dkpower.idlsave"
+
+        k_edges = scipy.io.readsav(data_path)["k_edges"]
+        power = scipy.io.readsav(data_path)["power"]
+
+        plot_vals = np.repeat(power, 2)
+        k_edges_plot = np.concatenate(
+            ([k_edges[0]], np.repeat(k_edges[1:-1], 2), [k_edges[-1]])
+        )
+        plt.plot(k_edges_plot, plot_vals, color=colors[file_ind], label=names[file_ind])
+        plt.xscale("log")
+        plt.yscale("log")
+        plt.ylim([1e4, 1e15])
+    plt.legend()
+    plt.savefig("/home/rbyrne/uv_density_sim_plots/ps_cal_error_modified_kernel.png")
+    plt.close()
+
+
 if __name__ == "__main__":
 
-    plot_ps()
+    plot_ps_modified_kernel()
