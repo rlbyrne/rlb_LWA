@@ -256,7 +256,7 @@ def plot_ps_modified_kernel():
     uv_spacings = ["10", "5", "1", "0.5"]
 
     colors = ["tab:blue", "tab:orange", "tab:green", "tab:purple"]
-    names = f"{1/(float(uv_spacings)**2.)} baselines/wavelength$^2$""
+    names = f"{1/(float(uv_spacings)**2.)} baselines/wavelength$^2$"
 
     # Plot with cal error
     for file_ind, spacing in enumerate(uv_spacings):
