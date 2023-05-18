@@ -261,7 +261,7 @@ def plot_ps_modified_kernel():
     # Plot with cal error
     for file_ind, spacing in enumerate(uv_spacings):
         #data_path = f"{cal_error_path}/ps/data/1d_binning/sim_uv_spacing_{spacing}_short_bls_cal_error__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_no_horizon_wedge_kperplambda10-50_1dkpower.idlsave"
-        data_path = f"{cal_error_path}/ps/data/1d_binning/sim_uv_spacing_{spacing}_short_bls_cal_error__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_kperplambda1-45_1dkpower.idlsave"
+        data_path = f"{cal_error_path}/ps/data/1d_binning/sim_uv_spacing_{spacing}_short_bls_cal_error__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_no_horizon_wedge_kperplambda1-45_1dkpower.idlsave"
 
         k_edges = scipy.io.readsav(data_path)["k_edges"]
         power = scipy.io.readsav(data_path)["power"]
@@ -275,6 +275,8 @@ def plot_ps_modified_kernel():
         plt.yscale("log")
         plt.ylim([1e4, 1e15])
     plt.legend()
+    plt.xlabel("k-perpendicular (h Mpc$^{-1}$)")
+    plt.ylabel("P$_k$ mK$^2$ h$^{-3}$ Mpc$^3$")
     plt.savefig("/home/rbyrne/uv_density_sim_plots/ps_cal_error_modified_kernel.png")
     plt.close()
 
