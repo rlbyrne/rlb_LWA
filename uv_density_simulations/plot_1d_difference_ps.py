@@ -256,7 +256,7 @@ def plot_ps_modified_kernel():
     uv_spacings = ["10", "5", "1", "0.5"]
 
     colors = ["tab:blue", "tab:orange", "tab:green", "tab:purple"]
-    names = uv_spacings
+    names = f"{1/(float(uv_spacings)**2.)} baselines/wavelength$^2$""
 
     # Plot with cal error
     for file_ind, spacing in enumerate(uv_spacings):
@@ -275,8 +275,8 @@ def plot_ps_modified_kernel():
         plt.yscale("log")
         plt.ylim([1e4, 1e15])
     plt.legend()
-    plt.xlabel("k-perpendicular (h Mpc$^{-1}$)")
-    plt.ylabel("P$_k$ mK$^2$ h$^{-3}$ Mpc$^3$")
+    plt.xlabel("k (h Mpc$^{-1}$)")
+    plt.ylabel("P$_k$ (mK$^2$ h$^{-3}$ Mpc$^3$)")
     plt.savefig("/home/rbyrne/uv_density_sim_plots/ps_cal_error_modified_kernel.png")
     plt.close()
 
