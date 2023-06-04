@@ -13,6 +13,7 @@ def make_polar_contour_plot(
     vmin=-1,
     vmax=1,
     cyclic_colorbar=False,
+    ncontours=11,
 ):
 
     if cyclic_colorbar:
@@ -34,10 +35,14 @@ def make_polar_contour_plot(
         (plot_vals, (plot_vals[az_zeros[0], az_zeros[1]])[np.newaxis, :]), axis=0
     )
 
+    # Set contour levels
+    levels = np.linspace(vmin, vmax, num=ncontours)
+
     contourplot = ax.contourf(
         az_vals,
         za_vals,
         plot_vals,
+        levels,
         vmin=vmin,
         vmax=vmax,
         cmap=use_cmap,
@@ -125,6 +130,8 @@ def plot_beam(
     beam,  # pyuvdata beam object
     plot_freq=50.0,  # frequency in MHz, must be included in the beam obj
     real_part=True,
+    plot_amplitude=False,
+    plot_pols=[0,1],
     vmin=-1,
     vmax=1,
     contour_plot=True,
@@ -134,11 +141,18 @@ def plot_beam(
     az_axis = np.degrees(beam.axis1_array)
     za_axis = np.degrees(beam.axis2_array)
 
-    if real_part:
-        plot_jones_vals = np.real(beam.data_array)
+    if plot_amplitude:
+        plot_jones_vals = np.sqrt(
+            np.abs(use_beam.data_array[:, :, 0, :, :, :])**2. + np.abs(use_beam.data_array[:, :, 1, :, :, :])**2.
+        )
+        # Normalize
+        plot_jones_vals /= np.max(plot_jones_vals)
+        title = f"Beam Amplitude, {plot_freq} MHz"
+    elif real_part:
+        plot_jones_vals = np.real(use_beam.data_array)
         title = f"Jones Matrix Components at {plot_freq} MHz, Real Part"
     else:
-        plot_jones_vals = np.imag(beam.data_array)
+        plot_jones_vals = np.imag(use_beam.data_array)
         title = f"Jones Matrix Components at {plot_freq} MHz, Imaginary Part"
 
     if contour_plot:
@@ -150,21 +164,38 @@ def plot_beam(
     use_cmap.set_bad(color="whitesmoke")
     za_vals, az_vals = np.meshgrid(za_axis, az_axis)
 
-    fig, ax = plt.subplots(
-        nrows=2, ncols=2, subplot_kw=dict(projection="polar"), figsize=(9, 9)
-    )
-    for pol1 in [0, 1]:
-        for pol2 in [0, 1]:
+    if plot_amplitude:
+        fig, ax = plt.subplots(
+            nrows=1, ncols=2, subplot_kw=dict(projection="polar"), figsize=(9, 6)
+        )
+        pol_names = ["A", "B"]
+        for pol in plot_pols:
             contourplot = plot_function(
-                ax[pol1, pol2],
-                (plot_jones_vals[pol1, 0, pol2, 0, :, :]).T,
+                ax[pol],
+                (plot_jones_vals[pol, 0, 0, :, :]).T,
                 np.radians(az_vals),
                 za_vals,
                 vmin=vmin,
                 vmax=vmax,
             )
-            fig.colorbar(contourplot, ax=ax[pol1, pol2])
-            ax[pol1, pol2].set_title(f"J[{pol1},{pol2}]")
+            fig.colorbar(contourplot, ax=ax[pol])
+            ax[pol].set_title(f"Pol {pol_names[pol]}")
+    else:
+        fig, ax = plt.subplots(
+            nrows=2, ncols=2, subplot_kw=dict(projection="polar"), figsize=(9, 9)
+        )
+        for pol1 in plot_pols:
+            for pol2 in [0, 1]:
+                contourplot = plot_function(
+                    ax[pol1, pol2],
+                    (plot_jones_vals[pol1, 0, pol2, 0, :, :]).T,
+                    np.radians(az_vals),
+                    za_vals,
+                    vmin=vmin,
+                    vmax=vmax,
+                )
+                fig.colorbar(contourplot, ax=ax[pol1, pol2])
+                ax[pol1, pol2].set_title(f"J[{pol1},{pol2}]")
     fig.suptitle(title)
     fig.tight_layout()
     plt.show()
