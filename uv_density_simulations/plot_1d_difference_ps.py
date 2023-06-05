@@ -160,7 +160,9 @@ def plot_ps():
     uv_spacings = ["10", "5", "1", "0.5"]
 
     colors = ["tab:blue", "tab:orange", "tab:green", "tab:purple"]
-    names = uv_spacings
+    names = [
+        f"{1/(float(spacing)**2.)} baselines/wavelength$^2$" for spacing in uv_spacings
+    ]
 
     # Plot error-free version
     for file_ind, spacing in enumerate(uv_spacings):
@@ -343,4 +345,4 @@ def plot_ps_modified_kernel_cal_amp_error_only():
 
 if __name__ == "__main__":
 
-    plot_ps_modified_kernel_cal_amp_error_only()
+    plot_ps()
