@@ -19,7 +19,10 @@ def make_polar_contour_plot(
     if cyclic_colorbar:
         use_cmap = matplotlib.cm.get_cmap("twilight_shifted").copy()
     else:
-        use_cmap = matplotlib.cm.get_cmap("Spectral").copy()
+        if vmin >= 0:
+            use_cmap = matplotlib.cm.get_cmap("inferno").copy()
+        else:
+            use_cmap = matplotlib.cm.get_cmap("Spectral").copy()
     use_cmap.set_bad(color="whitesmoke")
 
     # Fill in plotting gap by copying az=0 values to az=2Pi
@@ -135,9 +138,10 @@ def plot_beam(
     vmin=-1,
     vmax=1,
     contour_plot=True,
+    savepath=None,
 ):
 
-    use_beam = beam.select(frequencies=[plot_freq * 1e6], inplace=False)
+    use_beam = beam.select(frequencies=[plot_freq], inplace=False)
     az_axis = np.degrees(beam.axis1_array)
     za_axis = np.degrees(beam.axis2_array)
 
@@ -147,13 +151,13 @@ def plot_beam(
         )
         # Normalize
         plot_jones_vals /= np.max(plot_jones_vals)
-        title = f"Beam Amplitude, {plot_freq} MHz"
+        title = f"Beam Amplitude, {plot_freq/1e6} MHz"
     elif real_part:
         plot_jones_vals = np.real(use_beam.data_array)
-        title = f"Jones Matrix Components at {plot_freq} MHz, Real Part"
+        title = f"Jones Matrix Components at {plot_freq/1e6} MHz, Real Part"
     else:
         plot_jones_vals = np.imag(use_beam.data_array)
-        title = f"Jones Matrix Components at {plot_freq} MHz, Imaginary Part"
+        title = f"Jones Matrix Components at {plot_freq/1e6} MHz, Imaginary Part"
 
     if contour_plot:
         plot_function = make_polar_contour_plot
@@ -198,7 +202,12 @@ def plot_beam(
                 ax[pol1, pol2].set_title(f"J[{pol1},{pol2}]")
     fig.suptitle(title)
     fig.tight_layout()
-    plt.show()
+    if savepath is None:
+        plt.show()
+        plt.close()
+    else:
+        plt.savefig(savepath, dpi=300)
+        plt.close()
 
 
 def plot_mueller_matrix(
