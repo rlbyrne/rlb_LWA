@@ -1,3 +1,5 @@
+# This script is now deprecated. See instead github.com/rlbyrne/PSsensitivity
+
 import numpy as np
 import pyuvdata
 import matplotlib.pyplot as plt
