@@ -134,7 +134,7 @@ def plot_beam(
     plot_freq=50.0,  # frequency in MHz, must be included in the beam obj
     real_part=True,
     plot_amplitude=False,
-    plot_pols=[0,1],
+    plot_pols=[0, 1],
     vmin=-1,
     vmax=1,
     contour_plot=True,
@@ -147,7 +147,8 @@ def plot_beam(
 
     if plot_amplitude:
         plot_jones_vals = np.sqrt(
-            np.abs(use_beam.data_array[0, :, :, :, :, :])**2. + np.abs(use_beam.data_array[1, :, :, :, :, :])**2.
+            np.abs(use_beam.data_array[0, :, :, :, :, :]) ** 2.0
+            + np.abs(use_beam.data_array[1, :, :, :, :, :]) ** 2.0
         )
         # Normalize
         plot_jones_vals /= np.max(plot_jones_vals)
@@ -298,7 +299,9 @@ def get_parallactic_angle(az_vals, za_vals, latitude=37.23):
     return ra_vals, dec_vals, parallactic_angle
 
 
-def pol_basis_transform_azza_to_radec(beam, latitude=37.23, inplace=False, reverse=False):
+def pol_basis_transform_azza_to_radec(
+    beam, latitude=37.23, inplace=False, reverse=False
+):
 
     za_vals, az_vals = np.meshgrid(beam.axis2_array, beam.axis1_array)
     ra_vals, dec_vals, parallactic_angle = get_parallactic_angle(
@@ -508,7 +511,7 @@ def read_beam_txt_file(path, header_line=6):
                 multiply_factors[1, pol, 3] * jones_phi[point]
             )
 
-    #jones = np.transpose(jones, axes=(1, 0, 2, 3, 4))
+    # jones = np.transpose(jones, axes=(1, 0, 2, 3, 4))
     jones = np.flip(jones, axis=1)
 
     # Polarization mode at zenith is undefined
@@ -620,9 +623,9 @@ def write_mueller_to_csv(
 def invert_mueller_matrix(mueller_mat, inplace=False):
 
     mueller_inv = mueller_mat.copy()
-    mueller_inv = np.transpose(mueller_inv, axes=(1,3,4,5,2,0))
+    mueller_inv = np.transpose(mueller_inv, axes=(1, 3, 4, 5, 2, 0))
     mueller_inv = np.linalg.inv(mueller_inv)
-    mueller_inv = np.transpose(mueller_inv, axes=(5,0,4,1,2,3))
+    mueller_inv = np.transpose(mueller_inv, axes=(5, 0, 4, 1, 2, 3))
     if inplace:
         mueller_mat = mueller_inv
     else:
