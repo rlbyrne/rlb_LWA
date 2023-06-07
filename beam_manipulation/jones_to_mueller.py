@@ -147,7 +147,7 @@ def plot_beam(
 
     if plot_amplitude:
         plot_jones_vals = np.sqrt(
-            np.abs(use_beam.data_array[:, :, 0, :, :, :])**2. + np.abs(use_beam.data_array[:, :, 1, :, :, :])**2.
+            np.abs(use_beam.data_array[0, :, :, :, :, :])**2. + np.abs(use_beam.data_array[1, :, :, :, :, :])**2.
         )
         # Normalize
         plot_jones_vals /= np.max(plot_jones_vals)
@@ -176,7 +176,7 @@ def plot_beam(
         for pol in plot_pols:
             contourplot = plot_function(
                 ax[pol],
-                (plot_jones_vals[pol, 0, 0, :, :]).T,
+                (plot_jones_vals[0, pol, 0, :, :]).T,
                 np.radians(az_vals),
                 za_vals,
                 vmin=vmin,
@@ -508,8 +508,8 @@ def read_beam_txt_file(path, header_line=6):
                 multiply_factors[1, pol, 3] * jones_phi[point]
             )
 
-    jones = np.transpose(jones, axes=(1, 0, 2, 3, 4))
-    jones = np.flip(jones, axis=0)
+    #jones = np.transpose(jones, axes=(1, 0, 2, 3, 4))
+    jones = np.flip(jones, axis=1)
 
     # Polarization mode at zenith is undefined
     # Insert values that will make the conversion to RA/Dec work properly
