@@ -224,7 +224,7 @@ def plot_mueller_matrix(
     stokes=False,
 ):
 
-    freq_ind = np.where(freq_axis == plot_freq * 1e6)[0][0]
+    freq_ind = np.where(freq_axis == plot_freq)[0][0]
     use_mueller = mueller_mat[:, 0, :, freq_ind, :, :]
 
     if real_part:
@@ -312,10 +312,10 @@ def pol_basis_transform_azza_to_radec(
         parallactic_angle *= -1
 
     rot_matrix = np.zeros((2, 2, beam.Naxes1, beam.Naxes2), dtype=float)
-    rot_matrix[0, 0, :, :] = -np.sin(parallactic_angle)
+    rot_matrix[0, 0, :, :] = np.sin(parallactic_angle)
     rot_matrix[1, 0, :, :] = -np.cos(parallactic_angle)
     rot_matrix[0, 1, :, :] = -np.cos(parallactic_angle)
-    rot_matrix[1, 1, :, :] = np.sin(parallactic_angle)
+    rot_matrix[1, 1, :, :] = -np.sin(parallactic_angle)
 
     new_jones_vals = np.einsum("jion,jklmno->iklmno", rot_matrix, beam.data_array)
     new_basis_array = np.einsum("ijon,jlno->ilno", rot_matrix, beam.basis_vector_array)
@@ -518,11 +518,11 @@ def read_beam_txt_file(path, header_line=6):
     # Insert values that will make the conversion to RA/Dec work properly
     # This discards any imaginary component. Is that ok?
     zenith_points = np.where(za_axis == 0)[0]
-    jones[1, 0, :, zenith_points, :] = -np.sqrt(
+    jones[1, 0, :, zenith_points, :] = np.sqrt(
         jones[0, 0, :, zenith_points, :] ** 2.0
         + jones[1, 0, :, zenith_points, :] ** 2.0
     )
-    jones[0, 1, :, zenith_points, :] = np.sqrt(
+    jones[0, 1, :, zenith_points, :] = -np.sqrt(
         jones[0, 1, :, zenith_points, :] ** 2.0
         + jones[1, 1, :, zenith_points, :] ** 2.0
     )
@@ -567,7 +567,7 @@ def read_beam_txt_file(path, header_line=6):
     )
     beam_obj.feed_array = ["E", "N"]
     beam_obj.x_orientation = "east"
-    # beam_obj.peak_normalize()  # Ends up nan-ing the entire beam. Why???
+    beam_obj.peak_normalize()  # Ends up nan-ing the entire beam. Why???
     beam_obj.check()
 
     return beam_obj
@@ -594,6 +594,14 @@ def write_mueller_to_csv(
             for freq_ind, freq in enumerate(freq_axis):
                 for az_ind, az in enumerate(az_axis):
                     for za_ind, za in enumerate(za_axis):
+                        mueller_val = mueller_mat[
+                            sky_pol_ind,
+                            0,
+                            instr_pol_ind,
+                            freq_ind,
+                            za_ind,
+                            az_ind,
+                        ]
                         mueller_dict.append(
                             {
                                 "Instr Pol": instr_pol_name,
@@ -601,18 +609,20 @@ def write_mueller_to_csv(
                                 "Freq (Hz)": freq,
                                 "Az": az,
                                 "ZA": za,
-                                "Value": mueller_mat[
-                                    sky_pol_ind,
-                                    0,
-                                    instr_pol_ind,
-                                    freq_ind,
-                                    za_ind,
-                                    az_ind,
-                                ],
+                                "Value (Real Part)": np.real(mueller_val),
+                                "Value (Imag Part)": np.imag(mueller_val),
                             }
                         )
 
-    fieldnames = ["Instr Pol", "Sky Pol", "Freq (Hz)", "Az", "ZA", "Value"]
+    fieldnames = [
+        "Instr Pol",
+        "Sky Pol",
+        "Freq (Hz)",
+        "Az",
+        "ZA",
+        "Value (Real Part)",
+        "Value (Imag Part)",
+    ]
     with open(output_path, "w") as file:
         file_contents = csv.DictWriter(file, fieldnames=fieldnames)
         file_contents.writeheader()
