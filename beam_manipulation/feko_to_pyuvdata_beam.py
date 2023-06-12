@@ -37,12 +37,12 @@ for chunk_ind in range(len(start_chunk_lines)):
     header_len = int((data[header_intro_line].split())[-1])
     header_line = header_intro_line + header_len
     header = np.array(data[header_line].strip("#").split())
-    theta_col = np.where(header == '"Theta"')[0]
-    phi_col = np.where(header == '"Phi"')[0]
-    etheta_real_col = np.where(header == '"Re(Etheta)"')[0]
-    etheta_imag_col = np.where(header == '"Im(Etheta)"')[0]
-    ephi_real_col = np.where(header == '"Re(Ephi)"')[0]
-    ephi_imag_col = np.where(header == '"Im(Ephi)"')[0]
+    theta_col = np.where(header == '"Theta"')[0][0]
+    phi_col = np.where(header == '"Phi"')[0][0]
+    etheta_real_col = np.where(header == '"Re(Etheta)"')[0][0]
+    etheta_imag_col = np.where(header == '"Im(Etheta)"')[0][0]
+    ephi_real_col = np.where(header == '"Re(Ephi)"')[0][0]
+    ephi_imag_col = np.where(header == '"Im(Ephi)"')[0][0]
 
     for data_line in data[header_line + 1 : np.max(chunk_lines)]:
         data_line_split = data_line.split()
