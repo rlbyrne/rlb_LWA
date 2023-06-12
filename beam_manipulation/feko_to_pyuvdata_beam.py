@@ -1,16 +1,19 @@
 import numpy as np
+import pyuvdata
 
 with open("/data05/nmahesh/LWA_x_10to100.ffe", "r") as f:
     data = f.readlines()
 f.close()
 
 freq_array = np.array([], dtype=float)
-theta_array = np.array([], dtype=float)
-phi_array = np.array([], dtype=float)
+theta_array = np.array([], dtype=float)  # Zenith angle
+phi_array = np.array([], dtype=float)  # Azimuth
 etheta_array = np.array([], dtype=complex)
 ephi_array = np.array([], dtype=complex)
 
 start_chunk_lines = np.where(["Configuration Name:" in line for line in data])[0]
+
+start_chunk_lines = start_chunk_lines[0:3]  # Added for debugging
 
 for chunk_ind in range(len(start_chunk_lines)):
 
@@ -58,3 +61,51 @@ for chunk_ind in range(len(start_chunk_lines)):
                 ephi_array,
                 float(data_line_split[ephi_real_col]) + 1j * float(data_line_split[ephi_imag_col])
             )
+
+print(np.max(theta_array))
+print(np.max(phi_array))
+
+if False:
+
+    beam_obj = pyuvdata.UVBeam()
+    beam_obj.Naxes_vec = 2
+    beam_obj.Nfreqs = len(freq_axis)
+    beam_obj.Nspws = 1
+    beam_obj.antenna_type = "simple"
+    beam_obj.bandpass_array = np.full((1, len(freq_axis)), 1.0)
+    beam_obj.beam_type = "efield"
+    beam_obj.data_array = np.copy(jones[:, np.newaxis, :, :, :, :])
+    beam_obj.data_normalization = "physical"
+    beam_obj.feed_name = ""
+    beam_obj.feed_version = ""
+    beam_obj.freq_array = (
+        np.copy(freq_axis[np.newaxis, :]) * 1e6
+    )  # Convert from MHz to Hz
+    beam_obj.history = ""
+    beam_obj.model_name = ""
+    beam_obj.model_version = ""
+    beam_obj.pixel_coordinate_system = "az_za"
+    beam_obj.spw_array = [0]
+    beam_obj.telescope_name = "LWA"
+    beam_obj.Naxes1 = len(az_axis)
+    beam_obj.Naxes2 = len(za_axis)
+    beam_obj.Ncomponents_vec = 2
+    beam_obj.Nfeeds = 2
+    beam_obj.Npols = 2
+    beam_obj.axis1_array = np.radians(az_axis)
+    beam_obj.axis2_array = np.radians(za_axis)
+    beam_obj.basis_vector_array = np.repeat(
+        (
+            np.repeat(
+                (np.identity(2, dtype=float))[:, :, np.newaxis], len(za_axis), axis=2
+            )
+        )[:, :, :, np.newaxis],
+        len(az_axis),
+        axis=3,
+    )
+    beam_obj.feed_array = ["E", "N"]
+    beam_obj.x_orientation = "east"
+    beam_obj.peak_normalize()
+    beam_obj.check()
+
+    return beam_obj
