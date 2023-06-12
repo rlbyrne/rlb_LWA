@@ -4,11 +4,11 @@ with open("/data05/nmahesh/LWA_x_10to100.ffe", "r") as f:
     data = f.readlines()
 f.close()
 
-freq_array = []
-theta_array = []
-phi_array = []
-etheta_array = []
-ephi_array = []
+freq_array = np.array([], dtype=float)
+theta_array = np.array([], dtype=float)
+phi_array = np.array([], dtype=float)
+etheta_array = np.array([], dtype=complex)
+ephi_array = np.array([], dtype=complex)
 
 start_chunk_lines = np.where(["Configuration Name:" in line for line in data])[0]
 
@@ -47,12 +47,14 @@ for chunk_ind in range(len(start_chunk_lines)):
     for data_line in data[header_line + 1 : np.max(chunk_lines)]:
         data_line_split = data_line.split()
         if len(data_line_split) == len(header):
-            freq_array.append(freq_hz)
-            theta_array.append(data_line_split[theta_col])
-            phi_array.append(data_line_split[phi_col])
-            etheta_array.append(
-                data_line_split[etheta_real_col] + 1j * data_line_split[etheta_imag_col]
+            freq_array = np.append(freq_array, freq_hz)
+            theta_array = np.append(theta_array, float(data_line_split[theta_col]))
+            phi_array = np.append(phi_array, float(data_line_split[phi_col]))
+            etheta_array = np.append(
+                etheta_array,
+                float(data_line_split[etheta_real_col]) + 1j * float(data_line_split[etheta_imag_col])
             )
-            etheta_array.append(
-                data_line_split[ephi_real_col] + 1j * data_line_split[ephi_imag_col]
+            ephi_array = np.append(
+                ephi_array,
+                float(data_line_split[ephi_real_col]) + 1j * float(data_line_split[ephi_imag_col])
             )
