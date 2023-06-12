@@ -15,11 +15,11 @@ start_chunk_lines = np.where(["Configuration Name:" in line for line in data])[0
 for chunk_ind in range(len(start_chunk_lines)):
 
     if chunk_ind < len(start_chunk_lines) - 1:
-        chunk_lines = np.range(
+        chunk_lines = np.arange(
             start_chunk_lines[chunk_ind], start_chunk_lines[chunk_ind + 1]
         )
     else:
-        chunk_lines = np.range(start_chunk_lines[chunk_ind], len(freq_lines))
+        chunk_lines = np.arange(start_chunk_lines[chunk_ind], len(freq_lines))
 
     freq_line = (
         [line_num for line_num in chunk_lines if "Frequency:" in data[line_num]]
