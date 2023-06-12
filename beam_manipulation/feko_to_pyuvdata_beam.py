@@ -13,7 +13,9 @@ ephi_array = np.array([], dtype=complex)
 
 start_chunk_lines = np.where(["Configuration Name:" in line for line in data])[0]
 
-start_chunk_lines = start_chunk_lines[0:3]  # Added for debugging
+# Debug
+start_chunk_lines = start_chunk_lines[0:3]
+data = data[0:start_chunk_lines[3]]
 
 for chunk_ind in range(len(start_chunk_lines)):
 
@@ -22,7 +24,7 @@ for chunk_ind in range(len(start_chunk_lines)):
             start_chunk_lines[chunk_ind], start_chunk_lines[chunk_ind + 1]
         )
     else:
-        chunk_lines = np.arange(start_chunk_lines[chunk_ind], len(start_chunk_lines))
+        chunk_lines = np.arange(start_chunk_lines[chunk_ind], len(data))
 
     freq_line = (
         [line_num for line_num in chunk_lines if "Frequency:" in data[line_num]]
