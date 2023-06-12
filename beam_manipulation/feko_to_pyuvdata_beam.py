@@ -14,8 +14,8 @@ ephi_array = np.array([], dtype=complex)
 start_chunk_lines = np.where(["Configuration Name:" in line for line in data])[0]
 
 # Debug
-start_chunk_lines = start_chunk_lines[0:3]
 data = data[0:start_chunk_lines[3]]
+start_chunk_lines = start_chunk_lines[0:3]
 
 for chunk_ind in range(len(start_chunk_lines)):
 
