@@ -1,3 +1,5 @@
+import numpy as np
+
 with open("/data05/nmahesh/LWA_x_10to100.ffe", "r") as f:
     data = f.readlines()
 f.close()
