@@ -22,7 +22,7 @@ for chunk_ind in range(len(start_chunk_lines)):
             start_chunk_lines[chunk_ind], start_chunk_lines[chunk_ind + 1]
         )
     else:
-        chunk_lines = np.arange(start_chunk_lines[chunk_ind], len(freq_lines))
+        chunk_lines = np.arange(start_chunk_lines[chunk_ind], len(start_chunk_lines))
 
     freq_line = (
         [line_num for line_num in chunk_lines if "Frequency:" in data[line_num]]
@@ -108,4 +108,4 @@ if False:
     beam_obj.peak_normalize()
     beam_obj.check()
 
-    return beam_obj
+    #return beam_obj
