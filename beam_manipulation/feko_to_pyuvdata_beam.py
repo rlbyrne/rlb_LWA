@@ -77,7 +77,7 @@ theta_axis, theta_indices = np.unique(theta_array, return_index=True)
 phi_axis, phi_indices = np.unique(phi_array, return_index=True)
 freq_axis, freq_indices = np.unique(freq_array, return_index=True)
 jones = np.full(
-    (2, 1, len(freq_axis), len(theta_axis), len(phi_axis)), np.nan, dtype=complex
+    (2, 2, len(freq_axis), len(theta_axis), len(phi_axis)), np.nan, dtype=complex
 )
 for phi_ind, phi in enumerate(phi_axis):
     for theta_ind, theta in enumerate(theta_axis):
