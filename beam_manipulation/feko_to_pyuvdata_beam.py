@@ -64,8 +64,21 @@ for chunk_ind in range(len(start_chunk_lines)):
                 float(data_line_split[ephi_real_col]) + 1j * float(data_line_split[ephi_imag_col])
             )
 
-print(np.max(theta_array))
-print(np.max(phi_array))
+# Reshape array
+theta_axis, theta_indices = np.unique(theta_array, return_index=True)
+phi_axis, phi_indices = np.unique(phi_array, return_index=True)
+freq_axis, freq_indices = np.unique(freq_array, return_index=True)
+beam_vals = np.full((2, len(phi_axis), len(theta_axis), len(freq_axis)), np.nan, dtype=complex)
+for phi_ind, phi in enumerate(phi_axis):
+    for theta_ind, theta in enumerate(theta_axis):
+        use_indices = np.intersect1d(phi_indices[phi_ind], theta_indices[theta_ind])
+        for freq_ind, freq in enumerate(freq_axis):
+            index = np.intersect1d(use_indices, freq_indices[freq_ind])
+            if len(index) > 0:
+                beam_vals[0, phi_ind, theta_ind, freq_ind] = ephi_array[index[0]]
+                beam_vals[1, phi_ind, theta_ind, freq_ind] = etheta_array[index[0]]
+
+
 
 if False:
 
