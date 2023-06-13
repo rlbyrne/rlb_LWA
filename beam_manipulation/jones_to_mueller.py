@@ -567,7 +567,7 @@ def read_beam_txt_file(path, header_line=6):
     )
     beam_obj.feed_array = ["E", "N"]
     beam_obj.x_orientation = "east"
-    beam_obj.peak_normalize()  # Ends up nan-ing the entire beam. Why???
+    beam_obj.peak_normalize()
     beam_obj.check()
 
     return beam_obj
