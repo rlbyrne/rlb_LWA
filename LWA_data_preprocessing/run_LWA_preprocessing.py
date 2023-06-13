@@ -797,7 +797,7 @@ def flag_24hr_run_Jun13():
     ms_filenames = np.sort(os.listdir(data_dir))
 
     start_file_ind = 0
-    files_per_chunk = 20  # Process in 5 min chunks
+    files_per_chunk = 20  # Process in 200 second chunks
     while start_file_ind < len(ms_filenames):
         uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(
             [
@@ -823,7 +823,7 @@ def flag_24hr_run_Jun13():
             366
         ]  # Flags from Nivedita
         # fmt: on
-        flag_ants = [f"LWA{string(ant)}" for ant in flag_ants]
+        flag_ants = [f"LWA{str(ant)}" for ant in flag_ants]
         LWA_preprocessing.flag_antennas(
             uvd,
             antenna_names=flag_ants,
