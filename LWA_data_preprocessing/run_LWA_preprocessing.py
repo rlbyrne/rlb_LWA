@@ -823,7 +823,7 @@ def flag_24hr_run_Jun13():
             366
         ]  # Flags from Nivedita
         # fmt: on
-        flag_ants = [f"LWA{str(ant)}" for ant in flag_ants]
+        flag_ants = [f"LWA{str(ant).zfill(3)}" for ant in flag_ants]
         LWA_preprocessing.flag_antennas(
             uvd,
             antenna_names=flag_ants,
@@ -842,7 +842,7 @@ def flag_24hr_run_Jun13():
             plot_file_prefix=ms_filenames[start_file_ind].replace(".ms", ""),
         )
         # Apply flags by zeroing out flagged data
-        uvd.data_array[np.where(flag_array)] = 0.
+        uvd.data_array[np.where(uvd.flag_array)] = 0.
 
         # Save each time step individually
         unique_times = np.unique(uvd.time_array)
