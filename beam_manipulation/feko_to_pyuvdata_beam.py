@@ -20,8 +20,8 @@ for file in beam_files:
     start_chunk_lines = np.where(["Configuration Name:" in line for line in data])[0]
 
     # Debug
-    data = data[0 : start_chunk_lines[2]]
-    start_chunk_lines = start_chunk_lines[0:2]
+    #data = data[0 : start_chunk_lines[2]]
+    #start_chunk_lines = start_chunk_lines[0:2]
 
     for chunk_ind in range(len(start_chunk_lines)):
 
@@ -94,6 +94,9 @@ for phi_ind, phi in enumerate(phi_axis):
                     index[0]
                 ]
 
+# Clear variables
+freq_array = theta_array = phi_array = etheta_array = ephi_array = None
+
 beam_obj = pyuvdata.UVBeam()
 beam_obj.Naxes_vec = 2
 beam_obj.Nfreqs = len(freq_axis)
@@ -130,5 +133,7 @@ beam_obj.basis_vector_array = np.repeat(
 )
 beam_obj.feed_array = ["E", "N"]
 beam_obj.x_orientation = "east"
-beam_obj.peak_normalize()
+#beam_obj.peak_normalize()  # Throws an "invalid value encountered in divide" error
 beam_obj.check()
+
+beam_obj.write_beamfits("/data05/rbyrne/LWA_10to100.beamfits")
