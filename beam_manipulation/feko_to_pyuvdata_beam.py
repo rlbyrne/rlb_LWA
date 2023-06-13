@@ -94,45 +94,41 @@ for phi_ind, phi in enumerate(phi_axis):
                     index[0]
                 ]
 
-if False:
-
-    beam_obj = pyuvdata.UVBeam()
-    beam_obj.Naxes_vec = 2
-    beam_obj.Nfreqs = len(freq_axis)
-    beam_obj.Nspws = 1
-    beam_obj.antenna_type = "simple"
-    beam_obj.bandpass_array = np.full((1, len(freq_axis)), 1.0)
-    beam_obj.beam_type = "efield"
-    beam_obj.data_array = np.copy(jones[:, np.newaxis, :, :, :, :])
-    beam_obj.data_normalization = "physical"
-    beam_obj.feed_name = ""
-    beam_obj.feed_version = ""
-    beam_obj.freq_array = freq_axis[np.newaxis, :]
-    beam_obj.history = ""
-    beam_obj.model_name = ""
-    beam_obj.model_version = ""
-    beam_obj.pixel_coordinate_system = "az_za"
-    beam_obj.spw_array = [0]
-    beam_obj.telescope_name = "LWA"
-    beam_obj.Naxes1 = len(phi_axis)
-    beam_obj.Naxes2 = len(theta_axis)
-    beam_obj.Ncomponents_vec = 2
-    beam_obj.Nfeeds = 2
-    beam_obj.Npols = 2
-    beam_obj.axis1_array = np.radians(phi_axis)
-    beam_obj.axis2_array = np.radians(theta_axis)
-    beam_obj.basis_vector_array = np.repeat(
-        (
-            np.repeat(
-                (np.identity(2, dtype=float))[:, :, np.newaxis], len(za_axis), axis=2
-            )
-        )[:, :, :, np.newaxis],
-        len(az_axis),
-        axis=3,
-    )
-    beam_obj.feed_array = ["E", "N"]
-    beam_obj.x_orientation = "east"
-    beam_obj.peak_normalize()
-    beam_obj.check()
-
-    # return beam_obj
+beam_obj = pyuvdata.UVBeam()
+beam_obj.Naxes_vec = 2
+beam_obj.Nfreqs = len(freq_axis)
+beam_obj.Nspws = 1
+beam_obj.antenna_type = "simple"
+beam_obj.bandpass_array = np.full((1, len(freq_axis)), 1.0)
+beam_obj.beam_type = "efield"
+beam_obj.data_array = np.copy(jones[:, np.newaxis, :, :, :, :])
+beam_obj.data_normalization = "physical"
+beam_obj.feed_name = ""
+beam_obj.feed_version = ""
+beam_obj.freq_array = freq_axis[np.newaxis, :]
+beam_obj.history = ""
+beam_obj.model_name = ""
+beam_obj.model_version = ""
+beam_obj.pixel_coordinate_system = "az_za"
+beam_obj.spw_array = [0]
+beam_obj.telescope_name = "LWA"
+beam_obj.Naxes1 = len(phi_axis)
+beam_obj.Naxes2 = len(theta_axis)
+beam_obj.Ncomponents_vec = 2
+beam_obj.Nfeeds = 2
+beam_obj.Npols = 2
+beam_obj.axis1_array = np.radians(phi_axis)
+beam_obj.axis2_array = np.radians(theta_axis)
+beam_obj.basis_vector_array = np.repeat(
+    (
+        np.repeat(
+            (np.identity(2, dtype=float))[:, :, np.newaxis], len(za_axis), axis=2
+        )
+    )[:, :, :, np.newaxis],
+    len(az_axis),
+    axis=3,
+)
+beam_obj.feed_array = ["E", "N"]
+beam_obj.x_orientation = "east"
+beam_obj.peak_normalize()
+beam_obj.check()
