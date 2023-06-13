@@ -224,15 +224,15 @@ def plot_mueller_matrix(
     stokes=False,
 ):
 
-    freq_ind = np.where(freq_axis == plot_freq)[0][0]
+    freq_ind = np.where(freq_axis[0, :] == plot_freq)[0][0]
     use_mueller = mueller_mat[:, 0, :, freq_ind, :, :]
 
     if real_part:
         use_mueller = np.real(use_mueller)
-        title = f"Mueller Matrix Components at {plot_freq} MHz, Real Part"
+        title = f"Mueller Matrix Components at {plot_freq/1e6} MHz, Real Part"
     else:
         use_mueller = np.imag(use_mueller)
-        title = f"Mueller Matrix Components at {plot_freq} MHz, Imaginary Part"
+        title = f"Mueller Matrix Components at {plot_freq/1e6} MHz, Imaginary Part"
 
     if contour_plot:
         plot_function = make_polar_contour_plot
