@@ -20,8 +20,8 @@ for file in beam_files:
     start_chunk_lines = np.where(["Configuration Name:" in line for line in data])[0]
 
     # Debug
-    data = data[0 : start_chunk_lines[3]]
-    start_chunk_lines = start_chunk_lines[0:3]
+    data = data[0 : start_chunk_lines[2]]
+    start_chunk_lines = start_chunk_lines[0:2]
 
     for chunk_ind in range(len(start_chunk_lines)):
 
@@ -122,10 +122,10 @@ beam_obj.axis2_array = np.radians(theta_axis)
 beam_obj.basis_vector_array = np.repeat(
     (
         np.repeat(
-            (np.identity(2, dtype=float))[:, :, np.newaxis], len(za_axis), axis=2
+            (np.identity(2, dtype=float))[:, :, np.newaxis], len(theta_axis), axis=2
         )
     )[:, :, :, np.newaxis],
-    len(az_axis),
+    len(phi_axis),
     axis=3,
 )
 beam_obj.feed_array = ["E", "N"]
