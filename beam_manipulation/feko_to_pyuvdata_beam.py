@@ -179,7 +179,7 @@ def combine_frequencies():
 
     data_dir = "/data05/rbyrne"
     filenames = os.listdir(data_dir)
-    filenames = [file for file in filenames if file.endswith(".beamfits")]
+    filenames = [file for file in filenames if file.endswith("MHz.beamfits")]
 
     pol_names = ["x", "y"]
     for pol in pol_names:
