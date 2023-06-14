@@ -791,13 +791,13 @@ def flag_24hr_run_Jun13():
     data_dir = "/mnt/24-hour-run/73MHz"
     data_output_dir = "/data10/rbyrne/24-hour-run-flagged"
     ssins_plot_dir = "/data10/rbyrne/24-hour-run-ssins-plots"
-    ssins_thresh = 10.0
+    ssins_thresh = 15.0
 
     # Find raw ms files
     ms_filenames = np.sort(os.listdir(data_dir))
 
     start_file_ind = 0
-    files_per_chunk = 20  # Process in 200 second chunks
+    files_per_chunk = 30  # Process in 5 min chunks
     while start_file_ind < len(ms_filenames):
         uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(
             [
