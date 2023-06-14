@@ -171,11 +171,11 @@ def combine_frequencies():
 
     data_dir = "/data05/rbyrne"
     filenames = os.listdir(data_dir)
-    filenames = [file in filenames if file.endswith(".beamfits")]
+    filenames = [file for file in filenames if file.endswith(".beamfits")]
 
     pol_names = ["x", "y"]
     for pol in pol_names:
-        use_filenames = [file in filenames if f"_{pol}_" in file]
+        use_filenames = [file for file in filenames if f"_{pol}_" in file]
         for file_ind, file in enumerate(use_filenames):
             beam_new = pyuvdata.UVBeam()
             beam_new.read(file)
