@@ -1,17 +1,10 @@
 import numpy as np
 import pyuvdata
+import time
 
 beam_files = ["/data05/nmahesh/LWA_x_10to100.ffe", "/data05/nmahesh/LWA_y_10to100.ffe"]
 
-freq_array = np.array([], dtype=float)
-theta_array = np.array([], dtype=float)  # Zenith angle
-phi_array = np.array([], dtype=float)  # Azimuth
-etheta_array = np.array([], dtype=complex)
-ephi_array = np.array([], dtype=complex)
-
-file_start_ind = len(freq_array)
-
-for file in beam_files:
+for feed_ind, file in enumerate(beam_files):
 
     with open(file, "r") as f:
         data = f.readlines()
@@ -24,6 +17,12 @@ for file in beam_files:
     # start_chunk_lines = start_chunk_lines[0:2]
 
     for chunk_ind in range(len(start_chunk_lines)):
+
+        freq_array = np.array([], dtype=float)
+        theta_array = np.array([], dtype=float)  # Zenith angle
+        phi_array = np.array([], dtype=float)  # Azimuth
+        etheta_array = np.array([], dtype=complex)
+        ephi_array = np.array([], dtype=complex)
 
         if chunk_ind < len(start_chunk_lines) - 1:
             chunk_lines = np.arange(
@@ -38,6 +37,7 @@ for file in beam_files:
         freq_hz = float((data[freq_line].split())[-1])
 
         print(f"Processing frequency {freq_hz/1e6} MHz.")
+        start_time = time.time()
 
         # Parse header
         header_intro_line = (
@@ -92,10 +92,6 @@ for file in beam_files:
                 for freq_ind, freq in enumerate(freq_axis):
                     index = np.intersect1d(use_indices, freq_indices[freq_ind])
                     if len(index) > 0:
-                        if index[0] >= file_start_ind:
-                            feed_ind = 1
-                        else:
-                            feed_ind = 0
                         jones[0, feed_ind, freq_ind, theta_ind, phi_ind] = ephi_array[
                             index[0]
                         ]
@@ -162,4 +158,5 @@ for file in beam_files:
         jones = None
 
         print("Done.")
+        print(f"Timing: {(time.time() - start_time)/60.} minutes")
         print("")
