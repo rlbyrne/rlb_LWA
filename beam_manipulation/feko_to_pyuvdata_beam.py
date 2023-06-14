@@ -153,9 +153,9 @@ for file in beam_files:
 
         # Clear variables
         beam_obj = None
-        theta_axis, theta_indices = None
-        phi_axis, phi_indices = None
-        freq_axis, freq_indices = None
+        theta_axis = theta_indices = None
+        phi_axis = phi_indices = None
+        freq_axis = freq_indices = None
         jones = None
 
         print("Done.")
