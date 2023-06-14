@@ -145,8 +145,9 @@ for feed_ind, file in enumerate(beam_files):
         beam_obj.check()
 
         print("Writing beam object...")
+        pol_names = ["x", "y"]
         beam_obj.write_beamfits(
-            f"/data05/rbyrne/LWA_10to100_{freq_hz/1e6}MHz.beamfits",
+            f"/data05/rbyrne/LWA_{pol_names[feed_ind]}_10to100_{freq_hz/1e6}MHz.beamfits",
             clobber=True,
         )
 
