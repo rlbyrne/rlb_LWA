@@ -149,7 +149,10 @@ for file in beam_files:
         beam_obj.check()
 
         print("Writing beam object...")
-        beam_obj.write_beamfits(f"/data05/rbyrne/LWA_10to100_{freq_hz/1e6}MHz.beamfits")
+        beam_obj.write_beamfits(
+            f"/data05/rbyrne/LWA_10to100_{freq_hz/1e6}MHz.beamfits",
+            overwrite=True,
+        )
 
         # Clear variables
         beam_obj = None
