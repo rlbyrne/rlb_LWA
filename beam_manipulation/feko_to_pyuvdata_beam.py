@@ -178,7 +178,7 @@ def combine_frequencies():
         use_filenames = [file for file in filenames if f"_{pol}_" in file]
         for file_ind, file in enumerate(use_filenames):
             beam_new = pyuvdata.UVBeam()
-            beam_new.read(file)
+            beam_new.read(f"{data_dir}/{file}")
             if file_ind == 0:
                 beam = beam_new.copy()
             else:
