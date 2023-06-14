@@ -6,7 +6,10 @@ import time
 
 def parse_ffe_files():
 
-    beam_files = ["/data05/nmahesh/LWA_x_10to100.ffe", "/data05/nmahesh/LWA_y_10to100.ffe"]
+    beam_files = [
+        "/data05/nmahesh/LWA_x_10to100.ffe",
+        "/data05/nmahesh/LWA_y_10to100.ffe",
+    ]
 
     for feed_ind, file in enumerate(beam_files):
 
@@ -14,7 +17,9 @@ def parse_ffe_files():
             data = f.readlines()
         f.close()
 
-        start_chunk_lines = np.where(["Configuration Name:" in line for line in data])[0]
+        start_chunk_lines = np.where(["Configuration Name:" in line for line in data])[
+            0
+        ]
 
         # Debug
         # data = data[0 : start_chunk_lines[2]]
@@ -65,7 +70,9 @@ def parse_ffe_files():
                 data_line_split = data_line.split()
                 if len(data_line_split) == len(header):
                     freq_array = np.append(freq_array, freq_hz)
-                    theta_array = np.append(theta_array, float(data_line_split[theta_col]))
+                    theta_array = np.append(
+                        theta_array, float(data_line_split[theta_col])
+                    )
                     phi_array = np.append(phi_array, float(data_line_split[phi_col]))
                     etheta_array = np.append(
                         etheta_array,
@@ -96,12 +103,12 @@ def parse_ffe_files():
                     for freq_ind, freq in enumerate(freq_axis):
                         index = np.intersect1d(use_indices, freq_indices[freq_ind])
                         if len(index) > 0:
-                            jones[0, feed_ind, freq_ind, theta_ind, phi_ind] = ephi_array[
-                                index[0]
-                            ]
-                            jones[1, feed_ind, freq_ind, theta_ind, phi_ind] = etheta_array[
-                                index[0]
-                            ]
+                            jones[
+                                0, feed_ind, freq_ind, theta_ind, phi_ind
+                            ] = ephi_array[index[0]]
+                            jones[
+                                1, feed_ind, freq_ind, theta_ind, phi_ind
+                            ] = etheta_array[index[0]]
 
             # Clear variables
             freq_array = theta_array = phi_array = etheta_array = ephi_array = None
@@ -186,4 +193,28 @@ def combine_frequencies():
         beam.write_beamfits(
             f"/data05/rbyrne/LWA_{pol}_10to100.beamfits",
             clobber=True,
+        )
+
+
+def combine_pols():
+
+    file_paths = [
+        "/data05/rbyrne/LWA_x_10to100.beamfits",
+        "/data05/rbyrne/LWA_y_10to100.beamfits",
+    ]
+    beam_x = pyuvdata.UVBeam()
+    beam_x.read(file_paths[0])
+    beam_y = pyuvdata.UVBeam()
+    beam_y.read(file_paths[1])
+
+    if (
+        not np.min(beam_x.freq_array == beam_y.freq_array)
+        or not np.min(beam_x.axis1_array == beam_y.axis1_array)
+        or not np.min(beam_x.axis2_array == beam_y.axis2_array)
+    ):
+        print("ERROR: Mismatched axes. Cannot combine beam objects.")
+    else:
+        beam_x.data_array[:, :, 1, :, :, :] = beam_y.data_array[:, :, 1, :, :, :]
+        beam_x.write_beamfits(
+            f"/data05/rbyrne/LWA_10to100.beamfits",
         )
