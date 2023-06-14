@@ -87,28 +87,29 @@ def parse_ffe_files():
 
             # Reshape array
             print("Reformatting data...")
-            theta_axis, theta_indices = np.unique(theta_array, return_index=True)
-            phi_axis, phi_indices = np.unique(phi_array, return_index=True)
-            freq_axis, freq_indices = np.unique(freq_array, return_index=True)
+            theta_axis, theta_indices = np.unique(theta_array, return_inverse=True)
+            phi_axis, phi_indices = np.unique(phi_array, return_inverse=True)
+            freq_axis, freq_indices = np.unique(freq_array, return_inverse=True)
             jones = np.full(
                 (2, 2, len(freq_axis), len(theta_axis), len(phi_axis)),
                 np.nan,
                 dtype=complex,
             )
-            for phi_ind, phi in enumerate(phi_axis):
-                for theta_ind, theta in enumerate(theta_axis):
-                    use_indices = np.intersect1d(
-                        phi_indices[phi_ind], theta_indices[theta_ind]
-                    )
-                    for freq_ind, freq in enumerate(freq_axis):
-                        index = np.intersect1d(use_indices, freq_indices[freq_ind])
-                        if len(index) > 0:
-                            jones[
-                                0, feed_ind, freq_ind, theta_ind, phi_ind
-                            ] = ephi_array[index[0]]
-                            jones[
-                                1, feed_ind, freq_ind, theta_ind, phi_ind
-                            ] = etheta_array[index[0]]
+            for data_point in range(len(freq_array)):
+                jones[
+                    0,
+                    feed_ind,
+                    freq_indices[data_point],
+                    theta_indices[data_point],
+                    phi_indices[data_point],
+                ] = ephi_array[data_point]
+                jones[
+                    1,
+                    feed_ind,
+                    freq_indices[data_point],
+                    theta_indices[data_point],
+                    phi_indices[data_point],
+                ] = etheta_array[data_point]
 
             # Clear variables
             freq_array = theta_array = phi_array = etheta_array = ephi_array = None
