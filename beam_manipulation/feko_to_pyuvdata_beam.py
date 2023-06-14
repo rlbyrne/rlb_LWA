@@ -151,7 +151,7 @@ for file in beam_files:
         print("Writing beam object...")
         beam_obj.write_beamfits(
             f"/data05/rbyrne/LWA_10to100_{freq_hz/1e6}MHz.beamfits",
-            overwrite=True,
+            clobber=True,
         )
 
         # Clear variables
