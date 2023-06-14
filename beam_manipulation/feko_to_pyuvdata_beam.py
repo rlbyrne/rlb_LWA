@@ -218,4 +218,11 @@ def combine_pols():
         beam_x.data_array[:, :, 1, :, :, :] = beam_y.data_array[:, :, 1, :, :, :]
         beam_x.write_beamfits(
             f"/data05/rbyrne/LWA_10to100.beamfits",
+            clobber=True,
         )
+
+
+if __name__ == "__main__":
+    parse_ffe_files()
+    combine_frequencies()
+    combine_pols()
