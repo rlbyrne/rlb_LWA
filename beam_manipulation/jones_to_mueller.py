@@ -138,12 +138,17 @@ def plot_beam(
     vmin=-1,
     vmax=1,
     contour_plot=True,
+    horizon_cut=True,  # Truncate the beam model at the horizon
     savepath=None,
 ):
 
     use_beam = beam.select(frequencies=[plot_freq], inplace=False)
     az_axis = np.degrees(beam.axis1_array)
     za_axis = np.degrees(beam.axis2_array)
+    if horizon_cut:
+        use_za_inds = np.where(za_axis < 90.)[0]
+        use_beam.select(axis2_inds=use_za_inds, inplace=True)
+        za_axis = za_axis[use_za_inds]
 
     if plot_amplitude:
         plot_jones_vals = np.sqrt(
