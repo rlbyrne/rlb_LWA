@@ -10,26 +10,31 @@ def parse_ffe_files():
         "/data05/nmahesh/LWA_x_10to100.ffe",
         "/data05/nmahesh/LWA_y_10to100.ffe",
     ]
-    per_pol_beams = []
+    per_feed_beams = []
 
-    for feed_ind, file in enumerate(beam_files):
+    for feed_ind, file in enumerate(beam_files):  # Loop over feeds
 
         with open(file, "r") as f:
             data = f.readlines()
         f.close()
 
-        start_freq_chunk_lines = np.where(["Configuration Name:" in line for line in data])[
-            0
-        ]
+        start_freq_chunk_lines = np.where(
+            ["Configuration Name:" in line for line in data]
+        )[0]
 
-        for freq_chunk_ind in range(len(start_freq_chunk_lines)):
+        for freq_chunk_ind in range(
+            len(start_freq_chunk_lines)
+        ):  # Loop over frequencies
 
             if freq_chunk_ind < len(start_freq_chunk_lines) - 1:
                 chunk_lines = np.arange(
-                    start_freq_chunk_lines[freq_chunk_ind], start_freq_chunk_lines[freq_chunk_ind + 1]
+                    start_freq_chunk_lines[freq_chunk_ind],
+                    start_freq_chunk_lines[freq_chunk_ind + 1],
                 )
             else:
-                chunk_lines = np.arange(start_freq_chunk_lines[freq_chunk_ind], len(data))
+                chunk_lines = np.arange(
+                    start_freq_chunk_lines[freq_chunk_ind], len(data)
+                )
 
             freq_line = (
                 [line_num for line_num in chunk_lines if "Frequency:" in data[line_num]]
@@ -57,15 +62,24 @@ def parse_ffe_files():
             ephi_real_col = np.where(header == '"Re(Ephi)"')[0][0]
             ephi_imag_col = np.where(header == '"Im(Ephi)"')[0][0]
 
-            data_chunk_split = np.array([
-                data_line.split() for data_line in data[header_line + 1 : np.max(chunk_lines)]
-                if len(data_line.split()) == len(header)
-            ]).astype(float)
+            data_chunk_split = np.array(
+                [
+                    data_line.split()
+                    for data_line in data[header_line + 1 : np.max(chunk_lines)]
+                    if len(data_line.split()) == len(header)
+                ]
+            ).astype(float)
 
             theta_array = data_chunk_split[:, theta_col]  # Zenith angle
             phi_array = data_chunk_split[:, phi_col]  # Azimuth
-            etheta_array = data_chunk_split[:, etheta_real_col] + 1j * data_chunk_split[:, etheta_imag_col]
-            ephi_array = data_chunk_split[:, ephi_real_col] + 1j * data_chunk_split[:, ephi_imag_col]
+            etheta_array = (
+                data_chunk_split[:, etheta_real_col]
+                + 1j * data_chunk_split[:, etheta_imag_col]
+            )
+            ephi_array = (
+                data_chunk_split[:, ephi_real_col]
+                + 1j * data_chunk_split[:, ephi_imag_col]
+            )
             freq_array = np.full(len(theta_array), freq_hz)
 
             # Reshape array
@@ -75,7 +89,7 @@ def parse_ffe_files():
             freq_axis, freq_indices = np.unique(freq_array, return_inverse=True)
             jones = np.full(
                 (2, 2, len(freq_axis), len(theta_axis), len(phi_axis)),
-                np.nan + 1j*np.nan,
+                np.nan + 1j * np.nan,
                 dtype=complex,
             )
             for data_point in range(len(freq_array)):
@@ -139,6 +153,7 @@ def parse_ffe_files():
             # beam_obj.peak_normalize()  # Throws an "invalid value encountered in divide" error
             beam_obj.check()
 
+            # Combine frequencies
             if freq_chunk_ind == 0:
                 beam_object_combined = beam_obj.copy()
             else:
@@ -155,31 +170,35 @@ def parse_ffe_files():
             print(f"Timing: {(time.time() - start_time)/60.} minutes")
             print("")
 
-        per_pol_beams.append(beam_object_combined)
+        per_feed_beams.append(beam_object_combined)
 
+    # Combine feeds
     if (
-        not np.min(per_pol_beams[0].freq_array == per_pol_beams[1].freq_array)
-        or not np.min(per_pol_beams[0].axis1_array == per_pol_beams[1].axis1_array)
-        or not np.min(per_pol_beams[0].axis2_array == per_pol_beams[1].axis2_array)
+        not np.min(per_feed_beams[0].freq_array == per_feed_beams[1].freq_array)
+        or not np.min(per_feed_beams[0].axis1_array == per_feed_beams[1].axis1_array)
+        or not np.min(per_feed_beams[0].axis2_array == per_feed_beams[1].axis2_array)
     ):
         print("ERROR: Mismatched axes. Cannot combine beam objects.")
         print("Saving beam to /data05/rbyrne/LWA_x_10to100.beamfits")
-        per_pol_beams[0].write_beamfits(
+        per_feed_beams[0].write_beamfits(
             f"/data05/rbyrne/LWA_x_10to100.beamfits",
             clobber=True,
         )
         print("Saving beam to /data05/rbyrne/LWA_y_10to100.beamfits")
-        per_pol_beams[1].write_beamfits(
+        per_feed_beams[1].write_beamfits(
             f"/data05/rbyrne/LWA_y_10to100.beamfits",
             clobber=True,
         )
     else:
-        per_pol_beams[0].data_array[:, :, 1, :, :, :] = per_pol_beams[1].data_array[:, :, 1, :, :, :]
+        per_feed_beams[0].data_array[:, :, 1, :, :, :] = per_feed_beams[1].data_array[
+            :, :, 1, :, :, :
+        ]
         print("Saving beam to /data05/rbyrne/LWA_10to100.beamfits")
-        per_pol_beams[0].write_beamfits(
+        per_feed_beams[0].write_beamfits(
             f"/data05/rbyrne/LWA_10to100.beamfits",
             clobber=True,
         )
+
 
 if __name__ == "__main__":
     parse_ffe_files()
