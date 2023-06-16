@@ -27,12 +27,6 @@ def parse_ffe_files():
 
         for chunk_ind in range(len(start_chunk_lines)):
 
-            freq_array = np.array([], dtype=float)
-            theta_array = np.array([], dtype=float)  # Zenith angle
-            phi_array = np.array([], dtype=float)  # Azimuth
-            etheta_array = np.array([], dtype=complex)
-            ephi_array = np.array([], dtype=complex)
-
             if chunk_ind < len(start_chunk_lines) - 1:
                 chunk_lines = np.arange(
                     start_chunk_lines[chunk_ind], start_chunk_lines[chunk_ind + 1]
@@ -66,24 +60,16 @@ def parse_ffe_files():
             ephi_real_col = np.where(header == '"Re(Ephi)"')[0][0]
             ephi_imag_col = np.where(header == '"Im(Ephi)"')[0][0]
 
-            for data_line in data[header_line + 1 : np.max(chunk_lines)]:
-                data_line_split = data_line.split()
-                if len(data_line_split) == len(header):
-                    freq_array = np.append(freq_array, freq_hz)
-                    theta_array = np.append(
-                        theta_array, float(data_line_split[theta_col])
-                    )
-                    phi_array = np.append(phi_array, float(data_line_split[phi_col]))
-                    etheta_array = np.append(
-                        etheta_array,
-                        float(data_line_split[etheta_real_col])
-                        + 1j * float(data_line_split[etheta_imag_col]),
-                    )
-                    ephi_array = np.append(
-                        ephi_array,
-                        float(data_line_split[ephi_real_col])
-                        + 1j * float(data_line_split[ephi_imag_col]),
-                    )
+            data_chunk_split = np.array([
+                data_line.split() for data_line in data[header_line + 1 : np.max(chunk_lines)]
+                if len(data_line.split()) == len(header)
+            ]).astype(float)
+
+            theta_array = data_chunk_split[:, theta_col]  # Zenith angle
+            phi_array = data_chunk_split[:, phi_col]  # Azimuth
+            etheta_array = data_chunk_split[:, etheta_real_col] + 1j * data_chunk_split[:, etheta_imag_col]
+            ephi_array = data_chunk_split[:, ephi_real_col] + 1j * data_chunk_split[:, ephi_imag_col]
+            freq_array = np.full(len(theta_array), freq_hz)
 
             # Reshape array
             print("Reformatting data...")
@@ -92,7 +78,7 @@ def parse_ffe_files():
             freq_axis, freq_indices = np.unique(freq_array, return_inverse=True)
             jones = np.full(
                 (2, 2, len(freq_axis), len(theta_axis), len(phi_axis)),
-                np.nan,
+                np.nan + 1j*np.nan,
                 dtype=complex,
             )
             for data_point in range(len(freq_array)):

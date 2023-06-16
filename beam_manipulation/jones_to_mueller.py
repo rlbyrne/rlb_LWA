@@ -131,7 +131,7 @@ def simple_polar_plot(
 
 def plot_beam(
     beam,  # pyuvdata beam object
-    plot_freq=50.0,  # frequency in MHz, must be included in the beam obj
+    plot_freq=50.0e6,  # frequency in Hz, must be included in the beam obj
     real_part=True,
     plot_amplitude=False,
     plot_pols=[0, 1],
@@ -139,6 +139,7 @@ def plot_beam(
     vmax=1,
     contour_plot=True,
     horizon_cut=True,  # Truncate the beam model at the horizon
+    az_za_basis=True,
     savepath=None,
 ):
 
@@ -174,11 +175,12 @@ def plot_beam(
     use_cmap.set_bad(color="whitesmoke")
     za_vals, az_vals = np.meshgrid(za_axis, az_axis)
 
+    feed_names = ["X", "Y"]
+    sky_pol_names = ["Az", "ZA"]
     if plot_amplitude:
         fig, ax = plt.subplots(
             nrows=1, ncols=2, subplot_kw=dict(projection="polar"), figsize=(9, 6)
         )
-        pol_names = ["A", "B"]
         for pol in plot_pols:
             contourplot = plot_function(
                 ax[pol],
@@ -189,7 +191,7 @@ def plot_beam(
                 vmax=vmax,
             )
             fig.colorbar(contourplot, ax=ax[pol])
-            ax[pol].set_title(f"Pol {pol_names[pol]}")
+            ax[pol].set_title(f"Pol {feed_names[pol]}")
     else:
         fig, ax = plt.subplots(
             nrows=2, ncols=2, subplot_kw=dict(projection="polar"), figsize=(9, 9)
@@ -205,7 +207,10 @@ def plot_beam(
                     vmax=vmax,
                 )
                 fig.colorbar(contourplot, ax=ax[pol1, pol2])
-                ax[pol1, pol2].set_title(f"J[{pol1},{pol2}]")
+                subtitle = f"Feed {feed_names[pol2]}"
+                if az_za_basis:
+                    subtitle += f", {sky_pol_names[pol1]}"
+                ax[pol1, pol2].set_title(subtitle)
     fig.suptitle(title)
     fig.tight_layout()
     if savepath is None:
