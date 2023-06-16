@@ -163,68 +163,23 @@ def parse_ffe_files():
         or not np.min(per_pol_beams[0].axis2_array == per_pol_beams[1].axis2_array)
     ):
         print("ERROR: Mismatched axes. Cannot combine beam objects.")
+        print("Saving beam to /data05/rbyrne/LWA_x_10to100.beamfits")
         per_pol_beams[0].write_beamfits(
             f"/data05/rbyrne/LWA_x_10to100.beamfits",
             clobber=True,
         )
+        print("Saving beam to /data05/rbyrne/LWA_y_10to100.beamfits")
         per_pol_beams[1].write_beamfits(
             f"/data05/rbyrne/LWA_y_10to100.beamfits",
             clobber=True,
         )
     else:
         per_pol_beams[0].data_array[:, :, 1, :, :, :] = per_pol_beams[1].data_array[:, :, 1, :, :, :]
+        print("Saving beam to /data05/rbyrne/LWA_10to100.beamfits")
         per_pol_beams[0].write_beamfits(
             f"/data05/rbyrne/LWA_10to100.beamfits",
             clobber=True,
         )
-
-
-def combine_frequencies():
-
-    data_dir = "/data05/rbyrne"
-    filenames = os.listdir(data_dir)
-    filenames = [file for file in filenames if file.endswith("MHz.beamfits")]
-
-    pol_names = ["x", "y"]
-    for pol in pol_names:
-        use_filenames = [file for file in filenames if f"_{pol}_" in file]
-        for file_ind, file in enumerate(use_filenames):
-            beam_new = pyuvdata.UVBeam()
-            beam_new.read(f"{data_dir}/{file}")
-            if file_ind == 0:
-                beam = beam_new.copy()
-            else:
-                beam = beam + beam_new
-        beam.write_beamfits(
-            f"/data05/rbyrne/LWA_{pol}_10to100.beamfits",
-            clobber=True,
-        )
-
-
-def combine_pols():
-
-    file_paths = [
-        "/data05/rbyrne/LWA_x_10to100.beamfits",
-        "/data05/rbyrne/LWA_y_10to100.beamfits",
-    ]
-    beam_x = pyuvdata.UVBeam()
-    beam_x.read(file_paths[0])
-    beam_y = pyuvdata.UVBeam()
-    beam_y.read(file_paths[1])
-
-    if (
-        not np.min(beam_x.freq_array == beam_y.freq_array)
-        or not np.min(beam_x.axis1_array == beam_y.axis1_array)
-        or not np.min(beam_x.axis2_array == beam_y.axis2_array)
-    ):
-        print("ERROR: Mismatched axes. Cannot combine beam objects.")
-    else:
-        beam_x.data_array[:, :, 1, :, :, :] = beam_y.data_array[:, :, 1, :, :, :]
-        beam_x.write_beamfits(
-            f"/data05/rbyrne/LWA_10to100.beamfits",
-            clobber=True,
-        )
-
 
 if __name__ == "__main__":
     parse_ffe_files()
