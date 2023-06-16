@@ -134,15 +134,15 @@ def parse_ffe_files():
                 len(phi_axis),
                 axis=3,
             )
-            beam_obj.feed_array = ["E", "N"]
+            beam_obj.feed_array = np.array(["E", "N"])
             beam_obj.x_orientation = "east"
             # beam_obj.peak_normalize()  # Throws an "invalid value encountered in divide" error
             beam_obj.check()
 
             if freq_chunk_ind == 0:
-                per_pol_beams.append(beam_obj)
+                beam_object_combined = beam_obj.copy()
             else:
-                per_pol_beams[feed_ind] = per_pol_beams[feed_ind] + beam_obj
+                beam_object_combined = beam_object_combined + beam_obj
 
             # Clear variables
             beam_obj = None
@@ -154,6 +154,8 @@ def parse_ffe_files():
             print("Done.")
             print(f"Timing: {(time.time() - start_time)/60.} minutes")
             print("")
+
+        per_pol_beams.append(beam_object_combined)
 
     if (
         not np.min(per_pol_beams[0].freq_array == per_pol_beams[1].freq_array)
