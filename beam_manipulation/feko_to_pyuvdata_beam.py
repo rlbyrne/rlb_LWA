@@ -10,6 +10,7 @@ def parse_ffe_files():
         "/data05/nmahesh/LWA_x_10to100.ffe",
         "/data05/nmahesh/LWA_y_10to100.ffe",
     ]
+    per_pol_beams = []
 
     for feed_ind, file in enumerate(beam_files):
 
@@ -17,22 +18,18 @@ def parse_ffe_files():
             data = f.readlines()
         f.close()
 
-        start_chunk_lines = np.where(["Configuration Name:" in line for line in data])[
+        start_freq_chunk_lines = np.where(["Configuration Name:" in line for line in data])[
             0
         ]
 
-        # Debug
-        # data = data[0 : start_chunk_lines[2]]
-        # start_chunk_lines = start_chunk_lines[0:2]
+        for freq_chunk_ind in range(len(start_freq_chunk_lines)):
 
-        for chunk_ind in range(len(start_chunk_lines)):
-
-            if chunk_ind < len(start_chunk_lines) - 1:
+            if freq_chunk_ind < len(start_freq_chunk_lines) - 1:
                 chunk_lines = np.arange(
-                    start_chunk_lines[chunk_ind], start_chunk_lines[chunk_ind + 1]
+                    start_freq_chunk_lines[freq_chunk_ind], start_freq_chunk_lines[freq_chunk_ind + 1]
                 )
             else:
-                chunk_lines = np.arange(start_chunk_lines[chunk_ind], len(data))
+                chunk_lines = np.arange(start_freq_chunk_lines[freq_chunk_ind], len(data))
 
             freq_line = (
                 [line_num for line_num in chunk_lines if "Frequency:" in data[line_num]]
@@ -142,12 +139,10 @@ def parse_ffe_files():
             # beam_obj.peak_normalize()  # Throws an "invalid value encountered in divide" error
             beam_obj.check()
 
-            print("Writing beam object...")
-            pol_names = ["x", "y"]
-            beam_obj.write_beamfits(
-                f"/data05/rbyrne/LWA_{pol_names[feed_ind]}_10to100_{freq_hz/1e6}MHz.beamfits",
-                clobber=True,
-            )
+            if freq_chunk_ind == 0:
+                per_pol_beams.append(beam_obj)
+            else:
+                per_pol_beams[feed_ind] = per_pol_beams[feed_ind] + beam_obj
 
             # Clear variables
             beam_obj = None
@@ -159,6 +154,27 @@ def parse_ffe_files():
             print("Done.")
             print(f"Timing: {(time.time() - start_time)/60.} minutes")
             print("")
+
+    if (
+        not np.min(per_pol_beams[0].freq_array == per_pol_beams[1].freq_array)
+        or not np.min(per_pol_beams[0].axis1_array == per_pol_beams[1].axis1_array)
+        or not np.min(per_pol_beams[0].axis2_array == per_pol_beams[1].axis2_array)
+    ):
+        print("ERROR: Mismatched axes. Cannot combine beam objects.")
+        per_pol_beams[0].write_beamfits(
+            f"/data05/rbyrne/LWA_x_10to100.beamfits",
+            clobber=True,
+        )
+        per_pol_beams[1].write_beamfits(
+            f"/data05/rbyrne/LWA_y_10to100.beamfits",
+            clobber=True,
+        )
+    else:
+        per_pol_beams[0].data_array[:, :, 1, :, :, :] = per_pol_beams[1].data_array[:, :, 1, :, :, :]
+        per_pol_beams[0].write_beamfits(
+            f"/data05/rbyrne/LWA_10to100.beamfits",
+            clobber=True,
+        )
 
 
 def combine_frequencies():
@@ -210,5 +226,3 @@ def combine_pols():
 
 if __name__ == "__main__":
     parse_ffe_files()
-    combine_frequencies()
-    combine_pols()
