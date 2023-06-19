@@ -3,16 +3,13 @@ import shlex
 import os
 
 obsids_list = [
-    "sim_uv_spacing_10_short_bls_cal_amp_error",
-    "sim_uv_spacing_5_short_bls_cal_amp_error",
-    "sim_uv_spacing_1_short_bls_cal_amp_error",
-    "sim_uv_spacing_0.5_short_bls_cal_amp_error"
+    "20230310_000006_73MHz"
 ]
-versions_list = ["rlb_process_uv_density_sims_cal_error_modified_kernel_May2023"]
-uvfits_path = "/safepool/rbyrne/uv_density_simulations/calibration_error_sim"
+versions_list = ["rlb_image_LWA_data_Jun2023"]
+uvfits_path = "/safepool/rbyrne/lwa_data"
 outdir = "/safepool/rbyrne/fhd_outputs"
 run_fhd = True
-run_eppsilon = True
+run_eppsilon = False
 
 # Define wrappers
 fhd_versions_script = "fhd_versions_wario"
