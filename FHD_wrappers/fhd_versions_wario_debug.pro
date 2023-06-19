@@ -4,8 +4,8 @@ pro fhd_versions_wario_debug
   heap_gc
 
   output_directory = "/safepool/rbyrne/fhd_outputs"
-  version = "rlb_debug_modified_gridding_kernel_uvbeam_May2023"
-  vis_file_list = "/safepool/rbyrne/uv_density_simulations/calibration_error_sim/sim_uv_spacing_10_short_bls_cal_error.uvfits"
+  version = "rlb_image_LWA_data_Jun2023"
+  vis_file_list = "/safepool/rbyrne/lwa_data/20230310_000006_73MHz.uvfits"
 
   case version of
 
@@ -73,6 +73,29 @@ pro fhd_versions_wario_debug
               debug_dim = 1
               beam_mask_threshold = 1e3
               interpolate_kernel = 1
+          end
+
+          'rlb_image_LWA_data_Jun2023': begin
+            recalculate_all = 1
+            instrument = 'lwa'
+            import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+            calibrate_visibilities = 1
+            n_pol = 4
+            calibration_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
+            allow_sidelobe_cal_sources = 1
+            ;diffuse_calibrate = "/safepool/rbyrne/transferred_from_astm/ovro_lwa_sky_map_73.152MHz.skyh5"
+            ;diffuse_units_kelvin = 1
+            sim_over_calibrate = 1
+            bandpass_calibrate = 0
+            cable_bandpass_fit = 0
+            cal_mode_fit = 0
+            calibration_polyfit = 0
+            snapshot_healpix_export = 0
+            min_cal_baseline = 30
+            image_filter_fn = "filter_uv_optimal"
+            flag_calibration = 0 ;allow calibration to flag antennas
+            calibration_flag_iterate = 0 ;repeat calibration after flagging
+            save_uvf = 0
           end
 
   endcase
