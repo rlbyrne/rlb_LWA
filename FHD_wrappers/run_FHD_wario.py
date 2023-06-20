@@ -3,7 +3,7 @@ import shlex
 import os
 
 obsids_list = [
-    "20230310_000006_73MHz"
+    "458_peeled"
 ]
 versions_list = ["rlb_image_LWA_data_no_calibration_Jun2023"]
 uvfits_path = "/safepool/rbyrne/lwa_data"
