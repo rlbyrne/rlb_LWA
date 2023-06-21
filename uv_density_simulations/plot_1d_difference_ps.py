@@ -180,7 +180,7 @@ def plot_ps():
         plt.yscale("log")
         plt.ylim([1e4, 1e15])
     plt.legend()
-    plt.savefig("/home/rbyrne/uv_density_sim_plots/ps_no_cal_error.png")
+    plt.savefig("/home/rbyrne/uv_density_sim_plots/ps_no_cal_error_new.png")
     plt.close()
 
     # Plot with cal error
@@ -200,7 +200,7 @@ def plot_ps():
         plt.yscale("log")
         plt.ylim([1e4, 1e15])
     plt.legend()
-    plt.savefig("/home/rbyrne/uv_density_sim_plots/ps_cal_error.png")
+    plt.savefig("/home/rbyrne/uv_density_sim_plots/ps_cal_error_new.png")
     plt.close()
 
 
