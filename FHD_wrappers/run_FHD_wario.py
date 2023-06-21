@@ -3,9 +3,9 @@ import shlex
 import os
 
 obsids_list = [
-    "458_peeled"
+    "458_peeled_calibrated"
 ]
-versions_list = ["rlb_image_LWA_data_no_calibration_MWA_beam_Jun2023"]
+versions_list = ["rlb_image_LWA_data_no_calibration_Jun2023"]
 uvfits_path = "/safepool/rbyrne/lwa_data"
 outdir = "/safepool/rbyrne/fhd_outputs"
 run_fhd = True
