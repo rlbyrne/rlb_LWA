@@ -682,6 +682,29 @@ pro fhd_versions_wario
             save_uvf = 0
           end
 
+          'rlb_image_LWA_data_natural_weighting_with_beam_speedup_Jun2023': begin
+            recalculate_all = 1
+            instrument = 'lwa'
+            import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+            calibrate_visibilities = 0
+            n_pol = 4
+            min_baseline = 0
+            ;calibration_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
+            ;allow_sidelobe_cal_sources = 1
+            ;diffuse_calibrate = "/safepool/rbyrne/transferred_from_astm/ovro_lwa_sky_map_73.152MHz.skyh5"
+            ;diffuse_units_kelvin = 1
+            bandpass_calibrate = 0
+            cable_bandpass_fit = 0
+            cal_mode_fit = 0
+            calibration_polyfit = 0
+            snapshot_healpix_export = 0
+            min_cal_baseline = 30
+            image_filter_fn = "filter_uv_natural"
+            flag_calibration = 0 ;allow calibration to flag antennas
+            calibration_flag_iterate = 0 ;repeat calibration after flagging
+            save_uvf = 0
+          end
+
   endcase
 
   undefine, uvfits_subversion, uvfits_version
