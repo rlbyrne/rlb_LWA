@@ -167,7 +167,7 @@ def plot_ps():
     # Plot error-free version
     for file_ind, spacing in enumerate(uv_spacings):
         #data_path = f"{reference_path}/ps/data/1d_binning/sim_uv_spacing_{spacing}_short_bls__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_no_horizon_wedge_kperplambda1-45_1dkpower.idlsave"
-        data_path = f"{reference_path}/ps/data/1d_binning/sim_uv_spacing_{spacing}_short_bls__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_nodensitycorr_no_horizon_wedge_kperplambda1-45_1dkpower.idlsave"
+        data_path = f"{reference_path}/ps/data/1d_binning/sim_uv_spacing_{spacing}_short_bls__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_kperp_density_min_gt0.01_no_horizon_wedge_kperplambda1-45_1dkpower.idlsave"
 
         k_edges = scipy.io.readsav(data_path)["k_edges"]
         power = scipy.io.readsav(data_path)["power"]
@@ -187,7 +187,7 @@ def plot_ps():
     # Plot with cal error
     for file_ind, spacing in enumerate(uv_spacings):
         #data_path = f"{cal_error_path}/ps/data/1d_binning/sim_uv_spacing_{spacing}_short_bls_cal_error__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_no_horizon_wedge_kperplambda1-45_1dkpower.idlsave"
-        data_path = f"{cal_error_path}/ps/data/1d_binning/sim_uv_spacing_{spacing}_short_bls_cal_error__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_nodensitycorr_no_horizon_wedge_kperplambda1-45_1dkpower.idlsave"
+        data_path = f"{cal_error_path}/ps/data/1d_binning/sim_uv_spacing_{spacing}_short_bls_cal_error__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_kperp_density_min_gt0.01_no_horizon_wedge_kperplambda1-45_1dkpower.idlsave"
 
         k_edges = scipy.io.readsav(data_path)["k_edges"]
         power = scipy.io.readsav(data_path)["power"]
