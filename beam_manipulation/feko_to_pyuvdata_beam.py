@@ -1,6 +1,5 @@
 import numpy as np
 import pyuvdata
-import os
 import time
 
 

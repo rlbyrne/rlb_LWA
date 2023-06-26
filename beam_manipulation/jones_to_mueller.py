@@ -144,10 +144,10 @@ def plot_beam(
 ):
 
     use_beam = beam.select(frequencies=[plot_freq], inplace=False)
-    az_axis = np.degrees(beam.axis1_array)
-    za_axis = np.degrees(beam.axis2_array)
+    az_axis = np.degrees(use_beam.axis1_array)
+    za_axis = np.degrees(use_beam.axis2_array)
     if horizon_cut:
-        use_za_inds = np.where(za_axis < 90.)[0]
+        use_za_inds = np.where(za_axis < 90.0)[0]
         use_beam.select(axis2_inds=use_za_inds, inplace=True)
         za_axis = za_axis[use_za_inds]
 
@@ -179,7 +179,10 @@ def plot_beam(
     sky_pol_names = ["Az", "ZA"]
     if plot_amplitude:
         fig, ax = plt.subplots(
-            nrows=1, ncols=2, subplot_kw=dict(projection="polar"), figsize=(9, 6)
+            nrows=1,
+            ncols=len(plot_pols),
+            subplot_kw=dict(projection="polar"),
+            figsize=(9, 6),
         )
         for pol in plot_pols:
             contourplot = plot_function(
@@ -194,7 +197,10 @@ def plot_beam(
             ax[pol].set_title(f"Pol {feed_names[pol]}")
     else:
         fig, ax = plt.subplots(
-            nrows=2, ncols=2, subplot_kw=dict(projection="polar"), figsize=(9, 9)
+            nrows=2,
+            ncols=len(plot_pols),
+            subplot_kw=dict(projection="polar"),
+            figsize=(9, 9),
         )
         for pol1 in plot_pols:
             for pol2 in [0, 1]:
