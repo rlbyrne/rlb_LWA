@@ -1,0 +1,1 @@
+mpirun -n 15 python /home/rbyrne/rlb_LWA/LWA_data_preprocessing/generate_model_vis.py /data10/rbyrne/24-hour-run-flagged/20230309_225134_73MHz.ms /data10/rbyrne/pyuvsim_testing_Jul2023/20230309_225134_73MHz_model.uvfits
