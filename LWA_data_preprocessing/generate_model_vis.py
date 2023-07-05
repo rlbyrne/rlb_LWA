@@ -37,7 +37,7 @@ if rank == 0:
 
     # Read and format catalog
     catalog = pyradiosky.SkyModel()
-    catalog.read(catalog_path)
+    catalog.read_skyh5(catalog_path)
     if not catalog.check():
         print("Error: Catalog fails check.")
     # Format catalog to be pyuvsim-compatible
