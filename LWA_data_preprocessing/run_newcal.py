@@ -1,6 +1,6 @@
 import numpy as np
 import pyuvdata
-import newcal
+from newcal import calibration
 
 
 data = pyuvdata.UVData()
@@ -19,7 +19,7 @@ model.read("/home/rbyrne/calibration_testing_Jul2023/20230309_225134_73MHz_model
     visibility_weights,
     gains_exp_mat_1,
     gains_exp_mat_2,
-) = newcal.uvdata_calibration_setup(
+) = calibration.uvdata_calibration_setup(
     data,
     model,
     gain_init_calfile=None,
@@ -27,7 +27,7 @@ model.read("/home/rbyrne/calibration_testing_Jul2023/20230309_225134_73MHz_model
     N_feed_pols=2,
 )
 
-gains_fit = newcal.run_calibration_optimization_per_pol(
+gains_fit = calibration.run_calibration_optimization_per_pol(
     gains_init,
     Nants,
     Nbls,
