@@ -44,6 +44,7 @@ gains_fit = calibration_wrappers.calibration_per_pol(
     xtol=1e-3,
     parallel=True,
     verbose=True,
+    log_file_path="/home/rbyrne/calibration_testing_Jul2023/20230309_225134_73MHz_cal_log.txt",
 )
 
 cal = calibration_optimization.create_uvcal_obj(data, antenna_names, gains=gains_fit)
