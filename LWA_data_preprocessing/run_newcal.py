@@ -41,8 +41,7 @@ gains_fit = calibration_wrappers.calibration_per_pol(
     visibility_weights,
     gains_exp_mat_1,
     gains_exp_mat_2,
-    100,
-    xtol=1e-5,
+    xtol=1e-3,
     parallel=True,
     verbose=True,
 )
