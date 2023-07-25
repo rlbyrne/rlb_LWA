@@ -228,11 +228,11 @@ def plot_beam(
 
 
 def plot_mueller_matrix(
-    mueller_mat,  # pyuvdata beam object
+    mueller_mat,
     az_axis,
     za_axis,
     freq_axis,
-    plot_freq=50.0,  # frequency in MHz, must be included in the beam obj
+    plot_freq=50.0,  # Must be included in the freq_axis
     real_part=True,
     vmin=-1,
     vmax=1,
@@ -534,11 +534,11 @@ def read_beam_txt_file(path, header_line=6):
     # Insert values that will make the conversion to RA/Dec work properly
     # This discards any imaginary component. Is that ok?
     zenith_points = np.where(za_axis == 0)[0]
-    jones[1, 0, :, zenith_points, :] = np.sqrt(
+    jones[1, 0, :, zenith_points, :] = -np.sqrt(
         jones[0, 0, :, zenith_points, :] ** 2.0
         + jones[1, 0, :, zenith_points, :] ** 2.0
     )
-    jones[0, 1, :, zenith_points, :] = -np.sqrt(
+    jones[0, 1, :, zenith_points, :] = np.sqrt(
         jones[0, 1, :, zenith_points, :] ** 2.0
         + jones[1, 1, :, zenith_points, :] ** 2.0
     )
