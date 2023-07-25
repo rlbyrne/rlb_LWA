@@ -49,3 +49,5 @@ gains_fit = calibration_wrappers.calibration_per_pol(
 
 cal = calibration_optimization.create_uvcal_obj(data, antenna_names, gains=gains_fit)
 cal.write_calfits("/home/rbyrne/calibration_testing_Jul2023/20230309_225134_73MHz.calfits", clobber=True)
+pyuvdata.utils.uvcalibrate(data, cal, inplace=True, time_check=True)
+data.write_uvfits("/home/rbyrne/calibration_testing_Jul2023/20230309_225134_73MHz_calibrated.uvfits")
