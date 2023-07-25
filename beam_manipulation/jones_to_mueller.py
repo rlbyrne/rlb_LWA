@@ -534,11 +534,11 @@ def read_beam_txt_file(path, header_line=6):
     # Insert values that will make the conversion to RA/Dec work properly
     # This discards any imaginary component. Is that ok?
     zenith_points = np.where(za_axis == 0)[0]
-    jones[1, 0, :, zenith_points, :] = -np.sqrt(
+    jones[1, 0, :, zenith_points, :] = np.sqrt(
         jones[0, 0, :, zenith_points, :] ** 2.0
         + jones[1, 0, :, zenith_points, :] ** 2.0
     )
-    jones[0, 1, :, zenith_points, :] = np.sqrt(
+    jones[0, 1, :, zenith_points, :] = -np.sqrt(
         jones[0, 1, :, zenith_points, :] ** 2.0
         + jones[1, 1, :, zenith_points, :] ** 2.0
     )
