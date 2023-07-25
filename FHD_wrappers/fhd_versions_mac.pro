@@ -3,7 +3,7 @@ pro fhd_versions_mac
   !except=0
   heap_gc
 
-  version = 'rlb_cal_sims_Nov2022'
+  version = 'rlb_test_jones_rot_Jul2023'
   output_directory = '/Users/ruby/Astro/FHD_outputs'
 
   case version of
@@ -190,7 +190,7 @@ pro fhd_versions_mac
       max_baseline = 3000  ; try increasing max baseline to prevent baseline cutting
       dimension = 8192/2
     end
-    
+
     'rlb_cal_sims_Nov2022': begin
       obs_id = '1061316296_small'
       vis_file_list = '/Users/ruby/Astro/1061316296_small.uvfits'
@@ -206,6 +206,25 @@ pro fhd_versions_mac
       n_pol = 1
       export_images = 0 ;Cannot export images with just one polarization
       save_uvf = 1
+    end
+
+    'rlb_test_jones_rot_Jul2023': begin
+      obs_id = '1061316296_small'
+      vis_file_list = '/Users/ruby/Astro/1061316296_small.uvfits'
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/Users/ruby/Astro/rlb_LWA/LWAbeam_2015.fits'
+      recalculate_all = 1
+      calibrate_visibilities = 0
+      return_cal_visibilities = 0
+      model_visibilities = 1
+      model_catalog_file_path = filepath('GLEAM_v2_plus_rlb2019.sav',root=rootdir('FHD'),subdir='catalog_data')
+      model_subtract_sidelobe_catalog = filepath('GLEAM_v2_plus_rlb2019.sav',root=rootdir('FHD'),subdir='catalog_data')
+      allow_sidelobe_model_sources = 1
+      unflag_all = 1
+      beam_nfreq_avg = 384
+      n_pol = 4
+      export_images = 1 ;Cannot export images with just one polarization
+      save_uvf = 0
     end
 
   endcase
