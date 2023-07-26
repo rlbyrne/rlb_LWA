@@ -785,17 +785,6 @@ pro fhd_versions_wario
             save_uvf = 0
           end
 
-          'rlb_test_MWA_beam_Jul2023': begin
-            recalculate_all = 1
-            calibrate_visibilities = 0
-            model_visibilities = 0
-            n_pol = 4
-            min_baseline = 0
-            snapshot_healpix_export = 0
-            image_filter_fn = "filter_uv_natural"
-            save_uvf = 0
-          end
-
   endcase
 
   undefine, uvfits_subversion, uvfits_version

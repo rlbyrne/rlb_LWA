@@ -4,8 +4,8 @@ pro fhd_versions_wario_debug
   heap_gc
 
   output_directory = "/safepool/rbyrne/fhd_outputs"
-  version = "rlb_image_LWA_no_calibration_debug_Jul2023"
-  vis_file_list = "/safepool/rbyrne/lwa_data/newcal_testing_Jul2023/20230309_225134_73MHz_calibrated.uvfits"
+  version = "rlb_test_MWA_beam_Jul2023"
+  vis_file_list = "/safepool/rbyrne/mwa_data/1061316296.uvfits"
 
   case version of
 
@@ -102,6 +102,17 @@ pro fhd_versions_wario_debug
             recalculate_all = 1
             instrument = 'lwa'
             import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+            calibrate_visibilities = 0
+            model_visibilities = 0
+            n_pol = 4
+            min_baseline = 0
+            snapshot_healpix_export = 0
+            image_filter_fn = "filter_uv_natural"
+            save_uvf = 0
+          end
+
+          'rlb_test_MWA_beam_Jul2023': begin
+            recalculate_all = 1
             calibrate_visibilities = 0
             model_visibilities = 0
             n_pol = 4
