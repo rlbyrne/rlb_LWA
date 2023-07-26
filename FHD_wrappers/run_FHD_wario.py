@@ -3,13 +3,12 @@ import shlex
 import os
 
 obsids_list = [
-    "20230309_225134_73MHz_calibrated"
+    "1061316296"
 ]
 versions_list = [
-    "rlb_image_LWA_no_calibration_Jul2023",
-    "rlb_image_LWA_data_Jul2023",
+    "rlb_test_MWA_beam_Jul2023",
 ]
-uvfits_path = "/safepool/rbyrne/lwa_data/newcal_testing_Jul2023"
+uvfits_path = "/safepool/rbyrne/mwa_data"
 outdir = "/safepool/rbyrne/fhd_outputs"
 run_fhd = True
 run_eppsilon = False
