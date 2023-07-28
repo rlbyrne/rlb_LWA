@@ -478,14 +478,17 @@ def read_beam_txt_file(path, header_line=6):
     )
 
     # Flip the Jones matrix in particular quadrants
-    multiply_factors = np.ones(
-        (2, 2, 4), dtype=float
-    )  # Shape (nfeeds, npols, nquadrants)
-    multiply_factors[0, 0, 0:2] = -1.0
-    multiply_factors[0, 1, 1:3] = -1.0
-    multiply_factors[1, 0, 0] = -1
-    multiply_factors[1, 0, 3] = -1
-    multiply_factors[1, 1, 0:2] = -1
+    # Sign is determined by matching the convention of the MWA reference beam
+    # To download the MWA reference beam, use:
+    # wget http://cerberus.mwa128t.org/mwa_full_embedded_element_pattern.h5
+    # Read MWA beam with the UVBeam read_mwa_beam method
+    multiply_factors = np.full(
+        (2, 2, 4), -1, dtype=float
+    )  # Shape (npols, nfeeds, nquadrants)
+    multiply_factors[0, 0, 2:] = 1
+    multiply_factors[0, 1, 1:3] = 1
+    multiply_factors[1, 0, 1:3] = 1
+    multiply_factors[1, 1, 0:2] = 1
 
     for point in range(npoints):
         za_ind = np.where(za_axis == za_deg[point])
@@ -534,7 +537,7 @@ def read_beam_txt_file(path, header_line=6):
     # Insert values that will make the conversion to RA/Dec work properly
     # This discards any imaginary component. Is that ok?
     zenith_points = np.where(za_axis == 0)[0]
-    jones[1, 0, :, zenith_points, :] = np.sqrt(
+    jones[1, 0, :, zenith_points, :] = -np.sqrt(
         jones[0, 0, :, zenith_points, :] ** 2.0
         + jones[1, 0, :, zenith_points, :] ** 2.0
     )
