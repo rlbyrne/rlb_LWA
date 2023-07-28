@@ -4,8 +4,8 @@ pro fhd_versions_wario_debug
   heap_gc
 
   output_directory = "/safepool/rbyrne/fhd_outputs"
-  version = "rlb_test_MWA_beam_Jul2023"
-  vis_file_list = "/safepool/rbyrne/mwa_data/1061316296.uvfits"
+  version = "rlb_image_LWA_no_calibration_debug_Jul2023"
+  vis_file_list = "/safepool/rbyrne/lwa_data/458_peeled_calibrated.uvfits"
 
   case version of
 
