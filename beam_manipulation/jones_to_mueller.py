@@ -461,6 +461,7 @@ def read_beam_txt_file(path, header_line=6):
         jones_phi[point] = line_data[9] + 1j * line_data[10]
 
     za_axis = np.unique(za_deg)
+    za_axis = za_axis[np.where(za_axis != 0)[0]]  # Discard zenith points where the Jones matrix is undefined
     freq_axis = np.unique(freq_mhz)
     az_axis = np.unique(az_deg)
     # Fill in other quadrants
@@ -537,16 +538,17 @@ def read_beam_txt_file(path, header_line=6):
     # Insert values that will make the conversion to RA/Dec work properly
     # This discards any imaginary component. Is that ok?
     zenith_points = np.where(za_axis == 0)[0]
-    jones[1, 0, :, zenith_points, :] = -np.sqrt(
-        jones[0, 0, :, zenith_points, :] ** 2.0
-        + jones[1, 0, :, zenith_points, :] ** 2.0
-    )
-    jones[0, 1, :, zenith_points, :] = -np.sqrt(
-        jones[0, 1, :, zenith_points, :] ** 2.0
-        + jones[1, 1, :, zenith_points, :] ** 2.0
-    )
-    jones[0, 0, :, zenith_points, :] = 0.0
-    jones[1, 1, :, zenith_points, :] = 0.0
+    if len(zenith_points) > 0:
+        jones[1, 0, :, zenith_points, :] = -np.sqrt(
+            jones[0, 0, :, zenith_points, :] ** 2.0
+            + jones[1, 0, :, zenith_points, :] ** 2.0
+        )
+        jones[0, 1, :, zenith_points, :] = -np.sqrt(
+            jones[0, 1, :, zenith_points, :] ** 2.0
+            + jones[1, 1, :, zenith_points, :] ** 2.0
+        )
+        jones[0, 0, :, zenith_points, :] = 0.0
+        jones[1, 1, :, zenith_points, :] = 0.0
 
     beam_obj = pyuvdata.UVBeam()
     beam_obj.Naxes_vec = 2
