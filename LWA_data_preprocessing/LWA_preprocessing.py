@@ -138,15 +138,18 @@ def plot_autocorrelations(
             )
 
         pol_names = get_pol_names(uvd_autos.polarization_array)
-        ant_inds = np.intersect1d(uvd_autos.ant_1_array, uvd_autos.ant_2_array)
+        ant_nums = np.intersect1d(uvd_autos.ant_1_array, uvd_autos.ant_2_array)
+        ant_names = uvd_autos.antenna_names[
+            np.array([uvd_autos.antenna_numbers.index(num) for num in ant_nums])
+        ]
 
-        for ant_ind in ant_inds:
-            ant_name = uvd_autos.antenna_names[ant_ind]
+        for ant_ind in range(len(ant_names)):
+            ant_name = ant_names[ant_ind]
             if time_average:
                 plot_name = f"{plot_file_prefix}_autocorr_ant_{ant_name}.png"
             else:
                 plot_name = f"{plot_file_prefix}_autocorr_ant_{ant_name}_time{time_plot_ind:05d}.png"
-            bl_inds = np.where(uvd_autos.ant_1_array == ant_ind)[0]
+            bl_inds = np.where(uvd_autos.ant_1_array == ant_nums[ant_ind])[0]
             plot_values = np.nanmean(
                 np.abs(uvd_autos.data_array[bl_inds, 0, :, :]), axis=0
             )
