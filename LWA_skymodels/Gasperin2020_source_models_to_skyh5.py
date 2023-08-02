@@ -8,7 +8,7 @@ import pyradiosky_utils
 
 
 # Source models downloaded from http://cdsarc.u-strasbg.fr/viz-bin/cat/J/A+A/635/A150#/browse
-# Reference: Gasperin et al. 2020, https://doi.org/10.1051/0004-6361/201936844
+# Reference: de Gasperin et al. 2020, https://doi.org/10.1051/0004-6361/201936844
 
 
 def format_ra_deg(ra_str):
