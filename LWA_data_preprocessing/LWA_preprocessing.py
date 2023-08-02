@@ -140,7 +140,7 @@ def plot_autocorrelations(
         pol_names = get_pol_names(uvd_autos.polarization_array)
         ant_nums = np.intersect1d(uvd_autos.ant_1_array, uvd_autos.ant_2_array)
         ant_names = uvd_autos.antenna_names[
-            np.array([list(uvd_autos.antenna_numbers).index(num) for num in ant_nums])
+            np.array([np.where(uvd_autos.antenna_numbers == num)[0][0] for num in ant_nums])
         ]
 
         for ant_ind in range(len(ant_names)):
