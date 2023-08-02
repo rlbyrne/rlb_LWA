@@ -842,7 +842,7 @@ def flag_24hr_run_Jun13():
             plot_file_prefix=ms_filenames[start_file_ind].replace(".ms", ""),
         )
         # Apply flags by zeroing out flagged data
-        uvd.data_array[np.where(uvd.flag_array)] = 0.
+        uvd.data_array[np.where(uvd.flag_array)] = 0.0
 
         # Save each time step individually
         unique_times = np.unique(uvd.time_array)
@@ -856,5 +856,22 @@ def flag_24hr_run_Jun13():
         start_file_ind += files_per_chunk
 
 
+def plot_autocorrelations_Aug2():
+
+    files = os.listdir("/data03/rbyrne")
+    files = np.array(
+        [f"/data03/rbyrne/{file}" for file in files if file.startswith("20230801")]
+    )
+    uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(files)
+    LWA_preprocessing.plot_autocorrelations(
+        uvd,
+        plot_save_dir="/data03/rbyrne/autocorr_plots",
+        plot_file_prefix="20230801",
+        time_average=True,
+        plot_flagged_data=True,
+        yrange=[0, 100],
+    )
+
+
 if __name__ == "__main__":
-    flag_24hr_run_Jun13()
+    plot_autocorrelations_Aug2()
