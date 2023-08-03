@@ -861,11 +861,17 @@ def plot_autocorrelations_Aug2():
     files = os.listdir("/data03/rbyrne")
     start_time_stamp = "091000"
     end_time_stamp = "091020"
-    files = np.array([f"/data03/rbyrne/{file}" for file in files if (
-        file.startswith("20230801")
-        and (int(file.split("_")[1]) >= int(start_time_stamp))
-        and (int(file.split("_")[1]) <= int(end_time_stamp))
-    )])
+    files = np.array(
+        [
+            f"/data03/rbyrne/{file}"
+            for file in files
+            if (
+                file.startswith("20230801")
+                and (int(file.split("_")[1]) >= int(start_time_stamp))
+                and (int(file.split("_")[1]) <= int(end_time_stamp))
+            )
+        ]
+    )
     uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(files)
     LWA_preprocessing.plot_autocorrelations(
         uvd,
@@ -882,11 +888,18 @@ def flag_data_Aug3():
     files = os.listdir("/data03/rbyrne")
     start_time_stamp = "091000"
     end_time_stamp = "091020"
-    files = np.array([f"/data03/rbyrne/{file}" for file in files if (
-        file.startswith("20230801")
-        and (int(file.split("_")[1]) >= int(start_time_stamp))
-        and (int(file.split("_")[1]) <= int(end_time_stamp))
-    )])
+    files = np.array(
+        [
+            f"/data03/rbyrne/{file}"
+            for file in files
+            if (
+                file.startswith("20230801")
+                and (int(file.split("_")[1]) >= int(start_time_stamp))
+                and (int(file.split("_")[1]) <= int(end_time_stamp))
+            )
+        ]
+    )
+    uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(files)
     # fmt: off
     offline_ants = [
         39, 83, 88, 106, 119, 146, 152, 168, 174, 216, 220, 231, 365
@@ -932,9 +945,7 @@ def flag_data_Aug3():
         plot_file_prefix="20230801_091000-091020",
     )
     uvd.phase_to_time(np.mean(uvd.time_array))
-    uvd.write_uvfits(
-        f"/data03/rbyrne/20230801_091000-091020.uvfits"
-    )
+    uvd.write_uvfits(f"/data03/rbyrne/20230801_091000-091020.uvfits")
 
 
 if __name__ == "__main__":
