@@ -886,16 +886,19 @@ def plot_autocorrelations_Aug2():
 def flag_data_Aug3():
 
     files = os.listdir("/data03/rbyrne")
-    start_time_stamp = "091000"
-    end_time_stamp = "091020"
+    date_stamp = "20230801"
+    freq_stamp = "73MHz"
+    start_time_stamp = "091100"
+    end_time_stamp = "091600"
     files = np.array(
         [
             f"/data03/rbyrne/{file}"
             for file in files
             if (
-                file.startswith("20230801")
+                file.startswith(date_stamp)
                 and (int(file.split("_")[1]) >= int(start_time_stamp))
                 and (int(file.split("_")[1]) <= int(end_time_stamp))
+                and (freq_stamp in file)
             )
         ]
     )
@@ -942,10 +945,12 @@ def flag_data_Aug3():
         plot_orig_flags=True,
         plot_ssins_flags=True,
         plot_save_dir="/data03/rbyrne/ssins_plots",
-        plot_file_prefix="20230801_091000-091020",
+        plot_file_prefix=f"{date_stamp}_{start_time_stamp}-{end_time_stamp}_{freq_stamp}",
     )
     uvd.phase_to_time(np.mean(uvd.time_array))
-    uvd.write_uvfits(f"/data03/rbyrne/20230801_091000-091020.uvfits")
+    uvd.write_uvfits(
+        f"/data03/rbyrne/{date_stamp}_{start_time_stamp}-{end_time_stamp}_{freq_stamp}.uvfits"
+    )
 
 
 if __name__ == "__main__":
