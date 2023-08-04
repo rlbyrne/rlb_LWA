@@ -11,7 +11,7 @@ import time
 
 
 args = sys.argv
-input_ms_path = args[1]
+input_data_path = args[1]
 output_uvfits_path = args[2]
 
 catalog_path = "../LWA_skymodels/cyg_cas.skyh5"
@@ -27,7 +27,7 @@ catalog_formatted = pyuvsim.simsetup.SkyModelData()
 
 if rank == 0:
     # Read reference data for simulation
-    uv.read_ms(input_ms_path)
+    uv.read(input_data_path)
 
     # Get beam
     beam = pyuvdata.UVBeam()

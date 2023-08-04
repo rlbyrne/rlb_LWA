@@ -1,1 +1,2 @@
-mpirun -n 15 python /home/rbyrne/rlb_LWA/LWA_data_preprocessing/generate_model_vis.py /data10/rbyrne/24-hour-run-flagged/20230309_225134_73MHz.ms /home/rbyrne/calibration_testing_Jul2023/20230309_225134_73MHz_model.uvfits
+#mpirun -n 15 python /home/rbyrne/rlb_LWA/LWA_data_preprocessing/generate_model_vis.py /data10/rbyrne/24-hour-run-flagged/20230309_225134_73MHz.ms /home/rbyrne/calibration_testing_Jul2023/20230309_225134_73MHz_model.uvfits
+mpirun -n 15 python /home/rbyrne/rlb_LWA/LWA_data_preprocessing/generate_model_vis.py /data03/rbyrne/20230801_091100-091600_73MHz.uvfits /data03/rbyrne/20230801_091100-091600_73MHz_model.uvfits

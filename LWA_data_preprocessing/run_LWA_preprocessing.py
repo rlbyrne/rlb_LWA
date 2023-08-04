@@ -916,7 +916,7 @@ def flag_data_Aug3():
     )
     # fmt: off
     flag_ants = [
-        "95A", "191A", "207A", "255A", "267A", "280B", "288B", "292B", "302A",
+        "095A", "191A", "207A", "255A", "267A", "280B", "288B", "292B", "302A",
         "302B", "310A", "314B", "325B", "352A", "355B",
     ]  # Identified based on the Antenna Health Tracker spreadsheet
     # fmt: on
@@ -936,6 +936,7 @@ def flag_data_Aug3():
     )
 
     # Flag with SSINS
+    n_unflagged_bls_start = np.size(uvd.flag_array) - np.sum(uvd.flag_array)
     LWA_preprocessing.ssins_flagging(
         uvd,
         sig_thresh=15.0,  # Flagging threshold in std dev
@@ -947,6 +948,10 @@ def flag_data_Aug3():
         plot_save_dir="/data03/rbyrne/ssins_plots",
         plot_file_prefix=f"{date_stamp}_{start_time_stamp}-{end_time_stamp}_{freq_stamp}",
     )
+    n_unflagged_bls_end = np.size(uvd.flag_array) - np.sum(uvd.flag_array)
+    print(f"SSINS flagging fraction: {float(n_unflagged_bls_end)/float(n_unflagged_bls_start) * 100.0}%")
+
+    # Save flagged data
     uvd.phase_to_time(np.mean(uvd.time_array))
     uvd.write_uvfits(
         f"/data03/rbyrne/{date_stamp}_{start_time_stamp}-{end_time_stamp}_{freq_stamp}.uvfits"
