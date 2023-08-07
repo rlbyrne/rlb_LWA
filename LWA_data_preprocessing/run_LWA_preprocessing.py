@@ -893,13 +893,17 @@ def flag_data_Aug3():
         freq_stamp = "73MHz"
         start_time_stamp = "091100"
         end_time_stamp = "091600"
+        files = [
+            file
+            for file in files
+            if file.startswith(date_stamp) and file.endswith(".ms")
+        ]
         files = np.array(
             [
                 f"/data03/rbyrne/{file}"
                 for file in files
                 if (
-                    file.startswith(date_stamp)
-                    and (int(file.split("_")[1]) >= int(start_time_stamp))
+                    (int(file.split("_")[1]) >= int(start_time_stamp))
                     and (int(file.split("_")[1]) <= int(end_time_stamp))
                     and (freq_stamp in file)
                 )
