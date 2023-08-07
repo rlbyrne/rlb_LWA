@@ -885,77 +885,86 @@ def plot_autocorrelations_Aug2():
 
 def flag_data_Aug3():
 
-    files = os.listdir("/data03/rbyrne")
-    date_stamp = "20230801"
-    freq_stamp = "73MHz"
-    start_time_stamp = "091100"
-    end_time_stamp = "091600"
-    files = np.array(
-        [
-            f"/data03/rbyrne/{file}"
-            for file in files
-            if (
-                file.startswith(date_stamp)
-                and (int(file.split("_")[1]) >= int(start_time_stamp))
-                and (int(file.split("_")[1]) <= int(end_time_stamp))
-                and (freq_stamp in file)
-            )
+    use_dates = ["20230801", "20230802", "20230803", "20230804"]
+    use_dates = use_dates[1:]  # First date already processed
+    for data_stamp in use_dates:
+        files = os.listdir("/data03/rbyrne")
+        date_stamp = "20230801"
+        freq_stamp = "73MHz"
+        start_time_stamp = "091100"
+        end_time_stamp = "091600"
+        files = np.array(
+            [
+                f"/data03/rbyrne/{file}"
+                for file in files
+                if (
+                    file.startswith(date_stamp)
+                    and (int(file.split("_")[1]) >= int(start_time_stamp))
+                    and (int(file.split("_")[1]) <= int(end_time_stamp))
+                    and (freq_stamp in file)
+                )
+            ]
+        )
+        uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(files)
+        # fmt: off
+        offline_ants = [
+            39, 83, 88, 106, 119, 146, 152, 168, 174, 216, 220, 231, 365
         ]
-    )
-    uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(files)
-    # fmt: off
-    offline_ants = [
-        39, 83, 88, 106, 119, 146, 152, 168, 174, 216, 220, 231, 365
-    ]
-    # fmt: on
-    offline_ants = [f"LWA{str(ant).zfill(3)}" for ant in offline_ants]
-    LWA_preprocessing.flag_antennas(
-        uvd,
-        antenna_names=offline_ants,
-        inplace=True,
-    )
-    # fmt: off
-    flag_ants = [
-        "095A", "191A", "207A", "255A", "267A", "280B", "288B", "292B", "302A",
-        "302B", "310A", "314B", "325B", "352A", "355B",
-    ]  # Identified based on the Antenna Health Tracker spreadsheet
-    # fmt: on
-    flag_x = [f"LWA{antname[:-1]}" for antname in flag_ants if antname.endswith("A")]
-    flag_y = [f"LWA{antname[:-1]}" for antname in flag_ants if antname.endswith("B")]
-    LWA_preprocessing.flag_antennas(
-        uvd,
-        antenna_names=flag_x,
-        flag_pol="X",
-        inplace=True,
-    )
-    LWA_preprocessing.flag_antennas(
-        uvd,
-        antenna_names=flag_y,
-        flag_pol="Y",
-        inplace=True,
-    )
+        # fmt: on
+        offline_ants = [f"LWA{str(ant).zfill(3)}" for ant in offline_ants]
+        LWA_preprocessing.flag_antennas(
+            uvd,
+            antenna_names=offline_ants,
+            inplace=True,
+        )
+        # fmt: off
+        flag_ants = [
+            "095A", "191A", "207A", "255A", "267A", "280B", "288B", "292B", "302A",
+            "302B", "310A", "314B", "325B", "352A", "355B",
+        ]  # Identified based on the Antenna Health Tracker spreadsheet
+        # fmt: on
+        flag_x = [
+            f"LWA{antname[:-1]}" for antname in flag_ants if antname.endswith("A")
+        ]
+        flag_y = [
+            f"LWA{antname[:-1]}" for antname in flag_ants if antname.endswith("B")
+        ]
+        LWA_preprocessing.flag_antennas(
+            uvd,
+            antenna_names=flag_x,
+            flag_pol="X",
+            inplace=True,
+        )
+        LWA_preprocessing.flag_antennas(
+            uvd,
+            antenna_names=flag_y,
+            flag_pol="Y",
+            inplace=True,
+        )
 
-    # Flag with SSINS
-    n_unflagged_bls_start = np.size(uvd.flag_array) - np.sum(uvd.flag_array)
-    LWA_preprocessing.ssins_flagging(
-        uvd,
-        sig_thresh=15.0,  # Flagging threshold in std dev
-        inplace=True,
-        save_flags_filepath=None,
-        plot_no_flags=False,
-        plot_orig_flags=True,
-        plot_ssins_flags=True,
-        plot_save_dir="/data03/rbyrne/ssins_plots",
-        plot_file_prefix=f"{date_stamp}_{start_time_stamp}-{end_time_stamp}_{freq_stamp}",
-    )
-    n_unflagged_bls_end = np.size(uvd.flag_array) - np.sum(uvd.flag_array)
-    print(f"SSINS flagging fraction: {float(n_unflagged_bls_end)/float(n_unflagged_bls_start) * 100.0}%")
+        # Flag with SSINS
+        n_unflagged_bls_start = np.size(uvd.flag_array) - np.sum(uvd.flag_array)
+        LWA_preprocessing.ssins_flagging(
+            uvd,
+            sig_thresh=15.0,  # Flagging threshold in std dev
+            inplace=True,
+            save_flags_filepath=None,
+            plot_no_flags=False,
+            plot_orig_flags=True,
+            plot_ssins_flags=True,
+            plot_save_dir="/data03/rbyrne/ssins_plots",
+            plot_file_prefix=f"{date_stamp}_{start_time_stamp}-{end_time_stamp}_{freq_stamp}",
+        )
+        n_unflagged_bls_end = np.size(uvd.flag_array) - np.sum(uvd.flag_array)
+        print(
+            f"SSINS flagging fraction: {float(n_unflagged_bls_end)/float(n_unflagged_bls_start) * 100.0}%"
+        )
 
-    # Save flagged data
-    uvd.phase_to_time(np.mean(uvd.time_array))
-    uvd.write_uvfits(
-        f"/data03/rbyrne/{date_stamp}_{start_time_stamp}-{end_time_stamp}_{freq_stamp}.uvfits"
-    )
+        # Save flagged data
+        uvd.phase_to_time(np.mean(uvd.time_array))
+        uvd.write_uvfits(
+            f"/data03/rbyrne/{date_stamp}_{start_time_stamp}-{end_time_stamp}_{freq_stamp}.uvfits"
+        )
 
 
 if __name__ == "__main__":
