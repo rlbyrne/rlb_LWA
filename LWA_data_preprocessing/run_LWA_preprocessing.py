@@ -887,9 +887,8 @@ def flag_data_Aug3():
 
     use_dates = ["20230801", "20230802", "20230803", "20230804"]
     use_dates = use_dates[1:]  # First date already processed
-    for data_stamp in use_dates:
+    for date_stamp in use_dates:
         files = os.listdir("/data03/rbyrne")
-        date_stamp = "20230801"
         freq_stamp = "73MHz"
         start_time_stamp = "091100"
         end_time_stamp = "091600"
