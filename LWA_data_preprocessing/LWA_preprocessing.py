@@ -4,10 +4,12 @@ import numpy as np
 import sys
 import subprocess
 import shlex
+import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import SSINS
 from SSINS import plot_lib
+matplotlib.use("Agg")
 
 
 def convert_raw_ms_to_uvdata(
