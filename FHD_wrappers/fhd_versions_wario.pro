@@ -798,6 +798,24 @@ pro fhd_versions_wario
             save_uvf = 0
           end
 
+          'rlb_image_LWA_modified_kernel_Aug2023': begin
+               recalculate_all = 1
+               instrument = 'lwa'
+               import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+               calibrate_visibilities = 0
+               model_visibilities = 0
+               n_pol = 4
+               min_baseline = 0
+               snapshot_healpix_export = 0
+               image_filter_fn = "filter_uv_natural"
+               save_uvf = 0
+               ;kernel-related keywords
+               kernel_window = 1
+               debug_dim = 1
+               beam_mask_threshold = 1e3
+               interpolate_kernel = 1
+           end
+
   endcase
 
   undefine, uvfits_subversion, uvfits_version

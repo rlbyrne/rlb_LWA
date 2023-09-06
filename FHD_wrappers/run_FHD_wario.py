@@ -6,7 +6,7 @@ obsids_list = [
     "120952high.peel"
 ]
 versions_list = [
-    "rlb_image_LWA_no_calibration_Aug2023",
+    "rlb_image_LWA_modified_kernel_Aug2023",
 ]
 uvfits_path = "/safepool/rbyrne/lwa_data"
 outdir = "/safepool/rbyrne/fhd_outputs"
