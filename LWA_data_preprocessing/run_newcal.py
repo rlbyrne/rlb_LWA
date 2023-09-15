@@ -144,7 +144,7 @@ def antenna_dropout_testing_Sep15():
 
     # Plot gains:
     cal = pyuvdata.UVCal()
-    cal.read("/data03/rbyrne/20230801_091100-091600_73MHz.calfits")
+    cal.read_calfits("/data03/rbyrne/20230801_091100-091600_73MHz.calfits")
     calibration_optimization.plot_gains(
         cal,
         "/data03/rbyrne/antenna_dropout_testing",
