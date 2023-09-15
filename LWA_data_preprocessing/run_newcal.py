@@ -54,7 +54,9 @@ def calibrate_Aug4():
             log_file_path=f"/data03/rbyrne/{date_stamp}_091100-091600_73MHz_cal_log.txt",
         )
 
-        cal = calibration_optimization.create_uvcal_obj(data, antenna_names, gains=gains_fit)
+        cal = calibration_optimization.create_uvcal_obj(
+            data, antenna_names, gains=gains_fit
+        )
         cal.write_calfits(
             f"/data03/rbyrne/{date_stamp}_091100-091600_73MHz.calfits",
             clobber=True,
@@ -129,12 +131,74 @@ def debug_Aug21():
             log_file_path=f"/data03/rbyrne/{date_stamp}_091100-091600_73MHz_{pol_name}_cal_log.txt",
         )
 
-        cal = calibration_optimization.create_uvcal_obj(data, antenna_names, gains=gains_fit)
+        cal = calibration_optimization.create_uvcal_obj(
+            data, antenna_names, gains=gains_fit
+        )
         cal.write_calfits(
             f"/data03/rbyrne/{date_stamp}_091100-091600_73MHz_{pol_name}.calfits",
             clobber=True,
         )
 
 
+def antenna_dropout_testing_Sep15():
+
+    # Plot gains:
+    cal = pyuvdata.UVCal()
+    cal.read("/data03/rbyrne/20230801_091100-091600_73MHz.calfits")
+    calibration_optimization.plot_gains(
+        cal,
+        "/data03/rbyrne/antenna_dropout_testing",
+        plot_prefix="20230801_091100-091600_73MHz_iter1",
+    )
+
+    data = pyuvdata.UVData()
+    data.read("/data03/rbyrne/20230801_091100-091600_73MHz_calibrated.uvfits")
+    data.downsample_in_time(n_times_to_avg=data.Ntimes)  # Added to match model
+    model = pyuvdata.UVData()
+    model.read("/data03/rbyrne/20230801_091100-091600_73MHz_model.uvfits")
+
+    (
+        gains_init,
+        Nants,
+        Nbls,
+        Ntimes,
+        Nfreqs,
+        N_feed_pols,
+        model_visibilities,
+        data_visibilities,
+        visibility_weights,
+        gains_exp_mat_1,
+        gains_exp_mat_2,
+        antenna_names,
+    ) = calibration_wrappers.uvdata_calibration_setup(
+        data,
+        model,
+        gain_init_calfile=None,
+        gain_init_stddev=0.0,
+        N_feed_pols=2,
+        min_cal_baseline=30,
+    )
+    per_ant_cost = calibration_optimization.calculate_per_antenna_cost(
+        gains_init,
+        Nants,
+        Nbls,
+        Nfreqs,
+        N_feed_pols,
+        model_visibilities,
+        data_visibilities,
+        visibility_weights,
+        gains_exp_mat_1,
+        gains_exp_mat_2,
+    )
+    np.save(
+        f"/data03/rbyrne/antenna_dropout_testing/20230801_091100-091600_73MHz_iter1_per_ant_cost.npz",
+        per_ant_cost,
+    )
+    np.save(
+        f"/data03/rbyrne/antenna_dropout_testing/20230801_091100-091600_73MHz_iter1_per_ant_cost.npz",
+        antenna_names,
+    )
+
+
 if __name__ == "__main__":
-    debug_Aug21()
+    antenna_dropout_testing_Sep15()
