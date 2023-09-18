@@ -190,14 +190,9 @@ def antenna_dropout_testing_Sep15():
         gains_exp_mat_1,
         gains_exp_mat_2,
     )
-    np.save(
-        f"/data03/rbyrne/antenna_dropout_testing/20230801_091100-091600_73MHz_iter1_per_ant_cost.npz",
-        per_ant_cost,
-    )
-    np.save(
-        f"/data03/rbyrne/antenna_dropout_testing/20230801_091100-091600_73MHz_iter1_per_ant_cost.npz",
-        antenna_names,
-    )
+    f = open("/data03/rbyrne/antenna_dropout_testing/20230801_091100-091600_73MHz_iter1_per_ant_cost.npy", "wb")
+    np.save(f, [per_ant_cost, antenna_names])
+    f.close()
 
 
 if __name__ == "__main__":
