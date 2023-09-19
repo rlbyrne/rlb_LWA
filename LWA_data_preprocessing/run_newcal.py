@@ -192,6 +192,8 @@ def antenna_dropout_testing_Sep15():
     )
     f = open("/data03/rbyrne/antenna_dropout_testing/20230801_091100-091600_73MHz_iter1_per_ant_cost.npy", "wb")
     np.save(f, per_ant_cost)
+    f.close()
+    f = open("/data03/rbyrne/antenna_dropout_testing/20230801_091100-091600_73MHz_iter1_ant_names.npy", "wb")
     np.save(f, antenna_names)
     f.close()
 
