@@ -215,10 +215,10 @@ def antenna_dropout_testing_Sep15():
 
 def apply_antenna_flagging_and_recalibrate_Sept20():
 
-    with open("/Users/ruby/Astro/test_newcal_Jul2023/20230801_091100-091600_73MHz_iter1_per_ant_cost.npy", "rb") as f:
+    with open("/data03/rbyrne/antenna_dropout_testing/20230801_091100-091600_73MHz_iter1_per_ant_cost.npy", "rb") as f:
         per_ant_cost = np.load(f)
     f.close()
-    with open("/Users/ruby/Astro/test_newcal_Jul2023/20230801_091100-091600_73MHz_iter1_ant_names.npy", "rb") as f:
+    with open("/data03/rbyrne/antenna_dropout_testing/20230801_091100-091600_73MHz_iter1_ant_names.npy", "rb") as f:
         antenna_names_per_ant_cost = np.load(f)
     f.close()
 
