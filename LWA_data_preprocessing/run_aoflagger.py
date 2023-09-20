@@ -7,7 +7,7 @@ def tutorial():
 
     nch = 256
     ntimes = 1000
-    count = 50       # number of trials in the false-positives test
+    count = 50  # number of trials in the false-positives test
 
     flagger = aoflagger.AOFlagger()
     path = flagger.find_strategy_file(aoflagger.TelescopeId.Generic)
@@ -24,15 +24,19 @@ def tutorial():
 
         flags = strategy.run(data)
         flagvalues = flags.get_buffer()
-        ratio = float(sum(sum(flagvalues))) / (nch*ntimes)
+        ratio = float(sum(sum(flagvalues))) / (nch * ntimes)
         ratiosum += ratio
-        ratiosumsq += ratio*ratio
+        ratiosumsq += ratio * ratio
 
-    print("Percentage flags (false-positive rate) on Gaussian data: " +
-        str(ratiosum * 100.0 / count) + "% +/- " +
-        str(np.sqrt(
-            (ratiosumsq/count - ratiosum*ratiosum / (count*count) )
-            ) * 100.0) )
+    print(
+        "Percentage flags (false-positive rate) on Gaussian data: "
+        + str(ratiosum * 100.0 / count)
+        + "% +/- "
+        + str(
+            np.sqrt((ratiosumsq / count - ratiosum * ratiosum / (count * count)))
+            * 100.0
+        )
+    )
 
 
 def flag_ms_file():
@@ -48,7 +52,7 @@ def flag_ms_file():
     flagger = aoflagger.AOFlagger()
     path = flagger.find_strategy_file(aoflagger.TelescopeId.Generic)
     strategy = flagger.load_strategy_file(path)
-    flag_data = flagger.make_image_set(uvd.Ntimes, uvd.Nfreqs, uvd.Nbls*uvd.Npols)
+    flag_data = flagger.make_image_set(uvd.Ntimes, uvd.Nfreqs, uvd.Nbls * uvd.Npols)
 
     bl_pol_ind = 0
     for pol in uvd.polarization_array:
@@ -65,5 +69,5 @@ def flag_ms_file():
     print(np.sum(flagvalues))
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     flag_ms_file()

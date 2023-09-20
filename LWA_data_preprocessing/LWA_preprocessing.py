@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 import SSINS
 from SSINS import plot_lib
+
 matplotlib.use("Agg")
 
 
