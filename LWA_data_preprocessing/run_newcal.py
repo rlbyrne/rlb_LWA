@@ -1,6 +1,6 @@
 import numpy as np
 import pyuvdata
-from newcal import calibration_wrappers, calibration_optimization
+from newcal import calibration_wrappers, calibration_optimization, calibration_qa
 
 
 def calibrate_Aug4():
@@ -174,11 +174,12 @@ def antenna_dropout_testing_Sep15():
         data,
         model,
         gain_init_calfile=None,
+        gain_init_to_vis_ratio=False,
         gain_init_stddev=0.0,
         N_feed_pols=2,
         min_cal_baseline=30,
     )
-    per_ant_cost = calibration_optimization.calculate_per_antenna_cost(
+    per_ant_cost = calibration_qa.calculate_per_antenna_cost(
         gains_init,
         Nants,
         Nbls,
@@ -190,12 +191,25 @@ def antenna_dropout_testing_Sep15():
         gains_exp_mat_1,
         gains_exp_mat_2,
     )
-    f = open("/data03/rbyrne/antenna_dropout_testing/20230801_091100-091600_73MHz_iter1_per_ant_cost.npy", "wb")
+    f = open(
+        "/data03/rbyrne/antenna_dropout_testing/20230801_091100-091600_73MHz_iter1_per_ant_cost.npy",
+        "wb",
+    )
     np.save(f, per_ant_cost)
     f.close()
-    f = open("/data03/rbyrne/antenna_dropout_testing/20230801_091100-091600_73MHz_iter1_ant_names.npy", "wb")
+    f = open(
+        "/data03/rbyrne/antenna_dropout_testing/20230801_091100-091600_73MHz_iter1_ant_names.npy",
+        "wb",
+    )
     np.save(f, antenna_names)
     f.close()
+
+    calibration_qa.plot_per_ant_cost(
+        per_ant_cost,
+        antenna_names,
+        "/data03/rbyrne/antenna_dropout_testing",
+        plot_prefix="20230801_091100-091600_73MHz_iter1",
+    )
 
 
 if __name__ == "__main__":
