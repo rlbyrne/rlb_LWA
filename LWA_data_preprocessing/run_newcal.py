@@ -263,6 +263,7 @@ def apply_antenna_flagging_and_recalibrate_Sept20():
         gains_exp_mat_2=gains_exp_mat_2,
     )
 
+    print(gains_init[:, 0, 0])
     example_cost = cost_function_calculations.cost_function_single_pol(
         gains_init[:, 0, 0],
         model_visibilities[:, :, 0, 0],
