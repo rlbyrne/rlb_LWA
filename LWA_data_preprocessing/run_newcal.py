@@ -264,7 +264,7 @@ def apply_antenna_flagging_and_recalibrate_Sept20():
     )
 
     print(gains_init[:, 0, 0])
-    print(np.where(~np.isfinite(gains_init)))
+    print(antenna_names[np.where(~np.isfinite(gains_init[:,0]))])
     gains_init[~np.isfinite(gains_init)] = 0.0
     example_cost = cost_function_calculations.cost_function_single_pol(
         gains_init[:, 0, 0],
@@ -287,7 +287,6 @@ def apply_antenna_flagging_and_recalibrate_Sept20():
         gains_exp_mat_2,
         0.0,
     )
-    print(hess - np.conj(hess.T))
 
     gains_fit = calibration_wrappers.calibration_per_pol(
         gains_init,
