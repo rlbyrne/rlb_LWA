@@ -1,7 +1,7 @@
 import numpy as np
 import pyuvdata
 import LWA_preprocessing
-from newcal import calibration_wrappers, calibration_optimization, calibration_qa
+from newcal import calibration_wrappers, calibration_optimization, cost_function_calculations, calibration_qa
 
 
 def calibrate_Aug4():
@@ -262,6 +262,18 @@ def apply_antenna_flagging_and_recalibrate_Sept20():
         gains_exp_mat_1=gains_exp_mat_1,
         gains_exp_mat_2=gains_exp_mat_2,
     )
+
+    print(np.mean(visibility_weights))
+    example_cost = cost_function_calculations.cost_function_single_pol(
+        gains_init[:, 0, 0],
+        model_visibilities[:, :, 0, 0],
+        data_visibilities[:, :, 0, 0],
+        ant_excluded_weights[:, :, 0],
+        gains_exp_mat_1,
+        gains_exp_mat_2,
+        0.0,
+    )
+    print(example_cost)
 
     gains_fit = calibration_wrappers.calibration_per_pol(
         gains_init,
