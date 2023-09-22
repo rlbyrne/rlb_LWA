@@ -264,6 +264,7 @@ def apply_antenna_flagging_and_recalibrate_Sept20():
     )
 
     print(gains_init[:, 0, 0])
+    print(np.where(~np.isfinite(gains_init)))
     gains_init[~np.isfinite(gains_init)] = 0.0
     example_cost = cost_function_calculations.cost_function_single_pol(
         gains_init[:, 0, 0],
@@ -275,8 +276,7 @@ def apply_antenna_flagging_and_recalibrate_Sept20():
         0.0,
     )
     print(example_cost)
-    print(np.where(~np.isfinite(gains_init)))
-    example_hess = cost_function_calculations.hessian_single_pol(
+    hess = cost_function_calculations.hessian_single_pol(
         gains_init[:, 0, 0],
         Nants,
         Nbls,
