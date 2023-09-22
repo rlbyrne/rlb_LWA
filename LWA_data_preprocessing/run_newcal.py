@@ -250,6 +250,17 @@ def apply_antenna_flagging_and_recalibrate_Sept20():
         min_cal_baseline=30,
     )
 
+    example_cost = cost_function_calculations.cost_function_single_pol(
+        gains_init[:, 0, 0],
+        model_visibilities[:, :, 0, 0],
+        data_visibilities[:, :, 0, 0],
+        visibility_weights[:, :, 0, 0],
+        gains_exp_mat_1,
+        gains_exp_mat_2,
+        0.0,
+    )
+    print(example_cost)
+
     # Make sure antenna ordering matches
     antenna_inds = np.array([list(antenna_names_per_ant_cost).index(name) for name in antenna_names])
     per_ant_cost = per_ant_cost[antenna_inds, :]
@@ -263,9 +274,6 @@ def apply_antenna_flagging_and_recalibrate_Sept20():
         gains_exp_mat_2=gains_exp_mat_2,
     )
 
-    print(gains_init[:, 0, 0])
-    print(antenna_names[np.where(~np.isfinite(gains_init[:, 0, 0]))])
-    gains_init[~np.isfinite(gains_init)] = 0.0
     example_cost = cost_function_calculations.cost_function_single_pol(
         gains_init[:, 0, 0],
         model_visibilities[:, :, 0, 0],
