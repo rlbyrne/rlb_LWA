@@ -275,6 +275,16 @@ def apply_antenna_flagging_and_recalibrate_Sept20():
         0.0,
     )
     print(example_cost)
+    example_hess = cost_function_calculations.hessian_single_pol(
+        gains_init[:, 0, 0],
+        model_visibilities[:, :, 0, 0],
+        data_visibilities[:, :, 0, 0],
+        visibility_weights[:, :, 0, 0],
+        gains_exp_mat_1,
+        gains_exp_mat_2,
+        0.0,
+    )
+    print(hess - np.conj(hess.T))
 
     gains_fit = calibration_wrappers.calibration_per_pol(
         gains_init,
