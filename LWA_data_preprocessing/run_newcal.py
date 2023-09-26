@@ -246,7 +246,6 @@ def apply_antenna_flagging_and_recalibrate_Sept20():
         model,
         gain_init_calfile="/data03/rbyrne/20230801_091100-091600_73MHz.calfits",
         gain_init_stddev=0.0,
-        N_feed_pols=2,
         min_cal_baseline=30,
     )
 
