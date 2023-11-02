@@ -50,7 +50,7 @@ def convert_raw_ms_to_uvdata(
                 raise_error=False,  # May be needed when multiple spw are present
             )
         uvd_new.scan_number_array = None  # Fixes a pyuvdata bug
-        uvd_new.unphase_to_drift()
+        uvd_new.unproject_phase()
         if file_ind == 0:
             uvd = uvd_new
         else:
