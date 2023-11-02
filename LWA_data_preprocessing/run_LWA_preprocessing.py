@@ -980,7 +980,7 @@ def debug_flag_24hr_run_Nov2():
     ms_filenames = np.sort(os.listdir(data_dir))
 
     start_file_ind = 0
-    files_per_chunk = 30  # Process in 5 min chunks
+    files_per_chunk = 6
 
     uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(
         [
