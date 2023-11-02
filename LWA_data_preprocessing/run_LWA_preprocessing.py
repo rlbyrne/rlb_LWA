@@ -970,5 +970,72 @@ def flag_data_Aug3():
         )
 
 
+def debug_flag_24hr_run_Nov2():
+
+    data_dir = "/mnt/24-hour-run/73MHz"
+    data_output_dir = "/data10/rbyrne/debug_flagging"
+    ssins_thresh = 15.0
+
+    # Find raw ms files
+    ms_filenames = np.sort(os.listdir(data_dir))
+
+    start_file_ind = 0
+    files_per_chunk = 30  # Process in 5 min chunks
+
+    uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(
+        [
+            f"{data_dir}/{filename}"
+            for filename in ms_filenames[
+                start_file_ind : start_file_ind + files_per_chunk
+            ]
+        ]
+    )
+    uvd.phase_to_time(np.mean(uvd.time_array))
+
+    # Antenna-based flagging
+    # fmt: off
+    flag_ants = [
+        38,  51,  82,  87,  94, 105, 107, 111, 118, 122, 145, 148, 151,
+        167, 173, 176, 179, 190, 197, 215, 219, 230, 231, 232, 246, 256,
+        257, 258, 259, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270,
+        271, 272, 273, 275, 276, 277, 279, 280, 281, 282, 283, 284, 285,
+        287, 288, 290, 291, 293, 294, 295, 297, 298, 300, 301, 302, 303,
+        304, 305, 306, 307, 308, 309, 311, 313, 316, 317, 318, 319, 320,
+        322, 323, 326, 329, 330, 331, 334, 335, 336, 337, 338, 339, 340,
+        341, 342, 343, 348, 349, 350, 351, 353, 359, 361, 363, 364, 365,
+        366
+    ]  # Flags from Nivedita
+    # fmt: on
+    flag_ants = [f"LWA{str(ant).zfill(3)}" for ant in flag_ants]
+    LWA_preprocessing.flag_antennas(
+        uvd,
+        antenna_names=flag_ants,
+        inplace=True,
+    )
+
+    LWA_preprocessing.ssins_flagging(
+        uvd,
+        sig_thresh=ssins_thresh,  # Flagging threshold in std dev
+        inplace=True,
+        save_flags_filepath=None,
+        plot_no_flags=False,
+        plot_orig_flags=False,
+        plot_ssins_flags=False,
+    )
+    # Apply flags by zeroing out flagged data
+    uvd.data_array[np.where(uvd.flag_array)] = 0.0
+
+    # Save each time step individually
+    unique_times = np.unique(uvd.time_array)
+    for time_ind in range(len(unique_times)):
+        uvd_timestep = uvd.select(times=unique_times[time_ind], inplace=False)
+        uvd_timestep.phase_to_time(np.mean(uvd_timestep.time_array))
+        uvd_timestep.write_ms(
+            f"{data_output_dir}/{ms_filenames[start_file_ind+time_ind]}"
+        )
+
+    start_file_ind += files_per_chunk
+
+
 if __name__ == "__main__":
-    flag_data_Aug3()
+    debug_flag_24hr_run_Nov2()
