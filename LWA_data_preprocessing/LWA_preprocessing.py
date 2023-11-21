@@ -40,6 +40,7 @@ def convert_raw_ms_to_uvdata(
             uvd_new.read_ms(
                 f"{untar_dir}/{untar_filename}",
                 data_column=data_column,
+                run_check=False,  # Required to preserve baseline conjugation
                 raise_error=False,  # May be needed when multiple spw are present
             )
             subprocess.call(shlex.split(f"rm -r {untar_dir}/{untar_filename}"))
@@ -47,6 +48,7 @@ def convert_raw_ms_to_uvdata(
             uvd_new.read_ms(
                 ms_file,
                 data_column=data_column,
+                run_check=False,  # Required to preserve baseline conjugation
                 raise_error=False,  # May be needed when multiple spw are present
             )
         uvd_new.scan_number_array = None  # Fixes a pyuvdata bug
