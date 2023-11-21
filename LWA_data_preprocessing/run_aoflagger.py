@@ -67,12 +67,14 @@ def do_aoflagging(base_list, count):
 
 for time in range(math.ceil(ndata_chunks)):
 
+    print("Reading file")
     pool = mp.Pool(processes=args.threads)
     async_res = [
         pool.apply_async(read_data_from_ms, (fulldayrun_path[i], args.read_prog, i))
         for i in range(time * data_chunks, (time + 1) * data_chunks)
     ]
     dataset = np.array([file_o.get() for file_o in async_res])
+    print("Done reading file")
     # print(args.time_chunk, "mins of data read")
     pool = mp.Pool(processes=args.threads)
 
@@ -81,6 +83,7 @@ for time in range(math.ceil(ndata_chunks)):
         for k in range(np.shape(dataset)[1])
     ]
     final_flag = np.array([result_base.get() for result_base in baseline_res])
+    print("Done flagging")
 
     # print(
     #    str((time + 1) * args.time_chunk),
@@ -92,6 +95,7 @@ for time in range(math.ceil(ndata_chunks)):
     flags_dim = np.repeat(final_flag[:, :, :, np.newaxis], 4, axis=3)
     flag_copy = np.zeros((62128, 1, 192, 4))
 
+    print("Saving data")
     for i in range(data_chunks):
 
         uvd = pyuvdata.UVData()
@@ -103,6 +107,7 @@ for time in range(math.ceil(ndata_chunks)):
             args.out_dir + org_msfiles[time * data_chunks + i].split("/")[-1],
             run_check=False,
         )
+    print("Done")
 
 plot = 0
 if plot == 1:
