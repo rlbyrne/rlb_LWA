@@ -7,6 +7,7 @@ import argparse
 import math
 import multiprocessing as mp
 import casacore.tables as tbl
+import aoflagger as aof
 
 # Adapted from Nivedita Mahesh
 
