@@ -20,6 +20,8 @@ parser.add_argument("-time_chunk", type=int)
 parser.add_argument("-threads", type=int)
 args = parser.parse_args()
 
+multithreading = False
+
 if (args.file_path).endswith(".ms"):  # Single file
     data_chunks = 1
     ndata_chunks = 1
@@ -68,21 +70,27 @@ def do_aoflagging(base_list, count):
 for time in range(math.ceil(ndata_chunks)):
 
     print("Reading file")
-    pool = mp.Pool(processes=args.threads)
-    async_res = [
-        pool.apply_async(read_data_from_ms, (fulldayrun_path[i], args.read_prog, i))
-        for i in range(time * data_chunks, (time + 1) * data_chunks)
-    ]
-    dataset = np.array([file_o.get() for file_o in async_res])
+    if multithreading:
+        pool = mp.Pool(processes=args.threads)
+        async_res = [
+            pool.apply_async(read_data_from_ms, (fulldayrun_path[i], args.read_prog, i))
+            for i in range(time * data_chunks, (time + 1) * data_chunks)
+        ]
+        dataset = np.array([file_o.get() for file_o in async_res])
+    else:
+        dataset = read_data_from_ms(fulldayrun_path[time], 0, 0)
+
     print("Done reading file")
     # print(args.time_chunk, "mins of data read")
-    pool = mp.Pool(processes=args.threads)
-
-    baseline_res = [
-        pool.apply_async(do_aoflagging, (dataset[:, k, :, :], k))
-        for k in range(np.shape(dataset)[1])
-    ]
-    final_flag = np.array([result_base.get() for result_base in baseline_res])
+    if multithreading:
+        pool = mp.Pool(processes=args.threads)
+        baseline_res = [
+            pool.apply_async(do_aoflagging, (dataset[:, k, :, :], k))
+            for k in range(np.shape(dataset)[1])
+        ]
+        final_flag = np.array([result_base.get() for result_base in baseline_res])
+    else:
+        final_flag = do_aoflagging(dataset, 0)
     print("Done flagging")
 
     # print(
