@@ -41,7 +41,6 @@ data1 = flagger.make_image_set(nch, datasets, 8)
 strategy_aa = flagger.load_strategy_file(args.strategy_path)
 
 def read_datacolumn(msname,datacolumn,startrow):
-    blockPrint()
     with tbl.table(msname, readonly=True) as t:
        data = t.getcol(datacolumn,startrow)
     enablePrint()
