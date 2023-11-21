@@ -1,6 +1,5 @@
 import numpy as np
 import glob
-from read_multiple_ms import *
 import pyuvdata
 import os
 import sys
