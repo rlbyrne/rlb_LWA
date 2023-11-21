@@ -1,73 +1,98 @@
 import numpy as np
-import aoflagger
+import glob
+from read_multiple_ms import *
 import pyuvdata
+import os
+import sys
+import argparse
+import math
+import multiprocessing as mp
+import casacore.tables as tbl
+
+# Adapted from Nivedita Mahesh
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-file_path", type=str)
+parser.add_argument("-strategy_path", type=str)
+parser.add_argument("-read_prog", type=int)
+parser.add_argument("-out_dir", type=str)
+parser.add_argument("-time_chunk", type=int)
+parser.add_argument("-threads", type=int)
+args = parser.parse_args()
+
+if (args.file_path).endswith(".ms"):  # Single file
+    data_chunks = 1
+    ndata_chunks = 1
+    fulldayrun_path = [args.file_path]
+else:
+    fulldayrun_path = sorted(glob.glob(args.file_path + "/*"))
+
+    total_t = len(fulldayrun_path) * 10 / (3600)
+    print("No.of hours of data:", total_t)
+
+    data_chunks = int(args.time_chunk * 60 / 10)
+    ndata_chunks = len(fulldayrun_path) / data_chunks
+    ## Set up AO flagger and image set buffer
+
+flagger = aof.AOFlagger()
+nch = 192
+datasets = data_chunks
+data1 = flagger.make_image_set(nch, datasets, 8)
+strategy_aa = flagger.load_strategy_file(args.strategy_path)
 
 
-def tutorial():
+def do_aoflagging(base_list, count):
 
-    nch = 256
-    ntimes = 1000
-    count = 50  # number of trials in the false-positives test
+    for i in range(4):
+        data1.set_image_buffer(2 * i, np.real(base_list[:, :, i]))
+        data1.set_image_buffer(2 * i + 1, np.imag(base_list[:, :, i]))
+    flags_aa1 = strategy_aa.run(data1)
 
-    flagger = aoflagger.AOFlagger()
-    path = flagger.find_strategy_file(aoflagger.TelescopeId.Generic)
-    strategy = flagger.load_strategy_file(path)
-    data = flagger.make_image_set(ntimes, nch, 8)
+    if count % 10000 == 0:
+        print("No:of baselines processed by AOFlagger-", count)
+    return flags_aa1.get_buffer()
 
-    ratiosum = 0.0
-    ratiosumsq = 0.0
-    for repeat in range(count):
-        for imgindex in range(8):
-            # Initialize data with random numbers
-            values = np.random.normal(0, 1, [nch, ntimes])
-            data.set_image_buffer(imgindex, values)
 
-        flags = strategy.run(data)
-        flagvalues = flags.get_buffer()
-        ratio = float(sum(sum(flagvalues))) / (nch * ntimes)
-        ratiosum += ratio
-        ratiosumsq += ratio * ratio
+for time in range(math.ceil(ndata_chunks)):
 
-    print(
-        "Percentage flags (false-positive rate) on Gaussian data: "
-        + str(ratiosum * 100.0 / count)
-        + "% +/- "
-        + str(
-            np.sqrt((ratiosumsq / count - ratiosum * ratiosum / (count * count)))
-            * 100.0
+    pool = mp.Pool(processes=args.threads)
+    async_res = [
+        pool.apply_async(read_data_from_ms, (fulldayrun_path[i], args.read_prog, i))
+        for i in range(time * data_chunks, (time + 1) * data_chunks)
+    ]
+    dataset = np.array([file_o.get() for file_o in async_res])
+    # print(args.time_chunk, "mins of data read")
+    pool = mp.Pool(processes=args.threads)
+
+    baseline_res = [
+        pool.apply_async(do_aoflagging, (dataset[:, k, :, :], k))
+        for k in range(np.shape(dataset)[1])
+    ]
+    final_flag = np.array([result_base.get() for result_base in baseline_res])
+
+    # print(
+    #    str((time + 1) * args.time_chunk),
+    #    "/",
+    #    str(math.ceil(ndata_chunks) * args.time_chunk),
+    #    "min have been processed & saved",
+    # )
+
+    flags_dim = np.repeat(final_flag[:, :, :, np.newaxis], 4, axis=3)
+    flag_copy = np.zeros((62128, 1, 192, 4))
+
+    for i in range(data_chunks):
+
+        uvd = pyuvdata.UVData()
+        uvd.read_ms(fulldayrun_path[time * data_chunks + i], run_check=False)
+        uvd.reorder_pols(order="CASA", run_check=False)
+        flag_copy[:, 0, :, :] = flags_dim[:, i, :, :]
+        uvd.data_array[np.where(flag_copy)] = 0.0
+        uvd.write_ms(
+            args.out_dir + org_msfiles[time * data_chunks + i].split("/")[-1],
+            run_check=False,
         )
-    )
 
-
-def flag_ms_file():
-
-    ms_file = "/home/rbyrne/20220812_000158_84MHz.ms"
-    uvd = pyuvdata.UVData()
-    uvd.read_ms(ms_file, data_column="DATA")
-    uvd.instrument = "OVRO-LWA"
-    uvd.telescope_name = "OVRO-LWA"
-    uvd.set_telescope_params()
-    uvd.check()
-
-    flagger = aoflagger.AOFlagger()
-    path = flagger.find_strategy_file(aoflagger.TelescopeId.Generic)
-    strategy = flagger.load_strategy_file(path)
-    flag_data = flagger.make_image_set(uvd.Ntimes, uvd.Nfreqs, uvd.Nbls * uvd.Npols)
-
-    bl_pol_ind = 0
-    for pol in uvd.polarization_array:
-        for bl in np.unique(uvd.baseline_array):
-            blt_inds = np.where(uvd.baseline_array == bl)[0]
-            uvd_copy = uvd.select(polarizations=pol, blt_inds=blt_inds, inplace=False)
-            uvd_copy.reorder_freqs(channel_order="freq")
-            flag_data.set_image_buffer(bl_pol_ind, uvd_copy.data_array)
-            bl_pol_ind += 1
-
-    flags = strategy.run(flag_data)
-    flagvalues = flags.get_buffer()
-    print(np.shape(flagvalues))
-    print(np.sum(flagvalues))
-
-
-if __name__ == "__main__":
-    flag_ms_file()
+plot = 0
+if plot == 1:
+    masked_array = np.ma.array(b1_data_set69[j, :, :, 0])
+    masked_array[flagvalues_aa1 == 1] = np.ma.masked
