@@ -262,8 +262,6 @@ def apply_antenna_flagging_and_recalibrate_Sept20():
         gains_exp_mat_2=gains_exp_mat_2,
     )
 
-    gains_init[np.where(gains_init != 0)] = 1.  # Added for debugging
-
     gains_fit = calibration_wrappers.calibration_per_pol(
         gains_init,
         Nants,
