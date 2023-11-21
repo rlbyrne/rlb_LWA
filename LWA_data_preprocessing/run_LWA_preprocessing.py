@@ -1042,8 +1042,8 @@ def test_ssins_Nov20():
     date_stamp = "20230819"
     files = os.listdir("/data09/xhall/2023-08-19_24hour_run")
     freq_stamp = "73MHz"
-    start_time_stamp = "092523"
-    end_time_stamp = "093523"
+    start_time_stamp = "092823"
+    end_time_stamp = "093223"
     files = [
         file for file in files if file.startswith(date_stamp) and file.endswith(".ms")
     ]
