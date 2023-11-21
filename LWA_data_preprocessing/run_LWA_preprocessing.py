@@ -1045,24 +1045,24 @@ def test_ssins_Nov20():
     start_time_stamp = "092523"
     end_time_stamp = "093523"
     files = [
-        file
-        for file in files
-        if file.startswith(date_stamp) and file.endswith(".ms")
+        file for file in files if file.startswith(date_stamp) and file.endswith(".ms")
     ]
-    files = np.sort(np.array(
-        [
-            f"/data09/xhall/2023-08-19_24hour_run/{file}"
-            for file in files
-            if (
-                (int(file.split("_")[1]) >= int(start_time_stamp))
-                and (int(file.split("_")[1]) <= int(end_time_stamp))
-                and (freq_stamp in file)
-            )
-        ]
-    ))
+    files = np.sort(
+        np.array(
+            [
+                f"/data09/xhall/2023-08-19_24hour_run/{file}"
+                for file in files
+                if (
+                    (int(file.split("_")[1]) >= int(start_time_stamp))
+                    and (int(file.split("_")[1]) <= int(end_time_stamp))
+                    and (freq_stamp in file)
+                )
+            ]
+        )
+    )
     uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(files)
-    #offline_corr_nums = [79,150,201,224,229,215,221,242,246,272,294,299,332,334,33,34,37,38,41,42,44,92,51,21,190,154,56,29,28,222,126,127]
-    #offline_ants calculated with mapping.correlator_to_antname() on the development branch
+    # offline_corr_nums = [79,150,201,224,229,215,221,242,246,272,294,299,332,334,33,34,37,38,41,42,44,92,51,21,190,154,56,29,28,222,126,127]
+    # offline_ants calculated with mapping.correlator_to_antname() on the development branch
     offline_ants = [
         "LWA041",
         "LWA095",
@@ -1097,7 +1097,6 @@ def test_ssins_Nov20():
         "LWA365",
         "LWA364",
     ]
-    offline_ants = [f"LWA{str(ant).zfill(3)}" for ant in offline_ants]
     LWA_preprocessing.flag_antennas(
         uvd,
         antenna_names=offline_ants,
@@ -1125,11 +1124,13 @@ def test_ssins_Nov20():
     # Save each time step individually
     unique_times = np.unique(uvd.time_array)
     for time_ind in range(len(unique_times)):
+        save_file_name = (files[time_ind].split("/")[-1]).split(".")[0]
+        save_file_name = f"{save_file_name}_ssins_flagged.ms"
         uvd_timestep = uvd.select(times=unique_times[time_ind], inplace=False)
         uvd_timestep.phase_to_time(np.mean(uvd_timestep.time_array))
         uvd_timestep.reorder_pols(order="CASA", run_check=False)
         uvd_timestep.write_ms(
-            f"/data09/rbyrne/ssins_testing_Nov2023/{files[time_ind]}",
+            f"/data09/rbyrne/ssins_testing_Nov2023/{save_file_name}",
             run_check=False,
         )
 
