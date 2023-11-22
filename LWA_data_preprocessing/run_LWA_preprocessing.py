@@ -1118,7 +1118,7 @@ def test_ssins_Nov20():
     )
     n_unflagged_bls_end = np.size(uvd.flag_array) - np.sum(uvd.flag_array)
     print(
-        f"SSINS flagging fraction: {float(n_unflagged_bls_end)/float(n_unflagged_bls_start) * 100.0}%"
+        f"SSINS flagging fraction: {(1 - float(n_unflagged_bls_end)/float(n_unflagged_bls_start)) * 100.0}%"
     )
 
     # Save each time step individually
