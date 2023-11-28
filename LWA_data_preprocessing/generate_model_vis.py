@@ -11,11 +11,10 @@ import time
 
 
 args = sys.argv
-input_data_path = args[1]
-output_uvfits_path = args[2]
-
-catalog_path = "../LWA_skymodels/cyg_cas.skyh5"
-beam_path = "../LWAbeam_2015.fits"
+catalog_path = args[1]
+beam_path = args[2]
+input_data_path = args[3]
+output_uvfits_path = args[4]
 
 mpi.start_mpi(block_nonroot_stdout=False)
 rank = mpi.get_rank()
