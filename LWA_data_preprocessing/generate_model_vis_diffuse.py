@@ -26,7 +26,7 @@ diffuse_map_formatted = pyuvsim.simsetup.SkyModelData()
 
 if rank == 0:
     # Read reference data for simulation
-    uv.read_uvfits(input_data_path)
+    uv.read(input_data_path)
 
     # Get beam
     beam = pyuvdata.UVBeam()
