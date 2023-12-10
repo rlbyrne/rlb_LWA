@@ -49,6 +49,7 @@ def convert_fits_to_pyradiosky(fits_filepath, freq_mhz):
     )
     skymodel.stokes[0, 0, :] = map_data * units.Kelvin
     skymodel.hpx_inds = np.arange(skymodel.Ncomponents)
+    skymodel.spectral_type = "flat"
 
     return skymodel
 
