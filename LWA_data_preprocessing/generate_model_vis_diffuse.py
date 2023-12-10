@@ -51,6 +51,7 @@ if rank == 0:
         print("Error: Diffuse map fails check.")
     # Format diffuse map to be pyuvsim-compatible
     diffuse_map_formatted = pyuvsim.simsetup.SkyModelData(diffuse_map)
+    diffuse_map_formatted.frame = "galactic"
 
 uv = comm.bcast(uv, root=0)
 beam_list = comm.bcast(beam_list, root=0)
