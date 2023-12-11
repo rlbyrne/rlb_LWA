@@ -18,7 +18,7 @@ for model_ind, model_file in enumerate(model_files):
     model.reorder_pols()
     model.reorder_blts()
     model.reorder_freqs(channel_order="freq")
-    model.freq_array = data.freq_array
+    model.flag_array = data.flag_array
     model.vis_units = data.vis_units
     model.filename = data.filename
     diff = data.sum_vis(model, difference=True, inplace=False)
