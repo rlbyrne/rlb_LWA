@@ -3,15 +3,19 @@ import shlex
 import os
 
 obsids_list = [
-    "120952high.peel"
+    "20230819_093023_73MHz_calibrated",
+    "20230819_093023_73MHz_data_minus_cyg_cas",
+    "20230819_093023_73MHz_data_minus_deGasperin_cyg_cas",
+    "20230819_093023_73MHz_data_minus_deGasperin_sources",
+    "20230819_093023_73MHz_data_minus_VLSS"
 ]
 versions_list = [
-    "rlb_image_LWA_modified_kernel_test_branch_Sept2023",
+    "rlb_LWA_image_Dec2023",
 ]
-uvfits_path = "/safepool/rbyrne/lwa_data"
+uvfits_path = "/safepool/rbyrne/pyuvsim_sims_Dec2023"
 outdir = "/safepool/rbyrne/fhd_outputs"
 run_fhd = True
-run_eppsilon = False
+run_eppsilon = True
 
 # Define wrappers
 fhd_versions_script = "fhd_versions_wario"

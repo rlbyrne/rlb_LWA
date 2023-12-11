@@ -836,6 +836,18 @@ pro fhd_versions_wario
                 interpolate_kernel = 1
             end
 
+            'rlb_LWA_image_Dec2023': begin
+              recalculate_all = 1
+              instrument = 'lwa'
+              import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+              calibrate_visibilities = 0
+              n_pol = 4
+              ;snapshot_healpix_export = 0
+              min_cal_baseline = 0
+              image_filter_fn = "filter_uv_optimal"
+              save_uvf = 1
+            end
+
   endcase
 
   undefine, uvfits_subversion, uvfits_version
