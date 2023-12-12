@@ -845,6 +845,7 @@ pro fhd_versions_wario
               ;snapshot_healpix_export = 0
               min_cal_baseline = 0
               image_filter_fn = "filter_uv_optimal"
+              split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
               save_uvf = 1
             end
 
@@ -861,6 +862,7 @@ pro fhd_versions_wario
               ;snapshot_healpix_export = 0
               min_cal_baseline = 0
               image_filter_fn = "filter_uv_optimal"
+              split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
               save_uvf = 1
             end
 
