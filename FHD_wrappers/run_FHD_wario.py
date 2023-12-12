@@ -3,10 +3,10 @@ import shlex
 import os
 
 obsids_list = [
-    "20230819_093023_73MHz_calibrated"
+    "20230819_093023_73MHz_data_minus_deGasperin_cyg_cas_NMbeam"
 ]
 versions_list = [
-    "rlb_LWA_model_diffuse_Dec2023",
+    "rlb_LWA_image_Dec2023",
 ]
 uvfits_path = "/safepool/rbyrne/pyuvsim_sims_Dec2023"
 outdir = "/safepool/rbyrne/fhd_outputs"

@@ -10,8 +10,10 @@ data.reorder_blts()
 data.reorder_freqs(channel_order="freq")
 data.nsample_array[:, :, :, :] = 1.0
 
-model_names = ["cyg_cas", "deGasperin_cyg_cas", "deGasperin_sources", "VLSS"]
-model_files = [f"/safepool/rbyrne/pyuvsim_sims_Dec2023/20230819_093023_73MHz_{name}_sim.uvfits" for name in model_names]
+#model_names = ["cyg_cas", "deGasperin_cyg_cas", "deGasperin_sources", "VLSS"]
+#model_files = [f"/safepool/rbyrne/pyuvsim_sims_Dec2023/20230819_093023_73MHz_{name}_sim.uvfits" for name in model_names]
+model_names = ["deGasperin_cyg_cas_NMbeam"]
+model_files = ["/safepool/rbyrne/pyuvsim_sims_Dec2023/20230819_093023_73MHz_deGasperin_cyg_cas_sim_NMbeam.uvfits"]
 for model_ind, model_file in enumerate(model_files):
     model = pyuvdata.UVData()
     model.read(model_file)
