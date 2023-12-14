@@ -2,10 +2,10 @@ import numpy as np
 import scipy.io
 import matplotlib.pyplot as plt
 
-plot_save_dir = '/home/rbyrne/kpar0_plots_Dec2023'
+plot_save_dir = "/home/rbyrne/kpar0_plots_Dec2023"
 run_filepaths = [
     "/safepool/rbyrne/fhd_outputs/fhd_rlb_LWA_caltest_cyg_cas_Dec2023",
-    "/safepool/rbyrne/fhd_outputs/fhd_rlb_LWA_caltest_mmode_Dec2023"
+    "/safepool/rbyrne/fhd_outputs/fhd_rlb_LWA_caltest_mmode_Dec2023",
 ]
 run_names = ["Cyg & Cas", "m-mode"]
 colors = ["tab:blue", "tab:orange", "tab:green"]
@@ -16,7 +16,7 @@ for run_ind, run_path in enumerate(run_filepaths):
     dirty = scipy.io.readsav(dirty_filename)["power"]
     residual = scipy.io.readsav(residual_filename)["power"]
     k_edges = scipy.io.readsav(dirty_filename)["k_edges"]
-    frac_power = (1-sqrt(residual/dirty))*100.
+    frac_power = (1.0 - np.sqrt(residual / dirty)) * 100.0
     power_plot = np.repeat(frac_power, 2)
     k_edges_plot = np.concatenate(
         ([k_edges[0]], np.repeat(k_edges[1:-1], 2), [k_edges[-1]])
