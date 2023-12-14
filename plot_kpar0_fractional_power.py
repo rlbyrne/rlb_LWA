@@ -60,6 +60,21 @@ for run_ind, run_path in enumerate(run_filepaths):
         label=f"{run_names[run_ind]} dirty",
     )
 
+    model_filename = f"{run_path}/ps/data/1d_binning/20230819_093023_73MHz__gridded_uvf_noimgclip_model_xx_dft_averemove_swbh_dencorr_k0power.idlsave"
+    model = scipy.io.readsav(model_filename)["power"]
+    k_edges = scipy.io.readsav(model_filename)["k_edges"]
+    power_plot = np.repeat(model, 2)
+    k_edges_plot = np.concatenate(
+        ([k_edges[0]], np.repeat(k_edges[1:-1], 2), [k_edges[-1]])
+    )
+    plt.plot(
+        k_edges_plot,
+        power_plot,
+        ":",
+        color=colors[run_ind],
+        label=f"{run_names[run_ind]} model",
+    )
+
     plt.xscale("log")
     plt.xlabel("k-perpendicular (h/Mpc)")
     plt.ylabel("Power")
