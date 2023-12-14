@@ -24,4 +24,4 @@ for run_ind, run_path in enumerate(run_filepaths):
     plt.plot(k_edges_plot, power_plot, color=colors[run_ind], label=run_names[run_ind])
     plt.xscale("log")
 plt.legend()
-plt.savefig(f"/plot_save_dir/frac_power_recovered.png")
+plt.savefig(f"{plot_save_dir}/frac_power_recovered.png")
