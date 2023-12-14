@@ -3,10 +3,10 @@ import shlex
 import os
 
 obsids_list = [
-    "20230819_093023_73MHz_data_minus_deGasperin_cyg_cas_NMbeam"
+    "20230819_093023_73MHz"
 ]
 versions_list = [
-    "rlb_LWA_image_Dec2023",
+    "rlb_LWA_caltest_cyg_cas_Dec2023", "rlb_LWA_caltest_mmode_Dec2023"
 ]
 uvfits_path = "/safepool/rbyrne/pyuvsim_sims_Dec2023"
 outdir = "/safepool/rbyrne/fhd_outputs"
@@ -21,6 +21,7 @@ eppsilon_script = "ps_single_obs_wrapper"
 refresh_ps = 1
 uvf_input = 1
 no_evenodd = 1  # Use this option if only one time step is present
+xx_only = 0
 
 for version in versions_list:
     # Create directories
@@ -55,7 +56,7 @@ for version in versions_list:
             ) as err:
                 process = subprocess.Popen(
                     shlex.split(
-                        f"/opt/idl/idl88/bin/idl -e {eppsilon_script} -args {obsid} {outdir} {version} {refresh_ps} {uvf_input} {no_evenodd}"
+                        f"/opt/idl/idl88/bin/idl -e {eppsilon_script} -args {obsid} {outdir} {version} {refresh_ps} {uvf_input} {no_evenodd} {xx_only}"
                     ),
                     stdout=out,
                     stderr=err,
