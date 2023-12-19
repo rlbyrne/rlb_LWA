@@ -41,6 +41,7 @@ def convert_fits_to_pyradiosky(fits_filepath, freq_mhz):
     skymodel.component_type = "healpix"
     skymodel.nside = nside
     skymodel.hpx_order = ordering
+    skymodel.frame = "icrs"
     skymodel.Nfreqs = 1
     skymodel.Ncomponents = npix
     skymodel.freq_array = Quantity(np.full(skymodel.Nfreqs, freq_mhz * 1e6), "hertz")
