@@ -59,7 +59,7 @@ diffuse_map_formatted = mpi.big_bcast(comm, diffuse_map_formatted, root=0)
 
 # Run simulation
 start_time = time.time()
-diffuse_map_formatted.frame = "galactic"
+diffuse_map_formatted.frame = "equitorial"
 output_uv = pyuvsim.uvsim.run_uvdata_uvsim(
     input_uv=uv,
     beam_list=beam_list,

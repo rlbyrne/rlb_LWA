@@ -59,11 +59,12 @@ if __name__ == "__main__":
     # Map is downloaded from https://lambda.gsfc.nasa.gov/product/foreground/fg_ovrolwa_radio_maps_get.html
 
     fits_filepath = (
-        "/Users/ruby/Astro/mmode_maps_eastwood/ovro_lwa_sky_map_73.152MHz.fits"
+        "/safepool/rbyrne/skymodels/ovro_lwa_sky_map_73.152MHz.fits"
     )
     skymodel = convert_fits_to_pyradiosky(fits_filepath, 73.152)
+    skymodel.check()
     skymodel.write_skyh5(
-        "/Users/ruby/Astro/mmode_maps_eastwood/ovro_lwa_sky_map_73.152MHz.skyh5",
-        run_check=False,
+        "/safepool/rbyrne/skymodels/mmode_maps_eastwood/ovro_lwa_sky_map_73.152MHz.skyh5",
+        run_check=True,
         clobber=True,
     )
