@@ -911,6 +911,28 @@ pro fhd_versions_wario
               save_uvf = 1
             end
 
+            'rlb_LWA_caltest_cyg_cas_v2_branch_Dec2023': begin
+              recalculate_all = 1
+              instrument = 'lwa'
+              import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+              calibrate_visibilities = 1
+              n_pol = 2
+              calibration_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
+              allow_sidelobe_cal_sources = 1
+              return_cal_visibilities = 1
+              sim_over_calibrate = 1
+              bandpass_calibrate = 0
+              cable_bandpass_fit = 0
+              cal_mode_fit = 0
+              calibration_polyfit = 0
+              split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
+              min_cal_baseline = 0
+              image_filter_fn = "filter_uv_optimal"
+              flag_calibration = 1 ;allow calibration to flag antennas
+              calibration_flag_iterate = 1 ;repeat calibration after flagging
+              save_uvf = 1
+            end
+
   endcase
 
   undefine, uvfits_subversion, uvfits_version
