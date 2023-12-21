@@ -24,8 +24,8 @@ def convert_fits_to_pyradiosky(
 
     history_str = f"From file {fits_filepath.split('/')[-1]}"
 
-    # COORDSYS definitions: G = galactic, E = ecliptic, C = celestial = equatorial
     if output_frame is not None:
+        # COORDSYS definitions: G = galactic, E = ecliptic, C = celestial = equatorial
         if output_frame == "equatorial":
             output_frame_code = "C"
         elif output_frame == "galactic":
@@ -59,6 +59,12 @@ def convert_fits_to_pyradiosky(
     else:
         sys.exit("ERROR: Unsupported coordsys.")
 
+    if output_nside is not None and output_nside != nside:  # Interpolate to new nside
+        map_data = hp.pixelfunc.ud_grade(
+            map_data, output_nside, pess=True, order_in=ordering
+        )
+        nside = output_nside
+
     skymodel = pyradiosky.SkyModel()
     skymodel.component_type = "healpix"
     skymodel.nside = nside
@@ -84,7 +90,7 @@ if __name__ == "__main__":
     # Map is downloaded from https://lambda.gsfc.nasa.gov/product/foreground/fg_ovrolwa_radio_maps_get.html
 
     fits_filepath = "/safepool/rbyrne/skymodels/ovro_lwa_sky_map_73.152MHz.fits"
-    skymodel = convert_fits_to_pyradiosky(fits_filepath, 73.152)
+    skymodel = convert_fits_to_pyradiosky(fits_filepath, 73.152, output_frame="equatorial", output_nside=512)
     skymodel.check()
     skymodel.write_skyh5(
         "/safepool/rbyrne/skymodels/ovro_lwa_sky_map_73.152MHz_equatorial.skyh5",
