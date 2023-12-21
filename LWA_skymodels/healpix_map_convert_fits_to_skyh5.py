@@ -16,7 +16,7 @@ def convert_fits_to_pyradiosky(fits_filepath, freq_mhz):
     coordsys = file_contents[1].header["COORDSYS"]
     file_contents.close()
 
-    history_str = f"From file {fits_filepath.split("/")[-1]}"
+    history_str = f"From file {fits_filepath.split('/')[-1]}"
 
     # Map must be in equatorial coordinates
     # COORDSYS definitions: G = galactic, E = ecliptic, C = celestial = equatorial
