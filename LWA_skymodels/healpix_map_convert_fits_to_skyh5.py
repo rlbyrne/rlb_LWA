@@ -16,6 +16,8 @@ def convert_fits_to_pyradiosky(fits_filepath, freq_mhz):
     coordsys = file_contents[1].header["COORDSYS"]
     file_contents.close()
 
+    history_str = f"From file {fits_filepath.split("/")[-1]}"
+
     # Map must be in equatorial coordinates
     # COORDSYS definitions: G = galactic, E = ecliptic, C = celestial = equatorial
     if coordsys != "C":
@@ -34,6 +36,7 @@ def convert_fits_to_pyradiosky(fits_filepath, freq_mhz):
             theta_eq, phi_eq = rot(theta_gal, phi_gal)
             # Interpolate map to new pixel locations
             map_data = hp.get_interp_val(map_data, theta_eq, phi_eq, nest=nest)
+            history_str = f"{history_str}, interpolated to equatorial frame"
         else:
             print("WARNING: Unknown coordsys. No reordering applied.")
 
@@ -51,6 +54,7 @@ def convert_fits_to_pyradiosky(fits_filepath, freq_mhz):
     skymodel.stokes[0, 0, :] = map_data * units.Kelvin
     skymodel.hpx_inds = np.arange(skymodel.Ncomponents)
     skymodel.spectral_type = "flat"
+    skymodel.history = history_str
 
     return skymodel
 
