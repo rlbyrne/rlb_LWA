@@ -70,7 +70,7 @@ if __name__ == "__main__":
     skymodel = convert_fits_to_pyradiosky(fits_filepath, 73.152)
     skymodel.check()
     skymodel.write_skyh5(
-        "/safepool/rbyrne/skymodels/mmode_maps_eastwood/ovro_lwa_sky_map_73.152MHz_equatorial.skyh5",
+        "/safepool/rbyrne/skymodels/ovro_lwa_sky_map_73.152MHz_equatorial.skyh5",
         run_check=True,
         clobber=True,
     )
