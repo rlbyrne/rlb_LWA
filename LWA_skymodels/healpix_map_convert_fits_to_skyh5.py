@@ -64,6 +64,7 @@ def convert_fits_to_pyradiosky(
             map_data, output_nside, pess=True, order_in=ordering
         )
         nside = output_nside
+        npix = hp.nside2npix(nside)
 
     skymodel = pyradiosky.SkyModel()
     skymodel.component_type = "healpix"
