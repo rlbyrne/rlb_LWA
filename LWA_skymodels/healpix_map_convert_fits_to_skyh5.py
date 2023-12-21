@@ -76,7 +76,7 @@ def convert_fits_to_pyradiosky(
     skymodel.Ncomponents = npix
     skymodel.freq_array = Quantity(np.full(skymodel.Nfreqs, freq_mhz * 1e6), "hertz")
     skymodel.stokes = Quantity(
-        np.zeros((4, skymodel.Nfreqs, skymodel.Ncomponents)), "Kelvin"
+        np.zeros((4, skymodel.Nfreqs, skymodel.Ncomponents)), "Kelvin"  # Assume units of Kelvin
     )
     skymodel.stokes[0, 0, :] = map_data * units.Kelvin
     skymodel.hpx_inds = np.arange(skymodel.Ncomponents)
@@ -91,10 +91,21 @@ if __name__ == "__main__":
     # Map is downloaded from https://lambda.gsfc.nasa.gov/product/foreground/fg_ovrolwa_radio_maps_get.html
 
     fits_filepath = "/safepool/rbyrne/skymodels/ovro_lwa_sky_map_73.152MHz.fits"
-    skymodel = convert_fits_to_pyradiosky(fits_filepath, 73.152, output_frame="equatorial", output_nside=512)
+    skymodel = convert_fits_to_pyradiosky(
+        fits_filepath,
+        73.152,
+        output_frame="equatorial",
+    )
     skymodel.check()
     skymodel.write_skyh5(
         "/safepool/rbyrne/skymodels/ovro_lwa_sky_map_73.152MHz_equatorial.skyh5",
+        run_check=True,
+        clobber=True,
+    )
+    skymodel.kelvin_to_jansky()  # Convert to units Jy/sr
+    skymodel.stokes *= 4.0 * np.pi / hp.nside2npix(skymodel.nside) # Convert from Jy/sr to Jy/pixel
+    skymodel.write_skyh5(
+        "/safepool/rbyrne/skymodels/ovro_lwa_sky_map_73.152MHz_equatorial_Jy.skyh5",
         run_check=True,
         clobber=True,
     )
