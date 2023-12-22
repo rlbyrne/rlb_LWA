@@ -1135,5 +1135,107 @@ def test_ssins_Nov20():
         )
 
 
+def test_ssins_Dec21():
+
+    date_stamp = "20230819"
+    files = os.listdir("/data09/xhall/2023-08-19_24hour_run")
+    freq_stamp = "73MHz"
+    start_time_stamp = "093003"
+    end_time_stamp = "093043"
+    files = [
+        file for file in files if file.startswith(date_stamp) and file.endswith(".ms")
+    ]
+    files = np.sort(
+        np.array(
+            [
+                f"/data09/xhall/2023-08-19_24hour_run/{file}"
+                for file in files
+                if (
+                    (int(file.split("_")[1]) >= int(start_time_stamp))
+                    and (int(file.split("_")[1]) <= int(end_time_stamp))
+                    and (freq_stamp in file)
+                )
+            ]
+        )
+    )
+    uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(files)
+    # offline_corr_nums = [79,150,201,224,229,215,221,242,246,272,294,299,332,334,33,34,37,38,41,42,44,92,51,21,190,154,56,29,28,222,126,127]
+    # offline_ants calculated with mapping.correlator_to_antname() on the development branch
+    offline_ants = [
+        "LWA041",
+        "LWA095",
+        "LWA111",
+        "LWA124",
+        "LWA128",
+        "LWA150",
+        "LWA178",
+        "LWA187",
+        "LWA191",
+        "LWA195",
+        "LWA204",
+        "LWA207",
+        "LWA218",
+        "LWA221",
+        "LWA255",
+        "LWA260",
+        "LWA263",
+        "LWA272",
+        "LWA280",
+        "LWA288",
+        "LWA292",
+        "LWA302",
+        "LWA303",
+        "LWA314",
+        "LWA319",
+        "LWA325",
+        "LWA336",
+        "LWA341",
+        "LWA352",
+        "LWA355",
+        "LWA365",
+        "LWA364",
+    ]
+    #LWA_preprocessing.flag_antennas(
+    #    uvd,
+    #    antenna_names=offline_ants,
+    #    inplace=True,
+    #)
+
+    # Flag with SSINS
+    n_unflagged_bls_start = np.size(uvd.flag_array) - np.sum(uvd.flag_array)
+    LWA_preprocessing.ssins_flagging(
+        uvd,
+        sig_thresh=15.0,  # Flagging threshold in std dev
+        inplace=True,
+        save_flags_filepath=None,
+        plot_no_flags=False,
+        plot_orig_flags=True,
+        plot_ssins_flags=True,
+        plot_save_dir="/data09/rbyrne/ssins_testing_Dec2023",
+        plot_file_prefix=f"{date_stamp}_{start_time_stamp}-{end_time_stamp}_{freq_stamp}",
+    )
+    n_unflagged_bls_end = np.size(uvd.flag_array) - np.sum(uvd.flag_array)
+    print(
+        f"SSINS flagging fraction: {(1 - float(n_unflagged_bls_end)/float(n_unflagged_bls_start)) * 100.0}%"
+    )
+
+    # Remove flags
+    uvd.flag_array[:, :, :, :] = False
+
+    # Save each time step individually
+    unique_times = np.unique(uvd.time_array)
+    for time_ind in range(len(unique_times)):
+        save_file_name = (files[time_ind].split("/")[-1]).split(".")[0]
+        save_file_name = f"{save_file_name}_ssins_no_flagging.ms"
+        uvd_timestep = uvd.select(times=unique_times[time_ind], inplace=False)
+        uvd_timestep.phase_to_time(np.mean(uvd_timestep.time_array))
+        uvd_timestep.reorder_pols(order="CASA", run_check=False)
+        uvd_timestep.write_ms(
+            f"/data09/rbyrne/ssins_testing_Dec2023/{save_file_name}",
+            flip_conj=True,
+            run_check=False,
+        )
+
+
 if __name__ == "__main__":
-    test_ssins_Nov20()
+    test_ssins_Dec21()
