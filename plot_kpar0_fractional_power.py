@@ -76,6 +76,7 @@ for run_ind, run_path in enumerate(run_filepaths):
     )
 
     plt.xscale("log")
+    plt.ylim([0,1e4])
     plt.xlabel("k-perpendicular (h/Mpc)")
     plt.ylabel("Power")
 plt.legend()
