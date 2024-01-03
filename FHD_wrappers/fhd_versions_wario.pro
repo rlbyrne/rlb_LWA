@@ -984,6 +984,23 @@ pro fhd_versions_wario
               save_uvf = 1
             end
 
+            'rlb_LWA_test_diffuse_Jan2024': begin
+              recalculate_all = 1
+              instrument = 'lwa'
+              import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+              calibrate_visibilities = 0
+              return_cal_visibilities = 0
+              model_visibilities = 1
+              diffuse_model = "/safepool/rbyrne/skymodels/ovro_lwa_sky_map_73.152MHz_equatorial_Jy_per_sr.skyh5"
+              diffuse_units_kelvin = 0
+              model_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
+              n_pol = 4
+              ;snapshot_healpix_export = 0
+              image_filter_fn = "filter_uv_optimal"
+              split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
+              save_uvf = 1
+            end
+
   endcase
 
   undefine, uvfits_subversion, uvfits_version
