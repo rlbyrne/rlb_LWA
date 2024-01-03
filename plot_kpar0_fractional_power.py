@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 plot_save_dir = "/home/rbyrne/kpar0_plots_Dec2023"
 run_filepaths = [
-    "/safepool/rbyrne/fhd_outputs/rlb_LWA_test_diffuse_debug_Kelvin_conversion_Jan2024",
+    "/safepool/rbyrne/fhd_outputs/fhd_rlb_LWA_test_diffuse_debug_Kelvin_conversion_Jan2024",
     "/safepool/rbyrne/fhd_outputs/fhd_rlb_LWA_test_diffuse_Kelvin_conversion_Dec2023",
 ]
 run_names = ["debug version", "main version"]
