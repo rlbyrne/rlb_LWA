@@ -103,9 +103,14 @@ if __name__ == "__main__":
         clobber=True,
     )
     skymodel.kelvin_to_jansky()  # Convert to units Jy/sr
+    skymodel.write_skyh5(
+        "/safepool/rbyrne/skymodels/ovro_lwa_sky_map_73.152MHz_equatorial_Jy_per_sr.skyh5",
+        run_check=True,
+        clobber=True,
+    )
     skymodel.stokes *= 4.0 * np.pi / hp.nside2npix(skymodel.nside) # Convert from Jy/sr to Jy/pixel
     skymodel.write_skyh5(
-        "/safepool/rbyrne/skymodels/ovro_lwa_sky_map_73.152MHz_equatorial_Jy.skyh5",
+        "/safepool/rbyrne/skymodels/ovro_lwa_sky_map_73.152MHz_equatorial_Jy_per_pixel.skyh5",
         run_check=True,
         clobber=True,
     )
