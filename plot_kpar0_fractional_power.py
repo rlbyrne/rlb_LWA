@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 
 plot_save_dir = "/home/rbyrne/kpar0_plots_Dec2023"
 run_filepaths = [
-    "/safepool/rbyrne/fhd_outputs/fhd_rlb_LWA_caltest_cyg_cas_Dec2023",
-    "/safepool/rbyrne/fhd_outputs/fhd_rlb_LWA_caltest_mmode_Dec2023",
+    "/safepool/rbyrne/fhd_outputs/fhd_rlb_LWA_test_diffuse_Dec2023",
+    "/safepool/rbyrne/fhd_outputs/fhd_rlb_LWA_test_diffuse_Kelvin_conversion_Dec2023",
 ]
-run_names = ["Cyg & Cas", "m-mode"]
+run_names = ["", "Kelvin conversion"]
 colors = ["tab:blue", "tab:orange", "tab:green"]
 
 for run_ind, run_path in enumerate(run_filepaths):
@@ -26,7 +26,7 @@ for run_ind, run_path in enumerate(run_filepaths):
     plt.xlabel("k-perpendicular (h/Mpc)")
     plt.ylabel("Fractional Power Recovered (%)")
 plt.legend()
-plt.savefig(f"{plot_save_dir}/frac_power_recovered.png")
+plt.savefig(f"{plot_save_dir}/frac_power_recovered_Kelvin_conv_test.png")
 plt.close()
 
 for run_ind, run_path in enumerate(run_filepaths):
@@ -79,5 +79,5 @@ for run_ind, run_path in enumerate(run_filepaths):
     plt.xlabel("k-perpendicular (h/Mpc)")
     plt.ylabel("Power")
 plt.legend()
-plt.savefig(f"{plot_save_dir}/kpar0_power.png")
+plt.savefig(f"{plot_save_dir}/kpar0_power_Kelvin_conv_test.png")
 plt.close()
