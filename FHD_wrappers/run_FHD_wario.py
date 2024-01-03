@@ -3,7 +3,7 @@ import shlex
 import os
 
 obsids_list = ["20230819_093023_73MHz"]
-versions_list = ["rlb_LWA_test_diffuse_Dec2023", "rlb_LWA_test_diffuse_Kelvin_conversion_Dec2023"]
+versions_list = ["rlb_LWA_test_diffuse_debug_Kelvin_conversion_Jan2024"]
 uvfits_path = "/safepool/rbyrne/pyuvsim_sims_Dec2023"
 outdir = "/safepool/rbyrne/fhd_outputs"
 run_fhd = True
