@@ -114,8 +114,8 @@ def plot_kpar0_Jan3():
         plt.plot(
             k_edges_plot,
             power_plot,
-            color=colors[run_ind],
-            label=run_names[run_ind],
+            color=colors[file_ind],
+            label=run_names[file_ind],
         )
 
         plt.xscale("log")
