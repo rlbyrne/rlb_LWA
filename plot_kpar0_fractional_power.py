@@ -94,11 +94,11 @@ def plot_kpar0_Jan3():
 
     plot_save_dir = "/home/rbyrne/kpar0_plots_Dec2023"
     calibration_test_filepath = "/safepool/rbyrne/fhd_outputs/fhd_rlb_LWA_caltest_cyg_cas_Dec2023"
-    diffuse_model_test_filepath = "/safepool/rbyrne/fhd_outputs/fhd_rlb_LWA_test_diffuse_Dec2023"
+    diffuse_model_filepath = "/safepool/rbyrne/fhd_outputs/fhd_rlb_LWA_test_diffuse_Jan2024"
     plot_files = [
         f"{calibration_test_filepath}/ps/data/1d_binning/20230819_093023_73MHz__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_k0power.idlsave",
         f"{calibration_test_filepath}/ps/data/1d_binning/20230819_093023_73MHz__gridded_uvf_noimgclip_model_xx_dft_averemove_swbh_dencorr_k0power.idlsave",
-        f"{diffuse_model_test_filepath}/ps/data/1d_binning/20230819_093023_73MHz__gridded_uvf_noimgclip_model_xx_dft_averemove_swbh_dencorr_k0power.idlsave",
+        f"{diffuse_model_filepath}/ps/data/1d_binning/20230819_093023_73MHz__gridded_uvf_noimgclip_model_xx_dft_averemove_swbh_dencorr_k0power.idlsave",
     ]
     run_names = ["calibrated data", "point source model", "model with diffuse"]
     colors = ["tab:blue", "tab:orange", "tab:green"]
