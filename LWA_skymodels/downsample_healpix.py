@@ -13,7 +13,7 @@ print(diffuse_map.nside)
 
 use_nside = 512
 downsampled_map_data = hp.pixelfunc.ud_grade(
-    diffuse_map.stokes[0, 0, :].value, use_nside, pess=True, order_in=diffuse_map.ordering
+    diffuse_map.stokes[0, 0, :].value, use_nside, pess=True, order_in=diffuse_map.hpx_order
 )
 diffuse_map.nside = use_nside
 diffuse_map.Ncomponents = hp.nside2npix(use_nside)
