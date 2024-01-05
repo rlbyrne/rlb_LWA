@@ -127,6 +127,42 @@ def plot_kpar0_Jan3():
     plt.close()
 
 
+def compare_calibration_Jan4():
+
+    plot_save_dir = "/home/rbyrne/kpar0_plots_Dec2023"
+    filepath1 = "/safepool/rbyrne/fhd_outputs/fhd_rlb_LWA_caltest_cyg_cas_Jan2024"
+    filepath2 = "/safepool/rbyrne/fhd_outputs/fhd_rlb_LWA_caltest_cyg_cas_Dec2023"
+    plot_files = [
+        f"{filepath1}/ps/data/1d_binning/20230819_093023_73MHz__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_k0power.idlsave",
+        f"{filepath2}/ps/data/1d_binning/20230819_093023_73MHz__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_k0power.idlsave",
+    ]
+    run_names = ["new calibration", "old calibration"]
+    colors = ["tab:blue", "tab:orange", "tab:green"]
+
+    for file_ind, filename in enumerate(plot_files):
+
+        data = scipy.io.readsav(filename)["power"]
+        k_edges = scipy.io.readsav(filename)["k_edges"]
+        power_plot = np.repeat(data, 2)
+        k_edges_plot = np.concatenate(
+            ([k_edges[0]], np.repeat(k_edges[1:-1], 2), [k_edges[-1]])
+        )
+        plt.plot(
+            k_edges_plot,
+            power_plot,
+            color=colors[file_ind],
+            label=run_names[file_ind],
+        )
+
+        plt.xscale("log")
+        plt.yscale("log")
+        plt.xlabel("k-perpendicular (h/Mpc)")
+        plt.ylabel("Power")
+    plt.legend()
+    plt.savefig(f"{plot_save_dir}/kpar0_power_compare_calibration.png")
+    plt.close()
+
+
 if __name__ == "__main__":
 
-    plot_kpar0_Jan3()
+    compare_calibration_Jan4()
