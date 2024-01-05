@@ -8,7 +8,7 @@ catalog_path=/fast/rbyrne/skymodels
 #mpirun -n 20 python ${script_path} ${catalog_path}/Gasperin2020_cyg_cas.skyh5 ${beam_file} ${input_obs} ${output_path}/${obsname}_deGasperin_cyg_cas_sim.uvfits
 #mpirun -n 20 python ${script_path} ${catalog_path}/Gasperin2020_sources.skyh5 ${beam_file} ${input_obs} ${output_path}/${obsname}_deGasperin_sources_sim.uvfits
 #mpirun -n 20 python ${script_path} ${catalog_path}/FullVLSSCatalog.skyh5 ${beam_file} ${input_obs} ${output_path}/${obsname}_VLSS_sim.uvfits
-mpirun -n 15 python /home/rbyrne/rlb_LWA/LWA_data_preprocessing/generate_model_vis_diffuse.py ${catalog_path}/ovro_lwa_sky_map_73.152MHz_equatorial_nside512.skyh5 ${beam_file} ${input_obs} ${output_path}/${obsname}_mmode_sim.uvfits
+mpirun -n 15 python /home/rbyrne/rlb_LWA/LWA_data_preprocessing/generate_model_vis_diffuse.py ${catalog_path}/ovro_lwa_sky_map_73.152MHz_equatorial_nside128.skyh5 ${beam_file} ${input_obs} ${output_path}/${obsname}_mmode_sim.uvfits
 
 # Test Nivedita's beam
 #beam_file=/data03/rbyrne/LWA_10to100.beamfits
