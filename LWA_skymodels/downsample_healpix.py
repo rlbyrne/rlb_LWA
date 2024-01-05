@@ -1,6 +1,7 @@
 import numpy as np
 import healpy as hp
 from astropy.units import Quantity
+import astropy.units as units
 import pyradiosky
 import pyuvdata
 import pyuvsim
