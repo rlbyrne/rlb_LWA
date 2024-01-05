@@ -8,6 +8,7 @@ import pyuvsim
 from pyuvsim import mpi
 import sys
 import time
+import healpy as hp
 
 
 args = sys.argv
@@ -38,15 +39,26 @@ if rank == 0:
     diffuse_map = pyradiosky.SkyModel()
     diffuse_map.read_skyh5(diffuse_map_path)
     # Reformat the map with a spectral index
-    diffuse_map.spectral_type = "spectral_index"
-    diffuse_map.spectral_index = np.full(diffuse_map.Ncomponents, -0.8)
-    diffuse_map.reference_frequency = Quantity(
-        np.full(diffuse_map.Ncomponents, diffuse_map.freq_array[0].value), "Hz"
+    #diffuse_map.spectral_type = "spectral_index"
+    #diffuse_map.spectral_index = np.full(diffuse_map.Ncomponents, -0.8)
+    #diffuse_map.reference_frequency = Quantity(
+    #    np.full(diffuse_map.Ncomponents, diffuse_map.freq_array[0].value), "Hz"
+    #)
+    #diffuse_map._reference_frequency.required = True
+    #diffuse_map.freq_array = None
+
+    use_nside = 512
+    downsampled_map_data = hp.pixelfunc.ud_grade(
+        diffuse_map.stokes[0, 0, :].value, use_nside, pess=True, order_in=diffuse_map.ordering
     )
-    diffuse_map._reference_frequency.required = True
-    diffuse_map.freq_array = None
-    # Convert map to units of K
-    diffuse_map.jansky_to_kelvin()
+    diffuse_map.nside = use_nside
+    diffuse_map.Ncomponents = hp.nside2npix(use_nside)
+    diffuse_map.stokes = Quantity(
+        np.zeros((4, diffuse_map.Nfreqs, diffuse_map.Ncomponents)), "Kelvin"
+    )
+    diffuse_map.stokes[0, 0, :] = downsampled_map_data * units.Kelvin
+    diffuse_map.hpx_inds = np.arange(diffuse_map.Ncomponents)
+
     if not diffuse_map.check():
         print("Error: Diffuse map fails check.")
     # Format diffuse map to be pyuvsim-compatible
