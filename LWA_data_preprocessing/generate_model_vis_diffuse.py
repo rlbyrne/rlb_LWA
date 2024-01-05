@@ -37,7 +37,7 @@ if rank == 0:
     # Read and format diffuse
     diffuse_map = pyradiosky.SkyModel()
     diffuse_map.read_skyh5(diffuse_map_path)
-    diffuse_map.at_frequencies(Quantity(uv.freq_array, "Hz"))
+    diffuse_map.at_frequencies(Quantity(uv.freq_array[0, :], "Hz"))
     # Reformat the map with a spectral index
     #diffuse_map.spectral_type = "spectral_index"
     #diffuse_map.spectral_index = np.full(diffuse_map.Ncomponents, -0.8)
