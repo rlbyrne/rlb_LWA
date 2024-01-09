@@ -2,8 +2,8 @@ import subprocess
 import shlex
 import os
 
-obsids_list = ["20230819_093023_73MHz"]
-versions_list = ["rlb_LWA_caltest_cyg_cas_Jan2024"]
+obsids_list = ["20230819_093023_73MHz_mmode_cyg_cas_sim"]
+versions_list = ["rlb_LWA_generate_ps_Jan2024"]
 uvfits_path = "/safepool/rbyrne/pyuvsim_sims_Dec2023"
 outdir = "/safepool/rbyrne/fhd_outputs"
 run_fhd = True
