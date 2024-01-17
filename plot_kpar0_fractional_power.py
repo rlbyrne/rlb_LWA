@@ -171,7 +171,7 @@ def plot_pyuvsim_mmode_Jan17():
     plot_files = [
         f"{calibration_test_filepath}/ps/data/1d_binning/20230819_093023_73MHz__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_k0power.idlsave",
         f"{calibration_test_filepath}/ps/data/1d_binning/20230819_093023_73MHz__gridded_uvf_noimgclip_model_xx_dft_averemove_swbh_dencorr_k0power.idlsave",
-        f"{diffuse_model_filepath}/ps/data/1d_binning/20230819_093023_73MHz__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_k0power.idlsave",
+        f"{diffuse_model_filepath}/ps/data/1d_binning/20230819_093023_73MHz_mmode_cyg_cas_sim__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_k0power.idlsave",
     ]
     run_names = ["calibrated data", "point source model", "model with diffuse"]
     colors = ["tab:blue", "tab:orange", "tab:green"]
