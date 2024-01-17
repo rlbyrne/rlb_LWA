@@ -251,7 +251,7 @@ def plot_modeling_methods_ratio_Jan17():
     data1 = scipy.io.readsav(plot_files[0])["power"]
     data2 = scipy.io.readsav(plot_files[1])["power"]
     ratio = data2/data1
-    k_edges = scipy.io.readsav(filename)["k_edges"]
+    k_edges = scipy.io.readsav(plot_files[0])["k_edges"]
     power_plot = np.repeat(ratio, 2)
     k_edges_plot = np.concatenate(
         ([k_edges[0]], np.repeat(k_edges[1:-1], 2), [k_edges[-1]])
