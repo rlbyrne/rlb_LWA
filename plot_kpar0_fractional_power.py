@@ -200,6 +200,42 @@ def plot_pyuvsim_mmode_Jan17():
     plt.close()
 
 
+def compare_modeling_methods_Jan17():
+
+    plot_save_dir = "/home/rbyrne/kpar0_plots_Dec2023"
+    fhd_modeling_filepath = "/safepool/rbyrne/fhd_outputs/fhd_rlb_LWA_test_diffuse_Jan2024"
+    pyuvsim_modeling_filepath = "/safepool/rbyrne/fhd_outputs/fhd_rlb_LWA_generate_ps_Jan2024"
+    plot_files = [
+        f"{fhd_modeling_filepath}/ps/data/1d_binning/20230819_093023_73MHz__gridded_uvf_noimgclip_model_xx_dft_averemove_swbh_dencorr_k0power.idlsave",
+        f"{pyuvsim_modeling_filepath}/ps/data/1d_binning/20230819_093023_73MHz_mmode_cyg_cas_sim__gridded_uvf_noimgclip_dirty_xx_dft_averemove_swbh_dencorr_k0power.idlsave",
+    ]
+    run_names = ["FHD sim, diffuse + cyg&cas", "pyuvsim sim, diffuse + cyg&cas"]
+    colors = ["tab:blue", "tab:orange", "tab:green"]
+
+    for file_ind, filename in enumerate(plot_files):
+
+        data = scipy.io.readsav(filename)["power"]
+        k_edges = scipy.io.readsav(filename)["k_edges"]
+        power_plot = np.repeat(data, 2)
+        k_edges_plot = np.concatenate(
+            ([k_edges[0]], np.repeat(k_edges[1:-1], 2), [k_edges[-1]])
+        )
+        plt.plot(
+            k_edges_plot,
+            power_plot,
+            color=colors[file_ind],
+            label=run_names[file_ind],
+        )
+
+        plt.xscale("log")
+        plt.yscale("log")
+        plt.xlabel("k-perpendicular (h/Mpc)")
+        plt.ylabel("Power")
+    plt.legend()
+    plt.savefig(f"{plot_save_dir}/kpar0_power_compare_models_diffuse_with_cygcas.png")
+    plt.close()
+
+
 if __name__ == "__main__":
 
-    plot_pyuvsim_mmode_Jan17()
+    compare_modeling_methods_Jan17()
