@@ -259,8 +259,8 @@ def plot_modeling_methods_ratio_Jan17():
     plt.plot(
         k_edges_plot,
         power_plot,
-        color=colors[file_ind],
-        label=run_names[file_ind],
+        color=colors[0],
+        label=run_names[0],
     )
 
     plt.xscale("log")
