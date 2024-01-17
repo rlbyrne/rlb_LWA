@@ -264,7 +264,7 @@ def plot_modeling_methods_ratio_Jan17():
     )
 
     plt.xscale("log")
-    plt.yscale("log")
+    #plt.yscale("log")
     plt.xlabel("k-perpendicular (h/Mpc)")
     plt.ylabel("Power")
 
