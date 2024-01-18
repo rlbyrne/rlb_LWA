@@ -277,7 +277,7 @@ def plot_modeling_methods_ratio_Jan17():
 def compare_modeling_methods_cygcas_Jan17():
 
     plot_save_dir = "/home/rbyrne/kpar0_plots_Dec2023"
-    fhd_modeling_filepath = "/safepool/rbyrne/fhd_outputs/rlb_LWA_caltest_cyg_cas_Jan2024"
+    fhd_modeling_filepath = "/safepool/rbyrne/fhd_outputs/fhd_rlb_LWA_caltest_cyg_cas_Jan2024"
     pyuvsim_modeling_filepath = "/safepool/rbyrne/fhd_outputs/fhd_rlb_LWA_generate_ps_Jan2024"
     plot_files = [
         f"{fhd_modeling_filepath}/ps/data/1d_binning/20230819_093023_73MHz__gridded_uvf_noimgclip_model_xx_dft_averemove_swbh_dencorr_k0power.idlsave",
