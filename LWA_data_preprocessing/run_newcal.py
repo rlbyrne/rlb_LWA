@@ -311,5 +311,26 @@ def apply_antenna_flagging_and_recalibrate_Sept20():
     )
 
 
+def casa_calibration_comparison_Feb23():
+
+    data = pyuvdata.UVData()
+    data.read_ms("/data03/rbyrne/20231222/cal46.ms", data_column="DATA")
+    model = pyuvdata.UVData()
+    model.read_ms("/data03/rbyrne/20231222/cal46.ms", data_column="MODEL")
+
+    caldata_obj = calibration_wrappers.CalData()
+    caldata_obj.load_data(data, model)
+    calibration_wrappers.calibration_per_pol(
+        caldata_obj,
+        verbose=True,
+        log_file_path="/data03/rbyrne/20231222/newcal_calibration/calibration_log.txt",
+    )
+    uvcal = caldata_obj.convert_to_uvcal()
+    uvcal.write_calfits(
+        "/data03/rbyrne/20231222/newcal_calibration/cal46.calfits",
+        clobber=True,
+    )
+
+
 if __name__ == "__main__":
-    apply_antenna_flagging_and_recalibrate_Sept20()
+    casa_calibration_comparison_Feb23()
