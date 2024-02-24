@@ -316,7 +316,7 @@ def casa_calibration_comparison_Feb23():
     data = pyuvdata.UVData()
     data.read_ms("/data03/rbyrne/20231222/cal46.ms", data_column="DATA")
     model = pyuvdata.UVData()
-    model.read_ms("/data03/rbyrne/20231222/cal46.ms", data_column="MODEL")
+    model.read_ms("/data03/rbyrne/20231222/cal46.ms", data_column="MODEL_DATA")
 
     caldata_obj = calibration_wrappers.CalData()
     caldata_obj.load_data(data, model)
