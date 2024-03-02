@@ -331,6 +331,28 @@ def casa_calibration_comparison_Feb23():
         clobber=True,
     )
 
+def apply_calibration_Mar2():
+
+    cal = pyuvdata.UVCal()
+    cal.read("/data03/rbyrne/20231222/newcal_calibration/cal46.calfits")
+    filenames = [
+        "46time2",
+        "46time3",
+        "46time4",
+        "46time5",
+        "46time6",
+    ]
+    for file in filenames:
+        uv = pyuvdata.UVData()
+        uv.read_ms(f"/data03/rbyrne/20231222/{file}.ms")
+        pyuvdata.utils.uvcalibrate(uv, cal, inplace=True, time_check=False)
+        uv.reorder_pols(order="CASA", run_check=False)
+        uv.write_ms(
+            f"/data03/rbyrne/20231222/newcal_calibration/{file}_newcal.ms",
+            flip_conj=True,
+            run_check=False,
+        )
+
 
 if __name__ == "__main__":
-    casa_calibration_comparison_Feb23()
+    apply_calibration_Mar2()
