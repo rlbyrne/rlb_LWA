@@ -398,5 +398,70 @@ def apply_calibration_Mar18():
         )
 
 
+def test_single_time_Mar19():
+
+    data = pyuvdata.UVData()
+    data.read_ms("/data03/rbyrne/20231222/newcal_single_time/cal46_small_data.ms")
+    model = pyuvdata.UVData()
+    model.read_ms("/data03/rbyrne/20231222/newcal_single_time/cal46_small_model.ms")
+
+    caldata_obj = calibration_wrappers.CalData()
+    caldata_obj.load_data(data, model, min_cal_baseline_lambda=15)
+    calibration_wrappers.calibration_per_pol(
+        caldata_obj,
+        verbose=True,
+        log_file_path="/data03/rbyrne/20231222/newcal_single_time/calibration_logs/newcal_Mar19.txt",
+    )
+    uvcal = caldata_obj.convert_to_uvcal()
+    uvcal.write_calfits(
+        "/data03/rbyrne/20231222/newcal_single_time/cal46_small.calfits",
+        clobber=True,
+    )
+
+    # Apply calibration
+    data = pyuvdata.UVData()
+    data.read_ms("/data03/rbyrne/20231222/newcal_single_time/cal46_small_data.ms")
+    pyuvdata.utils.uvcalibrate(data, uvcal, inplace=True, time_check=False)
+    data.reorder_pols(order="CASA", run_check=False)
+    data.write_ms(
+        "/data03/rbyrne/20231222/newcal_single_time/cal46_small_newcal_calibrated.ms",
+        flip_conj=True,
+        run_check=False,
+    )
+
+
+def test_single_time_recalibrate_Mar19():
+
+    data = pyuvdata.UVData()
+    data.read_ms("/data03/rbyrne/20231222/newcal_single_time/cal46_small_casa_calibrated.ms")
+    model = pyuvdata.UVData()
+    model.read_ms("/data03/rbyrne/20231222/newcal_single_time/cal46_small_model.ms")
+
+    caldata_obj = calibration_wrappers.CalData()
+    caldata_obj.load_data(data, model, min_cal_baseline_lambda=15)
+    calibration_wrappers.calibration_per_pol(
+        caldata_obj,
+        verbose=True,
+        log_file_path="/data03/rbyrne/20231222/newcal_single_time/calibration_logs/newcal_recalibrate_Mar19.txt",
+    )
+    uvcal = caldata_obj.convert_to_uvcal()
+    uvcal.write_calfits(
+        "/data03/rbyrne/20231222/newcal_single_time/cal46_recalibrated_small.calfits",
+        clobber=True,
+    )
+
+    # Apply calibration
+    data = pyuvdata.UVData()
+    data.read_ms("/data03/rbyrne/20231222/newcal_single_time/cal46_small_casa_calibrated.ms")
+    pyuvdata.utils.uvcalibrate(data, uvcal, inplace=True, time_check=False)
+    data.reorder_pols(order="CASA", run_check=False)
+    data.write_ms(
+        "/data03/rbyrne/20231222/newcal_single_time/cal46_small_newcal_recalibrated.ms",
+        flip_conj=True,
+        run_check=False,
+    )
+
+
 if __name__ == "__main__":
-    apply_calibration_Mar18()
+    test_single_time_Mar19()
+    test_single_time_recalibrate_Mar19()
