@@ -630,7 +630,7 @@ def debug_recalibration_Mar20():
         )
 
         iter = 1
-        while iter < 5:
+        while iter < 20:
             calibration_wrappers.calibration_per_pol(
                 caldata_obj,
                 verbose=False,
