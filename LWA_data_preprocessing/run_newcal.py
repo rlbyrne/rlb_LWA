@@ -619,10 +619,16 @@ def debug_recalibration_Mar20():
     model.select(frequencies=47851562.5, polarizations=-5)
 
     caldata_obj = calibration_wrappers.CalData()
-    caldata_obj.load_data(data, model, min_cal_baseline_lambda=15, gain_init_to_vis_ratio=False, lambda_val=0.0)
+    caldata_obj.load_data(
+        data,
+        model,
+        min_cal_baseline_lambda=15,
+        gain_init_to_vis_ratio=False,
+        lambda_val=0.0
+    )
 
+    iter = 1
     while iter < 5:
-        iter = 1
         calibration_wrappers.calibration_per_pol(
             caldata_obj,
             verbose=False,
