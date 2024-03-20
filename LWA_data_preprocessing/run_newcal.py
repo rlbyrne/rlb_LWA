@@ -633,6 +633,7 @@ def debug_recalibration_Mar20():
             caldata_obj,
             verbose=False,
             maxiter=1,
+            parallel=False,
         )
         calibrated_cost = cost_function_calculations.cost_function_single_pol(
             caldata_obj.gains[:, 0, 0],
