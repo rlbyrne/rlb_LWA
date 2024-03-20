@@ -635,10 +635,10 @@ def debug_recalibration_Mar20():
             maxiter=1,
         )
         calibrated_cost = cost_function_calculations.cost_function_single_pol(
-            caldata_obj.gains[:, 0, use_pol],
-            caldata_obj.model_visibilities[0, :, 0, use_pol],
-            caldata_obj.data_visibilities[0, :, 0, use_pol],
-            caldata_obj.visibility_weights[0, :, 0, use_pol],
+            caldata_obj.gains[:, 0, 0],
+            caldata_obj.model_visibilities[0, :, 0, 0],
+            caldata_obj.data_visibilities[0, :, 0, 0],
+            caldata_obj.visibility_weights[0, :, 0, 0],
             caldata_obj.gains_exp_mat_1,
             caldata_obj.gains_exp_mat_2,
             caldata_obj.lambda_val,
