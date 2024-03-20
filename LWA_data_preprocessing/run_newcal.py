@@ -611,7 +611,7 @@ def debug_recalibration_Mar20():
 
     data = pyuvdata.UVData()
     data.read_ms(
-        "/data03/rbyrne/20231222/newcal_single_time/cal46_small_casa_calibrated.ms"
+        "/data03/rbyrne/20231222/newcal_single_time/cal46_small_newcal_calibrated.ms"
     )
     data.select(frequencies=47851562.5, polarizations=-5)
     model = pyuvdata.UVData()
@@ -653,7 +653,7 @@ def debug_recalibration_Mar20():
         # Apply calibration
         data = pyuvdata.UVData()
         data.read_ms(
-            "/data03/rbyrne/20231222/newcal_single_time/cal46_small_casa_calibrated.ms"
+            "/data03/rbyrne/20231222/newcal_single_time/cal46_small_newcal_calibrated.ms"
         )
         data.select(frequencies=47851562.5, polarizations=-5)
         pyuvdata.utils.uvcalibrate(data, uvcal, inplace=True, time_check=False)
