@@ -626,7 +626,6 @@ def debug_recalibration_Mar20():
             model,
             min_cal_baseline_lambda=15,
             gain_init_to_vis_ratio=False,
-            lambda_val=0.0
         )
 
         iter = 1
