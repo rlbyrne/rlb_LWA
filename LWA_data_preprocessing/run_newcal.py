@@ -558,7 +558,7 @@ def compare_cost_values_Mar20():
     model.select(frequencies=47851562.5)
     data_recalibrated = pyuvdata.UVData()
     data_recalibrated.read_ms(
-        "/data03/rbyrne/20231222/newcal_single_time/cal46_small_newcal_recalibrated.ms"
+        "/data03/rbyrne/20231222/newcal_single_time/cal46_small_casa_calibrated.ms"
     )
     data_recalibrated.select(frequencies=47851562.5)
     data_calibrated = pyuvdata.UVData()
