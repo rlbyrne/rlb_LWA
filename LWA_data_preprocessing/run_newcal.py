@@ -607,5 +607,39 @@ def compare_cost_values_Mar20():
     print(f"Calibration run cost: {calibrated_cost}")
 
 
+def debug_recalibration_Mar20():
+
+    data = pyuvdata.UVData()
+    data.read_ms(
+        "/data03/rbyrne/20231222/newcal_single_time/cal46_small_casa_calibrated.ms"
+    )
+    data.select(frequencies=47851562.5, polarizations=-5)
+    model = pyuvdata.UVData()
+    model.read_ms("/data03/rbyrne/20231222/newcal_single_time/cal46_small_model.ms")
+    model.select(frequencies=47851562.5, polarizations=-5)
+
+    caldata_obj = calibration_wrappers.CalData()
+    caldata_obj.load_data(data, model, min_cal_baseline_lambda=15, gain_init_to_vis_ratio=False, lambda_val=0.0)
+
+    while iter < 5:
+        iter = 1
+        calibration_wrappers.calibration_per_pol(
+            caldata_obj,
+            verbose=False,
+            maxiter=1,
+        )
+        calibrated_cost = cost_function_calculations.cost_function_single_pol(
+            caldata_obj.gains[:, 0, use_pol],
+            caldata_obj.model_visibilities[0, :, 0, use_pol],
+            caldata_obj.data_visibilities[0, :, 0, use_pol],
+            caldata_obj.visibility_weights[0, :, 0, use_pol],
+            caldata_obj.gains_exp_mat_1,
+            caldata_obj.gains_exp_mat_2,
+            caldata_obj.lambda_val,
+        )
+        print(f"Iteration {iter}, cost: {calibrated_cost}")
+        iter += 1
+
+
 if __name__ == "__main__":
-    compare_cost_values_Mar20()
+    debug_recalibration_Mar20()
