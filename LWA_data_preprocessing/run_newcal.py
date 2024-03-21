@@ -697,6 +697,7 @@ def test_calibration_convergence():
         caldata_obj.lambda_val,
     )
     print(f"Newcal cost: {calibrated_cost}")
+    print(np.shape(caldata_obj.gains))
 
     # Compare to recalibrated result:
     caldata_obj_recalibrated = calibration_wrappers.CalData()
@@ -707,6 +708,7 @@ def test_calibration_convergence():
         gain_init_calfile="/data03/rbyrne/20231222/newcal_single_time/cal46_recalibrated_small.calfits",
         lambda_val = 0,
     )
+    print(np.shape(caldata_obj_recalibrated.gains))
     caldata_obj.gains = caldata_obj_recalibrated.gains
     recalibrated_cost = cost_function_calculations.cost_function_single_pol(
         caldata_obj.gains[:, 0, 0],
