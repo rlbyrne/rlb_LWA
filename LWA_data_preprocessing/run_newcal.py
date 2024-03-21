@@ -659,6 +659,67 @@ def debug_recalibration_Mar20():
         pyuvdata.utils.uvcalibrate(data, uvcal, inplace=True, time_check=False)
 
 
+def test_calibration_convergence():
+
+    data = pyuvdata.UVData()
+    data.read_ms(
+        "/data03/rbyrne/20231222/newcal_single_time/cal46_small_data.ms"
+    )
+    data.select(frequencies=47851562.5, polarizations=-5)
+    model = pyuvdata.UVData()
+    model.read_ms("/data03/rbyrne/20231222/newcal_single_time/cal46_small_model.ms")
+    model.select(frequencies=47851562.5, polarizations=-5)
+
+    caldata_obj = calibration_wrappers.CalData()
+    caldata_obj.load_data(
+        data,
+        model,
+        min_cal_baseline_lambda=15,
+        gain_init_to_vis_ratio=True,
+        lambda_val = 0,
+    )
+
+    # Calibrate with newcal
+    calibration_wrappers.calibration_per_pol(
+        caldata_obj,
+        verbose=False,
+        parallel=False,
+    )
+
+    # Print resulting cost
+    calibrated_cost = cost_function_calculations.cost_function_single_pol(
+        caldata_obj.gains[:, 0, 0],
+        caldata_obj.model_visibilities[0, :, 0, 0],
+        caldata_obj.data_visibilities[0, :, 0, 0],
+        caldata_obj.visibility_weights[0, :, 0, 0],
+        caldata_obj.gains_exp_mat_1,
+        caldata_obj.gains_exp_mat_2,
+        caldata_obj.lambda_val,
+    )
+    print(f"Newcal cost: {calibrated_cost}")
+
+    # Compare to recalibrated result:
+    caldata_obj_recalibrated = calibration_wrappers.CalData()
+    caldata_obj_recalibrated.load_data(
+        data,
+        model,
+        min_cal_baseline_lambda=15,
+        gain_init_calfile="/data03/rbyrne/20231222/newcal_single_time/cal46_recalibrated_small.calfits",
+        lambda_val = 0,
+    )
+    caldata_obj.gains = caldata_obj_recalibrated.gains
+    recalibrated_cost = cost_function_calculations.cost_function_single_pol(
+        caldata_obj.gains[:, 0, 0],
+        caldata_obj.model_visibilities[0, :, 0, 0],
+        caldata_obj.data_visibilities[0, :, 0, 0],
+        caldata_obj.visibility_weights[0, :, 0, 0],
+        caldata_obj.gains_exp_mat_1,
+        caldata_obj.gains_exp_mat_2,
+        caldata_obj.lambda_val,
+    )
+    print(f"Cost with recalibrated gains: {recalibrated_cost}")
+
+
 
 if __name__ == "__main__":
-    debug_recalibration_Mar20()
+    test_calibration_convergence()
