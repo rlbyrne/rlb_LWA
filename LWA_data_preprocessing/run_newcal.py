@@ -722,6 +722,89 @@ def test_calibration_convergence():
     print(f"Cost with recalibrated gains: {recalibrated_cost}")
 
 
+def test_calibration_application():
+
+    data = pyuvdata.UVData()
+    data.read_ms(
+        "/data03/rbyrne/20231222/newcal_single_time/cal46_small_data.ms"
+    )
+    model = pyuvdata.UVData()
+    model.read_ms("/data03/rbyrne/20231222/newcal_single_time/cal46_small_model.ms")
+
+    caldata_obj = calibration_wrappers.CalData()
+    caldata_obj.load_data(
+        data,
+        model,
+        min_cal_baseline_lambda=15,
+        gain_init_to_vis_ratio=True,
+        lambda_val = 0,
+    )
+
+    # Calibrate with newcal
+    calibration_wrappers.calibration_per_pol(
+        caldata_obj,
+        verbose=False,
+        parallel=True,
+    )
+
+    # Print resulting cost
+    test_freq_channel = 96
+    test_pol_ind = 0
+    calibrated_cost = cost_function_calculations.cost_function_single_pol(
+        caldata_obj.gains[:, test_freq_channel, test_pol_ind],
+        caldata_obj.model_visibilities[0, :, test_freq_channel, test_pol_ind],
+        caldata_obj.data_visibilities[0, :, test_freq_channel, test_pol_ind],
+        caldata_obj.visibility_weights[0, :, test_freq_channel, test_pol_ind],
+        caldata_obj.gains_exp_mat_1,
+        caldata_obj.gains_exp_mat_2,
+        caldata_obj.lambda_val,
+    )
+    print(f"Newcal cost: {calibrated_cost}")
+
+    uvcal = caldata_obj.convert_to_uvcal()
+    uvcal.write_calfits(
+        "/data03/rbyrne/20231222/newcal_single_time/cal46_small_debug.calfits",
+        clobber=True,
+    )
+
+    # Apply calibration
+    data = pyuvdata.UVData()
+    data.read_ms("/data03/rbyrne/20231222/newcal_single_time/cal46_small_data.ms")
+    pyuvdata.utils.uvcalibrate(data, uvcal, inplace=True, time_check=False)
+    data.reorder_pols(order="CASA", run_check=False)
+    data.write_ms(
+        "/data03/rbyrne/20231222/newcal_single_time/cal46_small_newcal_calibrated_debug.ms",
+        flip_conj=True,
+        run_check=False,
+    )
+
+    # Reread calibrated data
+    data = pyuvdata.UVData()
+    data.read_ms(
+        "/data03/rbyrne/20231222/newcal_single_time/cal46_small_newcal_calibrated_debug.ms"
+    )
+    model = pyuvdata.UVData()
+    model.read_ms("/data03/rbyrne/20231222/newcal_single_time/cal46_small_model.ms")
+
+    caldata_obj = calibration_wrappers.CalData()
+    caldata_obj.load_data(
+        data,
+        model,
+        min_cal_baseline_lambda=15,
+        gain_init_to_vis_ratio=True,
+        lambda_val = 0,
+    )
+    calibrated_cost = cost_function_calculations.cost_function_single_pol(
+        caldata_obj.gains[:, test_freq_channel, test_pol_ind],
+        caldata_obj.model_visibilities[0, :, test_freq_channel, test_pol_ind],
+        caldata_obj.data_visibilities[0, :, test_freq_channel, test_pol_ind],
+        caldata_obj.visibility_weights[0, :, test_freq_channel, test_pol_ind],
+        caldata_obj.gains_exp_mat_1,
+        caldata_obj.gains_exp_mat_2,
+        caldata_obj.lambda_val,
+    )
+    print(f"Newcal cost, reread: {calibrated_cost}")
+
 
 if __name__ == "__main__":
-    test_calibration_convergence()
+    test_calibration_application()
