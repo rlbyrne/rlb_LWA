@@ -744,8 +744,8 @@ def test_calibration_application():
     calibration_wrappers.calibration_per_pol(
         caldata_obj,
         verbose=True,
-        parallel=True,
-        log_file_path="/data03/rbyrne/20231222/newcal_single_time/newcal_log.txt"
+        parallel=False,
+        log_file_path=None,
     )
 
     # Print resulting cost
