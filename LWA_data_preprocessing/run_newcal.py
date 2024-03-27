@@ -746,7 +746,11 @@ def test_calibration_application():
         verbose=True,
         parallel=False,
         log_file_path=None,
+        get_crosspol_phase=False,
     )
+
+    print("Calibration completed")
+    print("Evaluating cost")
 
     # Print resulting cost
     test_freq_channel = 96
