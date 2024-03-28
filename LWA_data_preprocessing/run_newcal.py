@@ -933,7 +933,7 @@ def test_calibration_full_band_Mar27():
     calibration_wrappers.calibration_per_pol(
         caldata_obj,
         verbose=True,
-        parallel=False,
+        parallel=True,
         log_file_path="/data03/rbyrne/20231222/newcal_single_time/newcal_log_Mar27.txt",
         get_crosspol_phase=True,
     )
