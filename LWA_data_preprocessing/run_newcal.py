@@ -873,18 +873,19 @@ def test_calibration_application_2():
     data = pyuvdata.UVData()
     data.read_ms("/data03/rbyrne/20231222/newcal_single_time/cal46_small_data.ms")
     pyuvdata.utils.uvcalibrate(data, uvcal, inplace=True, time_check=False)
-    #data.reorder_pols(order="CASA", run_check=False)
-    #data.write_ms(
-    #    "/data03/rbyrne/20231222/newcal_single_time/cal46_small_newcal_calibrated_debug.ms",
-    #    flip_conj=True,
-    #    run_check=False,
-    #)
+    data.reorder_pols(order="CASA", run_check=False)
+    data.write_ms(
+        "/data03/rbyrne/20231222/newcal_single_time/cal46_small_newcal_calibrated_debug.ms",
+        flip_conj=True,
+        run_check=False,
+        clobber=True,
+    )
 
     # Reread calibrated data
-    #data = pyuvdata.UVData()
-    #data.read_ms(
-    #    "/data03/rbyrne/20231222/newcal_single_time/cal46_small_newcal_calibrated_debug.ms"
-    #)
+    data = pyuvdata.UVData()
+    data.read_ms(
+        "/data03/rbyrne/20231222/newcal_single_time/cal46_small_newcal_calibrated_debug.ms"
+    )
     model = pyuvdata.UVData()
     model.read_ms("/data03/rbyrne/20231222/newcal_single_time/cal46_small_model.ms")
 
