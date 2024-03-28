@@ -861,8 +861,7 @@ def test_calibration_application_2():
         * np.matmul(caldata_obj.gains_exp_mat_2, np.conj(caldata_obj.gains[:, test_freq_channel, test_pol_ind]))
     )
     caldata_obj.data_visibilities[0, :, test_freq_channel, test_pol_ind] *= gains_expanded
-    print(np.min(caldata_obj.data_visibilities[0, :, test_freq_channel, test_pol_ind]))
-    print(np.max(caldata_obj.data_visibilities[0, :, test_freq_channel, test_pol_ind]))
+    print(np.sum(caldata_obj.data_visibilities[0, :, test_freq_channel, test_pol_ind]))
 
     uvcal = caldata_obj.convert_to_uvcal()
     uvcal.write_calfits(
@@ -908,8 +907,7 @@ def test_calibration_application_2():
     )
     print(f"Newcal cost, reread: {calibrated_cost}")
 
-    print(np.min(caldata_obj.data_visibilities[0, :, test_freq_channel, test_pol_ind]))
-    print(np.max(caldata_obj.data_visibilities[0, :, test_freq_channel, test_pol_ind]))
+    print(np.sum(caldata_obj.data_visibilities[0, :, test_freq_channel, test_pol_ind]))
 
 
 if __name__ == "__main__":
