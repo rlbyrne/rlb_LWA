@@ -894,7 +894,7 @@ def test_calibration_application_2():
         data,
         model,
         min_cal_baseline_lambda=15,
-        gain_init_to_vis_ratio=True,
+        gain_init_to_vis_ratio=False,
         lambda_val = 0,
     )
     calibrated_cost = cost_function_calculations.cost_function_single_pol(
