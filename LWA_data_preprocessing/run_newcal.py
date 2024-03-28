@@ -876,7 +876,7 @@ def test_calibration_application_2():
     data.reorder_pols(order="CASA", run_check=False)
     data.write_ms(
         "/data03/rbyrne/20231222/newcal_single_time/cal46_small_newcal_calibrated_debug.ms",
-        flip_conj=True,
+        flip_conj=False,
         run_check=False,
         clobber=True,
     )
