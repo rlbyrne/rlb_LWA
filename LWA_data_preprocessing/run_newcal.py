@@ -938,6 +938,23 @@ def test_calibration_full_band_Mar27():
         get_crosspol_phase=True,
     )
 
+    print("Calibration completed")
+    print("Evaluating cost")
+
+    # Print resulting cost
+    test_freq_channel = 96
+    test_pol_ind = 0
+    calibrated_cost = cost_function_calculations.cost_function_single_pol(
+        caldata_obj.gains[:, test_freq_channel, test_pol_ind],
+        caldata_obj.model_visibilities[0, :, test_freq_channel, test_pol_ind],
+        caldata_obj.data_visibilities[0, :, test_freq_channel, test_pol_ind],
+        caldata_obj.visibility_weights[0, :, test_freq_channel, test_pol_ind],
+        caldata_obj.gains_exp_mat_1,
+        caldata_obj.gains_exp_mat_2,
+        caldata_obj.lambda_val,
+    )
+    print(f"Newcal cost: {calibrated_cost}")
+
     uvcal = caldata_obj.convert_to_uvcal()
     uvcal.write_calfits(
         "/data03/rbyrne/20231222/newcal_single_time/cal46_small.calfits",
