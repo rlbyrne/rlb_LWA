@@ -974,5 +974,26 @@ def test_calibration_full_band_Mar27():
     )
 
 
+def casa_calibration_comparison_Mar28():
+
+    data = pyuvdata.UVData()
+    data.read_ms("/data03/rbyrne/20231222/cal46.ms", data_column="DATA")
+    model = pyuvdata.UVData()
+    model.read_ms("/data03/rbyrne/20231222/cal46.ms", data_column="MODEL_DATA")
+
+    caldata_obj = calibration_wrappers.CalData()
+    caldata_obj.load_data(data, model, min_cal_baseline_lambda=15)
+    calibration_wrappers.calibration_per_pol(
+        caldata_obj,
+        verbose=True,
+        log_file_path="/data03/rbyrne/20231222/newcal_calibration/calibration_log_Mar28.txt",
+    )
+    uvcal = caldata_obj.convert_to_uvcal()
+    uvcal.write_calfits(
+        "/data03/rbyrne/20231222/newcal_calibration/cal46_min_bl_15.calfits",
+        clobber=True,
+    )
+
+
 if __name__ == "__main__":
-    test_calibration_full_band_Mar27()
+    casa_calibration_comparison_Mar28()
