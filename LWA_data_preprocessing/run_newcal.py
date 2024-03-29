@@ -645,7 +645,9 @@ def debug_recalibration_Mar20():
                 caldata_obj.gains_exp_mat_2,
                 caldata_obj.lambda_val,
             )
-            print(f"Recalibration iteration {recalibration_iter}, optimization iteration {iter}, cost: {calibrated_cost}")
+            print(
+                f"Recalibration iteration {recalibration_iter}, optimization iteration {iter}, cost: {calibrated_cost}"
+            )
             iter += 1
 
         uvcal = caldata_obj.convert_to_uvcal()
@@ -662,9 +664,7 @@ def debug_recalibration_Mar20():
 def test_calibration_convergence():
 
     data = pyuvdata.UVData()
-    data.read_ms(
-        "/data03/rbyrne/20231222/newcal_single_time/cal46_small_data.ms"
-    )
+    data.read_ms("/data03/rbyrne/20231222/newcal_single_time/cal46_small_data.ms")
     data.select(frequencies=47851562.5, polarizations=-5)
     model = pyuvdata.UVData()
     model.read_ms("/data03/rbyrne/20231222/newcal_single_time/cal46_small_model.ms")
@@ -676,7 +676,7 @@ def test_calibration_convergence():
         model,
         min_cal_baseline_lambda=15,
         gain_init_to_vis_ratio=True,
-        lambda_val = 0,
+        lambda_val=0,
     )
 
     # Calibrate with newcal
@@ -706,7 +706,7 @@ def test_calibration_convergence():
         model,
         min_cal_baseline_lambda=15,
         gain_init_calfile="/data03/rbyrne/20231222/newcal_single_time/cal46_recalibrated_small.calfits",
-        lambda_val = 0,
+        lambda_val=0,
     )
     print(np.shape(caldata_obj_recalibrated.gains))
     caldata_obj.gains = caldata_obj_recalibrated.gains
@@ -725,9 +725,7 @@ def test_calibration_convergence():
 def test_calibration_application():
 
     data = pyuvdata.UVData()
-    data.read_ms(
-        "/data03/rbyrne/20231222/newcal_single_time/cal46_small_data.ms"
-    )
+    data.read_ms("/data03/rbyrne/20231222/newcal_single_time/cal46_small_data.ms")
     model = pyuvdata.UVData()
     model.read_ms("/data03/rbyrne/20231222/newcal_single_time/cal46_small_model.ms")
 
@@ -737,7 +735,7 @@ def test_calibration_application():
         model,
         min_cal_baseline_lambda=15,
         gain_init_to_vis_ratio=True,
-        lambda_val = 0,
+        lambda_val=0,
     )
 
     # Calibrate with newcal
@@ -776,18 +774,18 @@ def test_calibration_application():
     data = pyuvdata.UVData()
     data.read_ms("/data03/rbyrne/20231222/newcal_single_time/cal46_small_data.ms")
     pyuvdata.utils.uvcalibrate(data, uvcal, inplace=True, time_check=False)
-    #data.reorder_pols(order="CASA", run_check=False)
-    #data.write_ms(
+    # data.reorder_pols(order="CASA", run_check=False)
+    # data.write_ms(
     #    "/data03/rbyrne/20231222/newcal_single_time/cal46_small_newcal_calibrated_debug.ms",
     #    flip_conj=True,
     #    run_check=False,
-    #)
+    # )
 
     # Reread calibrated data
-    #data = pyuvdata.UVData()
-    #data.read_ms(
+    # data = pyuvdata.UVData()
+    # data.read_ms(
     #    "/data03/rbyrne/20231222/newcal_single_time/cal46_small_newcal_calibrated_debug.ms"
-    #)
+    # )
     model = pyuvdata.UVData()
     model.read_ms("/data03/rbyrne/20231222/newcal_single_time/cal46_small_model.ms")
 
@@ -797,7 +795,7 @@ def test_calibration_application():
         model,
         min_cal_baseline_lambda=15,
         gain_init_to_vis_ratio=True,
-        lambda_val = 0,
+        lambda_val=0,
     )
     calibrated_cost = cost_function_calculations.cost_function_single_pol(
         caldata_obj.gains[:, test_freq_channel, test_pol_ind],
@@ -814,9 +812,7 @@ def test_calibration_application():
 def test_calibration_application_2():
 
     data = pyuvdata.UVData()
-    data.read_ms(
-        "/data03/rbyrne/20231222/newcal_single_time/cal46_small_data.ms"
-    )
+    data.read_ms("/data03/rbyrne/20231222/newcal_single_time/cal46_small_data.ms")
     model = pyuvdata.UVData()
     model.read_ms("/data03/rbyrne/20231222/newcal_single_time/cal46_small_model.ms")
 
@@ -826,7 +822,7 @@ def test_calibration_application_2():
         model,
         min_cal_baseline_lambda=15,
         gain_init_to_vis_ratio=True,
-        lambda_val = 0,
+        lambda_val=0,
     )
 
     # Calibrate with newcal
@@ -856,11 +852,16 @@ def test_calibration_application_2():
     print(f"Newcal cost: {calibrated_cost}")
 
     # Apply calibration
-    gains_expanded = (
-        np.matmul(caldata_obj.gains_exp_mat_1, caldata_obj.gains[:, test_freq_channel, test_pol_ind])
-        * np.matmul(caldata_obj.gains_exp_mat_2, np.conj(caldata_obj.gains[:, test_freq_channel, test_pol_ind]))
+    gains_expanded = np.matmul(
+        caldata_obj.gains_exp_mat_1,
+        caldata_obj.gains[:, test_freq_channel, test_pol_ind],
+    ) * np.matmul(
+        caldata_obj.gains_exp_mat_2,
+        np.conj(caldata_obj.gains[:, test_freq_channel, test_pol_ind]),
     )
-    caldata_obj.data_visibilities[0, :, test_freq_channel, test_pol_ind] *= gains_expanded
+    caldata_obj.data_visibilities[
+        0, :, test_freq_channel, test_pol_ind
+    ] *= gains_expanded
     print(np.sum(caldata_obj.data_visibilities[0, :, test_freq_channel, test_pol_ind]))
 
     uvcal = caldata_obj.convert_to_uvcal()
@@ -895,7 +896,7 @@ def test_calibration_application_2():
         model,
         min_cal_baseline_lambda=15,
         gain_init_to_vis_ratio=False,
-        lambda_val = 0,
+        lambda_val=0,
     )
     calibrated_cost = cost_function_calculations.cost_function_single_pol(
         caldata_obj.gains[:, test_freq_channel, test_pol_ind],
@@ -914,9 +915,7 @@ def test_calibration_application_2():
 def test_calibration_full_band_Mar27():
 
     data = pyuvdata.UVData()
-    data.read_ms(
-        "/data03/rbyrne/20231222/newcal_single_time/cal46_small_data.ms"
-    )
+    data.read_ms("/data03/rbyrne/20231222/newcal_single_time/cal46_small_data.ms")
     model = pyuvdata.UVData()
     model.read_ms("/data03/rbyrne/20231222/newcal_single_time/cal46_small_model.ms")
 
@@ -926,7 +925,7 @@ def test_calibration_full_band_Mar27():
         model,
         min_cal_baseline_lambda=15,
         gain_init_to_vis_ratio=True,
-        lambda_val = 100,
+        lambda_val=100,
     )
 
     # Calibrate with newcal
@@ -995,5 +994,30 @@ def casa_calibration_comparison_Mar28():
     )
 
 
+def apply_calibration_Mar29():
+
+    cal = pyuvdata.UVCal()
+    cal.read("/data03/rbyrne/20231222/newcal_calibration/cal46_min_bl_15.calfits")
+    filenames = [
+        "46time1",
+        "46time2",
+        "46time3",
+        "46time4",
+        "46time5",
+        "46time6",
+    ]
+    for file in filenames:
+        uv = pyuvdata.UVData()
+        uv.read_ms(f"/data03/rbyrne/20231222/{file}.ms")
+        pyuvdata.utils.uvcalibrate(uv, cal, inplace=True, time_check=False)
+        uv.reorder_pols(order="CASA", run_check=False)
+        uv.write_ms(
+            f"/data03/rbyrne/20231222/newcal_calibration/{file}_newcal_min_bl_15.ms",
+            flip_conj=False,
+            run_check=False,
+            clobber=True,
+        )
+
+
 if __name__ == "__main__":
-    casa_calibration_comparison_Mar28()
+    apply_calibration_Mar29()
