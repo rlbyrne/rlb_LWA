@@ -1019,5 +1019,21 @@ def apply_calibration_Mar29():
         )
 
 
+def test_new_wrapper_Apr8():
+
+    calibration_wrappers.calibration_per_pol(
+        "/data03/rbyrne/20231222/cal46.ms",
+        "/data03/rbyrne/20231222/cal46.ms",
+        min_cal_baseline_lambda=15,
+        verbose=True,
+        log_file_path="/data03/rbyrne/20231222/newcal_calibration/calibration_log_Apr8.txt",
+    )
+    uvcal = caldata_obj.convert_to_uvcal()
+    uvcal.write_calfits(
+        "/data03/rbyrne/20231222/newcal_calibration/cal46_new_wrapper_test_Apr8.calfits",
+        clobber=True,
+    )
+
+
 if __name__ == "__main__":
-    apply_calibration_Mar29()
+    test_new_wrapper_Apr8()
