@@ -1034,5 +1034,17 @@ def test_new_wrapper_Apr8():
     )
 
 
+def test_uvcal_conversion():
+
+    data = pyuvdata.UVData()
+    data.read_ms("/data03/rbyrne/20231222/cal46.ms", data_column="DATA")
+    model = pyuvdata.UVData()
+    model.read_ms("/data03/rbyrne/20231222/cal46.ms", data_column="MODEL_DATA")
+
+    caldata_obj = calibration_wrappers.CalData()
+    caldata_obj.load_data(data, model, min_cal_baseline_lambda=15)
+    uvcal = caldata_obj.convert_to_uvcal()
+
+
 if __name__ == "__main__":
-    test_new_wrapper_Apr8()
+    test_uvcal_conversion()
