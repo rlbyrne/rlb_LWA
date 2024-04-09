@@ -1046,5 +1046,20 @@ def test_uvcal_conversion():
     uvcal = caldata_obj.convert_to_uvcal()
 
 
+def test_crosspol_phase_flip_Apr9():
+
+    uvcal = calibration_wrappers.calibration_per_pol(
+        "/data03/rbyrne/20231222/cal46.ms",
+        "/data03/rbyrne/20231222/cal46.ms",
+        min_cal_baseline_lambda=15,
+        verbose=True,
+        log_file_path="/data03/rbyrne/20231222/newcal_calibration/calibration_log_Apr9.txt",
+    )
+    uvcal.write_calfits(
+        "/data03/rbyrne/20231222/newcal_calibration/cal46_flipped_phase_test_Apr9.calfits",
+        clobber=True,
+    )
+
+
 if __name__ == "__main__":
-    test_new_wrapper_Apr8()
+    test_crosspol_phase_flip_Apr9()
