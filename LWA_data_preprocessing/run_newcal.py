@@ -1061,5 +1061,32 @@ def test_crosspol_phase_flip_Apr9():
     )
 
 
+def apply_phase_flip_calibration_Apr9():
+
+    cal = pyuvdata.UVCal()
+    cal.read(
+        "/data03/rbyrne/20231222/newcal_calibration/cal46_flipped_phase_test_Apr9.calfits"
+    )
+    filenames = [
+        "46time1",
+        "46time2",
+        "46time3",
+        "46time4",
+        "46time5",
+        "46time6",
+    ]
+    for file in filenames:
+        uv = pyuvdata.UVData()
+        uv.read_ms(f"/data03/rbyrne/20231222/{file}.ms")
+        pyuvdata.utils.uvcalibrate(uv, cal, inplace=True, time_check=False)
+        uv.reorder_pols(order="CASA", run_check=False)
+        uv.write_ms(
+            f"/data03/rbyrne/20231222/newcal_calibration/{file}_newcal_phase_flip.ms",
+            flip_conj=False,
+            run_check=False,
+            clobber=True,
+        )
+
+
 if __name__ == "__main__":
-    test_crosspol_phase_flip_Apr9()
+    apply_phase_flip_calibration_Apr9()
