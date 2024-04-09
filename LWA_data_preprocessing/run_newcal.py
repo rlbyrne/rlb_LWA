@@ -1047,4 +1047,4 @@ def test_uvcal_conversion():
 
 
 if __name__ == "__main__":
-    test_uvcal_conversion()
+    test_new_wrapper_Apr8()
