@@ -1103,21 +1103,13 @@ def test_skymodels_Apr15():
 
     for use_skymodel in skymodel_names:
 
-        data = pyuvdata.UVData()
-        data.read_ms(data_file, data_column="DATA")
-        model = pyuvdata.UVData()
-        model.read_uvfits(
-            f"/data03/rbyrne/20231222/simulation_outputs/cal46_time11_{use_skymodel}.uvfits"
-        )
-
-        caldata_obj = calibration_wrappers.CalData()
-        caldata_obj.load_data(data, model, min_cal_baseline_lambda=10)
-        calibration_wrappers.calibration_per_pol(
-            caldata_obj,
+        uvcal = calibration_wrappers.calibration_per_pol(
+            data_file,
+            f"/data03/rbyrne/20231222/simulation_outputs/cal46_time11_{use_skymodel}.uvfits",
+            min_cal_baseline_lambda=10,
             verbose=True,
             log_file_path=f"/data03/rbyrne/20231222/skymodel_testing/calibration_log_{use_skymodel}_Apr16.txt",
         )
-        uvcal = caldata_obj.convert_to_uvcal()
         uvcal.write_calfits(
             f"/data03/rbyrne/20231222/skymodel_testing/newcal_{use_skymodel}.calfits",
             clobber=True,
