@@ -1133,6 +1133,8 @@ def test_skymodels_Apr15():
         uvcal = calibration_wrappers.calibration_per_pol(
             data_file,
             f"/data03/rbyrne/20231222/simulation_outputs/cal46_time11_{use_skymodel}.ms",
+            data_use_column="DATA",
+            model_use_column="DATA",
             min_cal_baseline_lambda=10,
             verbose=True,
             log_file_path=f"/data03/rbyrne/20231222/skymodel_testing/calibration_log_{use_skymodel}_Apr16.txt",
