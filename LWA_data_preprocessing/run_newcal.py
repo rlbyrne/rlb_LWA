@@ -1103,9 +1103,21 @@ def test_skymodels_Apr15():
 
     for use_skymodel in skymodel_names:
 
+        model = pyuvdata.UVData()
+        model.read_uvfits(
+            f"/data03/rbyrne/20231222/simulation_outputs/cal46_time11_{use_skymodel}.uvfits"
+        )
+        model.reorder_pols(order="CASA", run_check=False)
+        model.write_ms(
+            f"/data03/rbyrne/20231222/simulation_outputs/cal46_time11_{use_skymodel}.ms"
+            flip_conj=True,
+            run_check=False,
+            clobber=True,
+        )
+
         uvcal = calibration_wrappers.calibration_per_pol(
             data_file,
-            f"/data03/rbyrne/20231222/simulation_outputs/cal46_time11_{use_skymodel}.uvfits",
+            f"/data03/rbyrne/20231222/simulation_outputs/cal46_time11_{use_skymodel}.ms"
             min_cal_baseline_lambda=10,
             verbose=True,
             log_file_path=f"/data03/rbyrne/20231222/skymodel_testing/calibration_log_{use_skymodel}_Apr16.txt",
