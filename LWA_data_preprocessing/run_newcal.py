@@ -1088,7 +1088,7 @@ def apply_phase_flip_calibration_Apr9():
         )
 
 
-def test_skymodels_Apr15():
+def flip_model_conjugation_Apr16():
 
     skymodel_names = [
         "cyg_cas_sim",
@@ -1099,7 +1099,6 @@ def test_skymodels_Apr15():
         "mmode_with_cyg_cas_sim",
         "mmode_with_deGasperin_cyg_cas_sim",
     ]
-    data_file = "/data03/rbyrne/20231222/simulation_outputs/cal46_time11.ms"
 
     for use_skymodel in skymodel_names:
 
@@ -1114,6 +1113,22 @@ def test_skymodels_Apr15():
             run_check=False,
             clobber=True,
         )
+
+
+def test_skymodels_Apr15():
+
+    skymodel_names = [
+        "cyg_cas_sim",
+        "deGasperin_cyg_cas_sim",
+        "deGasperin_cyg_cas_sim_NMbeam",
+        "deGasperin_sources_sim",
+        "VLSS_sim",
+        "mmode_with_cyg_cas_sim",
+        "mmode_with_deGasperin_cyg_cas_sim",
+    ]
+    data_file = "/data03/rbyrne/20231222/simulation_outputs/cal46_time11.ms"
+
+    for use_skymodel in skymodel_names:
 
         uvcal = calibration_wrappers.calibration_per_pol(
             data_file,
@@ -1135,4 +1150,4 @@ def test_skymodels_Apr15():
 
 
 if __name__ == "__main__":
-    test_skymodels_Apr15()
+    flip_model_conjugation_Apr16()
