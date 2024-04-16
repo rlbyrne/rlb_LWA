@@ -1150,4 +1150,4 @@ def test_skymodels_Apr15():
 
 
 if __name__ == "__main__":
-    flip_model_conjugation_Apr16()
+    test_skymodels_Apr15()
