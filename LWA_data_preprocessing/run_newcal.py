@@ -1088,5 +1088,47 @@ def apply_phase_flip_calibration_Apr9():
         )
 
 
+def test_skymodels_Apr15():
+
+    skymodel_names = [
+        "cyg_cas_sim",
+        "deGasperin_cyg_cas_sim",
+        "deGasperin_cyg_cas_sim_NMbeam",
+        "deGasperin_sources_sim",
+        "VLSS_sim",
+        "mmode_with_cyg_cas_sim",
+        "mmode_with_deGasperin_cyg_cas_sim",
+    ]
+    data_file = "/data03/rbyrne/20231222/simulation_outputs/cal46_time11.ms"
+
+    for use_skymodel in skymodel_names:
+
+        data = pyuvdata.UVData()
+        data.read_ms(data_file, data_column="DATA")
+        model = pyuvdata.UVData()
+        model.read_uvfits(
+            f"/data03/rbyrne/20231222/simulation_outputs/cal46_time11_{use_skymodel}.uvfits"
+        )
+
+        caldata_obj = calibration_wrappers.CalData()
+        caldata_obj.load_data(data, model, min_cal_baseline_lambda=10)
+        calibration_wrappers.calibration_per_pol(
+            caldata_obj,
+            verbose=True,
+            log_file_path=f"/data03/rbyrne/20231222/skymodel_testing/calibration_log_{use_skymodel}_Apr16.txt",
+        )
+        uvcal = caldata_obj.convert_to_uvcal()
+        uvcal.write_calfits(
+            f"/data03/rbyrne/20231222/skymodel_testing/newcal_{use_skymodel}.calfits",
+            clobber=True,
+        )
+        data = pyuvdata.UVData()
+        data.read_ms(data_file, data_column="DATA")
+        pyuvdata.utils.uvcalibrate(data, uvcal, inplace=True, time_check=False)
+        data.write_uvfits(
+            f"/data03/rbyrne/20231222/skymodel_testing/cal46_time11_newcal_{use_skymodel}.uvfits"
+        )
+
+
 if __name__ == "__main__":
-    apply_phase_flip_calibration_Apr9()
+    test_skymodels_Apr15()
