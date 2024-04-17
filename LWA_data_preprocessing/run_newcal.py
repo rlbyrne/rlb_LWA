@@ -1106,6 +1106,7 @@ def flip_model_conjugation_Apr16():
         model.read_uvfits(
             f"/data03/rbyrne/20231222/simulation_outputs/cal46_time11_{use_skymodel}.uvfits"
         )
+        model.data_array = np.conj(model.data_array)
         model.reorder_pols(order="CASA", run_check=False)
         model.write_ms(
             f"/data03/rbyrne/20231222/simulation_outputs/cal46_time11_{use_skymodel}.ms",
@@ -1152,4 +1153,5 @@ def test_skymodels_Apr15():
 
 
 if __name__ == "__main__":
+    flip_model_conjugation_Apr16()
     test_skymodels_Apr15()
