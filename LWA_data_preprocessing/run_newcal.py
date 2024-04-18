@@ -1160,7 +1160,7 @@ def test_orig_skymodel():
         data_file,
         data_file,
         data_use_column="DATA",
-        model_use_column="MODEL",
+        model_use_column="MODEL_DATA",
         min_cal_baseline_lambda=10,
         verbose=True,
         log_file_path=f"/data03/rbyrne/20231222/skymodel_testing/calibration_log_orig_skymodel_Apr17.txt",
