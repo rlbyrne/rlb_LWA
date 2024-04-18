@@ -1206,7 +1206,32 @@ def image_calibrated_data():
         )
 
 
+def test_pyuvsim_calibration_Apr18():
+
+    uvcal = calibration_wrappers.calibration_per_pol(
+        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj.ms",
+        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_cyg_cas_sim.ms",
+        data_use_column="DATA",
+        model_use_column="DATA",
+        min_cal_baseline_lambda=10,
+        verbose=True,
+        log_file_path=f"/data03/rbyrne/20231222/test_pyuvsim_modeling/calibration_log_Apr18.txt",
+    )
+    uvcal.write_calfits(
+        f"/data03/rbyrne/20231222/skymodel_testing/newcal_orig_skymodel.calfits",
+        clobber=True,
+    )
+    data = pyuvdata.UVData()
+    data.read_ms(
+        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj.ms",
+        data_column="DATA",
+    )
+    pyuvdata.utils.uvcalibrate(data, uvcal, inplace=True, time_check=False)
+    data.reorder_pols(order="CASA")
+    data.write_ms(
+        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_cyg_cas.ms"
+    )
+
+
 if __name__ == "__main__":
-    test_skymodels_Apr15()
-    test_orig_skymodel()
-    image_calibrated_data()
+    test_pyuvsim_calibration_Apr18()
