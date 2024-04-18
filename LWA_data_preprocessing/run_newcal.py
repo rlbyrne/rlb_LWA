@@ -1192,7 +1192,7 @@ def image_calibrated_data():
     ]
     for skymodel in skymodel_names:
         data = pyuvdata.UVData()
-        data.read_uvfits(f"{data_dir}/cal46_time11_newcal_{skymodel}")
+        data.read_uvfits(f"{data_dir}/cal46_time11_newcal_{skymodel}.uvfits")
         data.reorder_pols(order="CASA", run_check=False)
         data.write_ms(
             f"{data_dir}/cal46_time11_newcal_{skymodel}.ms",
@@ -1206,4 +1206,4 @@ def image_calibrated_data():
 
 
 if __name__ == "__main__":
-    test_orig_skymodel()
+    image_calibrated_data()
