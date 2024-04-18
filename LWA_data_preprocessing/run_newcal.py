@@ -1,6 +1,7 @@
 import numpy as np
 import pyuvdata
 import LWA_preprocessing
+import os
 from newcal import (
     calibration_wrappers,
     calibration_optimization,
@@ -1175,6 +1176,33 @@ def test_orig_skymodel():
     data.write_uvfits(
         f"/data03/rbyrne/20231222/skymodel_testing/cal46_time11_newcal_orig_skymodel.uvfits"
     )
+
+
+def image_calibrated_data():
+    data_dir = "/data03/rbyrne/20231222/skymodel_testing"
+    skymodel_names = [
+        "cyg_cas_sim",
+        "deGasperin_cyg_cas_sim",
+        "deGasperin_cyg_cas_sim_NMbeam",
+        "deGasperin_sources_sim",
+        "VLSS_sim",
+        "mmode_with_cyg_cas_sim",
+        "mmode_with_deGasperin_cyg_cas_sim",
+        "orig_skymodel",
+    ]
+    for skymodel in skymodel_names:
+        data = pyuvdata.UVData()
+        data.read_uvfits(f"{data_dir}/cal46_time11_newcal_{skymodel}")
+        data.reorder_pols(order="CASA", run_check=False)
+        data.write_ms(
+            f"{data_dir}/cal46_time11_newcal_{skymodel}.ms",
+            flip_conj=False,
+            run_check=False,
+            clobber=True,
+        )
+        os.system(
+            f"/opt/bin/wsclean -pol IV -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -taper-inner-tukey 30 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {data_dir}/wsclean_images/cal46_time11_newcal_{skymodel} {data_dir}/cal46_time11_newcal_{skymodel}.ms"
+        )
 
 
 if __name__ == "__main__":
