@@ -1152,6 +1152,30 @@ def test_skymodels_Apr15():
         )
 
 
+def test_orig_skymodel():
+
+    data_file = "/data03/rbyrne/20231222/simulation_outputs/cal46_time11.ms"
+
+    uvcal = calibration_wrappers.calibration_per_pol(
+        data_file,
+        data_file,
+        data_use_column="DATA",
+        model_use_column="MODEL",
+        min_cal_baseline_lambda=10,
+        verbose=True,
+        log_file_path=f"/data03/rbyrne/20231222/skymodel_testing/calibration_log_orig_skymodel_Apr17.txt",
+    )
+    uvcal.write_calfits(
+        f"/data03/rbyrne/20231222/skymodel_testing/newcal_orig_skymodel.calfits",
+        clobber=True,
+    )
+    data = pyuvdata.UVData()
+    data.read_ms(data_file, data_column="DATA")
+    pyuvdata.utils.uvcalibrate(data, uvcal, inplace=True, time_check=False)
+    data.write_uvfits(
+        f"/data03/rbyrne/20231222/skymodel_testing/cal46_time11_newcal_orig_skymodel.uvfits"
+    )
+
+
 if __name__ == "__main__":
-    flip_model_conjugation_Apr16()
-    test_skymodels_Apr15()
+    test_orig_skymodel()
