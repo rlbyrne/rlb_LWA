@@ -1194,6 +1194,7 @@ def image_calibrated_data():
         data = pyuvdata.UVData()
         data.read_uvfits(f"{data_dir}/cal46_time11_newcal_{skymodel}.uvfits")
         data.reorder_pols(order="CASA", run_check=False)
+        data.data_array = np.conj(data.data_array)  # Force conjugation
         data.write_ms(
             f"{data_dir}/cal46_time11_newcal_{skymodel}.ms",
             flip_conj=False,
@@ -1201,7 +1202,7 @@ def image_calibrated_data():
             clobber=True,
         )
         os.system(
-            f"/opt/bin/wsclean -pol IV -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -taper-inner-tukey 30 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {data_dir}/wsclean_images/cal46_time11_newcal_{skymodel} {data_dir}/cal46_time11_newcal_{skymodel}.ms"
+            f"/opt/bin/wsclean -pol IV -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 100 -taper-inner-tukey 30 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {data_dir}/wsclean_images/cal46_time11_newcal_{skymodel} {data_dir}/cal46_time11_newcal_{skymodel}.ms"
         )
 
 
