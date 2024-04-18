@@ -1207,4 +1207,6 @@ def image_calibrated_data():
 
 
 if __name__ == "__main__":
+    test_skymodels_Apr15()
+    test_orig_skymodel()
     image_calibrated_data()
