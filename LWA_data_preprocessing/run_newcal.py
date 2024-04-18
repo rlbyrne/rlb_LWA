@@ -1218,7 +1218,7 @@ def test_pyuvsim_calibration_Apr18():
         log_file_path=f"/data03/rbyrne/20231222/test_pyuvsim_modeling/calibration_log_Apr18.txt",
     )
     uvcal.write_calfits(
-        f"/data03/rbyrne/20231222/skymodel_testing/newcal_orig_skymodel.calfits",
+        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_cyg_cas.calfits",
         clobber=True,
     )
     data = pyuvdata.UVData()
