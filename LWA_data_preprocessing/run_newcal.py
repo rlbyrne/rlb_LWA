@@ -1244,13 +1244,13 @@ def convert_uvfits_to_ms_Apr19():
         "cal46_time11_conj_VLSS_sim",
     ]
     for use_file in filenames:
-        uv = pyuvdata.UVData()
-        uv.read_uvfits(f"{filedir}/{use_file}.uvfits")
-        uv.reorder_pols(order="CASA")
-        uv.write_ms(f"{filedir}/{use_file}.ms")
+        # uv = pyuvdata.UVData()
+        # uv.read_uvfits(f"{filedir}/{use_file}.uvfits")
+        # uv.reorder_pols(order="CASA")
+        # uv.write_ms(f"{filedir}/{use_file}.ms")
         # Image with WSClean
         os.system(
-            f"/opt/bin/wsclean -pol IV -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 100 -taper-inner-tukey 30 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {filedir}/{use_file} {filedir}/{use_file}.ms"
+            f"/opt/bin/wsclean -pol IV -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -taper-inner-tukey 30 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {filedir}/{use_file} {filedir}/{use_file}.ms"
         )
 
 
