@@ -7,10 +7,11 @@ import pyuvdata
 import pyuvsim
 
 
-diffuse_map_path = "/fast/rbyrne/skymodels/ovro_lwa_sky_map_73.152MHz.skyh5"
+diffuse_map_path = (
+    "/Users/ruby/Astro/mmode_maps_eastwood/ovro_lwa_sky_map_73.152MHz.skyh5"
+)
 diffuse_map = pyradiosky.SkyModel()
 diffuse_map.read_skyh5(diffuse_map_path)
-print(diffuse_map.nside)
 
 use_nside = 128
 downsampled_map_data = hp.pixelfunc.ud_grade(
@@ -28,7 +29,7 @@ diffuse_map.stokes[0, 0, :] = downsampled_map_data * units.Kelvin
 diffuse_map.hpx_inds = np.arange(diffuse_map.Ncomponents)
 diffuse_map.check()
 diffuse_map.write_skyh5(
-    "/safepool/rbyrne/skymodels/ovro_lwa_sky_map_73.152MHz_nside128.skyh5",
+    "/Users/ruby/Astro/mmode_maps_eastwood/ovro_lwa_sky_map_73.152MHz_nside128.skyh5",
     run_check=True,
     clobber=True,
 )
