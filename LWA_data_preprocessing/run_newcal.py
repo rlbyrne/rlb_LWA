@@ -1233,5 +1233,26 @@ def test_pyuvsim_calibration_Apr18():
     )
 
 
+def convert_uvfits_to_ms_Apr19():
+
+    filedir = "/data03/rbyrne/20231222/test_pyuvsim_modeling"
+    filenames = [
+        "cal46_time11_conj_deGasperin_cyg_cas_sim_NMbeam",
+        "cal46_time11_conj_deGasperin_cyg_cas_sim",
+        "cal46_time11_conj_deGasperin_sources_sim",
+        "cal46_time11_conj_mmode_sim",
+        "cal46_time11_conj_VLSS_sim",
+    ]
+    for use_file in filenames:
+        uv = pyuvdata.UVData()
+        uv.read_uvfits(f"{filedir}/{use_file}.uvfits")
+        uv.reorder_pols(order="CASA")
+        uv.write_ms(f"{filedir}/{use_file}.ms")
+        # Image with WSClean
+        os.system(
+            f"/opt/bin/wsclean -pol IV -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 100 -taper-inner-tukey 30 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {filedir}/{use_file} {filedir}/{use_file}.ms"
+        )
+
+
 if __name__ == "__main__":
-    test_pyuvsim_calibration_Apr18()
+    convert_uvfits_to_ms_Apr19()
