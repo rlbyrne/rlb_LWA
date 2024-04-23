@@ -11,7 +11,7 @@ catalog_path=/fast/rbyrne/skymodels
 
 # Run diffuse
 diffuse_script_path=/home/rbyrne/rlb_LWA/LWA_data_preprocessing/generate_model_vis_diffuse.py
-mpirun -n 15 python ${diffuse_script_path} ${catalog_path}/ovro_lwa_sky_map_73.152MHz_nside128.skyh5 ${beam_file} ${input_obs} ${output_path}/${obsname}_mmode_sim.uvfits
+mpirun -n 15 python ${diffuse_script_path} ${catalog_path}/ovro_lwa_sky_map_73.152MHz.skyh5 ${beam_file} ${input_obs} ${output_path}/${obsname}_mmode_2048_sim.uvfits
 
 # Test Nivedita's beam
 #nm_beam_file=/data03/rbyrne/LWA_10to100.beamfits
