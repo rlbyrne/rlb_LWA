@@ -10,6 +10,7 @@ import sys
 def convert_fits_to_pyradiosky(
     fits_filepath,
     freq_mhz,
+    input_frame=None,  # Options are "galactic", "equatorial", or None. Overwrites file coordsys if not None.
     output_frame=None,  # Options are "galactic", "equatorial", or None. If None, input frame is preserved.
     output_nside=None,  # If None, input nside is preserved
 ):
@@ -23,6 +24,21 @@ def convert_fits_to_pyradiosky(
     file_contents.close()
 
     history_str = f"From file {fits_filepath.split('/')[-1]}"
+
+    if input_frame is not None:
+        if input_frame == "equatorial":
+            use_coordsys = "C"
+        elif input_frame == "galactic":
+            use_coordsys = "G"
+        else:
+            sys.exit(
+                "ERROR: Unsupported output_frame. Options are equatorial, galactic, or None."
+            )
+        if use_coordsys != coordsys:
+            print(
+                f"WARNING: Input coordinate system mismatch. Assuming {input_frame} coordinates; ignoring file contents."
+            )
+            coordsys = use_coordsys
 
     if output_frame is not None:
         # COORDSYS definitions: G = galactic, E = ecliptic, C = celestial = equatorial
@@ -87,6 +103,33 @@ def convert_fits_to_pyradiosky(
     return skymodel
 
 
+def downsample_healpix(input_map_path, output_map_path, output_nside, clobber=True):
+
+    diffuse_map = pyradiosky.SkyModel()
+    diffuse_map.read_skyh5(input_map_path)
+
+    output_nside = 128
+    downsampled_map_data = hp.pixelfunc.ud_grade(
+        diffuse_map.stokes[0, 0, :].value,
+        output_nside,
+        pess=True,
+        order_in=diffuse_map.hpx_order,
+    )
+    diffuse_map.nside = output_nside
+    diffuse_map.Ncomponents = hp.nside2npix(output_nside)
+    diffuse_map.stokes = Quantity(
+        np.zeros((4, diffuse_map.Nfreqs, diffuse_map.Ncomponents)), "Kelvin"
+    )
+    diffuse_map.stokes[0, 0, :] = downsampled_map_data * units.Kelvin
+    diffuse_map.hpx_inds = np.arange(diffuse_map.Ncomponents)
+    diffuse_map.check()
+    diffuse_map.write_skyh5(
+        output_map_path,
+        run_check=True,
+        clobber=clobber,
+    )
+
+
 if __name__ == "__main__":
 
     # Map is downloaded from https://lambda.gsfc.nasa.gov/product/foreground/fg_ovrolwa_radio_maps_get.html
@@ -97,6 +140,7 @@ if __name__ == "__main__":
     skymodel = convert_fits_to_pyradiosky(
         fits_filepath,
         46.992,
+        input_frame="equqtorial",  # Ignore coordsys provied in the fits file
         output_frame="equatorial",
     )
     skymodel.check()
@@ -104,6 +148,11 @@ if __name__ == "__main__":
         "/Users/ruby/Astro/mmode_maps_eastwood/ovro_lwa_sky_map_46.992MHz.skyh5",
         run_check=True,
         clobber=True,
+    )
+    downsample_healpix(
+        "/Users/ruby/Astro/mmode_maps_eastwood/ovro_lwa_sky_map_46.992MHz.skyh5",
+        "/Users/ruby/Astro/mmode_maps_eastwood/ovro_lwa_sky_map_46.992MHz_nside128.skyh5",
+        128,
     )
     """
     skymodel.kelvin_to_jansky()  # Convert to units Jy/sr
