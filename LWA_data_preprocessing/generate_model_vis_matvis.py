@@ -64,7 +64,8 @@ def run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
 
     # Run simulation
     vis_full = np.zeros(
-        (uvd.freq_array.size, 1, len(antpos), len(antpos)), dtype=np.complex64
+        (uvd.freq_array.size, len([lst]), 2, 2, len(antpos), len(antpos)),
+        dtype=np.complex64,
     )
 
     for components in tqdm(
@@ -95,7 +96,7 @@ def run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
                 lsts=np.array([lst.to_value("rad")]),
                 beams=beams,
                 beam_idx=beam_ids,
-                polarized=False,
+                polarized=True,
                 precision=2,
                 latitude=location.lat.rad,
                 use_gpu=False,
@@ -103,17 +104,18 @@ def run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
 
     uvd_out = pyuvdata.UVData.new(
         freq_array=uvd.freq_array,
-        polarization_array=["xx"],
+        polarization_array=np.array([-5, -7, -8, -6]),
         antenna_positions=uvdata_antpos,
         telescope_location=location,
         telescope_name="OVRO-LWA",
         times=np.array([obstime.jd]),
         antpairs=antpairs,
         data_array=vis_full.reshape(
-            (uvd.Nfreqs, 1, len(antpos) * len(antpos))
+            (uvd.Nfreqs, 4, len(antpos) * len(antpos))
         ).transpose([2, 0, 1]),
     )
     uvd_out.telescope_location = np.array(uvd_out.telescope_location)
+    uvd_out.reorder_pols(order="AIPS")
     uvd_out.phase_to_time(np.mean(uvd.time_array))
     uvd_out.check()
     uvd_out.write_uvfits(output_uvfits_path)
@@ -133,5 +135,7 @@ if __name__ == "__main__":
     map_path = "/Users/ruby/Astro/mmode_maps_eastwood/ovro_lwa_sky_map_46.992MHz_nside128.skyh5"
     beam_path = "/Users/ruby/Astro/rlb_LWA/LWAbeam_2015.fits"
     input_data_path = "/Users/ruby/Astro/cal46_time11_conj.ms"
-    output_uvfits_path = "/Users/ruby/Astro/cal46_time11_conj_mmode_matvis_sim.uvfits"
+    output_uvfits_path = (
+        "/Users/ruby/Astro/matvis_simulations/cal46_time11_conj_mmode_matvis_sim.uvfits"
+    )
     run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_path)
