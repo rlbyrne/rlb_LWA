@@ -32,7 +32,7 @@ def convert_fits_to_pyradiosky(
             use_coordsys = "G"
         else:
             sys.exit(
-                "ERROR: Unsupported output_frame. Options are equatorial, galactic, or None."
+                "ERROR: Unsupported input_frame. Options are equatorial, galactic, or None."
             )
         if use_coordsys != coordsys:
             print(
@@ -140,7 +140,7 @@ if __name__ == "__main__":
     skymodel = convert_fits_to_pyradiosky(
         fits_filepath,
         46.992,
-        input_frame="equqtorial",  # Ignore coordsys provied in the fits file
+        input_frame="equatorial",  # Ignore coordsys provied in the fits file
         output_frame="equatorial",
     )
     skymodel.check()
