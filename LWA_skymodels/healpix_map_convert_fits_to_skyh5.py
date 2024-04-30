@@ -62,7 +62,7 @@ def convert_fits_to_pyradiosky(
             theta_init, phi_init = hp.pixelfunc.pix2ang(
                 nside, np.arange(npix), nest=nest
             )
-            rot = hp.rotator.Rotator(coord=[coordsys, output_frame_code])
+            rot = hp.rotator.Rotator(coord=[output_frame_code, coordsys])
             theta_rot, phi_rot = rot(theta_init, phi_init)
             map_data = hp.get_interp_val(map_data, theta_rot, phi_rot, nest=nest)
             history_str = f"{history_str}, interpolated to {output_frame} frame"
@@ -140,7 +140,6 @@ if __name__ == "__main__":
     skymodel = convert_fits_to_pyradiosky(
         fits_filepath,
         46.992,
-        input_frame="equatorial",  # Ignore coordsys provied in the fits file
         output_frame="equatorial",
     )
     skymodel.check()
