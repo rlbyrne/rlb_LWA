@@ -23,7 +23,6 @@ def run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
     if uvd.telescope_name == "OVRO_MMA":  # Correct telescope location
         uvd.telescope_name = "OVRO-LWA"
         uvd.set_telescope_params(overwrite=True, warn=True)
-    uvd.select(frequencies=uvd.freq_array[0:2])  # For debugging, limit frequencies
     uvd.phase_to_time(np.mean(uvd.time_array))  # Phase data
     # Define antenna locations
     antpos, ants = uvd.get_ENU_antpos()
@@ -107,7 +106,7 @@ def run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
         polarization_array=np.array([-5, -7, -8, -6]),
         antenna_positions=uvdata_antpos,
         telescope_location=location,
-        telescope_name="OVRO-LWA",
+        telescope_name=uvd.telescope_name,
         times=np.array([obstime.jd]),
         antpairs=antpairs,
         data_array=vis_full.reshape(
@@ -118,8 +117,13 @@ def run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
     uvd_out.reorder_pols(order="AIPS")
     uvd_out.phase_to_time(np.mean(uvd.time_array))
     uvd_out.check()
+
+    # Save as uvfits
     uvd_out.write_uvfits(output_uvfits_path)
+
+    # Save as ms
     output_name = output_uvfits_path.split(".")[0]
+    uvd_out.reorder_pols(order="CASA")
     uvd_out.write_ms(f"{output_name}.ms", clobber=True)
 
 
@@ -132,10 +136,8 @@ if __name__ == "__main__":
         input_data_path = args[3]
         output_uvfits_path = args[4]
 
-    map_path = "/Users/ruby/Astro/mmode_maps_eastwood/ovro_lwa_sky_map_46.992MHz_nside128.skyh5"
+    map_path = "/Users/ruby/Astro/mmode_maps_eastwood/ovro_lwa_sky_map_46.992MHz.skyh5"
     beam_path = "/Users/ruby/Astro/rlb_LWA/LWAbeam_2015.fits"
     input_data_path = "/Users/ruby/Astro/cal46_time11_conj.ms"
-    output_uvfits_path = (
-        "/Users/ruby/Astro/matvis_simulations/cal46_time11_conj_mmode_matvis_sim.uvfits"
-    )
+    output_uvfits_path = "/Users/ruby/Astro/matvis_simulations/cal46_time11_conj_mmode_matvis_sim_nside2048.uvfits"
     run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_path)
