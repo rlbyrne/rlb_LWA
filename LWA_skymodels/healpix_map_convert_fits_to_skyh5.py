@@ -134,6 +134,13 @@ if __name__ == "__main__":
 
     # Map is downloaded from https://lambda.gsfc.nasa.gov/product/foreground/fg_ovrolwa_radio_maps_get.html
 
+    downsample_healpix(
+        "/fast/rbyrne/skymodels/ovro_lwa_sky_map_46.992MHz.skyh5",
+        "/fast/rbyrne/skymodels/ovro_lwa_sky_map_46.992MHz_nside1024.skyh5",
+        1024,
+    )
+
+    """
     fits_filepath = (
         "/Users/ruby/Astro/mmode_maps_eastwood/ovro_lwa_sky_map_46.992MHz.fits"
     )
@@ -153,7 +160,7 @@ if __name__ == "__main__":
         "/Users/ruby/Astro/mmode_maps_eastwood/ovro_lwa_sky_map_46.992MHz_nside128.skyh5",
         128,
     )
-    """
+
     skymodel.kelvin_to_jansky()  # Convert to units Jy/sr
     skymodel.write_skyh5(
         "/safepool/rbyrne/skymodels/ovro_lwa_sky_map_73.152MHz_equatorial_Jy_per_sr.skyh5",

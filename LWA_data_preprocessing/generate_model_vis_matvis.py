@@ -135,10 +135,10 @@ if __name__ == "__main__":
         input_data_path = args[3]
         output_uvfits_path = args[4]
 
-    map_path = "/fast/rbyrne/skymodels/ovro_lwa_sky_map_46.992MHz.skyh5"
+    map_path = "/fast/rbyrne/skymodels/ovro_lwa_sky_map_46.992MHz_nside1024.skyh5"
     beam_path = "/home/rbyrne/rlb_LWA/LWAbeam_2015.fits"
     input_data_path = (
         "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj.ms"
     )
-    output_uvfits_path = "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_matvis_sim_nside2048.uvfits"
+    output_uvfits_path = "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_matvis_sim_nside1024.uvfits"
     run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_path)
