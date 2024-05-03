@@ -119,7 +119,7 @@ def run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
     uvd_out.check()
 
     # Save as uvfits
-    uvd_out.write_uvfits(output_uvfits_path)
+    uvd_out.write_uvfits(output_uvfits_path, fix_autos=True)
 
     # Save as ms
     uvd_out.reorder_pols(order="CASA")
