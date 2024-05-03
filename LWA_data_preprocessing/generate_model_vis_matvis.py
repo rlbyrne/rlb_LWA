@@ -68,7 +68,7 @@ def run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
     )
 
     for components in tqdm(
-        np.array_split(np.arange(model.Ncomponents), 50), position=1, desc="Sources"
+        np.array_split(np.arange(model.Ncomponents), 5000), position=1, desc="Sources"
     ):
         m2 = model.select(component_inds=components, inplace=False)
         ra_new, dec_new = matvis.conversions.equatorial_to_eci_coords(
@@ -136,8 +136,10 @@ if __name__ == "__main__":
         input_data_path = args[3]
         output_uvfits_path = args[4]
 
-    map_path = "/Users/ruby/Astro/mmode_maps_eastwood/ovro_lwa_sky_map_46.992MHz.skyh5"
-    beam_path = "/Users/ruby/Astro/rlb_LWA/LWAbeam_2015.fits"
-    input_data_path = "/Users/ruby/Astro/cal46_time11_conj.ms"
-    output_uvfits_path = "/Users/ruby/Astro/matvis_simulations/cal46_time11_conj_mmode_matvis_sim_nside2048.uvfits"
+    map_path = "/fast/rbyrne/skymodels/ovro_lwa_sky_map_46.992MHz.skyh5"
+    beam_path = "/home/rbyrne/rlb_LWA/LWAbeam_2015.fits"
+    input_data_path = (
+        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj.ms"
+    )
+    output_uvfits_path = "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_matvis_sim_nside2048.uvfits"
     run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_path)
