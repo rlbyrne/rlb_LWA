@@ -123,7 +123,7 @@ def run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
 
     # Save as ms
     uvd_out.reorder_pols(order="CASA")
-    uvd_out.write_ms(f"{output_uvfits_path.removesuffix(".uvfits")}.ms", clobber=True)
+    uvd_out.write_ms(f"{output_uvfits_path.removesuffix('.uvfits')}.ms", clobber=True)
 
 
 if __name__ == "__main__":
