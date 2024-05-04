@@ -108,7 +108,6 @@ def downsample_healpix(input_map_path, output_map_path, output_nside, clobber=Tr
     diffuse_map = pyradiosky.SkyModel()
     diffuse_map.read_skyh5(input_map_path)
 
-    output_nside = 128
     downsampled_map_data = hp.pixelfunc.ud_grade(
         diffuse_map.stokes[0, 0, :].value,
         output_nside,
