@@ -135,8 +135,8 @@ if __name__ == "__main__":
 
     downsample_healpix(
         "/fast/rbyrne/skymodels/ovro_lwa_sky_map_46.992MHz.skyh5",
-        "/fast/rbyrne/skymodels/ovro_lwa_sky_map_46.992MHz_nside1024.skyh5",
-        1024,
+        "/fast/rbyrne/skymodels/ovro_lwa_sky_map_46.992MHz_nside512.skyh5",
+        512,
     )
 
     """
