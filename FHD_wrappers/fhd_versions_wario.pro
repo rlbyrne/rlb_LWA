@@ -462,580 +462,580 @@ pro fhd_versions_wario
       unflag_all = 1
       instrument = "ovro-lwa"
       beam_nfreq_avg = 1  ;do not average beam
-   end
+    end
 
-   'rlb_process_uv_density_sims_Apr2023_4': begin
-        recalculate_all = 1
-        import_pyuvdata_beam_filepath = '/home/rbyrne/airy_14m.beamfits'
-        calibrate_visibilities = 0
-        n_pol = 2
-        snapshot_healpix_export = 1  ;required to activate save_uvf
-        split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
-        save_uvf = 1
-        flag_visibilities = 0
-        unflag_all = 1
-        instrument = "ovro-lwa"
-        beam_nfreq_avg = 1  ;do not average beam
+    'rlb_process_uv_density_sims_Apr2023_4': begin
+      recalculate_all = 1
+      import_pyuvdata_beam_filepath = '/home/rbyrne/airy_14m.beamfits'
+      calibrate_visibilities = 0
+      n_pol = 2
+      snapshot_healpix_export = 1  ;required to activate save_uvf
+      split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
+      save_uvf = 1
+      flag_visibilities = 0
+      unflag_all = 1
+      instrument = "ovro-lwa"
+      beam_nfreq_avg = 1  ;do not average beam
     end
 
     'rlb_process_uv_density_sims_Apr2023_5': begin
-         recalculate_all = 1
-         import_pyuvdata_beam_filepath = '/home/rbyrne/airy_14m.beamfits'
-         calibrate_visibilities = 0
-         n_pol = 2
-         snapshot_healpix_export = 1  ;required to activate save_uvf
-         split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
-         save_uvf = 1
-         flag_visibilities = 0
-         unflag_all = 1
-         instrument = "ovro-lwa"
-         beam_nfreq_avg = 1  ;do not average beam
-     end
+      recalculate_all = 1
+      import_pyuvdata_beam_filepath = '/home/rbyrne/airy_14m.beamfits'
+      calibrate_visibilities = 0
+      n_pol = 2
+      snapshot_healpix_export = 1  ;required to activate save_uvf
+      split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
+      save_uvf = 1
+      flag_visibilities = 0
+      unflag_all = 1
+      instrument = "ovro-lwa"
+      beam_nfreq_avg = 1  ;do not average beam
+    end
 
-     'rlb_process_uv_density_sims_Apr2023_6': begin
-          recalculate_all = 1
-          import_pyuvdata_beam_filepath = '/home/rbyrne/airy_14m.beamfits'
-          calibrate_visibilities = 0
-          n_pol = 2
-          snapshot_healpix_export = 1  ;required to activate save_uvf
-          split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
-          save_uvf = 1
-          flag_visibilities = 0
-          unflag_all = 1
-          instrument = "ovro-lwa"
-          beam_nfreq_avg = 1  ;do not average beam
-      end
+    'rlb_process_uv_density_sims_Apr2023_6': begin
+      recalculate_all = 1
+      import_pyuvdata_beam_filepath = '/home/rbyrne/airy_14m.beamfits'
+      calibrate_visibilities = 0
+      n_pol = 2
+      snapshot_healpix_export = 1  ;required to activate save_uvf
+      split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
+      save_uvf = 1
+      flag_visibilities = 0
+      unflag_all = 1
+      instrument = "ovro-lwa"
+      beam_nfreq_avg = 1  ;do not average beam
+    end
 
-      'rlb_process_uv_density_sims_May2023': begin
-           recalculate_all = 1
-           import_pyuvdata_beam_filepath = '/home/rbyrne/airy_14m.beamfits'
-           calibrate_visibilities = 0
-           n_pol = 2
-           snapshot_healpix_export = 1  ;required to activate save_uvf
-           split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
-           save_uvf = 1
-           flag_visibilities = 0
-           unflag_all = 1
-           instrument = "ovro-lwa"
-           beam_nfreq_avg = 1  ;do not average beam
-       end
+    'rlb_process_uv_density_sims_May2023': begin
+      recalculate_all = 1
+      import_pyuvdata_beam_filepath = '/home/rbyrne/airy_14m.beamfits'
+      calibrate_visibilities = 0
+      n_pol = 2
+      snapshot_healpix_export = 1  ;required to activate save_uvf
+      split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
+      save_uvf = 1
+      flag_visibilities = 0
+      unflag_all = 1
+      instrument = "ovro-lwa"
+      beam_nfreq_avg = 1  ;do not average beam
+    end
 
-       'rlb_uv_density_sims_beam_error_May2023': begin
-            recalculate_all = 1
-            import_pyuvdata_beam_filepath = '/home/rbyrne/airy_13m.beamfits'
-            calibrate_visibilities = 0
-            n_pol = 2
-            snapshot_healpix_export = 1  ;required to activate save_uvf
-            split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
-            save_uvf = 1
-            flag_visibilities = 0
-            unflag_all = 1
-            instrument = "ovro-lwa"
-            beam_nfreq_avg = 1  ;do not average beam
-        end
+    'rlb_uv_density_sims_beam_error_May2023': begin
+      recalculate_all = 1
+      import_pyuvdata_beam_filepath = '/home/rbyrne/airy_13m.beamfits'
+      calibrate_visibilities = 0
+      n_pol = 2
+      snapshot_healpix_export = 1  ;required to activate save_uvf
+      split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
+      save_uvf = 1
+      flag_visibilities = 0
+      unflag_all = 1
+      instrument = "ovro-lwa"
+      beam_nfreq_avg = 1  ;do not average beam
+    end
 
-        'rlb_process_uv_density_sims_cal_error_May2023': begin
-             recalculate_all = 1
-             import_pyuvdata_beam_filepath = '/home/rbyrne/airy_14m.beamfits'
-             calibrate_visibilities = 0
-             n_pol = 2
-             snapshot_healpix_export = 1  ;required to activate save_uvf
-             split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
-             save_uvf = 1
-             flag_visibilities = 0
-             unflag_all = 1
-             instrument = "ovro-lwa"
-             beam_nfreq_avg = 1  ;do not average beam
-             export_images = 0 ;for some reason image exporting is crashing
-         end
+    'rlb_process_uv_density_sims_cal_error_May2023': begin
+      recalculate_all = 1
+      import_pyuvdata_beam_filepath = '/home/rbyrne/airy_14m.beamfits'
+      calibrate_visibilities = 0
+      n_pol = 2
+      snapshot_healpix_export = 1  ;required to activate save_uvf
+      split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
+      save_uvf = 1
+      flag_visibilities = 0
+      unflag_all = 1
+      instrument = "ovro-lwa"
+      beam_nfreq_avg = 1  ;do not average beam
+      export_images = 0 ;for some reason image exporting is crashing
+    end
 
-         'rlb_process_uv_density_sims_cal_error_modified_kernel_May2023': begin
-              recalculate_all = 1
-              import_pyuvdata_beam_filepath = '/home/rbyrne/airy_14m.beamfits'
-              calibrate_visibilities = 0
-              n_pol = 2
-              snapshot_healpix_export = 1  ;required to activate save_uvf
-              split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
-              save_uvf = 1
-              flag_visibilities = 0
-              unflag_all = 1
-              instrument = "ovro-lwa"
-              beam_nfreq_avg = 1  ;do not average beam
-              export_images = 0 ;for some reason image exporting is crashing
-              ;kernel-related keywords
-              kernel_window = 1
-              debug_dim = 1
-              beam_mask_threshold = 1e3
-              interpolate_kernel = 1
-          end
+    'rlb_process_uv_density_sims_cal_error_modified_kernel_May2023': begin
+      recalculate_all = 1
+      import_pyuvdata_beam_filepath = '/home/rbyrne/airy_14m.beamfits'
+      calibrate_visibilities = 0
+      n_pol = 2
+      snapshot_healpix_export = 1  ;required to activate save_uvf
+      split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
+      save_uvf = 1
+      flag_visibilities = 0
+      unflag_all = 1
+      instrument = "ovro-lwa"
+      beam_nfreq_avg = 1  ;do not average beam
+      export_images = 0 ;for some reason image exporting is crashing
+      ;kernel-related keywords
+      kernel_window = 1
+      debug_dim = 1
+      beam_mask_threshold = 1e3
+      interpolate_kernel = 1
+    end
 
-          'rlb_image_LWA_data_Jun2023': begin
-            recalculate_all = 1
-            instrument = 'lwa'
-            import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
-            calibrate_visibilities = 1
-            n_pol = 4
-            calibration_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
-            allow_sidelobe_cal_sources = 1
-            ;diffuse_calibrate = "/safepool/rbyrne/transferred_from_astm/ovro_lwa_sky_map_73.152MHz.skyh5"
-            ;diffuse_units_kelvin = 1
-            sim_over_calibrate = 1
-            bandpass_calibrate = 0
-            cable_bandpass_fit = 0
-            cal_mode_fit = 0
-            calibration_polyfit = 0
-            snapshot_healpix_export = 0
-            min_cal_baseline = 30
-            image_filter_fn = "filter_uv_optimal"
-            flag_calibration = 0 ;allow calibration to flag antennas
-            calibration_flag_iterate = 0 ;repeat calibration after flagging
-            save_uvf = 0
-          end
+    'rlb_image_LWA_data_Jun2023': begin
+      recalculate_all = 1
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      calibrate_visibilities = 1
+      n_pol = 4
+      calibration_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
+      allow_sidelobe_cal_sources = 1
+      ;diffuse_calibrate = "/safepool/rbyrne/transferred_from_astm/ovro_lwa_sky_map_73.152MHz.skyh5"
+      ;diffuse_units_kelvin = 1
+      sim_over_calibrate = 1
+      bandpass_calibrate = 0
+      cable_bandpass_fit = 0
+      cal_mode_fit = 0
+      calibration_polyfit = 0
+      snapshot_healpix_export = 0
+      min_cal_baseline = 30
+      image_filter_fn = "filter_uv_optimal"
+      flag_calibration = 0 ;allow calibration to flag antennas
+      calibration_flag_iterate = 0 ;repeat calibration after flagging
+      save_uvf = 0
+    end
 
-          'rlb_image_LWA_data_no_calibration_Jun2023': begin
-            recalculate_all = 1
-            instrument = 'lwa'
-            import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
-            calibrate_visibilities = 0
-            n_pol = 4
-            ;calibration_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
-            ;allow_sidelobe_cal_sources = 1
-            ;diffuse_calibrate = "/safepool/rbyrne/transferred_from_astm/ovro_lwa_sky_map_73.152MHz.skyh5"
-            ;diffuse_units_kelvin = 1
-            bandpass_calibrate = 0
-            cable_bandpass_fit = 0
-            cal_mode_fit = 0
-            calibration_polyfit = 0
-            snapshot_healpix_export = 0
-            min_cal_baseline = 30
-            image_filter_fn = "filter_uv_optimal"
-            flag_calibration = 0 ;allow calibration to flag antennas
-            calibration_flag_iterate = 0 ;repeat calibration after flagging
-            save_uvf = 0
-          end
+    'rlb_image_LWA_data_no_calibration_Jun2023': begin
+      recalculate_all = 1
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      calibrate_visibilities = 0
+      n_pol = 4
+      ;calibration_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
+      ;allow_sidelobe_cal_sources = 1
+      ;diffuse_calibrate = "/safepool/rbyrne/transferred_from_astm/ovro_lwa_sky_map_73.152MHz.skyh5"
+      ;diffuse_units_kelvin = 1
+      bandpass_calibrate = 0
+      cable_bandpass_fit = 0
+      cal_mode_fit = 0
+      calibration_polyfit = 0
+      snapshot_healpix_export = 0
+      min_cal_baseline = 30
+      image_filter_fn = "filter_uv_optimal"
+      flag_calibration = 0 ;allow calibration to flag antennas
+      calibration_flag_iterate = 0 ;repeat calibration after flagging
+      save_uvf = 0
+    end
 
-          'rlb_image_LWA_data_no_calibration_MWA_beam_Jun2023': begin
-            recalculate_all = 1
-            ;instrument = 'lwa'
-            ;import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
-            calibrate_visibilities = 0
-            n_pol = 4
-            ;calibration_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
-            ;allow_sidelobe_cal_sources = 1
-            ;diffuse_calibrate = "/safepool/rbyrne/transferred_from_astm/ovro_lwa_sky_map_73.152MHz.skyh5"
-            ;diffuse_units_kelvin = 1
-            bandpass_calibrate = 0
-            cable_bandpass_fit = 0
-            cal_mode_fit = 0
-            calibration_polyfit = 0
-            snapshot_healpix_export = 0
-            min_cal_baseline = 30
-            image_filter_fn = "filter_uv_optimal"
-            flag_calibration = 0 ;allow calibration to flag antennas
-            calibration_flag_iterate = 0 ;repeat calibration after flagging
-            save_uvf = 0
-          end
+    'rlb_image_LWA_data_no_calibration_MWA_beam_Jun2023': begin
+      recalculate_all = 1
+      ;instrument = 'lwa'
+      ;import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      calibrate_visibilities = 0
+      n_pol = 4
+      ;calibration_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
+      ;allow_sidelobe_cal_sources = 1
+      ;diffuse_calibrate = "/safepool/rbyrne/transferred_from_astm/ovro_lwa_sky_map_73.152MHz.skyh5"
+      ;diffuse_units_kelvin = 1
+      bandpass_calibrate = 0
+      cable_bandpass_fit = 0
+      cal_mode_fit = 0
+      calibration_polyfit = 0
+      snapshot_healpix_export = 0
+      min_cal_baseline = 30
+      image_filter_fn = "filter_uv_optimal"
+      flag_calibration = 0 ;allow calibration to flag antennas
+      calibration_flag_iterate = 0 ;repeat calibration after flagging
+      save_uvf = 0
+    end
 
-          'rlb_image_LWA_data_no_calibration_all_baselines_Jun2023': begin
-            recalculate_all = 1
-            instrument = 'lwa'
-            import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
-            calibrate_visibilities = 0
-            n_pol = 4
-            min_baseline = 0
-            ;calibration_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
-            ;allow_sidelobe_cal_sources = 1
-            ;diffuse_calibrate = "/safepool/rbyrne/transferred_from_astm/ovro_lwa_sky_map_73.152MHz.skyh5"
-            ;diffuse_units_kelvin = 1
-            bandpass_calibrate = 0
-            cable_bandpass_fit = 0
-            cal_mode_fit = 0
-            calibration_polyfit = 0
-            snapshot_healpix_export = 0
-            min_cal_baseline = 30
-            image_filter_fn = "filter_uv_optimal"
-            flag_calibration = 0 ;allow calibration to flag antennas
-            calibration_flag_iterate = 0 ;repeat calibration after flagging
-            save_uvf = 0
-          end
+    'rlb_image_LWA_data_no_calibration_all_baselines_Jun2023': begin
+      recalculate_all = 1
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      calibrate_visibilities = 0
+      n_pol = 4
+      min_baseline = 0
+      ;calibration_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
+      ;allow_sidelobe_cal_sources = 1
+      ;diffuse_calibrate = "/safepool/rbyrne/transferred_from_astm/ovro_lwa_sky_map_73.152MHz.skyh5"
+      ;diffuse_units_kelvin = 1
+      bandpass_calibrate = 0
+      cable_bandpass_fit = 0
+      cal_mode_fit = 0
+      calibration_polyfit = 0
+      snapshot_healpix_export = 0
+      min_cal_baseline = 30
+      image_filter_fn = "filter_uv_optimal"
+      flag_calibration = 0 ;allow calibration to flag antennas
+      calibration_flag_iterate = 0 ;repeat calibration after flagging
+      save_uvf = 0
+    end
 
-          'rlb_image_LWA_data_natural_weighting_Jun2023': begin
-            recalculate_all = 1
-            instrument = 'lwa'
-            import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
-            calibrate_visibilities = 0
-            n_pol = 4
-            min_baseline = 0
-            ;calibration_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
-            ;allow_sidelobe_cal_sources = 1
-            ;diffuse_calibrate = "/safepool/rbyrne/transferred_from_astm/ovro_lwa_sky_map_73.152MHz.skyh5"
-            ;diffuse_units_kelvin = 1
-            bandpass_calibrate = 0
-            cable_bandpass_fit = 0
-            cal_mode_fit = 0
-            calibration_polyfit = 0
-            snapshot_healpix_export = 0
-            min_cal_baseline = 30
-            image_filter_fn = "filter_uv_natural"
-            flag_calibration = 0 ;allow calibration to flag antennas
-            calibration_flag_iterate = 0 ;repeat calibration after flagging
-            save_uvf = 0
-          end
+    'rlb_image_LWA_data_natural_weighting_Jun2023': begin
+      recalculate_all = 1
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      calibrate_visibilities = 0
+      n_pol = 4
+      min_baseline = 0
+      ;calibration_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
+      ;allow_sidelobe_cal_sources = 1
+      ;diffuse_calibrate = "/safepool/rbyrne/transferred_from_astm/ovro_lwa_sky_map_73.152MHz.skyh5"
+      ;diffuse_units_kelvin = 1
+      bandpass_calibrate = 0
+      cable_bandpass_fit = 0
+      cal_mode_fit = 0
+      calibration_polyfit = 0
+      snapshot_healpix_export = 0
+      min_cal_baseline = 30
+      image_filter_fn = "filter_uv_natural"
+      flag_calibration = 0 ;allow calibration to flag antennas
+      calibration_flag_iterate = 0 ;repeat calibration after flagging
+      save_uvf = 0
+    end
 
-          'rlb_image_LWA_data_natural_weighting_with_beam_speedup_Jun2023': begin
-            recalculate_all = 1
-            instrument = 'lwa'
-            import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
-            calibrate_visibilities = 0
-            n_pol = 4
-            min_baseline = 0
-            ;calibration_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
-            ;allow_sidelobe_cal_sources = 1
-            ;diffuse_calibrate = "/safepool/rbyrne/transferred_from_astm/ovro_lwa_sky_map_73.152MHz.skyh5"
-            ;diffuse_units_kelvin = 1
-            bandpass_calibrate = 0
-            cable_bandpass_fit = 0
-            cal_mode_fit = 0
-            calibration_polyfit = 0
-            snapshot_healpix_export = 0
-            min_cal_baseline = 30
-            image_filter_fn = "filter_uv_natural"
-            flag_calibration = 0 ;allow calibration to flag antennas
-            calibration_flag_iterate = 0 ;repeat calibration after flagging
-            save_uvf = 0
-          end
+    'rlb_image_LWA_data_natural_weighting_with_beam_speedup_Jun2023': begin
+      recalculate_all = 1
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      calibrate_visibilities = 0
+      n_pol = 4
+      min_baseline = 0
+      ;calibration_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
+      ;allow_sidelobe_cal_sources = 1
+      ;diffuse_calibrate = "/safepool/rbyrne/transferred_from_astm/ovro_lwa_sky_map_73.152MHz.skyh5"
+      ;diffuse_units_kelvin = 1
+      bandpass_calibrate = 0
+      cable_bandpass_fit = 0
+      cal_mode_fit = 0
+      calibration_polyfit = 0
+      snapshot_healpix_export = 0
+      min_cal_baseline = 30
+      image_filter_fn = "filter_uv_natural"
+      flag_calibration = 0 ;allow calibration to flag antennas
+      calibration_flag_iterate = 0 ;repeat calibration after flagging
+      save_uvf = 0
+    end
 
-          'rlb_image_LWA_data_test_jones_transpose_Jun2023': begin
-            recalculate_all = 1
-            instrument = 'lwa'
-            import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
-            calibrate_visibilities = 0
-            n_pol = 4
-            min_baseline = 0
-            ;calibration_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
-            ;allow_sidelobe_cal_sources = 1
-            ;diffuse_calibrate = "/safepool/rbyrne/transferred_from_astm/ovro_lwa_sky_map_73.152MHz.skyh5"
-            ;diffuse_units_kelvin = 1
-            bandpass_calibrate = 0
-            cable_bandpass_fit = 0
-            cal_mode_fit = 0
-            calibration_polyfit = 0
-            snapshot_healpix_export = 0
-            ;min_cal_baseline = 30
-            image_filter_fn = "filter_uv_natural"
-            flag_calibration = 0 ;allow calibration to flag antennas
-            calibration_flag_iterate = 0 ;repeat calibration after flagging
-            save_uvf = 0
-          end
+    'rlb_image_LWA_data_test_jones_transpose_Jun2023': begin
+      recalculate_all = 1
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      calibrate_visibilities = 0
+      n_pol = 4
+      min_baseline = 0
+      ;calibration_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
+      ;allow_sidelobe_cal_sources = 1
+      ;diffuse_calibrate = "/safepool/rbyrne/transferred_from_astm/ovro_lwa_sky_map_73.152MHz.skyh5"
+      ;diffuse_units_kelvin = 1
+      bandpass_calibrate = 0
+      cable_bandpass_fit = 0
+      cal_mode_fit = 0
+      calibration_polyfit = 0
+      snapshot_healpix_export = 0
+      ;min_cal_baseline = 30
+      image_filter_fn = "filter_uv_natural"
+      flag_calibration = 0 ;allow calibration to flag antennas
+      calibration_flag_iterate = 0 ;repeat calibration after flagging
+      save_uvf = 0
+    end
 
-          'rlb_image_LWA_data_test_mwa_beam_import_Jun2023': begin
-            recalculate_all = 1
-            ;instrument = 'lwa'
-            ;import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
-            calibrate_visibilities = 0
-            n_pol = 4
-            min_baseline = 0
-            ;calibration_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
-            ;allow_sidelobe_cal_sources = 1
-            ;diffuse_calibrate = "/safepool/rbyrne/transferred_from_astm/ovro_lwa_sky_map_73.152MHz.skyh5"
-            ;diffuse_units_kelvin = 1
-            bandpass_calibrate = 0
-            cable_bandpass_fit = 0
-            cal_mode_fit = 0
-            calibration_polyfit = 0
-            snapshot_healpix_export = 0
-            ;min_cal_baseline = 30
-            image_filter_fn = "filter_uv_natural"
-            flag_calibration = 0 ;allow calibration to flag antennas
-            calibration_flag_iterate = 0 ;repeat calibration after flagging
-            save_uvf = 0
-          end
+    'rlb_image_LWA_data_test_mwa_beam_import_Jun2023': begin
+      recalculate_all = 1
+      ;instrument = 'lwa'
+      ;import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      calibrate_visibilities = 0
+      n_pol = 4
+      min_baseline = 0
+      ;calibration_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
+      ;allow_sidelobe_cal_sources = 1
+      ;diffuse_calibrate = "/safepool/rbyrne/transferred_from_astm/ovro_lwa_sky_map_73.152MHz.skyh5"
+      ;diffuse_units_kelvin = 1
+      bandpass_calibrate = 0
+      cable_bandpass_fit = 0
+      cal_mode_fit = 0
+      calibration_polyfit = 0
+      snapshot_healpix_export = 0
+      ;min_cal_baseline = 30
+      image_filter_fn = "filter_uv_natural"
+      flag_calibration = 0 ;allow calibration to flag antennas
+      calibration_flag_iterate = 0 ;repeat calibration after flagging
+      save_uvf = 0
+    end
 
-          'rlb_image_LWA_no_calibration_Jul2023': begin
-            recalculate_all = 1
-            instrument = 'lwa'
-            import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
-            calibrate_visibilities = 0
-            model_visibilities = 0
-            n_pol = 4
-            min_baseline = 0
-            snapshot_healpix_export = 0
-            image_filter_fn = "filter_uv_natural"
-            save_uvf = 0
-          end
+    'rlb_image_LWA_no_calibration_Jul2023': begin
+      recalculate_all = 1
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      calibrate_visibilities = 0
+      model_visibilities = 0
+      n_pol = 4
+      min_baseline = 0
+      snapshot_healpix_export = 0
+      image_filter_fn = "filter_uv_natural"
+      save_uvf = 0
+    end
 
-          'rlb_image_LWA_data_Jul2023': begin
-            recalculate_all = 1
-            instrument = 'lwa'
-            import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
-            calibrate_visibilities = 1
-            n_pol = 4
-            calibration_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
-            allow_sidelobe_cal_sources = 1
-            sim_over_calibrate = 1
-            bandpass_calibrate = 0
-            cable_bandpass_fit = 0
-            cal_mode_fit = 0
-            calibration_polyfit = 0
-            snapshot_healpix_export = 0
-            min_cal_baseline = 30
-            image_filter_fn = "filter_uv_natural"
-            flag_calibration = 0 ;allow calibration to flag antennas
-            calibration_flag_iterate = 0 ;repeat calibration after flagging
-            save_uvf = 0
-          end
+    'rlb_image_LWA_data_Jul2023': begin
+      recalculate_all = 1
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      calibrate_visibilities = 1
+      n_pol = 4
+      calibration_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
+      allow_sidelobe_cal_sources = 1
+      sim_over_calibrate = 1
+      bandpass_calibrate = 0
+      cable_bandpass_fit = 0
+      cal_mode_fit = 0
+      calibration_polyfit = 0
+      snapshot_healpix_export = 0
+      min_cal_baseline = 30
+      image_filter_fn = "filter_uv_natural"
+      flag_calibration = 0 ;allow calibration to flag antennas
+      calibration_flag_iterate = 0 ;repeat calibration after flagging
+      save_uvf = 0
+    end
 
-          'rlb_image_LWA_no_calibration_Aug2023': begin
-            recalculate_all = 1
-            instrument = 'lwa'
-            import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
-            calibrate_visibilities = 0
-            model_visibilities = 0
-            n_pol = 4
-            min_baseline = 0
-            snapshot_healpix_export = 0
-            image_filter_fn = "filter_uv_natural"
-            save_uvf = 0
-          end
+    'rlb_image_LWA_no_calibration_Aug2023': begin
+      recalculate_all = 1
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      calibrate_visibilities = 0
+      model_visibilities = 0
+      n_pol = 4
+      min_baseline = 0
+      snapshot_healpix_export = 0
+      image_filter_fn = "filter_uv_natural"
+      save_uvf = 0
+    end
 
-          'rlb_image_LWA_modified_kernel_Aug2023': begin
-               recalculate_all = 0
-               instrument = 'lwa'
-               import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
-               calibrate_visibilities = 0
-               model_visibilities = 0
-               n_pol = 4
-               min_baseline = 0
-               snapshot_healpix_export = 0
-               image_filter_fn = "filter_uv_optimal"
-               save_uvf = 0
-               export_images = 1
-               ;kernel-related keywords
-               kernel_window = 1
-               debug_dim = 1
-               beam_mask_threshold = 1e3
-               interpolate_kernel = 1
-           end
+    'rlb_image_LWA_modified_kernel_Aug2023': begin
+      recalculate_all = 0
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      calibrate_visibilities = 0
+      model_visibilities = 0
+      n_pol = 4
+      min_baseline = 0
+      snapshot_healpix_export = 0
+      image_filter_fn = "filter_uv_optimal"
+      save_uvf = 0
+      export_images = 1
+      ;kernel-related keywords
+      kernel_window = 1
+      debug_dim = 1
+      beam_mask_threshold = 1e3
+      interpolate_kernel = 1
+    end
 
-           'rlb_image_LWA_modified_kernel_test_branch_Sept2023': begin
-                recalculate_all = 0
-                instrument = 'lwa'
-                import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
-                calibrate_visibilities = 0
-                model_visibilities = 0
-                n_pol = 4
-                min_baseline = 0
-                snapshot_healpix_export = 0
-                image_filter_fn = "filter_uv_optimal"
-                save_uvf = 0
-                export_images = 1
-                ;kernel-related keywords
-                kernel_window = 1
-                debug_dim = 1
-                beam_mask_threshold = 1e3
-                interpolate_kernel = 1
-            end
+    'rlb_image_LWA_modified_kernel_test_branch_Sept2023': begin
+      recalculate_all = 0
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      calibrate_visibilities = 0
+      model_visibilities = 0
+      n_pol = 4
+      min_baseline = 0
+      snapshot_healpix_export = 0
+      image_filter_fn = "filter_uv_optimal"
+      save_uvf = 0
+      export_images = 1
+      ;kernel-related keywords
+      kernel_window = 1
+      debug_dim = 1
+      beam_mask_threshold = 1e3
+      interpolate_kernel = 1
+    end
 
-            'rlb_LWA_image_Dec2023': begin
-              recalculate_all = 1
-              instrument = 'lwa'
-              import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
-              calibrate_visibilities = 0
-              n_pol = 4
-              ;snapshot_healpix_export = 0
-              image_filter_fn = "filter_uv_optimal"
-              split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
-              save_uvf = 1
-            end
+    'rlb_LWA_image_Dec2023': begin
+      recalculate_all = 1
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      calibrate_visibilities = 0
+      n_pol = 4
+      ;snapshot_healpix_export = 0
+      image_filter_fn = "filter_uv_optimal"
+      split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
+      save_uvf = 1
+    end
 
-            'rlb_LWA_model_diffuse_Dec2023': begin
-              recalculate_all = 1
-              instrument = 'lwa'
-              import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
-              calibrate_visibilities = 0
-              return_cal_visibilities = 0
-              model_visibilities = 1
-              diffuse_model = "/safepool/rbyrne/transferred_from_astm/ovro_lwa_sky_map_73.152MHz.skyh5"
-              diffuse_units_kelvin = 1
-              model_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
-              n_pol = 4
-              ;snapshot_healpix_export = 0
-              image_filter_fn = "filter_uv_optimal"
-              split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
-              save_uvf = 1
-            end
+    'rlb_LWA_model_diffuse_Dec2023': begin
+      recalculate_all = 1
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      calibrate_visibilities = 0
+      return_cal_visibilities = 0
+      model_visibilities = 1
+      diffuse_model = "/safepool/rbyrne/transferred_from_astm/ovro_lwa_sky_map_73.152MHz.skyh5"
+      diffuse_units_kelvin = 1
+      model_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
+      n_pol = 4
+      ;snapshot_healpix_export = 0
+      image_filter_fn = "filter_uv_optimal"
+      split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
+      save_uvf = 1
+    end
 
-            'rlb_LWA_caltest_cyg_cas_Dec2023': begin
-              recalculate_all = 1
-              instrument = 'lwa'
-              import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
-              calibrate_visibilities = 1
-              n_pol = 2
-              calibration_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
-              allow_sidelobe_cal_sources = 1
-              return_cal_visibilities = 1
-              sim_over_calibrate = 1
-              bandpass_calibrate = 0
-              cable_bandpass_fit = 0
-              cal_mode_fit = 0
-              calibration_polyfit = 0
-              split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
-              min_cal_baseline = 0
-              image_filter_fn = "filter_uv_optimal"
-              flag_calibration = 1 ;allow calibration to flag antennas
-              calibration_flag_iterate = 1 ;repeat calibration after flagging
-              save_uvf = 1
-            end
+    'rlb_LWA_caltest_cyg_cas_Dec2023': begin
+      recalculate_all = 1
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      calibrate_visibilities = 1
+      n_pol = 2
+      calibration_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
+      allow_sidelobe_cal_sources = 1
+      return_cal_visibilities = 1
+      sim_over_calibrate = 1
+      bandpass_calibrate = 0
+      cable_bandpass_fit = 0
+      cal_mode_fit = 0
+      calibration_polyfit = 0
+      split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
+      min_cal_baseline = 0
+      image_filter_fn = "filter_uv_optimal"
+      flag_calibration = 1 ;allow calibration to flag antennas
+      calibration_flag_iterate = 1 ;repeat calibration after flagging
+      save_uvf = 1
+    end
 
-            'rlb_LWA_caltest_mmode_Dec2023': begin
-              recalculate_all = 1
-              instrument = 'lwa'
-              import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
-              calibrate_visibilities = 1
-              n_pol = 2
-              calibration_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
-              diffuse_calibrate = "/safepool/rbyrne/transferred_from_astm/ovro_lwa_sky_map_73.152MHz.skyh5"
-              diffuse_units_kelvin = 1
-              allow_sidelobe_cal_sources = 1
-              return_cal_visibilities = 1
-              sim_over_calibrate = 1
-              bandpass_calibrate = 0
-              cable_bandpass_fit = 0
-              cal_mode_fit = 0
-              calibration_polyfit = 0
-              split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
-              min_cal_baseline = 0
-              image_filter_fn = "filter_uv_optimal"
-              flag_calibration = 1 ;allow calibration to flag antennas
-              calibration_flag_iterate = 1 ;repeat calibration after flagging
-              save_uvf = 1
-            end
+    'rlb_LWA_caltest_mmode_Dec2023': begin
+      recalculate_all = 1
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      calibrate_visibilities = 1
+      n_pol = 2
+      calibration_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
+      diffuse_calibrate = "/safepool/rbyrne/transferred_from_astm/ovro_lwa_sky_map_73.152MHz.skyh5"
+      diffuse_units_kelvin = 1
+      allow_sidelobe_cal_sources = 1
+      return_cal_visibilities = 1
+      sim_over_calibrate = 1
+      bandpass_calibrate = 0
+      cable_bandpass_fit = 0
+      cal_mode_fit = 0
+      calibration_polyfit = 0
+      split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
+      min_cal_baseline = 0
+      image_filter_fn = "filter_uv_optimal"
+      flag_calibration = 1 ;allow calibration to flag antennas
+      calibration_flag_iterate = 1 ;repeat calibration after flagging
+      save_uvf = 1
+    end
 
-            'rlb_LWA_caltest_cyg_cas_v2_branch_Dec2023': begin
-              recalculate_all = 1
-              instrument = 'lwa'
-              import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
-              calibrate_visibilities = 1
-              n_pol = 2
-              calibration_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
-              allow_sidelobe_cal_sources = 1
-              return_cal_visibilities = 1
-              sim_over_calibrate = 1
-              bandpass_calibrate = 0
-              cable_bandpass_fit = 0
-              cal_mode_fit = 0
-              calibration_polyfit = 0
-              split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
-              min_cal_baseline = 0
-              image_filter_fn = "filter_uv_optimal"
-              flag_calibration = 1 ;allow calibration to flag antennas
-              calibration_flag_iterate = 1 ;repeat calibration after flagging
-              save_uvf = 1
-            end
+    'rlb_LWA_caltest_cyg_cas_v2_branch_Dec2023': begin
+      recalculate_all = 1
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      calibrate_visibilities = 1
+      n_pol = 2
+      calibration_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
+      allow_sidelobe_cal_sources = 1
+      return_cal_visibilities = 1
+      sim_over_calibrate = 1
+      bandpass_calibrate = 0
+      cable_bandpass_fit = 0
+      cal_mode_fit = 0
+      calibration_polyfit = 0
+      split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
+      min_cal_baseline = 0
+      image_filter_fn = "filter_uv_optimal"
+      flag_calibration = 1 ;allow calibration to flag antennas
+      calibration_flag_iterate = 1 ;repeat calibration after flagging
+      save_uvf = 1
+    end
 
-            'rlb_LWA_test_diffuse_Dec2023': begin
-              recalculate_all = 1
-              instrument = 'lwa'
-              import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
-              calibrate_visibilities = 0
-              return_cal_visibilities = 0
-              model_visibilities = 1
-              diffuse_model = "/safepool/rbyrne/skymodels/ovro_lwa_sky_map_73.152MHz_equatorial_Jy.skyh5"
-              diffuse_units_kelvin = 0
-              model_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
-              n_pol = 4
-              ;snapshot_healpix_export = 0
-              image_filter_fn = "filter_uv_optimal"
-              split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
-              save_uvf = 1
-            end
+    'rlb_LWA_test_diffuse_Dec2023': begin
+      recalculate_all = 1
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      calibrate_visibilities = 0
+      return_cal_visibilities = 0
+      model_visibilities = 1
+      diffuse_model = "/safepool/rbyrne/skymodels/ovro_lwa_sky_map_73.152MHz_equatorial_Jy.skyh5"
+      diffuse_units_kelvin = 0
+      model_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
+      n_pol = 4
+      ;snapshot_healpix_export = 0
+      image_filter_fn = "filter_uv_optimal"
+      split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
+      save_uvf = 1
+    end
 
-            'rlb_LWA_test_diffuse_Kelvin_conversion_Dec2023': begin
-              recalculate_all = 1
-              instrument = 'lwa'
-              import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
-              calibrate_visibilities = 0
-              return_cal_visibilities = 0
-              model_visibilities = 1
-              diffuse_model = "/safepool/rbyrne/skymodels/ovro_lwa_sky_map_73.152MHz_equatorial.skyh5"
-              diffuse_units_kelvin = 1
-              model_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
-              n_pol = 4
-              ;snapshot_healpix_export = 0
-              image_filter_fn = "filter_uv_optimal"
-              split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
-              save_uvf = 1
-            end
+    'rlb_LWA_test_diffuse_Kelvin_conversion_Dec2023': begin
+      recalculate_all = 1
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      calibrate_visibilities = 0
+      return_cal_visibilities = 0
+      model_visibilities = 1
+      diffuse_model = "/safepool/rbyrne/skymodels/ovro_lwa_sky_map_73.152MHz_equatorial.skyh5"
+      diffuse_units_kelvin = 1
+      model_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
+      n_pol = 4
+      ;snapshot_healpix_export = 0
+      image_filter_fn = "filter_uv_optimal"
+      split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
+      save_uvf = 1
+    end
 
-            'rlb_LWA_test_diffuse_debug_Kelvin_conversion_Jan2024': begin
-              recalculate_all = 1
-              instrument = 'lwa'
-              import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
-              calibrate_visibilities = 0
-              return_cal_visibilities = 0
-              model_visibilities = 1
-              diffuse_model = "/safepool/rbyrne/skymodels/ovro_lwa_sky_map_73.152MHz_equatorial.skyh5"
-              diffuse_units_kelvin = 1
-              model_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
-              n_pol = 4
-              ;snapshot_healpix_export = 0
-              image_filter_fn = "filter_uv_optimal"
-              split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
-              save_uvf = 1
-            end
+    'rlb_LWA_test_diffuse_debug_Kelvin_conversion_Jan2024': begin
+      recalculate_all = 1
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      calibrate_visibilities = 0
+      return_cal_visibilities = 0
+      model_visibilities = 1
+      diffuse_model = "/safepool/rbyrne/skymodels/ovro_lwa_sky_map_73.152MHz_equatorial.skyh5"
+      diffuse_units_kelvin = 1
+      model_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
+      n_pol = 4
+      ;snapshot_healpix_export = 0
+      image_filter_fn = "filter_uv_optimal"
+      split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
+      save_uvf = 1
+    end
 
-            'rlb_LWA_test_diffuse_Jan2024': begin
-              recalculate_all = 1
-              instrument = 'lwa'
-              import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
-              calibrate_visibilities = 0
-              return_cal_visibilities = 0
-              model_visibilities = 1
-              diffuse_model = "/safepool/rbyrne/skymodels/ovro_lwa_sky_map_73.152MHz_equatorial_Jy_per_sr.skyh5"
-              diffuse_units_kelvin = 0
-              model_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
-              n_pol = 4
-              ;snapshot_healpix_export = 0
-              image_filter_fn = "filter_uv_optimal"
-              split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
-              save_uvf = 1
-            end
+    'rlb_LWA_test_diffuse_Jan2024': begin
+      recalculate_all = 1
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      calibrate_visibilities = 0
+      return_cal_visibilities = 0
+      model_visibilities = 1
+      diffuse_model = "/safepool/rbyrne/skymodels/ovro_lwa_sky_map_73.152MHz_equatorial_Jy_per_sr.skyh5"
+      diffuse_units_kelvin = 0
+      model_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
+      n_pol = 4
+      ;snapshot_healpix_export = 0
+      image_filter_fn = "filter_uv_optimal"
+      split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
+      save_uvf = 1
+    end
 
-            'rlb_LWA_caltest_cyg_cas_Jan2024': begin
-              recalculate_all = 1
-              instrument = 'lwa'
-              import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
-              calibrate_visibilities = 1
-              n_pol = 2
-              calibration_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
-              allow_sidelobe_cal_sources = 1
-              return_cal_visibilities = 1
-              sim_over_calibrate = 1
-              bandpass_calibrate = 0
-              cable_bandpass_fit = 0
-              cal_mode_fit = 0
-              calibration_polyfit = 0
-              split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
-              min_cal_baseline = 15  ;change this to match imaging tutorial
-              image_filter_fn = "filter_uv_optimal"
-              flag_calibration = 1 ;allow calibration to flag antennas
-              calibration_flag_iterate = 1 ;repeat calibration after flagging
-              save_uvf = 1
-            end
+    'rlb_LWA_caltest_cyg_cas_Jan2024': begin
+      recalculate_all = 1
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      calibrate_visibilities = 1
+      n_pol = 2
+      calibration_catalog_file_path = '/home/rbyrne/rlb_LWA/LWA_skymodels/cyg_cas.skyh5'
+      allow_sidelobe_cal_sources = 1
+      return_cal_visibilities = 1
+      sim_over_calibrate = 1
+      bandpass_calibrate = 0
+      cable_bandpass_fit = 0
+      cal_mode_fit = 0
+      calibration_polyfit = 0
+      split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
+      min_cal_baseline = 15  ;change this to match imaging tutorial
+      image_filter_fn = "filter_uv_optimal"
+      flag_calibration = 1 ;allow calibration to flag antennas
+      calibration_flag_iterate = 1 ;repeat calibration after flagging
+      save_uvf = 1
+    end
 
-            'rlb_LWA_generate_ps_Jan2024': begin
-              recalculate_all = 1
-              instrument = 'lwa'
-              import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
-              calibrate_visibilities = 0
-              return_cal_visibilities = 0
-              model_visibilities = 0
-              n_pol = 4
-              ;snapshot_healpix_export = 0
-              image_filter_fn = "filter_uv_optimal"
-              split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
-              save_uvf = 1
-            end
+    'rlb_LWA_generate_ps_Jan2024': begin
+      recalculate_all = 1
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+      calibrate_visibilities = 0
+      return_cal_visibilities = 0
+      model_visibilities = 0
+      n_pol = 4
+      ;snapshot_healpix_export = 0
+      image_filter_fn = "filter_uv_optimal"
+      split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
+      save_uvf = 1
+    end
 
   endcase
 
