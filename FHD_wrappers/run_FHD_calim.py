@@ -36,7 +36,7 @@ for version in versions_list:
             ) as err:
                 process = subprocess.Popen(
                     shlex.split(
-                        f"/opt/idl/idl88/bin/idl -e {fhd_versions_script} -args {outdir} {version} {uvfits_path}/{obsid}.uvfits"
+                        f"/opt/devel/rbyrne/harris/idl88/bin/idl -e {fhd_versions_script} -args {outdir} {version} {uvfits_path}/{obsid}.uvfits"
                     ),
                     stdout=out,
                     stderr=err,
@@ -52,7 +52,7 @@ for version in versions_list:
             ) as err:
                 process = subprocess.Popen(
                     shlex.split(
-                        f"/opt/idl/idl88/bin/idl -e {eppsilon_script} -args {obsid} {outdir} {version} {refresh_ps} {uvf_input} {no_evenodd} {xx_only}"
+                        f"/opt/devel/rbyrne/harris/idl88/bin/idl -e {eppsilon_script} -args {obsid} {outdir} {version} {refresh_ps} {uvf_input} {no_evenodd} {xx_only}"
                     ),
                     stdout=out,
                     stderr=err,
