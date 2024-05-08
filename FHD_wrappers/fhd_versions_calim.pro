@@ -18,9 +18,10 @@ pro fhd_versions_calim
         return_cal_visibilities = 0
         model_visibilities = 0
         n_pol = 4
-        image_filter_fn = "filter_uv_optimal"
+        image_filter_fn = "filter_uv_natural"
         split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
         save_uvf = 1
+        beam_nfreq_avg = 1  ;do not average beam
     end
 
   endcase
