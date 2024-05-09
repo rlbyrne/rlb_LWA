@@ -1,6 +1,7 @@
 import numpy as np
 import pyuvdata
-import LWA_preprocessing
+
+# import LWA_preprocessing
 import os
 from newcal import (
     calibration_wrappers,
@@ -1274,7 +1275,7 @@ def test_sky_models_May9():
 
     for model_ind, model_file in enumerate(model_files):
         uvcal = calibration_wrappers.calibration_per_pol(
-            "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj.ms",
+            datafile,
             model_file,
             data_use_column="DATA",
             model_use_column="DATA",
@@ -1288,7 +1289,7 @@ def test_sky_models_May9():
         )
         data = pyuvdata.UVData()
         data.read_ms(
-            "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj.ms",
+            datafile,
             data_column="DATA",
         )
         pyuvdata.utils.uvcalibrate(data, uvcal, inplace=True, time_check=False)
