@@ -24,6 +24,20 @@ pro fhd_versions_calim
         beam_nfreq_avg = 1  ;do not average beam
     end
 
+    'rlb_image_LWA_v2_branch_May2024': begin
+        recalculate_all = 1
+        instrument = 'lwa'
+        import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+        calibrate_visibilities = 0
+        return_cal_visibilities = 0
+        model_visibilities = 0
+        n_pol = 4
+        image_filter_fn = "filter_uv_natural"
+        split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
+        save_uvf = 1
+        beam_nfreq_avg = 1  ;do not average beam
+    end
+
   endcase
 
   undefine, uvfits_subversion, uvfits_version

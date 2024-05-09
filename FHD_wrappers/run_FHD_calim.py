@@ -3,7 +3,7 @@ import shlex
 import os
 
 obsids_list = ["cal46_time11_newcal_cyg_cas"]
-versions_list = ["rlb_image_LWA_May2024"]
+versions_list = ["rlb_image_LWA_v2_branch_May2024"]
 uvfits_path = "/data03/rbyrne/20231222/test_pyuvsim_modeling"
 outdir = "/data03/rbyrne/20231222/fhd_outputs"
 run_fhd = True
