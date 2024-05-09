@@ -1355,6 +1355,7 @@ def test_mmode_models_May9():
         data.write_ms(
             f"{map_path}/cal46_time11_newcal_{model_names[model_ind]}.ms",
             fix_autos=True,
+            clobber=True,
         )
 
 
