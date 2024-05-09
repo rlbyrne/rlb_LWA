@@ -1254,5 +1254,49 @@ def convert_uvfits_to_ms_Apr19():
         )
 
 
+def test_sky_models_May9():
+
+    datafile = "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj.ms"
+    model_files = [
+        "/data03/rbyrne/20231222/test_pyuvsim_modeling/orig_model.ms",
+        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_VLSS_sim.ms",
+        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_deGasperin_sources_sim.ms",
+        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_deGasperin_cyg_cas_sim.ms",
+        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_deGasperin_cyg_cas_sim_NMbeam.ms",
+    ]
+    model_names = [
+        "orig",
+        "VLSS",
+        "deGasperin_sources",
+        "deGasperin_cyg_cas",
+        "deGasperin_cyg_cas_NMbeam",
+    ]
+
+    for model_ind, model_file in enumerate(model_files):
+        uvcal = calibration_wrappers.calibration_per_pol(
+            "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj.ms",
+            model_file,
+            data_use_column="DATA",
+            model_use_column="DATA",
+            min_cal_baseline_lambda=10,
+            verbose=True,
+            log_file_path=f"/data03/rbyrne/20231222/test_pyuvsim_modeling/calibration_logs/cal_log_{model_names[model_ind]}_May9.txt",
+        )
+        uvcal.write_calfits(
+            f"/data03/rbyrne/20231222/test_pyuvsim_modeling/calfits_files/cal46_time11_newcal_{model_names[model_ind]}.calfits",
+            clobber=True,
+        )
+        data = pyuvdata.UVData()
+        data.read_ms(
+            "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj.ms",
+            data_column="DATA",
+        )
+        pyuvdata.utils.uvcalibrate(data, uvcal, inplace=True, time_check=False)
+        data.reorder_pols(order="CASA")
+        data.write_ms(
+            f"/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_{model_names[model_ind]}.ms"
+        )
+
+
 if __name__ == "__main__":
-    convert_uvfits_to_ms_Apr19()
+    test_sky_models_May9()
