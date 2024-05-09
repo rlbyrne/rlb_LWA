@@ -1328,7 +1328,11 @@ def test_mmode_models_May9():
         sources.read(source_simulation)
         mmode.filename = [""]
         sources.filename = [""]
-        mmode.sum_vis(sources, inplace=True, override_params=["phase_center_frame_pa"])
+        mmode.sum_vis(
+            sources,
+            inplace=True,
+            override_params=["phase_center_frame_pa", "scan_number_array"],
+        )
         mmode.reorder_pols(order="CASA")
         mmode.write_ms(combined_map_name, fix_autos=True, clobber=True)
 
