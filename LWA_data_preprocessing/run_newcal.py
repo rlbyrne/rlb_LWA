@@ -1330,6 +1330,18 @@ def test_mmode_models_May9():
         sources.filename = [""]
         mmode.phase_to_time(np.mean(mmode.time_array))
         sources.phase_to_time(np.mean(mmode.time_array))
+
+        mmode_baselines = list(set(list(zip(mmode.ant_1_array, mmode.ant_2_array))))
+        sources_baselines = list(
+            set(list(zip(sources.ant_1_array, sources.ant_2_array)))
+        )
+        use_baselines = [
+            baseline
+            for baseline in mmode_baselines
+            if (baseline in sources_baselines) or (baseline[::-1] in sources_baselines)
+        ]
+        mmode.select(bls=use_baselines)
+        sources.select(bls=use_baselines)
         mmode.reorder_blts()
         sources.reorder_blts()
         mmode.reorder_pols(order="AIPS")
