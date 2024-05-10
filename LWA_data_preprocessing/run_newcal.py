@@ -1328,6 +1328,8 @@ def test_mmode_models_May9():
         sources.read(source_simulation)
         mmode.filename = [""]
         sources.filename = [""]
+        mmode.phase_to_time(np.mean(mmode.time_array))
+        sources.phase_to_time(np.mean(mmode.time_array))
         mmode.sum_vis(
             sources,
             inplace=True,
@@ -1336,6 +1338,8 @@ def test_mmode_models_May9():
                 "scan_number_array",
                 "antenna_names",
                 "telescope_location",
+                "phase_center_app_ra",
+                "phase_center_app_dec",
             ],
         )
         mmode.reorder_pols(order="CASA")
