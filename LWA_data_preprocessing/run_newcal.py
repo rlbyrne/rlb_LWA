@@ -1350,6 +1350,7 @@ def test_mmode_models_May9():
                 "phase_center_app_dec",
                 "instrument",
                 "time_array",
+                "phase_center_id_array",
             ],
         )
         mmode.reorder_pols(order="CASA")
