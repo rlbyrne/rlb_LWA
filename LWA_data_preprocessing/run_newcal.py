@@ -1330,6 +1330,14 @@ def test_mmode_models_May9():
         sources.filename = [""]
         mmode.phase_to_time(np.mean(mmode.time_array))
         sources.phase_to_time(np.mean(mmode.time_array))
+        mmode.reorder_blts()
+        sources.reorder_blts()
+        mmode.reorder_pols(order="AIPS")
+        sources.reorder_pols(order="AIPS")
+        mmode.reorder_freqs(channel_order="freq")
+        sources.reorder_freqs(channel_order="freq")
+        mmode.filename = [""]
+        sources.filename = [""]
         mmode.sum_vis(
             sources,
             inplace=True,
