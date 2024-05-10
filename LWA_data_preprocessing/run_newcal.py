@@ -1335,6 +1335,7 @@ def test_mmode_models_May9():
                 "phase_center_frame_pa",
                 "scan_number_array",
                 "antenna_names",
+                "telescope_location",
             ],
         )
         mmode.reorder_pols(order="CASA")
