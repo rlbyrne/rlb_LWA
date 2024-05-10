@@ -1352,6 +1352,7 @@ def test_mmode_models_May9():
                 "time_array",
                 "phase_center_id_array",
                 "telescope_name",
+                "phase_center_catalog",
             ],
         )
         mmode.reorder_pols(order="CASA")
