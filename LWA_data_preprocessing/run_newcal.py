@@ -1377,6 +1377,7 @@ def test_mmode_models_May9():
                 "antenna_diameters",
                 "lst_array",
                 "nsample_array",
+                "blts_are_rectangular",
             ],
         )
         mmode.reorder_pols(order="CASA")
