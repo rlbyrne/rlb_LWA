@@ -1331,6 +1331,8 @@ def test_mmode_models_May9():
         mmode.phase_to_time(np.mean(mmode.time_array))
         sources.phase_to_time(np.mean(mmode.time_array))
 
+        mmode.conjugate_bls()
+        sources.conjugate_bls()
         mmode_baselines = list(set(list(zip(mmode.ant_1_array, mmode.ant_2_array))))
         sources_baselines = list(
             set(list(zip(sources.ant_1_array, sources.ant_2_array)))
@@ -1350,6 +1352,10 @@ def test_mmode_models_May9():
         sources.reorder_freqs(channel_order="freq")
         mmode.filename = [""]
         sources.filename = [""]
+        print(mmode.Nbls)
+        print(sources.Nbls)
+        print(mmode.Ntimes)
+        print(sources.Ntimes)
         mmode.sum_vis(
             sources,
             inplace=True,
@@ -1363,8 +1369,14 @@ def test_mmode_models_May9():
                 "instrument",
                 "time_array",
                 "phase_center_id_array",
+                "uvw_array",
                 "telescope_name",
                 "phase_center_catalog",
+                "flag_array",
+                "integration_time",
+                "antenna_diameters",
+                "lst_array",
+                "nsample_array",
             ],
         )
         mmode.reorder_pols(order="CASA")
