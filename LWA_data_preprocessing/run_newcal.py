@@ -1307,12 +1307,12 @@ def test_mmode_models_May9():
         "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_cyg_cas_sim.ms"
     )
     model_files = [
-        # "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_mmode_sim.ms",
+        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_mmode_sim.ms",
         "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_matvis_sim.ms",
         "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_matvis_sim_nside512.ms",
     ]
     model_names = [
-        # "mmode_with_cyg_cas_pyuvsim_nside128",
+        "mmode_with_cyg_cas_pyuvsim_nside128",
         "mmode_with_cyg_cas_matvis_nside128",
         "mmode_with_cyg_cas_matvis_nside512",
     ]
