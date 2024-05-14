@@ -1333,6 +1333,23 @@ def test_mmode_models_May9():
 
         mmode.conjugate_bls()
         sources.conjugate_bls()
+
+        # mmode map contains duplicate baselines
+        mmode_baselines = list(zip(mmode.ant_1_array, mmode.ant_2_array))
+        keep_baselines = []
+        for bl_ind, baseline in enumerate(mmode_baselines):
+            if baseline not in mmode_baselines[:bl_ind]:
+                keep_baselines.append(bl_ind)
+        mmode.select(blt_inds=keep_baselines)
+
+        # assign antenna names
+        for ant_ind in range(len(mmode.antenna_names)):
+            mmode.antenna_names[ant_ind] = sources.antenna_names[
+                np.where(sources.antenna_numbers == mmode.antenna_numbers[ant_ind])[0][
+                    0
+                ]
+            ]
+
         mmode_baselines = list(set(list(zip(mmode.ant_1_array, mmode.ant_2_array))))
         sources_baselines = list(
             set(list(zip(sources.ant_1_array, sources.ant_2_array)))
@@ -1342,6 +1359,7 @@ def test_mmode_models_May9():
             for baseline in mmode_baselines
             if (baseline in sources_baselines) or (baseline[::-1] in sources_baselines)
         ]
+
         mmode.select(bls=use_baselines)
         sources.select(bls=use_baselines)
         mmode.reorder_blts()
@@ -1352,32 +1370,22 @@ def test_mmode_models_May9():
         sources.reorder_freqs(channel_order="freq")
         mmode.filename = [""]
         sources.filename = [""]
-        print(mmode.Nbls)
-        print(sources.Nbls)
-        print(mmode.Ntimes)
-        print(sources.Ntimes)
         mmode.sum_vis(
             sources,
             inplace=True,
             override_params=[
-                "phase_center_frame_pa",
-                "scan_number_array",
-                "antenna_names",
-                "telescope_location",
+                "antenna_diameters",
+                "integration_time",
+                "lst_array",
+                "uvw_array",
+                "phase_center_id_array",
                 "phase_center_app_ra",
                 "phase_center_app_dec",
-                "instrument",
-                "time_array",
-                "phase_center_id_array",
-                "uvw_array",
-                "telescope_name",
+                "phase_center_frame_pa",
                 "phase_center_catalog",
-                "flag_array",
-                "integration_time",
-                "antenna_diameters",
-                "lst_array",
-                "nsample_array",
-                "blts_are_rectangular",
+                "telescope_location",
+                "telescope_name",
+                "instrument",
             ],
         )
         mmode.reorder_pols(order="CASA")
