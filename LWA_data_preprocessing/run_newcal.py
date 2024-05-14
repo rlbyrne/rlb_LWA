@@ -1321,7 +1321,7 @@ def test_mmode_models_May9():
 
         # Combine mmode map with Cyg and Cas models
         map_path = "/".join(model_file.split("/")[:-1])
-        combined_map_name = f"{map_path}/cal46_time11_conj_{model_names}_sim.ms"
+        combined_map_name = f"{map_path}/cal46_time11_conj_{model_names[model_ind]}_sim.ms"
         mmode = pyuvdata.UVData()
         mmode.read(model_file)
         sources = pyuvdata.UVData()
