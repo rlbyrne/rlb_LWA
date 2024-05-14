@@ -50,6 +50,7 @@ def plot_power(data_path, model_path, plot_save_dir, plot_prefix=""):
             "phase_center_catalog",
             "filename",
             "nsample_array",
+            "lst_array",
         ]
     )
 
