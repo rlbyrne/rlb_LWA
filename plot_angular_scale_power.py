@@ -109,7 +109,10 @@ def plot_power(data_path, model_path, plot_save_dir, plot_prefix=""):
         #plt.xscale("log")
         #plt.yscale("log")
         plt.xlim([np.min(bl_bin_edges), np.max(bl_bin_edges)])
-        plt.ylim([0, 1.3e8])
+        if pol_names[pol_ind]=="cross":
+            plt.ylim([0, 1e7])
+        else:
+            plt.ylim([0, 1.3e8])
         plt.xlabel("Baseline Length (m)")
         plt.ylabel("Power")
 
@@ -136,10 +139,10 @@ if __name__=="__main__":
 
     model_files = [
         #"/data03/rbyrne/20231222/test_pyuvsim_modeling/orig_model.ms",
-        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_cyg_cas_sim.ms",
-        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_VLSS_sim.ms",
-        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_deGasperin_sources_sim.ms",
-        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_deGasperin_cyg_cas_sim.ms",
+        #"/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_cyg_cas_sim.ms",
+        #"/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_VLSS_sim.ms",
+        #"/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_deGasperin_sources_sim.ms",
+        #"/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_deGasperin_cyg_cas_sim.ms",
         "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_deGasperin_cyg_cas_sim_NMbeam.ms",
         #"/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_mmode_with_cyg_cas_pyuvsim_nside128_sim.ms",
         #"/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_with_cyg_cas_matvis_nside128_sim.ms",
@@ -147,10 +150,10 @@ if __name__=="__main__":
     ]
     data_files = [
         #"/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_orig.ms",
-        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_cyg_cas.ms",
-        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_VLSS.ms",
-        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_deGasperin_sources.ms",
-        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_deGasperin_cyg_cas.ms",
+        #"/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_cyg_cas.ms",
+        #"/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_VLSS.ms",
+        #"/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_deGasperin_sources.ms",
+        #"/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_deGasperin_cyg_cas.ms",
         "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_deGasperin_cyg_cas_NMbeam.ms",
         #"/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_mmode_with_cyg_cas_pyuvsim_nside128.ms",
         #"/data03/rbyrne/20231222/matvis_modeling/cal46_time11_newcal_mmode_with_cyg_cas_matvis_nside128.ms",
@@ -158,10 +161,10 @@ if __name__=="__main__":
     ]
     model_names = [
         #"orig",
-        "cyg_cas",
-        "VLSS",
-        "deGasperin_sources",
-        "deGasperin_cyg_cas",
+        #"cyg_cas",
+        #"VLSS",
+        #"deGasperin_sources",
+        #"deGasperin_cyg_cas",
         "deGasperin_cyg_cas_NMbeam",
         #"mmode_pyuvsim_nside128",
         #"mmode_matvis_nside128",
