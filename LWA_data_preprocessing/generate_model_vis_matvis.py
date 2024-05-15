@@ -126,6 +126,82 @@ def run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
     uvd_out.write_ms(f"{output_uvfits_path.removesuffix('.uvfits')}.ms", clobber=True)
 
 
+def reformat_matvis_output(
+    orig_filepath, reference_filepath, new_filepath
+):  # This function is to bootstrap the output after the fact, should be combined with the above function before the next run
+
+    uvd = pyuvdata.UVData()
+    uvd.read(reference_filepath)
+    uvd_out = pyuvdata.UVData()
+    uvd_out.read(orig_filepath)
+
+    # Remove duplicate baselines
+    uvd_out.conjugate_bls()
+    baselines = list(zip(uvd_out.ant_1_array, uvd_out.ant_2_array))
+    keep_baselines = []
+    for bl_ind, baseline in enumerate(baselines):
+        if baseline not in baselines[:bl_ind]:
+            keep_baselines.append(bl_ind)
+    uvd_out.select(blt_inds=keep_baselines)
+
+    # assign antenna names
+    for ant_ind in range(len(uvd_out.antenna_names)):
+        uvd_out.antenna_names[ant_ind] = uvd.antenna_names[
+            np.where(uvd.antenna_numbers == uvd_out.antenna_numbers[ant_ind])[0][0]
+        ]
+
+    uvd_out.reorder_blts()
+    uvd_out.reorder_pols(order="AIPS")
+    uvd_out.reorder_freqs(channel_order="freq")
+    uvd_out.write_ms(new_filepath, clobber=True)
+
+
+def combine_mmode_and_sources(
+    source_simulation="/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_cyg_cas_sim.ms",
+    mmode_maps=[
+        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_mmode_sim.ms",
+        "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_matvis_sim_reformatted.ms",
+        "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_matvis_sim_nside512_reformatted.ms",
+    ],
+    output_filenames=[
+        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_mmode_with_cyg_cas_pyuvsim_nside128_sim.ms",
+        "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_with_cyg_cas_matvis_nside128_sim.ms",
+        "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_with_cyg_cas_matvis_nside512_sim.ms",
+    ],
+):
+
+    sources = pyuvdata.UVData()
+    sources.read(source_simulation)
+    sources.phase_to_time(np.mean(sources.time_array))
+    sources.filename = [""]
+
+    for mmode_map_ind in range(len(mmode_maps)):
+        mmode = pyuvdata.UVData()
+        mmode.read(mmode_maps[mmode_map_ind])
+        mmode.phase_to_time(np.mean(sources.time_array))
+        mmode.filename = [""]
+        mmode.sum_vis(
+            sources,
+            inplace=True,
+            override_params=[
+                "antenna_diameters",
+                "integration_time",
+                "lst_array",
+                "phase_center_id_array",
+                "phase_center_app_ra",
+                "phase_center_app_dec",
+                "phase_center_frame_pa",
+                "phase_center_catalog",
+                "telescope_location",
+                "telescope_name",
+                "instrument",
+                "filename",
+                "uvw_array",
+            ],
+        )
+        mmode.write_ms(output_filenames[mmode_map_ind], clobber=True)
+
+
 if __name__ == "__main__":
 
     if False:
@@ -135,10 +211,25 @@ if __name__ == "__main__":
         input_data_path = args[3]
         output_uvfits_path = args[4]
 
-    map_path = "/fast/rbyrne/skymodels/ovro_lwa_sky_map_46.992MHz_nside512.skyh5"
-    beam_path = "/home/rbyrne/rlb_LWA/LWAbeam_2015.fits"
-    input_data_path = (
-        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj.ms"
+    if False:
+        map_path = "/fast/rbyrne/skymodels/ovro_lwa_sky_map_46.992MHz_nside512.skyh5"
+        beam_path = "/home/rbyrne/rlb_LWA/LWAbeam_2015.fits"
+        input_data_path = (
+            "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj.ms"
+        )
+        output_uvfits_path = "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_matvis_sim_nside512.uvfits"
+        run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_path)
+
+    # reformat_matvis_output(
+    #    "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_matvis_sim.ms",
+    #    "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_cyg_cas_sim.ms",
+    #    "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_matvis_sim_reformatted.ms",
+    # )
+
+    reformat_matvis_output(
+        "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_matvis_sim_nside512.ms",
+        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_cyg_cas_sim.ms",
+        "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_matvis_sim_nside512_reformatted.ms",
     )
-    output_uvfits_path = "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_matvis_sim_nside512.uvfits"
-    run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_path)
+
+    combine_mmode_and_sources()

@@ -1321,7 +1321,9 @@ def test_mmode_models_May9():
 
         # Combine mmode map with Cyg and Cas models
         map_path = "/".join(model_file.split("/")[:-1])
-        combined_map_name = f"{map_path}/cal46_time11_conj_{model_names[model_ind]}_sim.ms"
+        combined_map_name = (
+            f"{map_path}/cal46_time11_conj_{model_names[model_ind]}_sim.ms"
+        )
         mmode = pyuvdata.UVData()
         mmode.read(model_file)
         sources = pyuvdata.UVData()
@@ -1368,8 +1370,6 @@ def test_mmode_models_May9():
         sources.reorder_pols(order="AIPS")
         mmode.reorder_freqs(channel_order="freq")
         sources.reorder_freqs(channel_order="freq")
-        mmode.filename = [""]
-        sources.filename = [""]
         mmode.sum_vis(
             sources,
             inplace=True,
@@ -1418,5 +1418,52 @@ def test_mmode_models_May9():
         )
 
 
+def test_mmode_models_May15():
+
+    datafile = "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj.ms"
+    file_directories = [
+        "/data03/rbyrne/20231222/test_pyuvsim_modeling",
+        "/data03/rbyrne/20231222/matvis_modeling",
+        "/data03/rbyrne/20231222/matvis_modeling",
+    ]
+    model_files = [
+        "cal46_time11_conj_mmode_with_cyg_cas_pyuvsim_nside128_sim.ms",
+        "cal46_time11_conj_mmode_with_cyg_cas_matvis_nside128_sim.ms",
+        "cal46_time11_conj_mmode_with_cyg_cas_matvis_nside512_sim.ms",
+    ]
+    model_names = [
+        "mmode_with_cyg_cas_pyuvsim_nside128",
+        "mmode_with_cyg_cas_matvis_nside128",
+        "mmode_with_cyg_cas_matvis_nside512",
+    ]
+
+    for model_ind, model_file in enumerate(model_files):
+        uvcal = calibration_wrappers.calibration_per_pol(
+            datafile,
+            f"{file_directories[model_ind]}/{model_file}",
+            data_use_column="DATA",
+            model_use_column="DATA",
+            min_cal_baseline_lambda=10,
+            verbose=True,
+            log_file_path=f"{file_directories[model_ind]}/calibration_logs/cal_log_{model_names[model_ind]}_May9.txt",
+        )
+        uvcal.write_calfits(
+            f"{file_directories[model_ind]}/calfits_files/cal46_time11_newcal_{model_names[model_ind]}.calfits",
+            clobber=True,
+        )
+        data = pyuvdata.UVData()
+        data.read_ms(
+            datafile,
+            data_column="DATA",
+        )
+        pyuvdata.utils.uvcalibrate(data, uvcal, inplace=True, time_check=False)
+        data.reorder_pols(order="CASA")
+        data.write_ms(
+            f"{file_directories[model_ind]}/cal46_time11_newcal_{model_names[model_ind]}.ms",
+            fix_autos=True,
+            clobber=True,
+        )
+
+
 if __name__ == "__main__":
-    test_mmode_models_May9()
+    test_mmode_models_May15()
