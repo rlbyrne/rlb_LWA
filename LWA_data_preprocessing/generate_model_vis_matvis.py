@@ -164,10 +164,11 @@ def combine_mmode_and_sources(
         "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_matvis_sim_nside512_reformatted.ms",
     ],
     output_filenames=[
-        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_mmode_with_cyg_cas_pyuvsim_nside128_sim.ms",
-        "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_with_cyg_cas_matvis_nside128_sim.ms",
-        "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_with_cyg_cas_matvis_nside512_sim.ms",
+        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_mmode_amp_offset_with_cyg_cas_pyuvsim_nside128_sim.ms",
+        "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_amp_offset_with_cyg_cas_matvis_nside128_sim.ms",
+        "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_amp_offset_with_cyg_cas_matvis_nside512_sim.ms",
     ],
+    mmode_amp_offset=0.8387082,
 ):
 
     sources = pyuvdata.UVData()
@@ -178,6 +179,7 @@ def combine_mmode_and_sources(
     for mmode_map_ind in range(len(mmode_maps)):
         mmode = pyuvdata.UVData()
         mmode.read(mmode_maps[mmode_map_ind])
+        mmode.data_array *= mmode_amp_offset
         mmode.phase_to_time(np.mean(sources.time_array))
         mmode.filename = [""]
         mmode.sum_vis(
@@ -220,16 +222,10 @@ if __name__ == "__main__":
         output_uvfits_path = "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_matvis_sim_nside512.uvfits"
         run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_path)
 
-    # reformat_matvis_output(
-    #    "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_matvis_sim.ms",
-    #    "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_cyg_cas_sim.ms",
-    #    "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_matvis_sim_reformatted.ms",
-    # )
-
-    reformat_matvis_output(
-        "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_matvis_sim_nside512.ms",
-        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_cyg_cas_sim.ms",
-        "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_matvis_sim_nside512_reformatted.ms",
-    )
+        reformat_matvis_output(
+            "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_matvis_sim_nside512.ms",
+            "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_cyg_cas_sim.ms",
+            "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_matvis_sim_nside512_reformatted.ms",
+        )
 
     combine_mmode_and_sources()

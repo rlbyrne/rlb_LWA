@@ -24,7 +24,15 @@ def get_binned_power(uvdata, use_pols=None, xmin=None, xmax=None, nbins=50):
         )[0]
         if len(bl_inds) > 0:
             binned_power[bin_ind] = np.nanmean(
-                np.abs(uvdata.data_array[bl_inds[:, np.newaxis, np.newaxis, np.newaxis], 0, :, pol_inds[np.newaxis, np.newaxis, np.newaxis, :]]) ** 2.0
+                np.abs(
+                    uvdata.data_array[
+                        bl_inds[:, np.newaxis, np.newaxis, np.newaxis],
+                        0,
+                        :,
+                        pol_inds[np.newaxis, np.newaxis, np.newaxis, :],
+                    ]
+                )
+                ** 2.0
             )
 
     return bl_bin_edges, binned_power
@@ -50,8 +58,8 @@ def plot_power(data_path, model_path, plot_save_dir, plot_prefix=""):
     model.reorder_pols(order="AIPS")
     data.reorder_freqs(channel_order="freq")
     model.reorder_freqs(channel_order="freq")
-    #model.data_array = np.conj(model.data_array)
-    
+    # model.data_array = np.conj(model.data_array)
+
     residual = data.sum_vis(
         model,
         difference=True,
@@ -73,7 +81,7 @@ def plot_power(data_path, model_path, plot_save_dir, plot_prefix=""):
             "telescope_name",
             "antenna_diameters",
             "uvw_array",
-        ]
+        ],
     )
 
     bl_lengths = np.sqrt(np.sum(model.uvw_array**2.0, axis=1))
@@ -89,7 +97,11 @@ def plot_power(data_path, model_path, plot_save_dir, plot_prefix=""):
             model, use_pols=use_pols[pol_ind], xmin=0, xmax=np.max(bl_lengths), nbins=50
         )
         bl_bin_edges, residual_power = get_binned_power(
-            residual, use_pols=use_pols[pol_ind], xmin=0, xmax=np.max(bl_lengths), nbins=50
+            residual,
+            use_pols=use_pols[pol_ind],
+            xmin=0,
+            xmax=np.max(bl_lengths),
+            nbins=50,
         )
 
         legend_names = ["data", "model", "residual"]
@@ -106,10 +118,10 @@ def plot_power(data_path, model_path, plot_save_dir, plot_prefix=""):
                 label=legend_names[plot_ind],
             )
 
-        #plt.xscale("log")
-        #plt.yscale("log")
+        # plt.xscale("log")
+        # plt.yscale("log")
         plt.xlim([np.min(bl_bin_edges), np.max(bl_bin_edges)])
-        if pol_names[pol_ind]=="cross":
+        if pol_names[pol_ind] == "cross":
             plt.ylim([0, 1e7])
         else:
             plt.ylim([0, 1.3e8])
@@ -120,7 +132,7 @@ def plot_power(data_path, model_path, plot_save_dir, plot_prefix=""):
         plt.savefig(f"{plot_save_dir}/{plot_prefix}_{pol_names[pol_ind]}_power.png")
         plt.close()
 
-        fractional_power_recovered = (1 - residual_power/data_power) * 100.0
+        fractional_power_recovered = (1 - residual_power / data_power) * 100.0
         power_plot = np.repeat(fractional_power_recovered, 2)
         plt.plot(
             bin_edges_plot,
@@ -132,48 +144,51 @@ def plot_power(data_path, model_path, plot_save_dir, plot_prefix=""):
         plt.ylim([-10, 100])
         plt.xlabel("Baseline Length (m)")
         plt.ylabel("Fractional Power Recovered (%)")
-        plt.savefig(f"{plot_save_dir}/{plot_prefix}_{pol_names[pol_ind]}_frac_power_recovered.png")
+        plt.savefig(
+            f"{plot_save_dir}/{plot_prefix}_{pol_names[pol_ind]}_frac_power_recovered.png"
+        )
         plt.close()
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
 
     model_files = [
-        #"/data03/rbyrne/20231222/test_pyuvsim_modeling/orig_model.ms",
-        #"/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_cyg_cas_sim.ms",
-        #"/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_VLSS_sim.ms",
-        #"/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_deGasperin_sources_sim.ms",
-        #"/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_deGasperin_cyg_cas_sim.ms",
-        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_deGasperin_cyg_cas_sim_NMbeam.ms",
-        #"/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_mmode_with_cyg_cas_pyuvsim_nside128_sim.ms",
-        #"/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_with_cyg_cas_matvis_nside128_sim.ms",
-        #"/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_with_cyg_cas_matvis_nside512_sim.ms",
+        # "/data03/rbyrne/20231222/test_pyuvsim_modeling/orig_model.ms",
+        # "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_cyg_cas_sim.ms",
+        # "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_VLSS_sim.ms",
+        # "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_deGasperin_sources_sim.ms",
+        # "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_deGasperin_cyg_cas_sim.ms",
+        # "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_deGasperin_cyg_cas_sim_NMbeam.ms",
+        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_mmode_with_cyg_cas_pyuvsim_nside128_sim.ms",
+        "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_with_cyg_cas_matvis_nside128_sim.ms",
+        "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_with_cyg_cas_matvis_nside512_sim.ms",
     ]
     data_files = [
-        #"/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_orig.ms",
-        #"/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_cyg_cas.ms",
-        #"/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_VLSS.ms",
-        #"/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_deGasperin_sources.ms",
-        #"/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_deGasperin_cyg_cas.ms",
-        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_deGasperin_cyg_cas_NMbeam.ms",
-        #"/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_mmode_with_cyg_cas_pyuvsim_nside128.ms",
-        #"/data03/rbyrne/20231222/matvis_modeling/cal46_time11_newcal_mmode_with_cyg_cas_matvis_nside128.ms",
-        #"/data03/rbyrne/20231222/matvis_modeling/cal46_time11_newcal_mmode_with_cyg_cas_matvis_nside512.ms",
+        # "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_orig.ms",
+        # "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_cyg_cas.ms",
+        # "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_VLSS.ms",
+        # "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_deGasperin_sources.ms",
+        # "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_deGasperin_cyg_cas.ms",
+        # "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_deGasperin_cyg_cas_NMbeam.ms",
+        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_mmode_with_cyg_cas_pyuvsim_nside128.ms",
+        "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_newcal_mmode_with_cyg_cas_matvis_nside128.ms",
+        "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_newcal_mmode_with_cyg_cas_matvis_nside512.ms",
     ]
     model_names = [
-        #"orig",
-        #"cyg_cas",
-        #"VLSS",
-        #"deGasperin_sources",
-        #"deGasperin_cyg_cas",
-        "deGasperin_cyg_cas_NMbeam",
-        #"mmode_pyuvsim_nside128",
-        #"mmode_matvis_nside128",
-        #"mmode_matvis_nside512",
+        # "orig",
+        # "cyg_cas",
+        # "VLSS",
+        # "deGasperin_sources",
+        # "deGasperin_cyg_cas",
+        # "deGasperin_cyg_cas_NMbeam",
+        "mmode_pyuvsim_nside128",
+        "mmode_matvis_nside128",
+        "mmode_matvis_nside512",
     ]
     for file_ind in range(len(model_names)):
         plot_power(
             data_files[file_ind],
             model_files[file_ind],
             "/data03/rbyrne/20231222/test_pyuvsim_modeling/power_plots",
-            plot_prefix=model_names[file_ind]
+            plot_prefix=model_names[file_ind],
         )

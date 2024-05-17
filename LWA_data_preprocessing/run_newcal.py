@@ -1512,5 +1512,143 @@ def test_mmode_models_May16():
         )
 
 
+def calculate_mmode_flux_offset():
+
+    calibrated_data_path = (
+        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_cyg_cas.ms"
+    )
+    mmode_sim_path = "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_matvis_sim_nside512_reformatted.ms"
+
+    data = pyuvdata.UVData()
+    data.read(calibrated_data_path)
+    model = pyuvdata.UVData()
+    model.read(mmode_sim_path)
+
+    model_baselines = list(set(list(zip(model.ant_1_array, model.ant_2_array))))
+    data_baselines = list(set(list(zip(data.ant_1_array, data.ant_2_array))))
+    use_baselines = [
+        baseline
+        for baseline in model_baselines
+        if (baseline in data_baselines) or (baseline[::-1] in data_baselines)
+    ]
+    data.select(bls=use_baselines, polarizations=[-5, -6])
+    model.select(bls=use_baselines, polarizations=[-5, -6])
+    data.phase_to_time(np.mean(data.time_array))
+    model.phase_to_time(np.mean(data.time_array))
+    # Ensure ordering matches
+    data.reorder_blts()
+    model.reorder_blts()
+    data.reorder_pols(order="AIPS")
+    model.reorder_pols(order="AIPS")
+    data.reorder_freqs(channel_order="freq")
+    model.reorder_freqs(channel_order="freq")
+    data.filename = [""]
+    model.filename = [""]
+
+    model.data_array[np.where(model.flag_array)] = 0.0
+    data.data_array[np.where(data.flag_array)] = 0.0
+
+    diff = data.sum_vis(
+        model,
+        difference=True,
+        inplace=False,
+        override_params=[
+            "antenna_diameters",
+            "integration_time",
+            "lst_array",
+            "uvw_array",
+            "phase_center_id_array",
+            "phase_center_app_ra",
+            "phase_center_app_dec",
+            "phase_center_frame_pa",
+            "phase_center_catalog",
+            "telescope_location",
+            "telescope_name",
+            "instrument",
+            "flag_array",
+            "nsample_array",
+            "scan_number_array",
+        ],
+    )
+    print(np.sum(np.abs(diff.data_array) ** 2.0))
+
+    offset_value = np.sum(
+        np.real(np.conj(model.data_array) * data.data_array)
+    ) / np.sum(np.abs(model.data_array) ** 2.0)
+    print(offset_value)
+
+    model.data_array *= offset_value
+    diff = data.sum_vis(
+        model,
+        difference=True,
+        inplace=False,
+        override_params=[
+            "antenna_diameters",
+            "integration_time",
+            "lst_array",
+            "uvw_array",
+            "phase_center_id_array",
+            "phase_center_app_ra",
+            "phase_center_app_dec",
+            "phase_center_frame_pa",
+            "phase_center_catalog",
+            "telescope_location",
+            "telescope_name",
+            "instrument",
+            "flag_array",
+            "nsample_array",
+            "scan_number_array",
+        ],
+    )
+    print(np.sum(np.abs(diff.data_array) ** 2.0))
+
+
+def run_newcal_with_mmode_amp_offset_May17():
+
+    datafile = "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj.ms"
+    file_directories = [
+        "/data03/rbyrne/20231222/test_pyuvsim_modeling",
+        "/data03/rbyrne/20231222/matvis_modeling",
+        "/data03/rbyrne/20231222/matvis_modeling",
+    ]
+    model_files = [
+        "cal46_time11_conj_mmode_amp_offset_with_cyg_cas_pyuvsim_nside128_sim.ms",
+        "cal46_time11_conj_mmode_amp_offset_with_cyg_cas_matvis_nside128_sim.ms",
+        "cal46_time11_conj_mmode_amp_offset_with_cyg_cas_matvis_nside512_sim.ms",
+    ]
+    model_names = [
+        "mmode_amp_offset_with_cyg_cas_pyuvsim_nside128",
+        "mmode_amp_offset_with_cyg_cas_matvis_nside128",
+        "mmode_amp_offset_with_cyg_cas_matvis_nside512",
+    ]
+
+    for model_ind, model_file in enumerate(model_files):
+        uvcal = calibration_wrappers.calibration_per_pol(
+            datafile,
+            f"{file_directories[model_ind]}/{model_file}",
+            data_use_column="DATA",
+            model_use_column="DATA",
+            min_cal_baseline_lambda=10,
+            verbose=True,
+            log_file_path=f"{file_directories[model_ind]}/calibration_logs/cal_log_{model_names[model_ind]}_May17.txt",
+        )
+        uvcal.write_calfits(
+            f"{file_directories[model_ind]}/calfits_files/cal46_time11_newcal_{model_names[model_ind]}.calfits",
+            clobber=True,
+        )
+        data = pyuvdata.UVData()
+        data.read_ms(
+            datafile,
+            data_column="DATA",
+        )
+        pyuvdata.utils.uvcalibrate(data, uvcal, inplace=True, time_check=False)
+        data.reorder_pols(order="CASA")
+        data.write_ms(
+            f"{file_directories[model_ind]}/cal46_time11_newcal_{model_names[model_ind]}.ms",
+            fix_autos=True,
+            clobber=True,
+        )
+
+
 if __name__ == "__main__":
-    test_mmode_models_May16()
+    run_newcal_with_mmode_amp_offset_May17()
