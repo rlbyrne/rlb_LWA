@@ -9,6 +9,7 @@ import pyradiosky_utils
 
 # Source models downloaded from http://cdsarc.u-strasbg.fr/viz-bin/cat/J/A+A/635/A150#/browse
 # Reference: de Gasperin et al. 2020, https://doi.org/10.1051/0004-6361/201936844
+# For more information about the model format, see https://sourceforge.net/p/wsclean/wiki/ComponentList/
 
 
 def format_ra_deg(ra_str):
@@ -40,13 +41,29 @@ def format_dec_deg(dec_str):
     return dec_val
 
 
-def interpolate_flux(flux_I_orig, freq_orig, freq_new, spectral_indices):
+def interpolate_flux(
+    flux_I_orig, freq_orig, freq_new, spectral_indices, use_log_spectral_ind
+):
     # Note that this is not typically how spectral indices are calculated
     # See Gasperin et al. 2020 for reference
 
     flux_I_new = np.copy(flux_I_orig)
-    for ind in range(np.shape(spectral_indices)[1]):
-        flux_I_new += spectral_indices[:, ind] * (freq_new / freq_orig - 1) ** (ind + 1)
+
+    log_indices = np.where(use_log_spectral_ind)[0]
+    if len(log_indices) > 0:
+        for ind in range(np.shape(spectral_indices)[1]):
+            flux_I_new[log_indices] += np.exp(
+                spectral_indices[log_indices, ind]
+                * np.log(freq_new / freq_orig) ** (ind + 1)
+            )
+
+    ordinary_indices = np.where(~use_log_spectral_ind)[0]
+    if len(ordinary_indices) > 0:
+        for ind in range(np.shape(spectral_indices)[1]):
+            flux_I_new[ordinary_indices] += spectral_indices[ordinary_indices, ind] * (
+                freq_new / freq_orig - 1
+            ) ** (ind + 1)
+
     return flux_I_new
 
 
@@ -66,6 +83,7 @@ def convert_wsclean_txt_models_to_pyradiosky(txt_path, target_freq_hz, source_na
     dec_deg = np.full(ncomps, np.nan, dtype=float)
     flux_I_orig = np.full(ncomps, np.nan, dtype=float)
     spectral_indices = np.zeros((ncomps, 6), dtype=float)
+    use_log_spectral_ind = np.zeros((ncomps), dtype=bool)
     freq_hz = np.full(ncomps, np.nan, dtype=float)
     major_axis_arcsec = np.zeros(ncomps, dtype=float)  # Not used by pyradiosky
     minor_axis_arcsec = np.zeros(ncomps, dtype=float)  # Not used by pyradiosky
@@ -99,6 +117,12 @@ def convert_wsclean_txt_models_to_pyradiosky(txt_path, target_freq_hz, source_na
                 spectral_indices[comp_ind, ind] = spec_ind_value
         else:
             spectral_indices[comp_ind, 0] = line_split_new[5]
+        if line_split_new[6] == "false":
+            use_log_spectral_ind[comp_ind] = False
+        elif line_split_new[6] == "true":
+            use_log_spectral_ind[comp_ind] = True
+        else:
+            print("WARNING: Unknown spectral index type.")
         freq_hz[comp_ind] = line_split_new[7]
         if len(line_split_new[8]) > 0:
             major_axis_arcsec[comp_ind] = line_split_new[8]
@@ -108,7 +132,9 @@ def convert_wsclean_txt_models_to_pyradiosky(txt_path, target_freq_hz, source_na
             orientation[comp_ind] = line_split_new[10]
 
     # Convert flux values to target freq
-    flux_I = interpolate_flux(flux_I_orig, freq_hz, target_freq_hz, spectral_indices)
+    flux_I = interpolate_flux(
+        flux_I_orig, freq_hz, target_freq_hz, spectral_indices, use_log_spectral_ind
+    )
 
     nfreqs = 1
     stokes = Quantity(np.zeros((4, nfreqs, ncomps), dtype=float), "Jy")
@@ -132,7 +158,7 @@ def convert_wsclean_txt_models_to_pyradiosky(txt_path, target_freq_hz, source_na
 
 if __name__ == "__main__":
 
-    use_freq = 70 * 1e6
+    use_freq = 47839599.609375
     cas_cat = convert_wsclean_txt_models_to_pyradiosky(
         "/Users/ruby/Astro/Gasperin2020_source_models/Cas-sources.txt",
         use_freq,
@@ -158,10 +184,10 @@ if __name__ == "__main__":
     combined_cat = cas_cyg.concat(tau_cat, inplace=False)
     combined_cat.concat(vir_cat, inplace=True)
     cas_cyg.write_skyh5(
-        "/Users/ruby/Astro/Gasperin2020_source_models/Gasperin2020_cyg_cas.skyh5"
+        "/Users/ruby/Astro/Gasperin2020_source_models/Gasperin2020_cyg_cas_48MHz.skyh5"
     )
     combined_cat.write_skyh5(
-        "/Users/ruby/Astro/Gasperin2020_source_models/Gasperin2020_sources.skyh5"
+        "/Users/ruby/Astro/Gasperin2020_source_models/Gasperin2020_sources_48MHz.skyh5"
     )
 
-    #pyradiosky_utils.plot_skymodel(combined_cat)
+    # pyradiosky_utils.plot_skymodel(combined_cat)
