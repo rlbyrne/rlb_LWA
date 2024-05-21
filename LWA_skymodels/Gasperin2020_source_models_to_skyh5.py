@@ -44,8 +44,7 @@ def format_dec_deg(dec_str):
 def interpolate_flux(
     flux_I_orig, freq_orig, freq_new, spectral_indices, use_log_spectral_ind
 ):
-    # Note that this is not typically how spectral indices are calculated
-    # See Gasperin et al. 2020 for reference
+    # See https://sourceforge.net/p/wsclean/wiki/ComponentList/ for reference
 
     flux_I_new = np.copy(flux_I_orig)
 
@@ -65,6 +64,18 @@ def interpolate_flux(
             ) ** (ind + 1)
 
     return flux_I_new
+
+
+def fit_spectral_index(flux_I_orig, spectral_indices, use_log_spectral_ind):
+
+    spectral_indices_fit = np.zeros((np.shape(spectral_indices)[0]), dtype=float)
+    log_indices = np.where(use_log_spectral_ind)[0]
+    spectral_indices_fit[log_indices] = spectral_indices[log_indices, 0]
+    ordinary_indices = np.where(~use_log_spectral_ind)[0]
+    spectral_indices_fit[ordinary_indices] = (
+        spectral_indices[ordinary_indices, 0] / flux_I_orig
+    )
+    return spectral_indices_fit
 
 
 def convert_wsclean_txt_models_to_pyradiosky(txt_path, target_freq_hz, source_name=""):
@@ -135,6 +146,13 @@ def convert_wsclean_txt_models_to_pyradiosky(txt_path, target_freq_hz, source_na
     flux_I = interpolate_flux(
         flux_I_orig, freq_hz, target_freq_hz, spectral_indices, use_log_spectral_ind
     )
+    # Interpolate spectral indices to a single number per component
+    spectral_indices_use = fit_spectral_index(
+        flux_I_orig, spectral_indices, use_log_spectral_ind
+    )
+    mean_spectral_index = np.sum(flux_I_orig * spectral_indices_use) / np.sum(
+        flux_I_orig
+    )
 
     nfreqs = 1
     stokes = Quantity(np.zeros((4, nfreqs, ncomps), dtype=float), "Jy")
@@ -148,11 +166,31 @@ def convert_wsclean_txt_models_to_pyradiosky(txt_path, target_freq_hz, source_na
         stokes=stokes,
         spectral_type="spectral_index",
         reference_frequency=Quantity(np.full(ncomps, target_freq_hz), "hertz"),
-        spectral_index=np.full(
-            ncomps, -0.8
-        ),  # Spoof spectral index because convention does not match
+        spectral_index=spectral_indices_use,
+        frame="icrs",
     )
 
+    return catalog
+
+
+def concatenate_catalogs(cat1, cat2):
+
+    catalog = pyradiosky.SkyModel(
+        name=np.concatenate((cat1.name, cat2.name)),
+        extended_model_group=np.concatenate(
+            (cat1.extended_model_group, cat2.extended_model_group)
+        ),
+        ra=np.concatenate((cat1.ra, cat2.ra)),
+        dec=np.concatenate((cat1.dec, cat2.dec)),
+        stokes=np.concatenate((cat1.stokes, cat2.stokes), axis=2),
+        spectral_type="spectral_index",
+        reference_frequency=np.concatenate(
+            (cat1.reference_frequency, cat2.reference_frequency)
+        ),
+        spectral_index=np.concatenate((cat1.spectral_index, cat2.spectral_index)),
+        frame="icrs",
+    )
+    catalog.check()
     return catalog
 
 
@@ -180,9 +218,9 @@ if __name__ == "__main__":
         source_name="Vir",
     )
 
-    cas_cyg = cas_cat.concat(cyg_cat, inplace=False)
-    combined_cat = cas_cyg.concat(tau_cat, inplace=False)
-    combined_cat.concat(vir_cat, inplace=True)
+    cas_cyg = concatenate_catalogs(cas_cat, cyg_cat)
+    combined_cat = concatenate_catalogs(cas_cat, tau_cat)
+    combined_cat = concatenate_catalogs(combined_cat, vir_cat)
     cas_cyg.write_skyh5(
         "/Users/ruby/Astro/Gasperin2020_source_models/Gasperin2020_cyg_cas_48MHz.skyh5"
     )
