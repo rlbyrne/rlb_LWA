@@ -1,6 +1,8 @@
 import numpy as np
 import healpy as hp
+import scipy
 import pyradiosky
+import sys
 import astropy.units as units
 from astropy.units import Quantity
 from astropy.coordinates import Latitude, Longitude
@@ -53,28 +55,63 @@ def interpolate_flux(
         for ind in range(np.shape(spectral_indices)[1]):
             flux_I_new[log_indices] += np.exp(
                 spectral_indices[log_indices, ind]
-                * np.log(freq_new / freq_orig) ** (ind + 1)
+                * np.log(freq_new / freq_orig[log_indices]) ** (ind + 1)
             )
 
     ordinary_indices = np.where(~use_log_spectral_ind)[0]
     if len(ordinary_indices) > 0:
         for ind in range(np.shape(spectral_indices)[1]):
             flux_I_new[ordinary_indices] += spectral_indices[ordinary_indices, ind] * (
-                freq_new / freq_orig - 1
+                freq_new / freq_orig[ordinary_indices] - 1
             ) ** (ind + 1)
 
     return flux_I_new
 
 
-def fit_spectral_index(flux_I_orig, spectral_indices, use_log_spectral_ind):
+def fit_spectral_index(
+    flux_I_orig, freq_orig, freq_new, spectral_indices, use_log_spectral_ind
+):
 
     spectral_indices_fit = np.zeros((np.shape(spectral_indices)[0]), dtype=float)
+
     log_indices = np.where(use_log_spectral_ind)[0]
-    spectral_indices_fit[log_indices] = spectral_indices[log_indices, 0]
+    if len(log_indices) > 0:
+        sum_term_1 = np.zeros((len(log_indices)), dtype=float)
+        sum_term_2 = np.zeros((len(log_indices)), dtype=float)
+        for ind in range(np.shape(spectral_indices)[1]):
+            sum_term_1 += spectral_indices[log_indices, ind] * np.log(
+                freq_new / freq_orig[log_indices]
+            ) ** (ind + 1)
+            sum_term_2 += (
+                spectral_indices[log_indices, ind]
+                * (ind + 1)
+                * np.log(freq_new / freq_orig[log_indices]) ** (ind + 1)
+            )
+        lambertw_term = scipy.special.lambertw(np.exp(sum_term_1) * sum_term_2)
+        spectral_indices_fit[log_indices] = np.real(lambertw_term) / np.log(
+            freq_new / freq_orig[log_indices]
+        )
+
     ordinary_indices = np.where(~use_log_spectral_ind)[0]
-    spectral_indices_fit[ordinary_indices] = (
-        spectral_indices[ordinary_indices, 0] / flux_I_orig
-    )
+    if len(ordinary_indices) > 0:
+        sum_term = np.zeros((len(ordinary_indices)), dtype=float)
+        for ind in range(np.shape(spectral_indices)[1]):
+            sum_term += (
+                spectral_indices[ordinary_indices, ind]
+                * (ind + 1)
+                * (freq_new / freq_orig[ordinary_indices] - 1) ** ind
+            )
+        lambertw_term = scipy.special.lambertw(
+            freq_new
+            / freq_orig[ordinary_indices]
+            / flux_I_orig[ordinary_indices]
+            * np.log(freq_new / freq_orig[ordinary_indices])
+            * sum_term
+        )
+        spectral_indices_fit[ordinary_indices] = np.real(lambertw_term) / np.log(
+            freq_new / freq_orig[ordinary_indices]
+        )
+
     return spectral_indices_fit
 
 
@@ -146,13 +183,21 @@ def convert_wsclean_txt_models_to_pyradiosky(txt_path, target_freq_hz, source_na
     flux_I = interpolate_flux(
         flux_I_orig, freq_hz, target_freq_hz, spectral_indices, use_log_spectral_ind
     )
-    # Interpolate spectral indices to a single number per component
+    # Interpolate spectral indices to a single number. Use the same spectral index for all components.
+    if np.min(use_log_spectral_ind):
+        print(
+            "ERROR: Not all spectral indices are use the ordinary polynomial convention. Exiting."
+        )
+        sys.exit(1)
     spectral_indices_use = fit_spectral_index(
-        flux_I_orig, spectral_indices, use_log_spectral_ind
+        np.array([np.sum(flux_I_orig)]),
+        np.array([np.mean(freq_hz)]),
+        target_freq_hz,
+        np.sum(spectral_indices, axis=0)[np.newaxis, :],
+        np.array([False]),
     )
-    mean_spectral_index = np.sum(flux_I_orig * spectral_indices_use) / np.sum(
-        flux_I_orig
-    )
+    print(spectral_indices_use)
+    spectral_indices_use = np.full(ncomps, spectral_indices_use)
 
     nfreqs = 1
     stokes = Quantity(np.zeros((4, nfreqs, ncomps), dtype=float), "Jy")
@@ -222,10 +267,12 @@ if __name__ == "__main__":
     combined_cat = concatenate_catalogs(cas_cat, tau_cat)
     combined_cat = concatenate_catalogs(combined_cat, vir_cat)
     cas_cyg.write_skyh5(
-        "/Users/ruby/Astro/Gasperin2020_source_models/Gasperin2020_cyg_cas_48MHz.skyh5"
+        "/Users/ruby/Astro/Gasperin2020_source_models/Gasperin2020_cyg_cas_48MHz.skyh5",
+        clobber=True,
     )
     combined_cat.write_skyh5(
-        "/Users/ruby/Astro/Gasperin2020_source_models/Gasperin2020_sources_48MHz.skyh5"
+        "/Users/ruby/Astro/Gasperin2020_source_models/Gasperin2020_sources_48MHz.skyh5",
+        clobber=True,
     )
 
     # pyradiosky_utils.plot_skymodel(combined_cat)
