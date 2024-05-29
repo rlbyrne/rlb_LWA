@@ -13,4 +13,4 @@ mpirun -n 20 python ${script_path} ${catalog_path}/Gasperin2020_cyg_cas_48MHz.sk
 
 # Run diffuse
 diffuse_script_path=/home/rbyrne/rlb_LWA/LWA_data_preprocessing/generate_model_vis_diffuse.py
-mpirun -n 15 python ${diffuse_script_path} ${catalog_path}/ovro_lwa_sky_map_46.992MHz_nside512.skyh5 ${beam_file} ${input_obs} ${output_path}/${obsname}_mmode_2048_sim.uvfits
+mpirun -n 15 python ${diffuse_script_path} ${catalog_path}/ovro_lwa_sky_map_46.992MHz_nside512.skyh5 ${beam_file} ${input_obs} ${output_path}/${obsname}_mmode_46.992MHz_nside512_sim.uvfits
