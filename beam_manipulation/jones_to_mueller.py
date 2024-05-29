@@ -237,7 +237,8 @@ def plot_mueller_matrix(
     vmin=-1,
     vmax=1,
     contour_plot=True,
-    stokes=False,
+    stokes=False,  # If True, assumes sky polarization is in Stokes
+    pseudostokes=False,  # If True, assumes instrumental polarization is in pseudo-Stokes
 ):
 
     freq_ind = np.where(freq_axis[0, :] == plot_freq)[0][0]
@@ -259,7 +260,11 @@ def plot_mueller_matrix(
         pol_names = ["I", "Q", "U", "V"]
     else:
         pol_names = ["RA-RA", "Dec-Dec", "RA-Dec", "Dec-RA"]
-    instr_pol_names = ["XX", "YY", "XY", "YX"]
+
+    if pseudostokes:
+        instr_pol_names = ["pI", "pQ", "pU", "pV"]
+    else:
+        instr_pol_names = ["XX", "YY", "XY", "YX"]
 
     use_cmap = matplotlib.cm.get_cmap("Spectral").copy()
     use_cmap.set_bad(color="whitesmoke")
@@ -437,6 +442,32 @@ def pol_basis_transform_radec_to_stokes(mueller_mat, inplace=False):
         return mueller_mat_new
 
 
+def pol_basis_transform_instrumental_to_pseudostokes(mueller_mat, inplace=False):
+
+    mueller_mat_new = np.full_like(mueller_mat, np.nan)
+    # pseudo-Stokes I
+    mueller_mat_new[:, 0, 0, :, :, :] = (
+        mueller_mat[:, 0, 0, :, :, :] + mueller_mat[:, 0, 1, :, :, :]
+    )
+    # pseudo-Stokes Q
+    mueller_mat_new[:, 0, 1, :, :, :] = (
+        mueller_mat[:, 0, 0, :, :, :] - mueller_mat[:, 0, 1, :, :, :]
+    )
+    # pseudo-Stokes U
+    mueller_mat_new[:, 0, 2, :, :, :] = (
+        mueller_mat[:, 0, 2, :, :, :] + mueller_mat[:, 0, 3, :, :, :]
+    )
+    # pseudo-Stokes V
+    mueller_mat_new[:, 0, 3, :, :, :] = (
+        1j * mueller_mat[:, 0, 2, :, :, :] - 1j * mueller_mat[:, 0, 3, :, :, :]
+    )
+
+    if inplace:
+        mueller_mat = mueller_mat_new
+    else:
+        return mueller_mat_new
+
+
 def read_beam_txt_file(path, header_line=6):
 
     with open(path, "r") as f:
@@ -461,7 +492,9 @@ def read_beam_txt_file(path, header_line=6):
         jones_phi[point] = line_data[9] + 1j * line_data[10]
 
     za_axis = np.unique(za_deg)
-    za_axis = za_axis[np.where(za_axis != 0)[0]]  # Discard zenith points where the Jones matrix is undefined
+    za_axis = za_axis[
+        np.where(za_axis != 0)[0]
+    ]  # Discard zenith points where the Jones matrix is undefined
     freq_axis = np.unique(freq_mhz)
     az_axis = np.unique(az_deg)
     # Fill in other quadrants
