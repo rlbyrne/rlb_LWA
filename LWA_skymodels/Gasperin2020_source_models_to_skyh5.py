@@ -69,47 +69,35 @@ def interpolate_flux(
 
 
 def fit_spectral_index(
-    flux_I_orig, freq_orig, freq_new, spectral_indices, use_log_spectral_ind
+    flux_I_new, freq_orig, freq_new, spectral_indices, use_log_spectral_ind
 ):
 
     spectral_indices_fit = np.zeros((np.shape(spectral_indices)[0]), dtype=float)
 
     log_indices = np.where(use_log_spectral_ind)[0]
     if len(log_indices) > 0:
-        sum_term_1 = np.zeros((len(log_indices)), dtype=float)
-        sum_term_2 = np.zeros((len(log_indices)), dtype=float)
+        sum_term = np.zeros((len(log_indices)), dtype=float)
         for ind in range(np.shape(spectral_indices)[1]):
-            sum_term_1 += spectral_indices[log_indices, ind] * np.log(
-                freq_new / freq_orig[log_indices]
-            ) ** (ind + 1)
-            sum_term_2 += (
+            sum_term += (
                 spectral_indices[log_indices, ind]
                 * (ind + 1)
-                * np.log(freq_new / freq_orig[log_indices]) ** (ind + 1)
+                * np.log(freq_new / freq_orig[log_indices]) ** ind
             )
-        lambertw_term = scipy.special.lambertw(np.exp(sum_term_1) * sum_term_2)
-        spectral_indices_fit[log_indices] = np.real(lambertw_term) / np.log(
-            freq_new / freq_orig[log_indices]
-        )
+        spectral_indices_fit[log_indices] = sum_term
 
     ordinary_indices = np.where(~use_log_spectral_ind)[0]
     if len(ordinary_indices) > 0:
         sum_term = np.zeros((len(ordinary_indices)), dtype=float)
         for ind in range(np.shape(spectral_indices)[1]):
             sum_term += (
-                spectral_indices[ordinary_indices, ind]
+                1
+                / freq_orig[ordinary_indices]
+                * spectral_indices[ordinary_indices, ind]
                 * (ind + 1)
                 * (freq_new / freq_orig[ordinary_indices] - 1) ** ind
             )
-        lambertw_term = scipy.special.lambertw(
-            freq_new
-            / freq_orig[ordinary_indices]
-            / flux_I_orig[ordinary_indices]
-            * np.log(freq_new / freq_orig[ordinary_indices])
-            * sum_term
-        )
-        spectral_indices_fit[ordinary_indices] = np.real(lambertw_term) / np.log(
-            freq_new / freq_orig[ordinary_indices]
+        spectral_indices_fit[ordinary_indices] = (
+            freq_new / flux_I_new[ordinary_indices] * sum_term
         )
 
     return spectral_indices_fit
@@ -190,7 +178,7 @@ def convert_wsclean_txt_models_to_pyradiosky(txt_path, target_freq_hz, source_na
         )
         sys.exit(1)
     spectral_indices_use = fit_spectral_index(
-        np.array([np.sum(flux_I_orig)]),
+        np.array([np.sum(flux_I)]),
         np.array([np.mean(freq_hz)]),
         target_freq_hz,
         np.sum(spectral_indices, axis=0)[np.newaxis, :],
@@ -246,52 +234,49 @@ if __name__ == "__main__":
         use_freq,
         source_name="Cas",
     )
-    if False:
-        print(np.sum(cas_cat.stokes))
-        cyg_cat = convert_wsclean_txt_models_to_pyradiosky(
-            "/Users/ruby/Astro/Gasperin2020_source_models/Cyg-sources.txt",
-            use_freq,
-            source_name="Cyg",
-        )
-        print(np.sum(cyg_cat.stokes))
-        tau_cat = convert_wsclean_txt_models_to_pyradiosky(
-            "/Users/ruby/Astro/Gasperin2020_source_models/Tau-sources.txt",
-            use_freq,
-            source_name="Tau",
-        )
-        print(np.sum(tau_cat.stokes))
-        vir_cat = convert_wsclean_txt_models_to_pyradiosky(
-            "/Users/ruby/Astro/Gasperin2020_source_models/Vir-sources.txt",
-            use_freq,
-            source_name="Vir",
-        )
-        print(np.sum(vir_cat.stokes))
-
-        cas_cyg = concatenate_catalogs(cas_cat, cyg_cat)
-        combined_cat = concatenate_catalogs(cas_cyg, tau_cat)
-        combined_cat = concatenate_catalogs(combined_cat, vir_cat)
-        cas_cyg.write_skyh5(
-            "/Users/ruby/Astro/Gasperin2020_source_models/Gasperin2020_cyg_cas_48MHz.skyh5",
-            clobber=True,
-        )
-        combined_cat.write_skyh5(
-            "/Users/ruby/Astro/Gasperin2020_source_models/Gasperin2020_sources_48MHz.skyh5",
-            clobber=True,
-        )
-
-    cas_cat_single_source = pyradiosky.SkyModel(
-        name=cas_cat.name[0],
-        extended_model_group=cas_cat.extended_model_group[0],
-        ra=np.mean(cas_cat.ra),
-        dec=np.mean(cas_cat.dec),
-        stokes=np.sum(cas_cat.stokes, axis=2),
-        spectral_type="spectral_index",
-        reference_frequency=Quantity(np.full(1, use_freq), "hertz"),
-        spectral_index=0.0,
-        frame="icrs",
+    cyg_cat = convert_wsclean_txt_models_to_pyradiosky(
+        "/Users/ruby/Astro/Gasperin2020_source_models/Cyg-sources.txt",
+        use_freq,
+        source_name="Cyg",
     )
-    cas_cat_single_source.write_skyh5(
-        "/Users/ruby/Astro/Gasperin2020_source_models/Cas_single_source_48MHz.skyh5",
+    tau_cat = convert_wsclean_txt_models_to_pyradiosky(
+        "/Users/ruby/Astro/Gasperin2020_source_models/Tau-sources.txt",
+        use_freq,
+        source_name="Tau",
+    )
+    vir_cat = convert_wsclean_txt_models_to_pyradiosky(
+        "/Users/ruby/Astro/Gasperin2020_source_models/Vir-sources.txt",
+        use_freq,
+        source_name="Vir",
+    )
+
+    cas_cyg = concatenate_catalogs(cas_cat, cyg_cat)
+    combined_cat = concatenate_catalogs(cas_cyg, tau_cat)
+    combined_cat = concatenate_catalogs(combined_cat, vir_cat)
+    cas_cyg.write_skyh5(
+        "/Users/ruby/Astro/Gasperin2020_source_models/Gasperin2020_cyg_cas_48MHz.skyh5",
         clobber=True,
     )
+    combined_cat.write_skyh5(
+        "/Users/ruby/Astro/Gasperin2020_source_models/Gasperin2020_sources_48MHz.skyh5",
+        clobber=True,
+    )
+
+    # Model Cas A as a single point source
+    if False:
+        cas_cat_single_source = pyradiosky.SkyModel(
+            name=cas_cat.name[0],
+            extended_model_group=cas_cat.extended_model_group[0],
+            ra=np.mean(cas_cat.ra),
+            dec=np.mean(cas_cat.dec),
+            stokes=np.sum(cas_cat.stokes, axis=2),
+            spectral_type="spectral_index",
+            reference_frequency=Quantity(np.full(1, use_freq), "hertz"),
+            spectral_index=0.0,
+            frame="icrs",
+        )
+        cas_cat_single_source.write_skyh5(
+            "/Users/ruby/Astro/Gasperin2020_source_models/Cas_single_source_48MHz.skyh5",
+            clobber=True,
+        )
     # pyradiosky_utils.plot_skymodel(combined_cat)
