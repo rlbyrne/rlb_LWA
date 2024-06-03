@@ -1650,5 +1650,45 @@ def run_newcal_with_mmode_amp_offset_May17():
         )
 
 
+def run_newcal_Jun3():
+
+    datafile = "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj.ms"
+    model_files = [
+        "/data03/rbyrne/20231222/test_diffuse_normalization/cal46_time11_conj_deGasperin_cyg_cas_48MHz_sim.uvfits",
+        "/data03/rbyrne/20231222/test_diffuse_normalization/cal46_time11_conj_deGasperin_cyg_cas_48MHz_with_mmode_sim.uvfits",
+    ]
+    model_names = [
+        "deGasperin_cyg_cas_48MHz",
+        "deGasperin_cyg_cas_48MHz_with_mmode",
+    ]
+    output_directory = "/data03/rbyrne/20231222/test_diffuse_normalization"
+
+    for model_ind, model_file in enumerate(model_files):
+        uvcal = calibration_wrappers.calibration_per_pol(
+            datafile,
+            f"{output_directory}/{model_file}",
+            data_use_column="DATA",
+            min_cal_baseline_lambda=10,
+            verbose=True,
+            log_file_path=f"{output_directory}/calibration_logs/cal_log_{model_names[model_ind]}_May17.txt",
+        )
+        uvcal.write_calfits(
+            f"{output_directory}/calfits_files/cal46_time11_newcal_{model_names[model_ind]}.calfits",
+            clobber=True,
+        )
+        data = pyuvdata.UVData()
+        data.read_ms(
+            datafile,
+            data_column="DATA",
+        )
+        pyuvdata.utils.uvcalibrate(data, uvcal, inplace=True, time_check=False)
+        data.reorder_pols(order="CASA")
+        data.write_ms(
+            f"{output_directory}/cal46_time11_newcal_{model_names[model_ind]}.ms",
+            fix_autos=True,
+            clobber=True,
+        )
+
+
 if __name__ == "__main__":
-    run_newcal_with_mmode_amp_offset_May17()
+    run_newcal_Jun3()
