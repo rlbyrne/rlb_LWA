@@ -157,18 +157,11 @@ def reformat_matvis_output(
 
 
 def combine_mmode_and_sources(
-    source_simulation="/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_cyg_cas_sim.ms",
-    mmode_maps=[
-        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_mmode_sim.ms",
-        "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_matvis_sim_reformatted.ms",
-        "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_matvis_sim_nside512_reformatted.ms",
-    ],
-    output_filenames=[
-        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_mmode_amp_offset_with_cyg_cas_pyuvsim_nside128_sim.ms",
-        "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_amp_offset_with_cyg_cas_matvis_nside128_sim.ms",
-        "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_amp_offset_with_cyg_cas_matvis_nside512_sim.ms",
-    ],
-    mmode_amp_offset=0.8387082,
+    source_simulation=None,
+    mmode_simulation=None,
+    output_filename=None,
+    adjust_mmode_flux_scale=False,
+    calibrated_data_filepath=None,  # Required if adjust_mmode_flux_scale is True
 ):
 
     sources = pyuvdata.UVData()
@@ -176,19 +169,26 @@ def combine_mmode_and_sources(
     sources.phase_to_time(np.mean(sources.time_array))
     sources.filename = [""]
 
-    for mmode_map_ind in range(len(mmode_maps)):
-        mmode = pyuvdata.UVData()
-        mmode.read(mmode_maps[mmode_map_ind])
-        mmode.data_array *= mmode_amp_offset
-        mmode.phase_to_time(np.mean(sources.time_array))
-        mmode.filename = [""]
-        mmode.sum_vis(
+    mmode = pyuvdata.UVData()
+    mmode.read(mmode_simulation)
+    mmode.phase_to_time(np.mean(sources.time_array))
+    mmode.filename = [""]
+
+    if adjust_mmode_flux_scale:
+
+        calibrated_data = pyuvdata.UVData()
+        calibrated_data.read(calibrated_data_filepath)
+        calibrated_data.phase_to_time(np.mean(sources.time_array))
+        calibrated_data.filename = [""]
+        calibrated_data.sum_vis(
             sources,
+            difference=True,
             inplace=True,
             override_params=[
                 "antenna_diameters",
                 "integration_time",
                 "lst_array",
+                "uvw_array",
                 "phase_center_id_array",
                 "phase_center_app_ra",
                 "phase_center_app_dec",
@@ -197,11 +197,124 @@ def combine_mmode_and_sources(
                 "telescope_location",
                 "telescope_name",
                 "instrument",
-                "filename",
+                "flag_array",
+                "nsample_array",
+                "scan_number_array",
+                "timesys",
+                "dut1",
+                "gst0",
+                "earth_omega",
+                "rdate",
+            ],
+        )  # Get residual
+        calibrated_data.write_ms(
+            "/data03/rbyrne/20231222/test_diffuse_normalization/cal46_time11_newcal_deGasperin_cyg_cas_48MHz_residual.ms",
+            clobber=True,
+        )
+        calibrated_data.select(polarizations=[-5, -6])
+        mmode_use = mmode.select(polarizations=[-5, -6], inplace=False)
+
+        mmode_use.data_array[np.where(mmode_use.flag_array)] = 0.0
+        calibrated_data.data_array[np.where(calibrated_data.flag_array)] = 0.0
+
+        diff_orig = calibrated_data.sum_vis(
+            mmode_use,
+            difference=True,
+            inplace=False,
+            override_params=[
+                "antenna_diameters",
+                "integration_time",
+                "lst_array",
                 "uvw_array",
+                "phase_center_id_array",
+                "phase_center_app_ra",
+                "phase_center_app_dec",
+                "phase_center_frame_pa",
+                "phase_center_catalog",
+                "telescope_location",
+                "telescope_name",
+                "instrument",
+                "flag_array",
+                "nsample_array",
+                "scan_number_array",
+                "timesys",
+                "dut1",
+                "gst0",
+                "earth_omega",
+                "rdate",
             ],
         )
-        mmode.write_ms(output_filenames[mmode_map_ind], clobber=True)
+        print(
+            f"Total visibility power, before amplitude offset correction: {np.sum(np.abs(diff_orig.data_array) ** 2.0)}"
+        )
+
+        mmode_amp_offset = np.sum(
+            np.real(np.conj(mmode_use.data_array) * calibrated_data.data_array)
+        ) / np.sum(np.abs(mmode_use.data_array) ** 2.0)
+
+        print(f"Calculated amplitude offset: {mmode_amp_offset}")
+
+        mmode_use.data_array *= mmode_amp_offset
+        diff_new = calibrated_data.sum_vis(
+            mmode_use,
+            difference=True,
+            inplace=False,
+            override_params=[
+                "antenna_diameters",
+                "integration_time",
+                "lst_array",
+                "uvw_array",
+                "phase_center_id_array",
+                "phase_center_app_ra",
+                "phase_center_app_dec",
+                "phase_center_frame_pa",
+                "phase_center_catalog",
+                "telescope_location",
+                "telescope_name",
+                "instrument",
+                "flag_array",
+                "nsample_array",
+                "scan_number_array",
+                "timesys",
+                "dut1",
+                "gst0",
+                "earth_omega",
+                "rdate",
+            ],
+        )
+        print(
+            f"Total visibility power, after amplitude offset correction: {np.sum(np.abs(diff_new.data_array) ** 2.0)}"
+        )
+
+        mmode.data_array *= mmode_amp_offset
+
+    mmode.sum_vis(
+        sources,
+        inplace=True,
+        override_params=[
+            "antenna_diameters",
+            "integration_time",
+            "lst_array",
+            "uvw_array",
+            "phase_center_id_array",
+            "phase_center_app_ra",
+            "phase_center_app_dec",
+            "phase_center_frame_pa",
+            "phase_center_catalog",
+            "telescope_location",
+            "telescope_name",
+            "instrument",
+            "flag_array",
+            "nsample_array",
+            "scan_number_array",
+            "timesys",
+            "dut1",
+            "gst0",
+            "earth_omega",
+            "rdate",
+        ],
+    )
+    mmode.write_uvfits(output_filename)
 
 
 if __name__ == "__main__":
@@ -228,4 +341,10 @@ if __name__ == "__main__":
             "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_matvis_sim_nside512_reformatted.ms",
         )
 
-    combine_mmode_and_sources()
+    combine_mmode_and_sources(
+        source_simulation="/data03/rbyrne/20231222/test_diffuse_normalization/cal46_time11_conj_deGasperin_cyg_cas_48MHz_sim.uvfits",
+        mmode_simulation="/data03/rbyrne/20231222/test_diffuse_normalization/cal46_time11_conj_mmode_46.992MHz_nside512_sim.uvfits",
+        output_filename="/data03/rbyrne/20231222/test_diffuse_normalization/cal46_time11_conj_deGasperin_cyg_cas_48MHz_with_normalized_mmode_sim.uvfits",
+        adjust_mmode_flux_scale=True,
+        calibrated_data_filepath="/data03/rbyrne/20231222/test_diffuse_normalization/cal46_time11_newcal_deGasperin_cyg_cas_48MHz_with_mmode.ms",
+    )

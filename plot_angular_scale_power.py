@@ -158,16 +158,13 @@ def plot_power(data_path, model_path, plot_save_dir, plot_prefix=""):
 if __name__ == "__main__":
 
     model_files = [
-        "/data03/rbyrne/20231222/test_diffuse_normalization/cal46_time11_conj_deGasperin_cyg_cas_48MHz_sim.uvfits",
-        "/data03/rbyrne/20231222/test_diffuse_normalization/cal46_time11_conj_deGasperin_cyg_cas_48MHz_with_mmode_sim.uvfits",
+        "/data03/rbyrne/20231222/test_diffuse_normalization/cal46_time11_conj_mmode_46.992MHz_nside512_sim.uvfits",
     ]
     data_files = [
-        "/data03/rbyrne/20231222/test_diffuse_normalization/cal46_time11_newcal_deGasperin_cyg_cas_48MHz.ms",
-        "/data03/rbyrne/20231222/test_diffuse_normalization/cal46_time11_newcal_deGasperin_cyg_cas_48MHz_with_mmode.ms",
+        "/data03/rbyrne/20231222/test_diffuse_normalization/cal46_time11_newcal_deGasperin_cyg_cas_48MHz_residual.ms",
     ]
     model_names = [
-        "deGasperin_cyg_cas",
-        "deGasperin_cyg_cas_with_mmode",
+        "mmode_with_residual_data",
     ]
     for file_ind in range(len(model_names)):
         plot_power(
