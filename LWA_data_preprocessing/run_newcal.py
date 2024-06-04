@@ -1654,11 +1654,11 @@ def run_newcal_Jun3():
 
     datafile = "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj.ms"
     model_files = [
-        "/data03/rbyrne/20231222/test_diffuse_normalization/cal46_time11_conj_deGasperin_cyg_cas_48MHz_sim.uvfits",
+        # "/data03/rbyrne/20231222/test_diffuse_normalization/cal46_time11_conj_deGasperin_cyg_cas_48MHz_sim.uvfits",
         "/data03/rbyrne/20231222/test_diffuse_normalization/cal46_time11_conj_deGasperin_cyg_cas_48MHz_with_mmode_sim.uvfits",
     ]
     model_names = [
-        "deGasperin_cyg_cas_48MHz",
+        # "deGasperin_cyg_cas_48MHz",
         "deGasperin_cyg_cas_48MHz_with_mmode",
     ]
     output_directory = "/data03/rbyrne/20231222/test_diffuse_normalization"
@@ -1666,11 +1666,11 @@ def run_newcal_Jun3():
     for model_ind, model_file in enumerate(model_files):
         uvcal = calibration_wrappers.calibration_per_pol(
             datafile,
-            f"{output_directory}/{model_file}",
+            model_file,
             data_use_column="DATA",
             min_cal_baseline_lambda=10,
             verbose=True,
-            log_file_path=f"{output_directory}/calibration_logs/cal_log_{model_names[model_ind]}_May17.txt",
+            log_file_path=f"{output_directory}/calibration_logs/cal_log_{model_names[model_ind]}_Jun4.txt",
         )
         uvcal.write_calfits(
             f"{output_directory}/calfits_files/cal46_time11_newcal_{model_names[model_ind]}.calfits",

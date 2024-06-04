@@ -81,6 +81,11 @@ def plot_power(data_path, model_path, plot_save_dir, plot_prefix=""):
             "telescope_name",
             "antenna_diameters",
             "uvw_array",
+            "rdate",
+            "gst0",
+            "earth_omega",
+            "dut1",
+            "timesys",
         ],
     )
 
@@ -153,42 +158,21 @@ def plot_power(data_path, model_path, plot_save_dir, plot_prefix=""):
 if __name__ == "__main__":
 
     model_files = [
-        # "/data03/rbyrne/20231222/test_pyuvsim_modeling/orig_model.ms",
-        # "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_cyg_cas_sim.ms",
-        # "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_VLSS_sim.ms",
-        # "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_deGasperin_sources_sim.ms",
-        # "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_deGasperin_cyg_cas_sim.ms",
-        # "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_deGasperin_cyg_cas_sim_NMbeam.ms",
-        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_mmode_with_cyg_cas_pyuvsim_nside128_sim.ms",
-        "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_with_cyg_cas_matvis_nside128_sim.ms",
-        "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_with_cyg_cas_matvis_nside512_sim.ms",
+        "/data03/rbyrne/20231222/test_diffuse_normalization/cal46_time11_conj_deGasperin_cyg_cas_48MHz_sim.uvfits",
+        "/data03/rbyrne/20231222/test_diffuse_normalization/cal46_time11_conj_deGasperin_cyg_cas_48MHz_with_mmode_sim.uvfits",
     ]
     data_files = [
-        # "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_orig.ms",
-        # "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_cyg_cas.ms",
-        # "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_VLSS.ms",
-        # "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_deGasperin_sources.ms",
-        # "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_deGasperin_cyg_cas.ms",
-        # "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_deGasperin_cyg_cas_NMbeam.ms",
-        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_newcal_mmode_with_cyg_cas_pyuvsim_nside128.ms",
-        "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_newcal_mmode_with_cyg_cas_matvis_nside128.ms",
-        "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_newcal_mmode_with_cyg_cas_matvis_nside512.ms",
+        "/data03/rbyrne/20231222/test_diffuse_normalization/cal46_time11_newcal_deGasperin_cyg_cas_48MHz.ms",
+        "/data03/rbyrne/20231222/test_diffuse_normalization/cal46_time11_newcal_deGasperin_cyg_cas_48MHz_with_mmode.ms",
     ]
     model_names = [
-        # "orig",
-        # "cyg_cas",
-        # "VLSS",
-        # "deGasperin_sources",
-        # "deGasperin_cyg_cas",
-        # "deGasperin_cyg_cas_NMbeam",
-        "mmode_pyuvsim_nside128",
-        "mmode_matvis_nside128",
-        "mmode_matvis_nside512",
+        "deGasperin_cyg_cas",
+        "deGasperin_cyg_cas_with_mmode",
     ]
     for file_ind in range(len(model_names)):
         plot_power(
             data_files[file_ind],
             model_files[file_ind],
-            "/data03/rbyrne/20231222/test_pyuvsim_modeling/power_plots",
+            "/data03/rbyrne/20231222/test_diffuse_normalization/power_plots",
             plot_prefix=model_names[file_ind],
         )
