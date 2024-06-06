@@ -1,12 +1,10 @@
 import numpy as np
 import healpy as hp
-import scipy
 import pyradiosky
 import sys
 import astropy.units as units
 from astropy.units import Quantity
 from astropy.coordinates import Latitude, Longitude
-import pyradiosky_utils
 
 
 # Source models downloaded from http://cdsarc.u-strasbg.fr/viz-bin/cat/J/A+A/635/A150#/browse
@@ -205,24 +203,33 @@ def convert_wsclean_txt_models_to_pyradiosky(txt_path, target_freq_hz, source_na
     return catalog
 
 
-def concatenate_catalogs(cat1, cat2):
+def concatenate_catalogs(catalog_list):
 
-    catalog = pyradiosky.SkyModel(
-        name=np.concatenate((cat1.name, cat2.name)),
-        extended_model_group=np.concatenate(
-            (cat1.extended_model_group, cat2.extended_model_group)
-        ),
-        ra=np.concatenate((cat1.ra, cat2.ra)),
-        dec=np.concatenate((cat1.dec, cat2.dec)),
-        stokes=np.concatenate((cat1.stokes, cat2.stokes), axis=2),
-        spectral_type="spectral_index",
-        reference_frequency=np.concatenate(
-            (cat1.reference_frequency, cat2.reference_frequency)
-        ),
-        spectral_index=np.concatenate((cat1.spectral_index, cat2.spectral_index)),
-        frame="icrs",
-    )
-    catalog.check()
+    if len(catalog_list) > 1:
+        for cat_ind in range(len(catalog_list) - 1):
+            if cat_ind == 0:
+                cat1 = catalog_list[cat_ind]
+            cat2 = catalog_list[cat_ind + 1]
+            catalog = pyradiosky.SkyModel(
+                name=np.concatenate((cat1.name, cat2.name)),
+                extended_model_group=np.concatenate(
+                    (cat1.extended_model_group, cat2.extended_model_group)
+                ),
+                ra=np.concatenate((cat1.ra, cat2.ra)),
+                dec=np.concatenate((cat1.dec, cat2.dec)),
+                stokes=np.concatenate((cat1.stokes, cat2.stokes), axis=2),
+                spectral_type="spectral_index",
+                reference_frequency=np.concatenate(
+                    (cat1.reference_frequency, cat2.reference_frequency)
+                ),
+                spectral_index=np.concatenate(
+                    (cat1.spectral_index, cat2.spectral_index)
+                ),
+                frame="icrs",
+            )
+            catalog.check()
+            cat1 = catalog
+
     return catalog
 
 
@@ -250,9 +257,8 @@ if __name__ == "__main__":
         source_name="Vir",
     )
 
-    cas_cyg = concatenate_catalogs(cas_cat, cyg_cat)
-    combined_cat = concatenate_catalogs(cas_cyg, tau_cat)
-    combined_cat = concatenate_catalogs(combined_cat, vir_cat)
+    cas_cyg = concatenate_catalogs([cas_cat, cyg_cat])
+    combined_cat = concatenate_catalogs([cas_cat, cyg_cat, tau_cat, vir_cat])
     cas_cyg.write_skyh5(
         "/Users/ruby/Astro/Gasperin2020_source_models/Gasperin2020_cyg_cas_48MHz.skyh5",
         clobber=True,
