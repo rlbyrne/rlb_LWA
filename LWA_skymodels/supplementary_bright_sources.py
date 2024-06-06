@@ -71,12 +71,11 @@ def interpolate_spec_ind(spectral_coeffs, target_freq_hz):
     spec_ind = 0
     for coeff_ind, coeff in enumerate(spectral_coeffs[1:]):
         spec_ind += coeff * (coeff_ind + 1) * np.log(target_freq_hz / 1e9) ** coeff_ind
-    return np.exp(spec_ind)
+    return spec_ind
 
 
 if __name__ == "__main__":
     target_freq_hz = 47839599.609375
-    print(np.log(target_freq_hz / 1e9))
     source_dict = get_source_info()
     names = list(source_dict.keys())
     ras = []
@@ -93,6 +92,7 @@ if __name__ == "__main__":
         )
         spec_inds.append(spectral_index)
 
+    print(stokes[0, 0, :])
     print(spec_inds)
 
     catalog = pyradiosky.SkyModel(
