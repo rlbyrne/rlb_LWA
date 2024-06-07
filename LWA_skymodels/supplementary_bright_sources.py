@@ -74,8 +74,8 @@ def interpolate_spec_ind(spectral_coeffs, target_freq_hz):
     return spec_ind
 
 
-if __name__ == "__main__":
-    target_freq_hz = 47839599.609375
+def create_skymodel(target_freq_hz):
+
     source_dict = get_source_info()
     names = list(source_dict.keys())
     ras = []
@@ -92,9 +92,6 @@ if __name__ == "__main__":
         )
         spec_inds.append(spectral_index)
 
-    print(stokes[0, 0, :])
-    print(spec_inds)
-
     catalog = pyradiosky.SkyModel(
         name=names,
         extended_model_group=names,
@@ -106,4 +103,22 @@ if __name__ == "__main__":
         spectral_index=spec_inds,
         frame="icrs",
     )
-    catalog.check()
+    if not catalog.check():
+        print("WARNING: Catalog check failed.")
+
+    return catalog
+
+
+if __name__ == "__main__":
+    catalog = create_skymodel(47839599.609375)
+
+    degasperin_catalog = pyradiosky.SkyModel()
+    degasperin_catalog.read(
+        "/Users/ruby/Astro/Gasperin2020_source_models/Gasperin2020_sources_48MHz.skyh5"
+    )
+
+    catalog.concat(degasperin_catalog, inplace=True)
+    catalog.write_skyh5(
+        "/Users/ruby/Astro/Gasperin2020_source_models/Gasperin2020_sources_plus_48MHz.skyh5",
+        clobber=True,
+    )
