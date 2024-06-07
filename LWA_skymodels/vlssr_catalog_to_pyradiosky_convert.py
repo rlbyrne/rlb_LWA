@@ -45,9 +45,9 @@ cat_RA_s = np.array([float(val) for val in cat_RA_s])
 cat_Dec_d_int = np.array([int(val) for val in cat_Dec_d])
 cat_Dec_m = np.array([int(val) for val in cat_Dec_m])
 cat_Dec_s = np.array([float(val) for val in cat_Dec_s])
-cat_RA = cat_RA_h + cat_RA_m / 60.0 + cat_RA_s / (60.0 ** 2.0)
+cat_RA = cat_RA_h + cat_RA_m / 60.0 + cat_RA_s / (60.0**2.0)
 cat_RA = cat_RA * 15.0  # Convert to degrees
-cat_Dec = np.abs(cat_Dec_d_int) + cat_Dec_m / 60.0 + cat_Dec_s / (60.0 ** 2.0)
+cat_Dec = np.abs(cat_Dec_d_int) + cat_Dec_m / 60.0 + cat_Dec_s / (60.0**2.0)
 for dec_ind in range(len(cat_Dec)):
     if cat_Dec_d[dec_ind][1:2] == "-":
         cat_Dec[dec_ind] *= -1
