@@ -10,7 +10,7 @@ catalog_path=/fast/rbyrne/skymodels
 #mpirun -n 20 python ${script_path} ${catalog_path}/Gasperin2020_sources.skyh5 ${beam_file} ${input_obs} ${output_path}/${obsname}_deGasperin_sources_sim.uvfits
 #mpirun -n 20 python ${script_path} ${catalog_path}/FullVLSSCatalog.skyh5 ${beam_file} ${input_obs} ${output_path}/${obsname}_VLSS_sim.uvfits
 #mpirun -n 20 python ${script_path} ${catalog_path}/Gasperin2020_sources_48MHz.skyh5 ${beam_file} ${input_obs} ${output_path}/${obsname}_deGasperin_sources_48MHz_sim.uvfits
-mpirun -n 20 python ${script_path} ${catalog_path}/Gasperin2020_sources_48MHz.skyh5 ${beam_file} ${input_obs} ${output_path}/${obsname}_deGasperin_sources_48MHz_sim.uvfits
+mpirun -n 20 python ${script_path} ${catalog_path}/Gasperin2020_sources_plus_48MHz.skyh5 ${beam_file} ${input_obs} ${output_path}/${obsname}_deGasperin_sources_plus_48MHz_sim.uvfits
 
 # Run diffuse
 #diffuse_script_path=/home/rbyrne/rlb_LWA/LWA_data_preprocessing/generate_model_vis_diffuse.py
