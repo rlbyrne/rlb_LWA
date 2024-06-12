@@ -1706,10 +1706,10 @@ def run_newcal_Jun12():
             datafile,
             model_file,
             data_use_column="DATA",
-            model_use_column="MODEL",
+            model_use_column="DATA",
             min_cal_baseline_lambda=10,
             verbose=True,
-            log_file_path=f"{output_directory}/calibration_logs/cal_log_{model_names[model_ind]}_Jun4.txt",
+            log_file_path=f"{output_directory}/calibration_logs/cal_log_{model_names[model_ind]}_Jun12.txt",
         )
         uvcal.write_calfits(
             f"{output_directory}/calfits_files/cal46_time11_newcal_{model_names[model_ind]}.calfits",
