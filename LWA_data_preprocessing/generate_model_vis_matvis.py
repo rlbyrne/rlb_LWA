@@ -23,7 +23,7 @@ def run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
     if uvd.telescope_name == "OVRO_MMA":  # Correct telescope location
         uvd.telescope_name = "OVRO-LWA"
         uvd.set_telescope_params(overwrite=True, warn=True)
-    uvd.set_uvws_from_antenna_positions(updata_vis=False)
+    uvd.set_uvws_from_antenna_positions(update_vis=False)
     uvd.phase_to_time(np.mean(uvd.time_array))  # Phase data
     # Define antenna locations
     antpos, ants = uvd.get_ENU_antpos()
