@@ -61,11 +61,16 @@ def plot_images_Mar17():
         plot_fits.plot_fits_file(
             f"{path}/{filename}",
             signal_extent=stokes_signal_extent,
-            save_filename = f"/Users/ruby/Documents/2022 Winter/Polarimetry paper review/plots/Stokes{stokes_name}.png",
-            title = f"Stokes {stokes_name}"
+            save_filename=f"/Users/ruby/Documents/2022 Winter/Polarimetry paper review/plots/Stokes{stokes_name}.png",
+            title=f"Stokes {stokes_name}",
         )
 
-    instr_signal_extents = [[-1e4, 3.5e4], [-1e4, 3.5e4], [-.5e3, 1.75e3], [-.5e3/120, 1.75e3/120]]
+    instr_signal_extents = [
+        [-1e4, 3.5e4],
+        [-1e4, 3.5e4],
+        [-0.5e3, 1.75e3],
+        [-0.5e3 / 120, 1.75e3 / 120],
+    ]
     instr_names = ["XX", "YY", "XY_real", "XY_imaginary"]
     titles = ["pp", "qq", "pq, Real Part", "pq, Imaginary Part"]
     for ind, instr_name in enumerate(instr_names):
@@ -73,31 +78,35 @@ def plot_images_Mar17():
         plot_fits.plot_fits_file(
             f"{path}/{filename}",
             signal_extent=instr_signal_extents[ind],
-            save_filename = f"/Users/ruby/Documents/2022 Winter/Polarimetry paper review/plots/Instr_{instr_name}.png",
-            title = titles[ind]
+            save_filename=f"/Users/ruby/Documents/2022 Winter/Polarimetry paper review/plots/Instr_{instr_name}.png",
+            title=titles[ind],
         )
 
 
 def plot_skyh5_test_Mar23():
 
-    path = "/Users/ruby/Astro/FHD_outputs/fhd_rlb_model_diffuse_skyh5_Mar2022/output_data"
+    path = (
+        "/Users/ruby/Astro/FHD_outputs/fhd_rlb_model_diffuse_skyh5_Mar2022/output_data"
+    )
     stokes = ["I", "Q", "U", "V"]
     for stokes_name in stokes:
         filename = f"1061316296_optimal_Model_{stokes_name}.fits"
         plot_fits.plot_fits_file(
             f"{path}/{filename}",
-            save_filename = f"/Users/ruby/Astro/FHD_outputs/fhd_rlb_model_diffuse_skyh5_Mar2022/1061316296_optimal_Model_{stokes_name}.png",
-            title = f"Stokes {stokes_name}"
+            save_filename=f"/Users/ruby/Astro/FHD_outputs/fhd_rlb_model_diffuse_skyh5_Mar2022/1061316296_optimal_Model_{stokes_name}.png",
+            title=f"Stokes {stokes_name}",
         )
 
 
 def plot_marin_images_Apr8():
 
-    filename = "/Users/ruby/Astro/LWA_data/LWA_data_20220307/20220307_175923_15MHz-dirty.fits"
+    filename = (
+        "/Users/ruby/Astro/LWA_data/LWA_data_20220307/20220307_175923_15MHz-dirty.fits"
+    )
 
     plot_fits.plot_fits_file(
         filename,
-        #save_filename = f"/Users/ruby/Astro/FHD_outputs/fhd_rlb_model_diffuse_skyh5_Mar2022/1061316296_optimal_Model_{stokes_name}.png",
+        # save_filename = f"/Users/ruby/Astro/FHD_outputs/fhd_rlb_model_diffuse_skyh5_Mar2022/1061316296_optimal_Model_{stokes_name}.png",
     )
 
 
@@ -107,12 +116,14 @@ def plot_mmode_sims_Apr19():
 
     plot_fits.plot_fits_file(
         filename,
-        edge_crop_ratio = 0,
-        signal_extent = [-5e6, 5e6],
-        #save_filename = f"/Users/ruby/Astro/FHD_outputs/fhd_rlb_LWA_model_mmode_map_Apr2022/20220307_175923_61MHz_calib_optimal_Dirty_I.png",
+        edge_crop_ratio=0,
+        signal_extent=[-5e6, 5e6],
+        # save_filename = f"/Users/ruby/Astro/FHD_outputs/fhd_rlb_LWA_model_mmode_map_Apr2022/20220307_175923_61MHz_calib_optimal_Dirty_I.png",
     )
 
 
-
 if __name__ == "__main__":
-    plot_mmode_sims_Apr19()
+    plot_fits.plot_fits_file(
+        "/Users/ruby/Astro/LWA_data/LWA_data_20220307/20220307_175923_66MHz-dirty.fits",
+        # save_filename = f"/Users/ruby/Astro/FHD_outputs/fhd_rlb_model_diffuse_skyh5_Mar2022/1061316296_optimal_Model_{stokes_name}.png",
+    )
