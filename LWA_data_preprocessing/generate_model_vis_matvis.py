@@ -23,6 +23,7 @@ def run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
     if uvd.telescope_name == "OVRO_MMA":  # Correct telescope location
         uvd.telescope_name = "OVRO-LWA"
         uvd.set_telescope_params(overwrite=True, warn=True)
+    uvd.set_uvws_from_antenna_positions(updata_vis=False)
     uvd.phase_to_time(np.mean(uvd.time_array))  # Phase data
     # Define antenna locations
     antpos, ants = uvd.get_ENU_antpos()
@@ -114,26 +115,6 @@ def run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
         ).transpose([2, 0, 1]),
     )
     uvd_out.telescope_location = np.array(uvd_out.telescope_location)
-    uvd_out.reorder_pols(order="AIPS")
-    uvd_out.phase_to_time(np.mean(uvd.time_array))
-    uvd_out.check()
-
-    # Save as uvfits
-    uvd_out.write_uvfits(output_uvfits_path, fix_autos=True)
-
-    # Save as ms
-    uvd_out.reorder_pols(order="CASA")
-    uvd_out.write_ms(f"{output_uvfits_path.removesuffix('.uvfits')}.ms", clobber=True)
-
-
-def reformat_matvis_output(
-    orig_filepath, reference_filepath, new_filepath
-):  # This function is to bootstrap the output after the fact, should be combined with the above function before the next run
-
-    uvd = pyuvdata.UVData()
-    uvd.read(reference_filepath)
-    uvd_out = pyuvdata.UVData()
-    uvd_out.read(orig_filepath)
 
     # Remove duplicate baselines
     uvd_out.conjugate_bls()
@@ -144,7 +125,7 @@ def reformat_matvis_output(
             keep_baselines.append(bl_ind)
     uvd_out.select(blt_inds=keep_baselines)
 
-    # assign antenna names
+    # Assign antenna names
     for ant_ind in range(len(uvd_out.antenna_names)):
         uvd_out.antenna_names[ant_ind] = uvd.antenna_names[
             np.where(uvd.antenna_numbers == uvd_out.antenna_numbers[ant_ind])[0][0]
@@ -153,7 +134,15 @@ def reformat_matvis_output(
     uvd_out.reorder_blts()
     uvd_out.reorder_pols(order="AIPS")
     uvd_out.reorder_freqs(channel_order="freq")
-    uvd_out.write_ms(new_filepath, clobber=True)
+    uvd_out.phase_to_time(np.mean(uvd.time_array))
+    uvd_out.check()
+
+    # Save as uvfits
+    uvd_out.write_uvfits(output_uvfits_path, fix_autos=True)
+
+    # Save as ms
+    uvd_out.reorder_pols(order="CASA")
+    uvd_out.write_ms(f"{output_uvfits_path.removesuffix('.uvfits')}.ms", clobber=True)
 
 
 def combine_mmode_and_sources(
@@ -326,25 +315,21 @@ if __name__ == "__main__":
         input_data_path = args[3]
         output_uvfits_path = args[4]
 
-    if False:
+    data_paths = [
+        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj.ms",
+        "/data03/rbyrne/20231222/compare_lsts/46_time210_conj.ms",
+    ]
+    for input_data_paht in data_paths:
         map_path = "/fast/rbyrne/skymodels/ovro_lwa_sky_map_46.992MHz_nside512.skyh5"
-        beam_path = "/home/rbyrne/rlb_LWA/LWAbeam_2015.fits"
-        input_data_path = (
-            "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj.ms"
-        )
-        output_uvfits_path = "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_matvis_sim_nside512.uvfits"
+        beam_path = "/data03/rbyrne/LWA_10to100.beamfits"
+        output_uvfits_path = "/data03/rbyrne/20231222/compare_lsts/cal46_time11_mmode_matvis_sim_nside512.uvfits"
         run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_path)
 
-        reformat_matvis_output(
-            "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_matvis_sim_nside512.ms",
-            "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj_cyg_cas_sim.ms",
-            "/data03/rbyrne/20231222/matvis_modeling/cal46_time11_conj_mmode_matvis_sim_nside512_reformatted.ms",
+    if False:
+        combine_mmode_and_sources(
+            source_simulation="/data03/rbyrne/20231222/test_diffuse_normalization/cal46_time11_conj_deGasperin_cyg_cas_48MHz_sim.uvfits",
+            mmode_simulation="/data03/rbyrne/20231222/test_diffuse_normalization/cal46_time11_conj_mmode_46.992MHz_nside512_sim.uvfits",
+            output_filename="/data03/rbyrne/20231222/test_diffuse_normalization/cal46_time11_conj_deGasperin_cyg_cas_48MHz_with_normalized_mmode_sim.uvfits",
+            adjust_mmode_flux_scale=True,
+            calibrated_data_filepath="/data03/rbyrne/20231222/test_diffuse_normalization/cal46_time11_newcal_deGasperin_cyg_cas_48MHz_with_mmode.ms",
         )
-
-    combine_mmode_and_sources(
-        source_simulation="/data03/rbyrne/20231222/test_diffuse_normalization/cal46_time11_conj_deGasperin_cyg_cas_48MHz_sim.uvfits",
-        mmode_simulation="/data03/rbyrne/20231222/test_diffuse_normalization/cal46_time11_conj_mmode_46.992MHz_nside512_sim.uvfits",
-        output_filename="/data03/rbyrne/20231222/test_diffuse_normalization/cal46_time11_conj_deGasperin_cyg_cas_48MHz_with_normalized_mmode_sim.uvfits",
-        adjust_mmode_flux_scale=True,
-        calibrated_data_filepath="/data03/rbyrne/20231222/test_diffuse_normalization/cal46_time11_newcal_deGasperin_cyg_cas_48MHz_with_mmode.ms",
-    )
