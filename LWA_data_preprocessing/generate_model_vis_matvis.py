@@ -308,22 +308,13 @@ def combine_mmode_and_sources(
 
 if __name__ == "__main__":
 
-    if False:
-        args = sys.argv
-        map_path = args[1]
-        beam_path = args[2]
-        input_data_path = args[3]
-        output_uvfits_path = args[4]
+    args = sys.argv
+    map_path = args[1]
+    beam_path = args[2]
+    input_data_path = args[3]
+    output_uvfits_path = args[4]
 
-    data_paths = [
-        "/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj.ms",
-        "/data03/rbyrne/20231222/compare_lsts/46_time210_conj.ms",
-    ]
-    for input_data_path in data_paths:
-        map_path = "/fast/rbyrne/skymodels/ovro_lwa_sky_map_46.992MHz_nside512.skyh5"
-        beam_path = "/data03/rbyrne/LWA_10to100.beamfits"
-        output_uvfits_path = "/data03/rbyrne/20231222/compare_lsts/cal46_time11_mmode_matvis_sim_nside512.uvfits"
-        run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_path)
+    run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_path)
 
     if False:
         combine_mmode_and_sources(
