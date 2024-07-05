@@ -99,7 +99,7 @@ def run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
                 polarized=True,
                 precision=2,
                 latitude=location.lat.rad,
-                use_gpu=False,
+                use_gpu=True,
             )
 
     uvd_out = pyuvdata.UVData.new(
