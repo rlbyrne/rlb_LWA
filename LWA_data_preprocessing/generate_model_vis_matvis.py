@@ -19,6 +19,7 @@ def run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
         input_data_path,
         read_data=False,
         use_future_array_shapes=True,
+        file_type="ms",
     )
     if uvd.telescope_name == "OVRO_MMA":  # Correct telescope location
         uvd.telescope_name = "OVRO-LWA"
