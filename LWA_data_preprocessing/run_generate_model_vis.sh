@@ -17,7 +17,6 @@ catalog_path=/fast/rbyrne/skymodels
 #mpirun -n 15 python ${diffuse_script_path} ${catalog_path}/ovro_lwa_sky_map_46.992MHz_nside512.skyh5 ${beam_file} ${input_obs} ${output_path}/${obsname}_mmode_46.992MHz_nside512_sim.uvfits
 
 # Run matvis
-
 map_path="/fast/rbyrne/skymodels/ovro_lwa_sky_map_46.992MHz_nside512.skyh5"
 beam_path="/data03/rbyrne/LWA_10to100.beamfits"
 input_obs="/data03/rbyrne/20231222/compare_lsts/46_time210_conj.ms"
@@ -28,4 +27,18 @@ map_path="/fast/rbyrne/skymodels/ovro_lwa_sky_map_46.992MHz_nside512.skyh5"
 beam_path="/data03/rbyrne/LWA_10to100.beamfits"
 input_obs="/data03/rbyrne/20231222/test_pyuvsim_modeling/cal46_time11_conj.ms"
 output_uvfits_path="/data03/rbyrne/20231222/compare_lsts/cal46_time11_mmode_matvis_sim_nside512.uvfits"
+python /home/rbyrne/rlb_LWA/LWA_data_preprocessing/generate_model_vis_matvis.py ${map_path} ${beam_path} ${input_obs} ${output_uvfits_path}
+
+# Run source model
+map_path="/fast/rbyrne/skymodels/Gasperin2020_sources_plus_48MHz.skyh5"
+beam_path="/data03/rbyrne/LWA_10to100.beamfits"
+input_obs="/data03/rbyrne/20231222/compare_lsts/46_time210_conj.ms"
+output_uvfits_path="/data03/rbyrne/20231222/compare_lsts/46_time210_Gasperin_plus.uvfits"
+python /home/rbyrne/rlb_LWA/LWA_data_preprocessing/generate_model_vis.py ${map_path} ${beam_path} ${input_obs} ${output_uvfits_path}
+
+# Run matvis, testing GPUs
+map_path="/fast/rbyrne/skymodels/ovro_lwa_sky_map_46.992MHz_nside512.skyh5"
+beam_path="/data03/rbyrne/LWA_10to100.beamfits"
+input_obs="/data03/rbyrne/20231222/compare_lsts/46_time210_conj.ms"
+output_uvfits_path="/data03/rbyrne/20231222/compare_lsts/46_time210_mmode_matvis_sim_nside512_gpu.uvfits"
 python /home/rbyrne/rlb_LWA/LWA_data_preprocessing/generate_model_vis_matvis.py ${map_path} ${beam_path} ${input_obs} ${output_uvfits_path}

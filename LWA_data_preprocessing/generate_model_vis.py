@@ -27,7 +27,9 @@ catalog_formatted = pyuvsim.simsetup.SkyModelData()
 if rank == 0:
     # Read reference data for simulation
     uv.read(input_data_path)
-    #uv.downsample_in_time(n_times_to_avg=uv.Ntimes)
+    uv.flag_array[:, :, :] = False
+    uv.set_uvws_from_antenna_positions(update_vis=False)  # Correct UVWs
+    # uv.downsample_in_time(n_times_to_avg=uv.Ntimes)
 
     # Get beam
     beam = pyuvdata.UVBeam()

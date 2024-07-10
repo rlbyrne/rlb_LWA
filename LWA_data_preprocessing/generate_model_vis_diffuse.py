@@ -27,6 +27,8 @@ diffuse_map_formatted = pyuvsim.simsetup.SkyModelData()
 if rank == 0:
     # Read reference data for simulation
     uv.read(input_data_path)
+    uv.set_uvws_from_antenna_positions(update_vis=False)
+    uv.flag_array[:, :, :] = False
 
     # Get beam
     beam = pyuvdata.UVBeam()
@@ -39,13 +41,13 @@ if rank == 0:
     diffuse_map.read_skyh5(diffuse_map_path)
     diffuse_map.at_frequencies(Quantity(uv.freq_array[0, :], "Hz"))
     # Reformat the map with a spectral index
-    #diffuse_map.spectral_type = "spectral_index"
-    #diffuse_map.spectral_index = np.full(diffuse_map.Ncomponents, -0.8)
-    #diffuse_map.reference_frequency = Quantity(
+    # diffuse_map.spectral_type = "spectral_index"
+    # diffuse_map.spectral_index = np.full(diffuse_map.Ncomponents, -0.8)
+    # diffuse_map.reference_frequency = Quantity(
     #    np.full(diffuse_map.Ncomponents, diffuse_map.freq_array[0].value), "Hz"
-    #)
-    #diffuse_map._reference_frequency.required = True
-    #diffuse_map.freq_array = None
+    # )
+    # diffuse_map._reference_frequency.required = True
+    # diffuse_map.freq_array = None
 
     if not diffuse_map.check():
         print("Error: Diffuse map fails check.")
@@ -55,7 +57,7 @@ if rank == 0:
 uv = comm.bcast(uv, root=0)
 beam_list = comm.bcast(beam_list, root=0)
 diffuse_map_formatted = mpi.big_bcast(comm, diffuse_map_formatted, root=0)
-#diffuse_map_formatted.share(root=0)
+# diffuse_map_formatted.share(root=0)
 
 # Run simulation
 start_time = time.time()

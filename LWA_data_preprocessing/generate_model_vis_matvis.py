@@ -26,6 +26,7 @@ def run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
         uvd.set_telescope_params(overwrite=True, warn=True)
     uvd.set_uvws_from_antenna_positions(update_vis=False)
     uvd.phase_to_time(np.mean(uvd.time_array))  # Phase data
+    uvd.flag_array[:, :, :] = False  # Unflag all
     # Define antenna locations
     antpos, ants = uvd.get_ENU_antpos()
     antpos = {a: pos for (a, pos) in zip(ants, antpos)}
