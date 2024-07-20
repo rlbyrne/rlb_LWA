@@ -42,3 +42,12 @@ beam_path="/data03/rbyrne/LWA_10to100.beamfits"
 input_obs="/data03/rbyrne/20231222/compare_lsts/46_time210_conj.ms"
 output_uvfits_path="/data03/rbyrne/20231222/compare_lsts/46_time210_mmode_matvis_sim_nside512_gpu.uvfits"
 python /home/rbyrne/rlb_LWA/LWA_data_preprocessing/generate_model_vis_matvis.py ${map_path} ${beam_path} ${input_obs} ${output_uvfits_path}
+
+
+###### Run source models for Gregg's data 7/17/24 ######
+script_path="/home/rbyrne/rlb_LWA/LWA_data_preprocessing/generate_model_vis.py"
+catalog_path="/fast/rbyrne/skymodels/Gasperin2020_sources_plus_48MHz.skyh5"
+beam_file="/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits"
+input_obs="/lustre/gh/2024-03-02/calibration/ruby/46.ms"
+output_file="/lustre/rbyrne/2024-03-02/calibration_models/46_deGasperin_plus.ms"
+mpirun -n 20 python ${script_path} ${catalog_path} ${beam_file} ${input_obs} ${output_file}
