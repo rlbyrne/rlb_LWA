@@ -7,6 +7,7 @@ from astropy import units
 from astropy.coordinates import EarthLocation
 from astropy.time import Time
 from astropy.units import Quantity
+import time
 import pyradiosky
 import pyuvdata
 import matvis
@@ -20,6 +21,7 @@ def run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
         read_data=False,
         use_future_array_shapes=True,
         file_type="ms",
+        ignore_single_chan=False,
     )
     if uvd.telescope_name == "OVRO_MMA":  # Correct telescope location
         uvd.telescope_name = "OVRO-LWA"
@@ -59,10 +61,11 @@ def run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
     # Get model
     model = pyradiosky.SkyModel.from_skyh5(map_path)
     model.at_frequencies(Quantity(uvd.freq_array, "Hz"))
-    model.healpix_to_point()
-    model.stokes += (
-        np.abs(model.stokes[0].min()) + 0.01 * units.Jy
-    )  # matvis does not support negative sources
+    if model.component_type == "healpix":
+        model.healpix_to_point()
+        model.stokes += (
+            np.abs(model.stokes[0].min()) + 0.01 * units.Jy
+        )  # matvis does not support negative sources
 
     # Run simulation
     vis_full = np.zeros(
@@ -70,8 +73,11 @@ def run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
         dtype=np.complex64,
     )
 
+    sim_start_time = time.time()
     for components in tqdm(
-        np.array_split(np.arange(model.Ncomponents), 5000), position=1, desc="Sources"
+        np.array_split(np.arange(model.Ncomponents), np.min([5000, model.Ncomponents])),
+        position=1,
+        desc="Sources"
     ):
         m2 = model.select(component_inds=components, inplace=False)
         ra_new, dec_new = matvis.conversions.equatorial_to_eci_coords(
@@ -80,7 +86,7 @@ def run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
         assert np.all(m2.stokes[0] > 0), "Found sources with negative flux"
 
         for freq_inds in tqdm(
-            np.array_split(np.arange(uvd.freq_array.size), 5),
+            np.array_split(np.arange(uvd.freq_array.size), np.min([10, uvd.freq_array.size])),
             position=0,
             desc="Freqs",
             leave=False,
@@ -101,8 +107,11 @@ def run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
                 polarized=True,
                 precision=2,
                 latitude=location.lat.rad,
-                use_gpu=True,
+                use_gpu=False,
             )
+    sim_duration = time.time() - sim_start_time
+    #with open("/home/rbyrne/sim_timing.txt", "a") as f:
+    #    f.write(f"Matvis without GPUs simulation timing {sim_duration/60.0} minutes")
 
     uvd_out = pyuvdata.UVData.new(
         freq_array=uvd.freq_array,
