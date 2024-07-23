@@ -2,12 +2,12 @@ import subprocess
 import shlex
 import os
 
-obsids_list = ["cal46_time11_newcal_cyg_cas"]
-versions_list = ["rlb_image_LWA_v2_branch_May2024"]
-uvfits_path = "/data03/rbyrne/20231222/test_pyuvsim_modeling"
+obsids_list = ["46_1time_1freq"]
+versions_list = ["rlb_LWA_model_diffuse_Jul2024"]
+uvfits_path = "/data03/rbyrne/20231222"
 outdir = "/data03/rbyrne/20231222/fhd_outputs"
 run_fhd = True
-run_eppsilon = True
+run_eppsilon = False
 
 # Define wrappers
 fhd_versions_script = "fhd_versions_calim"

@@ -38,6 +38,23 @@ pro fhd_versions_calim
         beam_nfreq_avg = 1  ;do not average beam
     end
 
+    'rlb_LWA_model_diffuse_Jul2024': begin
+      recalculate_all = 1
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits'
+      calibrate_visibilities = 0
+      return_cal_visibilities = 0
+      model_visibilities = 1
+      diffuse_model = "/fast/rbyrne/skymodels/ovro_lwa_sky_map_46.992MHz_nside512.skyh5"
+      diffuse_units_kelvin = 1
+      model_catalog_file_path = '/fast/rbyrne/skymodels/Gasperin2020_sources_plus_48MHz.skyh5'
+      n_pol = 2
+      ;snapshot_healpix_export = 0
+      image_filter_fn = "filter_uv_optimal"
+      split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
+      save_uvf = 1
+    end
+
   endcase
 
   undefine, uvfits_subversion, uvfits_version
