@@ -48,6 +48,6 @@ python /home/rbyrne/rlb_LWA/LWA_data_preprocessing/generate_model_vis_matvis.py 
 script_path="/home/rbyrne/rlb_LWA/LWA_data_preprocessing/generate_model_vis.py"
 catalog_path="/fast/rbyrne/skymodels/Gasperin2020_point_sources_plus_48MHz.skyh5"
 beam_file="/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits"
-input_obs="/lustre/gh/2024-03-02/calibration/ruby/46.ms"
-output_file="/lustre/rbyrne/2024-03-02/calibration_models/46_deGasperin_point_sources.ms"
-mpirun -n 20 python ${script_path} ${catalog_path} ${beam_file} ${input_obs} ${output_file}
+input_obs="/lustre/rbyrne/2024-03-02/46_time1.ms"
+output_file="/lustre/rbyrne/2024-03-02/calibration_models/46_time1_deGasperin_point_sources.ms"
+mpirun -n 10 python ${script_path} ${catalog_path} ${beam_file} ${input_obs} ${output_file}

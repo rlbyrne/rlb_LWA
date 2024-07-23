@@ -20,25 +20,26 @@ mpi.start_mpi(block_nonroot_stdout=False)
 rank = mpi.get_rank()
 comm = mpi.world_comm
 
-uv_list = []
+uv = pyuvdata.UVData()
 beam_list = None
 catalog_formatted = pyuvsim.simsetup.SkyModelData()
 
 if rank == 0:
     # Read reference data for simulation
-    uv = pyuvdata.UVData()
     uv.read_ms(input_data_path)
     uv.flag_array[:, :, :] = False
     if uv.telescope_name == "OVRO_MMA":  # Correct telescope location
         uv.telescope_name = "OVRO-LWA"
         uv.set_telescope_params(overwrite=True, warn=True)
     uv.set_uvws_from_antenna_positions(update_vis=False)  # Correct UVWs
-    time_list = list(set(uv.time_array))
-    uv.phase_to_time(np.mean(time_list))
-    uv_list = []
-    for use_time in time_list:
-        uv_list.append(uv.select(times=use_time, inplace=False))
+    uv.phase_to_time(np.mean(uv.time_array))
     # uv.downsample_in_time(n_times_to_avg=uv.Ntimes)
+
+    # if uv.Npols != 4:  # pyuvsim currently only supports data with Npols=4
+    #    uv2 = uv.copy()
+    #    uv2.polarization_array = [-7, -8]
+    #    uv2.data_array[:, :, :] = 0.0 + 1j*0.0  # Zero out crosspol data
+    #    uv.fast_concat(uv2, "polarization", inplace=True)
 
     # Get beam
     beam = pyuvdata.UVBeam()
@@ -54,25 +55,20 @@ if rank == 0:
     # Format catalog to be pyuvsim-compatible
     catalog_formatted = pyuvsim.simsetup.SkyModelData(catalog)
 
-mpi.big_bcast(comm, uv_list, root=0)
+# mpi.big_bcast(comm, uv, root=0)
+uv = comm.bcast(uv, root=0)
 beam_list = comm.bcast(beam_list, root=0)
 catalog_formatted.share(root=0)
 
 # Run simulation
 start_time = time.time()
-output_uv_list = []
-for time_ind in range(len(uv_list)):
-    output_uv_single_time = pyuvsim.uvsim.run_uvdata_uvsim(
-        input_uv=uv_list[time_ind],
-        beam_list=beam_list,
-        beam_dict=None,  # Same beam for all ants
-        catalog=catalog_formatted,
-        quiet=False,
-    )
-    if time_ind == 0:
-        output_uv = output_uv_single_time
-    else:
-        output_uv.fast_concat(output_uv_single_time, inplace=True)
+output_uv = pyuvsim.uvsim.run_uvdata_uvsim(
+    input_uv=uv,
+    beam_list=beam_list,
+    beam_dict=None,  # Same beam for all ants
+    catalog=catalog_formatted,
+    quiet=False,
+)
 
 if rank == 0:
     print(f"Simulation time: {(time.time() - start_time)/60.} minutes")
@@ -80,5 +76,8 @@ if rank == 0:
     # output_uv.write_uvfits(output_uvfits_path, fix_autos=True)
     # Add this for Gregg's simulations:
     output_uv.data_array *= 2
+    output_uv.phase_center_catalog = (
+        uv.phase_center_catalog
+    )  # pyuvsim does not preserve phase center info
     output_uv.reorder_pols(order="CASA")
     output_uv.write_ms(output_uvfits_path, fix_autos=True)
