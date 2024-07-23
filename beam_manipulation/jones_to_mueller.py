@@ -684,13 +684,45 @@ def write_mueller_to_csv(
     file.close()
 
 
-def invert_mueller_matrix(mueller_mat, inplace=False):
+def zernike(n, m, za, theta):
+    rho = np.sin(za)
+    return zernike_radial_part(n, abs(m), rho) * zernike_azimuthal_part(m, theta)
 
-    mueller_inv = mueller_mat.copy()
-    mueller_inv = np.transpose(mueller_inv, axes=(1, 3, 4, 5, 2, 0))
-    mueller_inv = np.linalg.inv(mueller_inv)
-    mueller_inv = np.transpose(mueller_inv, axes=(5, 0, 4, 1, 2, 3))
-    if inplace:
-        mueller_mat = mueller_inv
+
+def zernike_radial_part(n, m, rho):
+    R0 = rho**m
+    if n == m:
+        return R0
+    R2 = ((m + 2) * rho**2 - (m + 1)) * R0
+    for n_prime in range(m + 4, n + 1, 2):
+        recurrence_relation = (
+            2
+            * (n_prime - 1)
+            * (2 * n_prime * (n_prime - 2) * rho**2 - m**2 - n_prime * (n_prime - 2))
+            * R2
+            - n_prime * (n_prime + m - 2) * (n_prime - m - 2) * R0
+        ) / ((n_prime + m) * (n_prime - m) * (n_prime - 2))
+        R0 = R2
+        R2 = recurrence_relation
+    return R2
+
+
+def zernike_azimuthal_part(m, theta):
+    if m == 0:
+        return 1.0
+    elif m > 0:
+        return np.cos(m * theta)
     else:
-        return mueller_mat
+        return np.sin(-m * theta)
+
+
+def create_zernike_beam(az_values, za_values, zernike_coeffs, n_vals, m_vals):
+    beam = np.zeros_like(az_values)
+    for zernike_ind, coeff in enumerate(zernike_coeffs):
+        beam += coeff * zernike(
+            n_vals[zernike_ind],
+            m_vals[zernike_ind],
+            np.radians(za_values),
+            np.radians(az_values),
+        )
+    return beam
