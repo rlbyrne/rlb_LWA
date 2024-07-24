@@ -1,5 +1,6 @@
 import numpy as np
 import healpy as hp
+import pyuvdata
 import pyradiosky
 import sys
 import astropy.units as units
@@ -233,56 +234,216 @@ def concatenate_catalogs(catalog_list):
     return catalog
 
 
-if __name__ == "__main__":
+def create_deGasperin_catalog(use_freq, source_file_dir="/fast/rbyrne/skymodels"):
 
-    use_freq = 47839599.609375
     cas_cat = convert_wsclean_txt_models_to_pyradiosky(
-        "/Users/ruby/Astro/Gasperin2020_source_models/Cas-sources.txt",
+        f"{source_file_dir}/Cas-sources.txt",
         use_freq,
         source_name="Cas",
     )
     cyg_cat = convert_wsclean_txt_models_to_pyradiosky(
-        "/Users/ruby/Astro/Gasperin2020_source_models/Cyg-sources.txt",
+        f"{source_file_dir}/Cyg-sources.txt",
         use_freq,
         source_name="Cyg",
     )
     tau_cat = convert_wsclean_txt_models_to_pyradiosky(
-        "/Users/ruby/Astro/Gasperin2020_source_models/Tau-sources.txt",
+        f"{source_file_dir}/Tau-sources.txt",
         use_freq,
         source_name="Tau",
     )
     vir_cat = convert_wsclean_txt_models_to_pyradiosky(
-        "/Users/ruby/Astro/Gasperin2020_source_models/Vir-sources.txt",
+        f"{source_file_dir}/Vir-sources.txt",
         use_freq,
         source_name="Vir",
     )
 
-    cas_cyg = concatenate_catalogs([cas_cat, cyg_cat])
     combined_cat = concatenate_catalogs([cas_cat, cyg_cat, tau_cat, vir_cat])
-    cas_cyg.write_skyh5(
-        "/Users/ruby/Astro/Gasperin2020_source_models/Gasperin2020_cyg_cas_48MHz.skyh5",
-        clobber=True,
-    )
-    combined_cat.write_skyh5(
-        "/Users/ruby/Astro/Gasperin2020_source_models/Gasperin2020_sources_48MHz.skyh5",
-        clobber=True,
-    )
+    return combined_cat
 
-    # Model Cas A as a single point source
-    if False:
-        cas_cat_single_source = pyradiosky.SkyModel(
-            name=cas_cat.name[0],
-            extended_model_group=cas_cat.extended_model_group[0],
-            ra=np.mean(cas_cat.ra),
-            dec=np.mean(cas_cat.dec),
-            stokes=np.sum(cas_cat.stokes, axis=2),
-            spectral_type="spectral_index",
-            reference_frequency=Quantity(np.full(1, use_freq), "hertz"),
-            spectral_index=0.0,
-            frame="icrs",
+
+def get_supplementary_source_info():
+    # This script gets data for additional sources that were peeled from the Eastwood et al.
+    # m-mode map.
+    # Source spectral information is from Perley & Butler 2017
+    # Source locations are from https://ned.ipac.caltech.edu/
+
+    source_dict = {"Her A": {}, "Hya A": {}, "3C 123": {}, "3C 353": {}}
+
+    ## Her A (Hercules A, 3C 348)
+    source_dict["Her A"] = {
+        "spectral_coeffs": [1.8298, -1.0247, -0.0951],
+        "ra": Longitude((16.0 + 51.0 / 60.0 + 8.1468 / 60.0**2.0) * 15.0, units.deg),
+        "dec": Latitude((4.0 + 59.0 / 60.0 + 33.316 / 60.0**2.0), units.deg),
+    }
+
+    ## Hya A (Hydra A, 3C 218)
+    source_dict["Hya A"] = {
+        "spectral_coeffs": [
+            1.7795,
+            -0.9176,
+            -0.0843,
+            -0.0139,
+            0.0295,
+        ],
+        "ra": Longitude((9.0 + 18.0 / 60.0 + 5.6687 / 60.0**2.0) * 15.0, units.deg),
+        "dec": Latitude((-12.0 - 5.0 / 60.0 - 43.953 / 60.0**2.0), units.deg),
+    }
+
+    ## 3C 123
+    source_dict["3C 123"] = {
+        "spectral_coeffs": [
+            1.8017,
+            -0.7884,
+            -0.1035,
+            -0.0248,
+            0.0090,
+        ],
+        "ra": Longitude((4.0 + 37.0 / 60.0 + 4.3752 / 60.0**2.0) * 15.0, units.deg),
+        "dec": Latitude((29.0 + 40.0 / 60.0 + 13.818 / 60.0**2.0), units.deg),
+    }
+
+    ## 3C 353
+    source_dict["3C 353"] = {
+        "spectral_coeffs": [1.8627, -0.6938, -0.0998, -0.0732],
+        "ra": Longitude((17.0 + 20.0 / 60.0 + 28.1582 / 60.0**2.0) * 15.0, units.deg),
+        "dec": Latitude((0.0 - 58.0 / 60.0 - 46.621 / 60.0**2.0), units.deg),
+    }
+
+    return source_dict
+
+
+def interpolate_flux_supplementary_sources(spectral_coeffs, target_freq_hz):
+
+    log_flux = 0
+    for coeff_ind, coeff in enumerate(spectral_coeffs):
+        log_flux += coeff * np.log(target_freq_hz / 1e9) ** coeff_ind
+    return np.exp(log_flux)
+
+
+def interpolate_spec_ind_supplementary_sources(spectral_coeffs, target_freq_hz):
+
+    spec_ind = 0
+    for coeff_ind, coeff in enumerate(spectral_coeffs[1:]):
+        spec_ind += coeff * (coeff_ind + 1) * np.log(target_freq_hz / 1e9) ** coeff_ind
+    return spec_ind
+
+
+def create_skymodel_supplementary_sources(target_freq_hz):
+
+    source_dict = get_supplementary_source_info()
+    names = list(source_dict.keys())
+    ras = []
+    decs = []
+    stokes = Quantity(np.zeros((4, 1, len(names)), dtype=float), "Jy")
+    spec_inds = []
+    for source_ind, name in enumerate(names):
+        ras.append(source_dict[name]["ra"])
+        decs.append(source_dict[name]["dec"])
+        flux = interpolate_flux_supplementary_sources(
+            source_dict[name]["spectral_coeffs"], target_freq_hz
         )
-        cas_cat_single_source.write_skyh5(
-            "/Users/ruby/Astro/Gasperin2020_source_models/Cas_single_source_48MHz.skyh5",
+        stokes[0, 0, source_ind] = Quantity(flux, "Jy")
+        spectral_index = interpolate_spec_ind_supplementary_sources(
+            source_dict[name]["spectral_coeffs"], target_freq_hz
+        )
+        spec_inds.append(spectral_index)
+
+    catalog = pyradiosky.SkyModel(
+        name=names,
+        extended_model_group=names,
+        ra=ras,
+        dec=decs,
+        stokes=stokes,
+        spectral_type="spectral_index",
+        reference_frequency=Quantity(np.full(len(names), target_freq_hz), "hertz"),
+        spectral_index=spec_inds,
+        frame="icrs",
+    )
+    if not catalog.check():
+        print("WARNING: Catalog check failed.")
+
+    return catalog
+
+
+def create_combined_catalog(target_freq_hz):
+
+    deGasperin_sources = create_deGasperin_catalog(target_freq_hz)
+    supplementary_sources = create_skymodel_supplementary_sources(target_freq_hz)
+    combined_catalog = concatenate_catalogs([deGasperin_sources, supplementary_sources])
+    return combined_catalog
+
+
+def create_point_source_catalog(
+    input_catalog,
+):  # Convert a catalog with extended sources into one with point sources only
+
+    sources = [
+        source_name
+        for source_name in list(set(input_catalog.extended_model_group))
+        if len(source_name) > 0
+    ]
+    catalog_list = []
+    for source_name in sources:
+        source_inds = np.where(input_catalog.extended_model_group == source_name)[0]
+        if len(source_inds) > 0:
+            component_flux = input_catalog.stokes[0, 0, source_inds]
+            weighted_mean_ra = np.sum(
+                component_flux.value * input_catalog.ra[source_inds]
+            ) / np.sum(component_flux.value)
+            weighted_mean_dec = np.sum(
+                component_flux.value * input_catalog.dec[source_inds]
+            ) / np.sum(component_flux.value)
+            weighted_mean_spectral_index = np.sum(
+                component_flux.value * input_catalog.spectral_index[source_inds]
+            ) / np.sum(component_flux.value)
+            catalog = pyradiosky.SkyModel(
+                name=input_catalog.name[source_inds[0]],
+                extended_model_group=source_name,
+                ra=Longitude(weighted_mean_ra),
+                dec=Latitude(weighted_mean_dec),
+                stokes=np.sum(input_catalog.stokes[:, :, source_inds], axis=2),
+                spectral_type="spectral_index",
+                reference_frequency=np.mean(
+                    input_catalog.reference_frequency[source_inds]
+                ),
+                spectral_index=np.array([weighted_mean_spectral_index]),
+                frame="icrs",
+            )
+            catalog_list.append(catalog)
+    output_catalog = concatenate_catalogs(catalog_list)
+    return output_catalog
+
+
+if __name__ == "__main__":
+
+    for file_name in [
+        "18",
+        "23",
+        "27",
+        "36",
+        "41",
+        "46",
+        "50",
+        "55",
+        "59",
+        "64",
+        "73",
+        "78",
+        "82",
+    ]:
+
+        input_file = f"/lustre/gh/2024-03-02/calibration/ruby/{file_name}.ms"
+        uv = pyuvdata.UVData()
+        uv.read(input_file)
+        use_freq = np.mean(uv.freq_array)
+        print(use_freq / 1e6)
+        catalog = create_combined_catalog(use_freq)
+        catalog.write_skyh5(
+            f"/fast/rbyrne/skymodels/Gasperin2020_sources_plus_{file_name}.skyh5",
             clobber=True,
         )
-    # pyradiosky_utils.plot_skymodel(combined_cat)
+        point_source_catalog = create_point_source_catalog(catalog)
+        point_source_catalog.write_skyh5(
+            f"/fast/rbyrne/skymodels/Gasperin2020_point_sources_plus_{file_name}.skyh5",
+            clobber=True,
+        )

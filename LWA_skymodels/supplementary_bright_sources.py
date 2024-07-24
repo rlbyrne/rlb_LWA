@@ -5,6 +5,7 @@ import astropy.units as units
 from astropy.units import Quantity
 from astropy.coordinates import Latitude, Longitude
 
+# This script has been deprecated and combined with Gasperin2020_source_models_to_skyh5.py
 # This script gets data for additional sources that were peeled from the Eastwood et al.
 # m-mode map.
 # Source spectral information is from Perley & Butler 2017
