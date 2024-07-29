@@ -1729,5 +1729,41 @@ def run_newcal_Jun12():
         )
 
 
+def run_newcal_Jul29():
+
+    datafile = "/lustre/gh/2024-03-02/calibration/ruby/46.ms"
+    model_file = (
+        "/lustre/rbyrne/2024-03-02/calibration_models/46_deGasperin_point_sources.ms"
+    )
+
+    uvcal = calibration_wrappers.calibration_per_pol(
+        datafile,
+        model_file,
+        data_use_column="DATA",
+        model_use_column="DATA",
+        min_cal_baseline_lambda=10,
+        max_cal_baseline_lambda=125,
+        verbose=True,
+        get_crosspol_phase=False,
+        log_file_path="/lustre/rbyrne/2024-03-02/calibration_outputs/48_cal_log_v1.txt",
+    )
+    uvcal.write_calfits(
+        "/lustre/rbyrne/2024-03-02/calibration_outputs/48.calfits",
+        clobber=True,
+    )
+    data = pyuvdata.UVData()
+    data.read_ms(
+        datafile,
+        data_column="DATA",
+    )
+    pyuvdata.utils.uvcalibrate(data, uvcal, inplace=True, time_check=False)
+    data.reorder_pols(order="CASA")
+    data.write_ms(
+        "/lustre/rbyrne/2024-03-02/calibration_outputs/48_calibrated.ms",
+        fix_autos=True,
+        clobber=True,
+    )
+
+
 if __name__ == "__main__":
-    run_newcal_Jun12()
+    run_newcal_Jul29()
