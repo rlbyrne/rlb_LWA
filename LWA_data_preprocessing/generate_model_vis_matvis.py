@@ -11,6 +11,7 @@ import time
 import pyradiosky
 import pyuvdata
 import matvis
+import fftvis
 
 
 def run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_path):
@@ -55,6 +56,7 @@ def run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
         uvb.feed_array = np.array(
             [pol_mapping[feed.lower()] for feed in uvb.feed_array]
         )
+    uvb.freq_interp_kind = "linear"
     beams = [uvb]
     beam_ids = np.zeros(len(antpos), dtype=np.uint8)
 
@@ -75,9 +77,9 @@ def run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
 
     sim_start_time = time.time()
     for components in tqdm(
-        np.array_split(np.arange(model.Ncomponents), np.min([5000, model.Ncomponents])),
+        np.array_split(np.arange(model.Ncomponents), np.min([1000, model.Ncomponents])),
         position=1,
-        desc="Sources"
+        desc="Sources",
     ):
         m2 = model.select(component_inds=components, inplace=False)
         ra_new, dec_new = matvis.conversions.equatorial_to_eci_coords(
@@ -86,7 +88,9 @@ def run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
         assert np.all(m2.stokes[0] > 0), "Found sources with negative flux"
 
         for freq_inds in tqdm(
-            np.array_split(np.arange(uvd.freq_array.size), np.min([10, uvd.freq_array.size])),
+            np.array_split(
+                np.arange(uvd.freq_array.size), np.min([50, uvd.freq_array.size])
+            ),
             position=0,
             desc="Freqs",
             leave=False,
@@ -110,8 +114,6 @@ def run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
                 use_gpu=True,
             )
     sim_duration = time.time() - sim_start_time
-    #with open("/home/rbyrne/sim_timing.txt", "a") as f:
-    #    f.write(f"Matvis without GPUs simulation timing {sim_duration/60.0} minutes")
 
     uvd_out = pyuvdata.UVData.new(
         freq_array=uvd.freq_array,

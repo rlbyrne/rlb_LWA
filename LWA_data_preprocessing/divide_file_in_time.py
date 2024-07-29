@@ -20,40 +20,47 @@ use_filenames = [
 ]
 
 # Break files into time chunks
-for file_name in use_filenames:
-    input_file = f"/lustre/gh/2024-03-02/calibration/ruby/{file_name}.ms"
-    uv = pyuvdata.UVData()
-    uv.read_ms(input_file)
-    times = list(set(uv.time_array))
-    time_ind = 1
-    for use_time in times:
-        uv_1time = uv.select(times=use_time, inplace=False)
-        uv_1time.write_ms(f"/lustre/rbyrne/2024-03-02/{file_name}_time{time_ind}.ms")
-        time_ind += 1
+if False:
+    for file_name in use_filenames[6:]:
+        input_file = f"/lustre/gh/2024-03-02/calibration/ruby/{file_name}.ms"
+        uv = pyuvdata.UVData()
+        uv.read_ms(input_file)
+        times = list(set(uv.time_array))
+        time_ind = 1
+        for use_time in times:
+            uv_1time = uv.select(times=use_time, inplace=False)
+            uv_1time.write_ms(
+                f"/lustre/rbyrne/2024-03-02/{file_name}_time{time_ind}.ms", clobber=True
+            )
+            time_ind += 1
 
-# Run simulations
-script_path = "/home/rbyrne/rlb_LWA/LWA_data_preprocessing/generate_model_vis.py"
-beam_file = "/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits"
-for file_name in use_filenames:
-    catalog_path = (
-        f"/fast/rbyrne/skymodels/Gasperin2020_point_sources_plus_{file_name}.skyh5"
-    )
-    for time_ind in range(1, 25):
-        input_obs = f"/lustre/rbyrne/2024-03-02/{file_name}_time{time_ind}.ms"
-        output_file = f"/lustre/rbyrne/2024-03-02/calibration_models/{file_name}_time{time_ind}_deGasperin_point_sources.ms"
-        run_command = f"mpirun -n 20 python {script_path} {catalog_path} {beam_file} {input_obs} {output_file}"
-        os.system(run_command)
+    # Run simulations
+    script_path = "/home/rbyrne/rlb_LWA/LWA_data_preprocessing/generate_model_vis.py"
+    beam_file = "/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits"
+    for file_name in use_filenames[10:]:
+        catalog_path = (
+            f"/fast/rbyrne/skymodels/Gasperin2020_point_sources_plus_{file_name}.skyh5"
+        )
+        for time_ind in range(1, 25):
+            input_obs = f"/lustre/rbyrne/2024-03-02/{file_name}_time{time_ind}.ms"
+            output_file = f"/lustre/rbyrne/2024-03-02/calibration_models/{file_name}_time{time_ind}_deGasperin_point_sources.ms"
+            run_command = f"mpirun -n 20 python {script_path} {catalog_path} {beam_file} {input_obs} {output_file}"
+            os.system(run_command)
 
 # Combine results
 for file_name in use_filenames:
     for time_ind in range(1, 25):
         uv_new = pyuvdata.UVData()
-        uv_new.read_ms(f"/lustre/rbyrne/2024-03-02/{file_name}_time{time_ind}.ms")
-        if time_ind == 0:
+        uv_new.read_ms(
+            f"/lustre/rbyrne/2024-03-02/calibration_models/{file_name}_time{time_ind}_deGasperin_point_sources.ms"
+        )
+        uv_new.scan_number_array = None
+        if time_ind == 1:
             uv = uv_new
         else:
-            uv.fast_concat(uv_new, inplace=True)
+            uv.fast_concat(uv_new, axis="blt", inplace=True)
     uv.phase_to_time(np.mean(uv.time_array))
     uv.write_ms(
-        f"/lustre/rbyrne/2024-03-02/calibration_models/{file_name}_deGasperin_point_sources.ms"
+        f"/lustre/rbyrne/2024-03-02/calibration_models/{file_name}_deGasperin_point_sources.ms",
+        clobber=True,
     )
