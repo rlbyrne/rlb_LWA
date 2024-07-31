@@ -2,7 +2,6 @@
 
 import sys
 import numpy as np
-from tqdm import tqdm
 from astropy import units
 from astropy.coordinates import EarthLocation
 from astropy.time import Time
@@ -57,64 +56,34 @@ def run_fftvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
             [pol_mapping[feed.lower()] for feed in uvb.feed_array]
         )
     uvb.freq_interp_kind = "linear"
-    beams = [uvb]
-    beam_ids = np.zeros(len(antpos), dtype=np.uint8)
 
     # Get model
     model = pyradiosky.SkyModel.from_skyh5(map_path)
     model.at_frequencies(Quantity(uvd.freq_array, "Hz"))
     if model.component_type == "healpix":
         model.healpix_to_point()
-        model.stokes += (
-            np.abs(model.stokes[0].min()) + 0.01 * units.Jy
-        )  # matvis does not support negative sources
+        ra_new, dec_new = matvis.conversions.equatorial_to_eci_coords(
+            model.ra.rad, model.dec.rad, obstime, location, unit="rad", frame="icrs"
+        )
+    else:
+        ra_new = model.ra.rad
+        dec_new = model.dec.rad
+    use_model = model.at_frequencies(uvd.freq_array * units.Hz, inplace=False)
 
     # Run simulation
-    vis_full = np.zeros(
-        (uvd.freq_array.size, len([lst]), 2, 2, len(antpos), len(antpos)),
-        dtype=np.complex64,
-    )
-
     sim_start_time = time.time()
-    for components in tqdm(
-        # np.array_split(np.arange(model.Ncomponents), np.min([1000, model.Ncomponents])),
-        np.array_split(np.arange(model.Ncomponents), np.min([1, model.Ncomponents])),
-        position=1,
-        desc="Sources",
-    ):
-        m2 = model.select(component_inds=components, inplace=False)
-        ra_new, dec_new = matvis.conversions.equatorial_to_eci_coords(
-            m2.ra.rad, m2.dec.rad, obstime, location, unit="rad", frame="icrs"
-        )
-        assert np.all(m2.stokes[0] > 0), "Found sources with negative flux"
-
-        for freq_inds in tqdm(
-            np.array_split(
-                np.arange(uvd.freq_array.size), np.min([10, uvd.freq_array.size])
-            ),
-            position=0,
-            desc="Freqs",
-            leave=False,
-        ):
-            freqs = uvd.freq_array[freq_inds]
-
-            m3 = m2.at_frequencies(freqs * units.Hz, inplace=False)
-
-            vis_full[freq_inds] += fftvis.simulate.simulate_vis(
-                ants=antpos,
-                fluxes=m3.stokes[0].T.to_value("Jy"),
-                ra=ra_new,
-                dec=dec_new,
-                freqs=freqs,
-                lsts=np.array([lst.to_value("rad")]),
-                beam=beams[0],
-                # beams=beams,
-                # beam_idx=beam_ids,
-                polarized=True,
-                precision=2,
-                latitude=location.lat.rad,
-                # use_gpu=True,
-            )
+    vis_full = fftvis.simulate.simulate_vis(
+        ants=antpos,
+        fluxes=use_model.stokes[0].T.to_value("Jy"),
+        ra=ra_new,
+        dec=dec_new,
+        freqs=uvd.freq_arra,
+        lsts=np.array([lst.to_value("rad")]),
+        beam=uvb,
+        polarized=True,
+        precision=2,
+        latitude=location.lat.rad,
+    )
     sim_duration = time.time() - sim_start_time
     with open("/home/rbyrne/sim_timing.txt", "a") as f:
         f.write(

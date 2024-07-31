@@ -1741,6 +1741,7 @@ def run_newcal_Jul29():
         model_file,
         data_use_column="DATA",
         model_use_column="DATA",
+        conjugate_model=True,
         min_cal_baseline_lambda=10,
         max_cal_baseline_lambda=125,
         verbose=True,
