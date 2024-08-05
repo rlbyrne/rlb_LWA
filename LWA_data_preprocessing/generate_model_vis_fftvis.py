@@ -11,11 +11,28 @@ import pyradiosky
 import pyuvdata
 import matvis
 import fftvis
+from run_lwa_jobs_celery import app
 
 
-def run_fftvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_path):
+@app.task
+def run_fftvis_diffuse_sim(
+    map_path=None,
+    beam_path=None,
+    input_data_path=None,
+    output_uvfits_path=None,
+    log_path=None,
+):
+
+    if log_path is None:
+        log_path = f"{output_uvfits_path.removesuffix('.uvfits')}_log.txt"
+
+    stdout_orig = sys.stdout
+    stderr_orig = sys.stderr
+    sys.stdout = sys.stderr = log_file_new = open(log_path, "w")
 
     # Read metadata from file
+    print("Reading data...")
+    sys.stdout.flush()
     uvd = pyuvdata.UVData.from_file(
         input_data_path,
         read_data=False,
@@ -29,6 +46,7 @@ def run_fftvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
     uvd.set_uvws_from_antenna_positions(update_vis=False)
     uvd.phase_to_time(np.mean(uvd.time_array))  # Phase data
     uvd.flag_array[:, :, :] = False  # Unflag all
+
     # Define antenna locations
     antpos, ants = uvd.get_ENU_antpos()
     antpos = {a: pos for (a, pos) in zip(ants, antpos)}
@@ -36,6 +54,7 @@ def run_fftvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
         int(a): tuple(pos) for (a, pos) in zip(ants, uvd.antenna_positions)
     }
     antpairs = np.array([(a1, a2) for a1 in antpos.keys() for a2 in antpos.keys()])
+
     # Get observation time
     lat, lon, alt = uvd.telescope_location_lat_lon_alt_degrees
     location = EarthLocation.from_geodetic(lat=lat, lon=lon, height=alt)
@@ -43,6 +62,8 @@ def run_fftvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
     lst = obstime.sidereal_time("apparent")
 
     # Get beam
+    print("Reading the beam model...")
+    sys.stdout.flush()
     uvb = pyuvdata.UVBeam.from_file(beam_path)
     uvb.peak_normalize()
     if uvb.feed_array[0].lower() == "e":
@@ -58,6 +79,8 @@ def run_fftvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
     uvb.freq_interp_kind = "linear"
 
     # Get model
+    print("Reading the sky model...")
+    sys.stdout.flush()
     model = pyradiosky.SkyModel.from_skyh5(map_path)
     model.at_frequencies(Quantity(uvd.freq_array, "Hz"))
     if model.component_type == "healpix":
@@ -71,6 +94,8 @@ def run_fftvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
     use_model = model.at_frequencies(uvd.freq_array * units.Hz, inplace=False)
 
     # Run simulation
+    print("Starting the simulation...")
+    sys.stdout.flush()
     sim_start_time = time.time()
     vis_full = fftvis.simulate.simulate_vis(
         ants=antpos,
@@ -85,10 +110,8 @@ def run_fftvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
         latitude=location.lat.rad,
     )
     sim_duration = time.time() - sim_start_time
-    with open("/home/rbyrne/sim_timing.txt", "a") as f:
-        f.write(
-            f"\n FFTvis, linear beam interpolation: simulation timing {sim_duration/60.0} minutes"
-        )
+    print(f"Simulation completed. Timing {sim_duration/60.0} minutes.")
+    sys.stdout.flush()
 
     uvd_out = pyuvdata.UVData.new(
         freq_array=uvd.freq_array,
@@ -126,11 +149,21 @@ def run_fftvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_p
     uvd_out.check()
 
     # Save as uvfits
-    uvd_out.write_uvfits(output_uvfits_path, fix_autos=True)
+    print(f"Saving simulation output to {output_uvfits_path}")
+    sys.stdout.flush()
+    try:
+        uvd_out.write_uvfits(output_uvfits_path, fix_autos=True)
+    finally:
+        # Save as ms
+        ms_path = f"{output_uvfits_path.removesuffix('.uvfits')}.ms"
+        print(f"Saving simulation output to {ms_path}")
+        sys.stdout.flush()
+        uvd_out.reorder_pols(order="CASA")
+        uvd_out.write_ms(ms_path, clobber=True)
 
-    # Save as ms
-    uvd_out.reorder_pols(order="CASA")
-    uvd_out.write_ms(f"{output_uvfits_path.removesuffix('.uvfits')}.ms", clobber=True)
+    sys.stdout = stdout_orig
+    sys.stderr = stderr_orig
+    log_file_new.close()
 
 
 if __name__ == "__main__":

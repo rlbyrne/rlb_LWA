@@ -4,7 +4,6 @@ import time
 
 app = Celery(
     "cosmo",
-    # broker="pyamqp://pipe:pipe@rabbitmq.calim.mcs.pvt:5672/rbyrne",
     broker="pyamqp://rbyrne:rbyrne@rabbitmq.calim.mcs.pvt:5672/rbyrne",
     backend="redis://10.41.0.85:6379/0",
 )
@@ -29,3 +28,7 @@ def test_function(filename, number):
     f = open(filename, "a")
     f.write(f"ended job {number}\n")
     f.close()
+
+
+if __name__ == "__main__":
+    app.start()
