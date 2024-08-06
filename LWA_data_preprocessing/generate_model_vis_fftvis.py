@@ -11,10 +11,10 @@ import pyradiosky
 import pyuvdata
 import matvis
 import fftvis
-from run_lwa_jobs_celery import app
+
+# from run_lwa_jobs_celery import app
 
 
-@app.task
 def run_fftvis_diffuse_sim(
     map_path=None,
     beam_path=None,
@@ -26,9 +26,16 @@ def run_fftvis_diffuse_sim(
     if log_path is None:
         log_path = f"{output_uvfits_path.removesuffix('.uvfits')}_log.txt"
 
+    f = open(log_path, "w")
+    f.write("Starting fftvis simulation.\n")
+    f.write(f"Simulation skymodel: {map_path}\n")
+    f.write(f"Simulation beam model: {beam_path}\n")
+    f.write(f"Simulation input datafile: {input_data_path}\n")
+    f.close()
+
     stdout_orig = sys.stdout
     stderr_orig = sys.stderr
-    sys.stdout = sys.stderr = log_file_new = open(log_path, "w")
+    sys.stdout = sys.stderr = log_file_new = open(log_path, "a")
 
     # Read metadata from file
     print("Reading data...")
@@ -102,7 +109,7 @@ def run_fftvis_diffuse_sim(
         fluxes=use_model.stokes[0].T.to_value("Jy"),
         ra=ra_new,
         dec=dec_new,
-        freqs=uvd.freq_arra,
+        freqs=uvd.freq_array,
         lsts=np.array([lst.to_value("rad")]),
         beam=uvb,
         polarized=True,
