@@ -1,6 +1,8 @@
 from celery import Celery
 import time
 import sys
+import pyuvdata
+from newcal import calibration_wrappers
 
 sys.path.append("/home/rbyrne/rlb_LWA/LWA_data_preprocessing")
 from generate_model_vis_fftvis import run_fftvis_diffuse_sim
@@ -37,6 +39,50 @@ def run_simulation_celery(
         input_data_path=input_data_path,
         output_uvfits_path=output_uvfits_path,
         log_path=None,
+    )
+
+
+@app.task
+def run_calibration_celery(
+    data_path,
+    model_path,
+    data_use_column,
+    model_use_column,
+    conjugate_model,
+    min_cal_baseline_lambda,
+    max_cal_baseline_lambda,
+    get_crosspol_phase,
+    log_file_path,
+    calfits_path,
+    output_ms_path,
+):
+    uvcal = calibration_wrappers.calibration_per_pol(
+        data_path,
+        model_path,
+        data_use_column=data_use_column,
+        model_use_column=model_use_column,
+        conjugate_model=conjugate_model,
+        min_cal_baseline_lambda=min_cal_baseline_lambda,
+        max_cal_baseline_lambda=max_cal_baseline_lambda,
+        verbose=True,
+        get_crosspol_phase=get_crosspol_phase,
+        log_file_path=log_file_path,
+    )
+    uvcal.write_calfits(
+        calfits_path,
+        clobber=True,
+    )
+    data = pyuvdata.UVData()
+    data.read_ms(
+        data_path,
+        data_column=data_use_column,
+    )
+    pyuvdata.utils.uvcalibrate(data, uvcal, inplace=True, time_check=False)
+    data.reorder_pols(order="CASA")
+    data.write_ms(
+        output_ms_path,
+        fix_autos=True,
+        clobber=True,
     )
 
 

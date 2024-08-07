@@ -1749,7 +1749,7 @@ def run_newcal_Jul29():
         log_file_path="/lustre/rbyrne/2024-03-02/calibration_outputs/48_cal_log_v1.txt",
     )
     uvcal.write_calfits(
-        "/lustre/rbyrne/2024-03-02/calibration_outputs/48.calfits",
+        "/lustre/rbyrne/2024-03-02/calibration_outputs/48_v2.calfits",
         clobber=True,
     )
     data = pyuvdata.UVData()
@@ -1820,4 +1820,4 @@ def run_newcal_Jul31():
 
 
 if __name__ == "__main__":
-    run_newcal_Jul31()
+    run_newcal_Jul29()
