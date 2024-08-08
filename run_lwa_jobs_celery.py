@@ -67,6 +67,7 @@ def run_calibration_celery(
         verbose=True,
         get_crosspol_phase=get_crosspol_phase,
         log_file_path=log_file_path,
+        parallel=False,
     )
     uvcal.write_calfits(
         calfits_path,

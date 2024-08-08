@@ -65,8 +65,10 @@ def run_fftvis_diffuse_sim(
     # Get observation time
     lat, lon, alt = uvd.telescope_location_lat_lon_alt_degrees
     location = EarthLocation.from_geodetic(lat=lat, lon=lon, height=alt)
-    obstime = Time(np.mean(uvd.time_array), format="jd", scale="utc", location=location)
-    lst = obstime.sidereal_time("apparent")
+    obstimes = Time(
+        sorted(list(set(uvd.time_array))), format="jd", scale="utc", location=location
+    )
+    lsts = obstimes.sidereal_time("apparent")
 
     # Get beam
     print("Reading the beam model...")
@@ -93,7 +95,12 @@ def run_fftvis_diffuse_sim(
     if model.component_type == "healpix":
         model.healpix_to_point()
         ra_new, dec_new = matvis.conversions.equatorial_to_eci_coords(
-            model.ra.rad, model.dec.rad, obstime, location, unit="rad", frame="icrs"
+            model.ra.rad,
+            model.dec.rad,
+            np.mean(obstimes),
+            location,
+            unit="rad",
+            frame="icrs",
         )
     else:
         ra_new = model.ra.rad
@@ -110,7 +117,7 @@ def run_fftvis_diffuse_sim(
         ra=ra_new,
         dec=dec_new,
         freqs=uvd.freq_array,
-        lsts=np.array([lst.to_value("rad")]),
+        lsts=np.array(lsts.to_value("rad")),
         beam=uvb,
         polarized=True,
         precision=2,
@@ -126,7 +133,7 @@ def run_fftvis_diffuse_sim(
         antenna_positions=uvdata_antpos,
         telescope_location=location,
         telescope_name=uvd.telescope_name,
-        times=np.array([obstime.jd]),
+        times=np.array(obstimes.jd),
         antpairs=antpairs,
         data_array=vis_full.reshape(
             (uvd.Nfreqs, 4, len(antpos) * len(antpos))

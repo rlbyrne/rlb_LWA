@@ -8,18 +8,18 @@ from run_lwa_jobs_celery import (
 def run_compact_source_sims_Aug5():
 
     use_filenames = [
-        # "18",
-        # "23",
-        # "27",
-        # "36",
-        # "41",
-        # "46",
-        # "50",
-        # "55",
-        # "59",
-        # "64",
-        # "73",
-        # "78",
+        "18",
+        "23",
+        "27",
+        "36",
+        "41",
+        "46",
+        "50",
+        "55",
+        "59",
+        "64",
+        "73",
+        "78",
         "82",
     ]
 
@@ -55,7 +55,7 @@ def run_calibration_Aug7():
         datafile = f"/lustre/gh/2024-03-02/calibration/ruby/{file_name}.ms"
         model_file = f"/lustre/rbyrne/2024-03-02/calibration_models/{file_name}_deGasperin_sources.ms"
 
-        run_calibration_celery.delay(
+        run_calibration_celery(
             datafile,
             model_file,
             "DATA",
@@ -71,4 +71,4 @@ def run_calibration_Aug7():
 
 
 if __name__ == "__main__":
-    run_calibration_Aug7()
+    run_compact_source_sims_Aug5()
