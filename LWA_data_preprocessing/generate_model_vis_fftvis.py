@@ -12,8 +12,6 @@ import pyuvdata
 import matvis
 import fftvis
 
-# from run_lwa_jobs_celery import app
-
 
 def run_fftvis_diffuse_sim(
     map_path=None,
@@ -60,7 +58,7 @@ def run_fftvis_diffuse_sim(
     uvdata_antpos = {
         int(a): tuple(pos) for (a, pos) in zip(ants, uvd.antenna_positions)
     }
-    antpairs = np.array([(a1, a2) for a1 in antpos.keys() for a2 in antpos.keys()])
+    antpairs = [(a1, a2) for ant1_ind, a1 in enumerate(ants) for a2 in ants[ant1_ind:]]
 
     # Get observation time
     lat, lon, alt = uvd.telescope_location_lat_lon_alt_degrees
@@ -105,7 +103,6 @@ def run_fftvis_diffuse_sim(
     else:
         ra_new = model.ra.rad
         dec_new = model.dec.rad
-    use_model = model.at_frequencies(uvd.freq_array * units.Hz, inplace=False)
 
     # Run simulation
     print("Starting the simulation...")
@@ -113,7 +110,8 @@ def run_fftvis_diffuse_sim(
     sim_start_time = time.time()
     vis_full = fftvis.simulate.simulate_vis(
         ants=antpos,
-        fluxes=use_model.stokes[0].T.to_value("Jy"),
+        baselines=antpairs,
+        fluxes=model.stokes[0].T.to_value("Jy"),
         ra=ra_new,
         dec=dec_new,
         freqs=uvd.freq_array,
@@ -125,30 +123,24 @@ def run_fftvis_diffuse_sim(
     )
     sim_duration = time.time() - sim_start_time
     print(f"Simulation completed. Timing {sim_duration/60.0} minutes.")
+    print("Formatting simulation output...")
     sys.stdout.flush()
+    formatting_start_time = time.time()
 
     uvd_out = pyuvdata.UVData.new(
         freq_array=uvd.freq_array,
-        polarization_array=np.array([-5, -7, -8, -6]),
+        polarization_array=[-5, -7, -6, -8],
         antenna_positions=uvdata_antpos,
         telescope_location=location,
         telescope_name=uvd.telescope_name,
         times=np.array(obstimes.jd),
-        antpairs=antpairs,
-        data_array=vis_full.reshape(
-            (uvd.Nfreqs, 4, len(antpos) * len(antpos))
-        ).transpose([2, 0, 1]),
+        antpairs=np.array(antpairs),
+        time_axis_faster_than_bls=True,
+        data_array=vis_full.transpose([4, 1, 0, 2, 3]).reshape(
+            (len(antpairs) * uvd.Ntimes, uvd.Nfreqs, uvd.Npols)
+        ),
     )
     uvd_out.telescope_location = np.array(uvd_out.telescope_location)
-
-    # Remove duplicate baselines
-    uvd_out.conjugate_bls()
-    baselines = list(zip(uvd_out.ant_1_array, uvd_out.ant_2_array))
-    keep_baselines = []
-    for bl_ind, baseline in enumerate(baselines):
-        if baseline not in baselines[:bl_ind]:
-            keep_baselines.append(bl_ind)
-    uvd_out.select(blt_inds=keep_baselines)
 
     # Assign antenna names
     for ant_ind in range(len(uvd_out.antenna_names)):
@@ -161,6 +153,10 @@ def run_fftvis_diffuse_sim(
     uvd_out.reorder_freqs(channel_order="freq")
     uvd_out.phase_to_time(np.mean(uvd.time_array))
     uvd_out.check()
+    print(
+        f"Formatting completed. Timing {(time.time()-formatting_start_time)/60.0} minutes."
+    )
+    sys.stdout.flush()
 
     # Save as uvfits
     print(f"Saving simulation output to {output_uvfits_path}")
