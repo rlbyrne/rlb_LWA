@@ -92,17 +92,15 @@ def run_fftvis_diffuse_sim(
     model.at_frequencies(Quantity(uvd.freq_array, "Hz"))
     if model.component_type == "healpix":
         model.healpix_to_point()
-        ra_new, dec_new = matvis.conversions.equatorial_to_eci_coords(
-            model.ra.rad,
-            model.dec.rad,
-            np.mean(obstimes),
-            location,
-            unit="rad",
-            frame="icrs",
-        )
-    else:
-        ra_new = model.ra.rad
-        dec_new = model.dec.rad
+    # Perform a coordinate transformation to account for time-dependent precession and nutation
+    ra_new, dec_new = matvis.conversions.equatorial_to_eci_coords(
+        model.ra.rad,
+        model.dec.rad,
+        np.mean(obstimes),
+        location,
+        unit="rad",
+        frame="icrs",
+    )
 
     # Run simulation
     print("Starting the simulation...")
@@ -129,7 +127,7 @@ def run_fftvis_diffuse_sim(
 
     uvd_out = pyuvdata.UVData.new(
         freq_array=uvd.freq_array,
-        polarization_array=[-5, -7, -6, -8],
+        polarization_array=[-5, -7, -8, -6],
         antenna_positions=uvdata_antpos,
         telescope_location=location,
         telescope_name=uvd.telescope_name,

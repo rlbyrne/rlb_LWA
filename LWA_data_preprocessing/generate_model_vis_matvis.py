@@ -14,7 +14,12 @@ import matvis
 import fftvis
 
 
-def run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_path):
+def run_matvis_diffuse_sim(
+    map_path=None,
+    beam_path=None,
+    input_data_path=None,
+    output_uvfits_path=None,
+):
 
     # Read metadata from file
     uvd = pyuvdata.UVData.from_file(
@@ -327,7 +332,12 @@ if __name__ == "__main__":
     input_data_path = args[3]
     output_uvfits_path = args[4]
 
-    run_matvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_path)
+    run_matvis_diffuse_sim(
+        map_path=map_path,
+        beam_path=beam_path,
+        input_data_path=input_data_path,
+        output_uvfits_path=output_uvfits_path,
+    )
 
     if False:
         combine_mmode_and_sources(
