@@ -11,6 +11,7 @@ import pyradiosky
 import pyuvdata
 import matvis
 import fftvis
+import socket
 
 
 def run_fftvis_diffuse_sim(
@@ -26,6 +27,7 @@ def run_fftvis_diffuse_sim(
 
     f = open(log_path, "w")
     f.write("Starting fftvis simulation.\n")
+    f.write(f"Running on {socket.gethostname()}")
     f.write(f"Simulation skymodel: {map_path}\n")
     f.write(f"Simulation beam model: {beam_path}\n")
     f.write(f"Simulation input datafile: {input_data_path}\n")
@@ -36,8 +38,9 @@ def run_fftvis_diffuse_sim(
     sys.stdout = sys.stderr = log_file_new = open(log_path, "a")
 
     # Read metadata from file
-    print("Reading data...")
-    sys.stdout.flush()
+    f = open(log_path, "a")
+    f.write("Reading data...\n")
+    f.close()
     uvd = pyuvdata.UVData.from_file(
         input_data_path,
         read_data=False,
@@ -69,8 +72,9 @@ def run_fftvis_diffuse_sim(
     lsts = obstimes.sidereal_time("apparent")
 
     # Get beam
-    print("Reading the beam model...")
-    sys.stdout.flush()
+    f = open(log_path, "a")
+    f.write("Reading the beam model...\n")
+    f.close()
     uvb = pyuvdata.UVBeam.from_file(beam_path)
     uvb.peak_normalize()
     if uvb.feed_array[0].lower() == "e":
@@ -86,8 +90,9 @@ def run_fftvis_diffuse_sim(
     uvb.freq_interp_kind = "linear"
 
     # Get model
-    print("Reading the sky model...")
-    sys.stdout.flush()
+    f = open(log_path, "a")
+    f.write("Reading the sky model...\n")
+    f.close()
     model = pyradiosky.SkyModel.from_skyh5(map_path)
     model.at_frequencies(Quantity(uvd.freq_array, "Hz"))
     if model.component_type == "healpix":
@@ -103,8 +108,9 @@ def run_fftvis_diffuse_sim(
     )
 
     # Run simulation
-    print("Starting the simulation...")
-    sys.stdout.flush()
+    f = open(log_path, "a")
+    f.write("Starting the simulation...\n")
+    f.close()
     sim_start_time = time.time()
     vis_full = fftvis.simulate.simulate_vis(
         ants=antpos,
@@ -120,11 +126,12 @@ def run_fftvis_diffuse_sim(
         latitude=location.lat.rad,
     )
     sim_duration = time.time() - sim_start_time
-    print(f"Simulation completed. Timing {sim_duration/60.0} minutes.")
-    print("Formatting simulation output...")
-    sys.stdout.flush()
-    formatting_start_time = time.time()
+    f = open(log_path, "a")
+    f.write(f"Simulation completed. Timing {sim_duration/60.0} minutes.\n")
+    f.write("Formatting simulation output...\n")
+    f.close()
 
+    formatting_start_time = time.time()
     uvd_out = pyuvdata.UVData.new(
         freq_array=uvd.freq_array,
         polarization_array=[-5, -7, -8, -6],
@@ -151,21 +158,24 @@ def run_fftvis_diffuse_sim(
     uvd_out.reorder_freqs(channel_order="freq")
     uvd_out.phase_to_time(np.mean(uvd.time_array))
     uvd_out.check()
-    print(
-        f"Formatting completed. Timing {(time.time()-formatting_start_time)/60.0} minutes."
+    f = open(log_path, "a")
+    f.write(
+        f"Formatting completed. Timing {(time.time()-formatting_start_time)/60.0} minutes.\n"
     )
-    sys.stdout.flush()
+    f.close()
 
     # Save as uvfits
-    print(f"Saving simulation output to {output_uvfits_path}")
-    sys.stdout.flush()
+    f = open(log_path, "a")
+    f.write(f"Saving simulation output to {output_uvfits_path}\n")
+    f.close()
     try:
         uvd_out.write_uvfits(output_uvfits_path, fix_autos=True)
     finally:
         # Save as ms
         ms_path = f"{output_uvfits_path.removesuffix('.uvfits')}.ms"
-        print(f"Saving simulation output to {ms_path}")
-        sys.stdout.flush()
+        f = open(log_path, "a")
+        f.write(f"Saving simulation output to {ms_path}\n")
+        f.close()
         uvd_out.reorder_pols(order="CASA")
         uvd_out.write_ms(ms_path, clobber=True)
 

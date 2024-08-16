@@ -23,19 +23,9 @@ def run_compact_source_sims_Aug5():
         "82",
     ]
 
-    if False:
-        for file_name in use_filenames:
-            run_simulation_celery.delay(
-                f"/lustre/rbyrne/skymodels/Gasperin2020_sources_plus_{file_name}.skyh5",
-                "/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits",
-                f"/lustre/gh/2024-03-02/calibration/ruby/{file_name}.ms",
-                f"/lustre/rbyrne/2024-03-02/calibration_models/{file_name}_deGasperin_sources.uvfits",
-            )
-
-    # Debug:
-    for file_name in use_filenames[:1]:
-        run_simulation_celery(
-            f"/lustre/rbyrne/skymodels/Gasperin2020_point_sources_plus_{file_name}.skyh5",
+    for file_name in use_filenames[::-1]:
+        run_simulation_celery.delay(
+            f"/lustre/rbyrne/skymodels/Gasperin2020_sources_plus_{file_name}.skyh5",
             "/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits",
             f"/lustre/gh/2024-03-02/calibration/ruby/{file_name}.ms",
             f"/lustre/rbyrne/2024-03-02/calibration_models/{file_name}_deGasperin_sources.uvfits",
