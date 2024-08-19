@@ -3,6 +3,7 @@ from run_lwa_jobs_celery import (
     run_calibration_celery,
     test_function,
 )
+import multiprocessing
 
 
 def run_compact_source_sims_Aug5():
@@ -23,13 +24,33 @@ def run_compact_source_sims_Aug5():
         "82",
     ]
 
-    for file_name in use_filenames[::-1]:
-        run_simulation_celery.delay(
-            f"/lustre/rbyrne/skymodels/Gasperin2020_sources_plus_{file_name}.skyh5",
-            "/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits",
-            f"/lustre/gh/2024-03-02/calibration/ruby/{file_name}.ms",
-            f"/lustre/rbyrne/2024-03-02/calibration_models/{file_name}_deGasperin_sources.uvfits",
+    use_celery = False
+
+    if use_celery:
+        for file_name in use_filenames[::-1]:
+            run_simulation_celery.delay(
+                f"/lustre/rbyrne/skymodels/Gasperin2020_sources_plus_{file_name}.skyh5",
+                "/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits",
+                f"/lustre/gh/2024-03-02/calibration/ruby/{file_name}.ms",
+                f"/lustre/rbyrne/2024-03-02/calibration_models/{file_name}_deGasperin_sources.uvfits",
+            )
+    else:
+        pool = multiprocessing.Pool(processes=len(use_filenames))
+        args_list = []
+        for file_name in use_filenames:
+            args = (
+                f"/lustre/rbyrne/skymodels/Gasperin2020_sources_plus_{file_name}.skyh5",
+                "/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits",
+                f"/lustre/gh/2024-03-02/calibration/ruby/{file_name}.ms",
+                f"/lustre/rbyrne/2024-03-02/calibration_models/{file_name}_deGasperin_sources.uvfits",
+            )
+            args_list.append(args)
+        pool.starmap(
+            run_simulation_celery,
+            args_list,
         )
+        pool.close()
+        pool.join()
 
 
 def run_calibration_Aug7():
