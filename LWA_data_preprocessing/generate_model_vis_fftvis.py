@@ -33,9 +33,9 @@ def run_fftvis_diffuse_sim(
     f.write(f"Simulation input datafile: {input_data_path}\n")
     f.close()
 
-    stdout_orig = sys.stdout
-    stderr_orig = sys.stderr
-    sys.stdout = sys.stderr = log_file_new = open(log_path, "a")
+    # stdout_orig = sys.stdout
+    # stderr_orig = sys.stderr
+    # sys.stdout = sys.stderr = log_file_new = open(log_path, "a")
 
     # Read metadata from file
     f = open(log_path, "a")
@@ -112,19 +112,25 @@ def run_fftvis_diffuse_sim(
     f.write("Starting the simulation...\n")
     f.close()
     sim_start_time = time.time()
-    vis_full = fftvis.simulate.simulate_vis(
-        ants=antpos,
-        baselines=antpairs,
-        fluxes=model.stokes[0].T.to_value("Jy"),
-        ra=ra_new,
-        dec=dec_new,
-        freqs=uvd.freq_array,
-        lsts=np.array(lsts.to_value("rad")),
-        beam=uvb,
-        polarized=True,
-        precision=2,
-        latitude=location.lat.rad,
-    )
+
+    vis_full = np.zeros((uvd.Nfreqs, uvd.Ntimes, 2, 2, len(antpairs)), dtype=complex)
+    for freq_ind in range(uvd.Nfreqs):
+        f = open(log_path, "a")
+        f.write(f"Simulating frequency {freq_ind + 1}/{uvd.Nfreqs}.\n")
+        f.close()
+        vis_full[freq_ind, :, :, :, :] = fftvis.simulate.simulate_vis(
+            ants=antpos,
+            baselines=antpairs,
+            fluxes=model.stokes[0].T.to_value("Jy"),
+            ra=ra_new,
+            dec=dec_new,
+            freqs=uvd.freq_array[[freq_ind]],
+            lsts=np.array(lsts.to_value("rad")),
+            beam=uvb,
+            polarized=True,
+            precision=1,  # Worse precision
+            latitude=location.lat.rad,
+        )
     sim_duration = time.time() - sim_start_time
     f = open(log_path, "a")
     f.write(f"Simulation completed. Timing {sim_duration/60.0} minutes.\n")
@@ -179,9 +185,9 @@ def run_fftvis_diffuse_sim(
         uvd_out.reorder_pols(order="CASA")
         uvd_out.write_ms(ms_path, clobber=True)
 
-    sys.stdout = stdout_orig
-    sys.stderr = stderr_orig
-    log_file_new.close()
+    # sys.stdout = stdout_orig
+    # sys.stderr = stderr_orig
+    # log_file_new.close()
 
 
 if __name__ == "__main__":

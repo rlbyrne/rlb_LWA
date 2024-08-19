@@ -25,6 +25,7 @@ def run_compact_source_sims_Aug5():
     ]
 
     use_celery = False
+    parallel = False
 
     if use_celery:
         for file_name in use_filenames[::-1]:
@@ -34,7 +35,7 @@ def run_compact_source_sims_Aug5():
                 f"/lustre/gh/2024-03-02/calibration/ruby/{file_name}.ms",
                 f"/lustre/rbyrne/2024-03-02/calibration_models/{file_name}_deGasperin_sources.uvfits",
             )
-    else:
+    elif parallel:
         pool = multiprocessing.Pool(processes=len(use_filenames))
         args_list = []
         for file_name in use_filenames:
@@ -51,6 +52,14 @@ def run_compact_source_sims_Aug5():
         )
         pool.close()
         pool.join()
+    else:
+        for file_name in use_filenames[::-1]:
+            run_simulation_celery(
+                f"/lustre/rbyrne/skymodels/Gasperin2020_sources_plus_{file_name}.skyh5",
+                "/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits",
+                f"/lustre/gh/2024-03-02/calibration/ruby/{file_name}.ms",
+                f"/lustre/rbyrne/2024-03-02/calibration_models/{file_name}_deGasperin_sources.uvfits",
+            )
 
 
 def run_calibration_Aug7():
