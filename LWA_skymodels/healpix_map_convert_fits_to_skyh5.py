@@ -97,16 +97,19 @@ def convert_fits_to_pyradiosky(
     )
     skymodel.stokes[0, 0, :] = map_data * units.Kelvin
     skymodel.hpx_inds = np.arange(skymodel.Ncomponents)
-    skymodel.spectral_type = "flat"
+    skymodel.spectral_type = "subband"
     skymodel.history = history_str
 
     return skymodel
 
 
-def downsample_healpix(input_map_path, output_map_path, output_nside, clobber=True):
+def downsample_healpix(input_map, output_nside, output_map_path=None, clobber=True):
 
-    diffuse_map = pyradiosky.SkyModel()
-    diffuse_map.read_skyh5(input_map_path)
+    if isinstance(input_map, str):
+        diffuse_map = pyradiosky.SkyModel()
+        diffuse_map.read_skyh5(input_map)
+    else:
+        diffuse_map = input_map
 
     downsampled_map_data = hp.pixelfunc.ud_grade(
         diffuse_map.stokes[0, 0, :].value,
@@ -122,54 +125,87 @@ def downsample_healpix(input_map_path, output_map_path, output_nside, clobber=Tr
     diffuse_map.stokes[0, 0, :] = downsampled_map_data * units.Kelvin
     diffuse_map.hpx_inds = np.arange(diffuse_map.Ncomponents)
     diffuse_map.check()
-    diffuse_map.write_skyh5(
-        output_map_path,
-        run_check=True,
-        clobber=clobber,
-    )
+
+    if output_map_path is not None:
+        diffuse_map.write_skyh5(
+            output_map_path,
+            run_check=True,
+            clobber=clobber,
+        )
+    else:
+        return diffuse_map
+
+
+def concatenate_healpix_catalogs_in_frequency(catalog_list):
+
+    if len(catalog_list) > 1:
+        for cat_ind in range(len(catalog_list) - 1):
+            if cat_ind == 0:
+                cat1 = catalog_list[cat_ind]
+            cat2 = catalog_list[cat_ind + 1]
+
+            if cat1.nside != cat2.nside:
+                if cat1.nside != np.min([cat1.nside, cat2.nside]):
+                    cat1 = downsample_healpix(cat1, np.min([cat1.nside, cat2.nside]))
+                if cat2.nside != np.min([cat1.nside, cat2.nside]):
+                    cat2 = downsample_healpix(cat2, np.min([cat1.nside, cat2.nside]))
+            if cat1.hpx_order != cat2.hpx_order:
+                print("ERROR: Healpix ordering does not match.")
+                sys.exit(1)
+            if cat1.hpx_frame != cat2.hpx_frame:
+                print("ERROR: Frame does not match.")
+                sys.exit(1)
+
+            skymodel = pyradiosky.SkyModel()
+            skymodel.component_type = "healpix"
+            skymodel.nside = cat1.nside
+            skymodel.hpx_order = cat1.hpx_order
+            skymodel.hpx_frame = cat1.hpx_frame
+            skymodel.Nfreqs = cat1.Nfreqs + cat2.Nfreqs
+            skymodel.Ncomponents = cat1.Ncomponents
+            skymodel.freq_array = np.concatenate((cat1.freq_array, cat2.freq_array))
+            skymodel.stokes = np.concatenate((cat1.stokes, cat2.stokes), axis=1)
+            skymodel.hpx_inds = cat1.hpx_inds
+            skymodel.spectral_type = "subband"
+            skymodel.history = cat1.history
+
+            skymodel.check()
+            cat1 = skymodel
+
+    return skymodel
 
 
 if __name__ == "__main__":
 
-    # Map is downloaded from https://lambda.gsfc.nasa.gov/product/foreground/fg_ovrolwa_radio_maps_get.html
+    # Maps are downloaded from https://lambda.gsfc.nasa.gov/product/foreground/fg_ovrolwa_radio_maps_get.html
 
-    downsample_healpix(
-        "/fast/rbyrne/skymodels/ovro_lwa_sky_map_46.992MHz.skyh5",
-        "/fast/rbyrne/skymodels/ovro_lwa_sky_map_46.992MHz_nside512.skyh5",
-        512,
-    )
-
-    """
-    fits_filepath = (
-        "/Users/ruby/Astro/mmode_maps_eastwood/ovro_lwa_sky_map_46.992MHz.fits"
-    )
-    skymodel = convert_fits_to_pyradiosky(
-        fits_filepath,
-        46.992,
-        output_frame="equatorial",
-    )
-    skymodel.check()
+    filedir = "/lustre/rbyrne/skymodels"
+    freqs_mhz = [
+        "36.528",
+        "41.760",
+        "46.992",
+        "52.224",
+        "57.456",
+        "62.688",
+        "67.920",
+        "73.152",
+    ]
+    for freq_ind, freq in enumerate(freqs_mhz):
+        fits_filepath = f"{filedir}/ovro_lwa_sky_map_{freq}MHz.fits"
+        skymodel_new = convert_fits_to_pyradiosky(
+            fits_filepath,
+            float(freq_ind),
+            output_frame="equatorial",
+        )
+        skymodel_new = downsample_healpix(skymodel_new, 512)
+        if freq_ind == 0:
+            skymodel = skymodel_new
+        else:
+            skymodel = concatenate_healpix_catalogs_in_frequency(
+                [skymodel, skymodel_new]
+            )
     skymodel.write_skyh5(
-        "/Users/ruby/Astro/mmode_maps_eastwood/ovro_lwa_sky_map_46.992MHz.skyh5",
+        f"{filedir}/ovro_lwa_sky_map_36-73MHz_nside512.skyh5",
         run_check=True,
         clobber=True,
     )
-    downsample_healpix(
-        "/Users/ruby/Astro/mmode_maps_eastwood/ovro_lwa_sky_map_46.992MHz.skyh5",
-        "/Users/ruby/Astro/mmode_maps_eastwood/ovro_lwa_sky_map_46.992MHz_nside128.skyh5",
-        128,
-    )
-
-    skymodel.kelvin_to_jansky()  # Convert to units Jy/sr
-    skymodel.write_skyh5(
-        "/safepool/rbyrne/skymodels/ovro_lwa_sky_map_73.152MHz_equatorial_Jy_per_sr.skyh5",
-        run_check=True,
-        clobber=True,
-    )
-    skymodel.stokes *= 4.0 * np.pi / hp.nside2npix(skymodel.nside) # Convert from Jy/sr to Jy/pixel
-    skymodel.write_skyh5(
-        "/safepool/rbyrne/skymodels/ovro_lwa_sky_map_73.152MHz_equatorial_Jy_per_pixel.skyh5",
-        run_check=True,
-        clobber=True,
-    )
-    """
