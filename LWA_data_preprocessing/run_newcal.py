@@ -1834,7 +1834,7 @@ def run_newcal_Aug12():
         "64",
         "73",
         "78",
-        # "82",
+        "82",
     ]
 
     for file_name in use_filenames:
@@ -1853,6 +1853,9 @@ def run_newcal_Aug12():
             verbose=True,
             get_crosspol_phase=False,
             log_file_path=f"/lustre/rbyrne/2024-03-02/calibration_outputs/{file_name}_cal_log_v2.txt",
+            xtol=1e-5,
+            maxiter=200,  # reduce maxiter for debugging
+            antenna_flagging_iterations=0,
         )
         uvcal.write_calfits(
             f"/lustre/rbyrne/2024-03-02/calibration_outputs/{file_name}_extended_sources.calfits",
