@@ -29,7 +29,7 @@ for freq_band in [
     uv = pyuvdata.UVData()
     uv.read_ms(f"{data_path}/{datafile}.ms", data_column="DATA")
     pyuvdata.utils.uvcalibrate(uv, cal, inplace=True, time_check=False)
-    uv.write_ms(f"{data_path}/{datafile}_calibrated.ms")
+    uv.write_ms(f"{data_path}/{datafile}_calibrated.ms", fix_autos=True)
     os.system(
         f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {data_path}/{datafile}_nofilter {data_path}/{datafile}_calibrated.ms"
     )
