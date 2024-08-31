@@ -153,8 +153,8 @@ def plot_beam(
 
     if plot_amplitude:
         plot_jones_vals = np.sqrt(
-            np.abs(use_beam.data_array[0, :, :, :, :, :]) ** 2.0
-            + np.abs(use_beam.data_array[1, :, :, :, :, :]) ** 2.0
+            np.abs(use_beam.data_array[0, :, :, :, :]) ** 2.0
+            + np.abs(use_beam.data_array[1, :, :, :, :]) ** 2.0
         )
         # Normalize
         plot_jones_vals /= np.max(plot_jones_vals)
@@ -206,7 +206,7 @@ def plot_beam(
             for pol2 in [0, 1]:
                 contourplot = plot_function(
                     ax[pol1, pol2],
-                    (plot_jones_vals[pol1, 0, pol2, 0, :, :]).T,
+                    (plot_jones_vals[pol1, pol2, 0, :, :]).T,
                     np.radians(az_vals),
                     za_vals,
                     vmin=vmin,
@@ -241,7 +241,7 @@ def plot_mueller_matrix(
     pseudostokes=False,  # If True, assumes instrumental polarization is in pseudo-Stokes
 ):
 
-    freq_ind = np.where(freq_axis[0, :] == plot_freq)[0][0]
+    freq_ind = np.where(freq_axis == plot_freq)[0][0]
     use_mueller = mueller_mat[:, 0, :, freq_ind, :, :]
 
     if real_part:
@@ -338,7 +338,7 @@ def pol_basis_transform_azza_to_radec(
     rot_matrix[0, 1, :, :] = -np.cos(parallactic_angle)
     rot_matrix[1, 1, :, :] = -np.sin(parallactic_angle)
 
-    new_jones_vals = np.einsum("jion,jklmno->iklmno", rot_matrix, beam.data_array)
+    new_jones_vals = np.einsum("jion,jlmno->ilmno", rot_matrix, beam.data_array)
     new_basis_array = np.einsum("ijon,jlno->ilno", rot_matrix, beam.basis_vector_array)
 
     if inplace:
@@ -359,58 +359,58 @@ def convert_jones_to_mueller(beam):
 
     # XX pol
     mueller_mat[0, 0, 0, :, :, :] = (
-        np.abs(beam.data_array[0, 0, 0, :, :, :]) ** 2.0
+        np.abs(beam.data_array[0, 0, :, :, :]) ** 2.0
     )  # RA-RA
     mueller_mat[1, 0, 0, :, :, :] = (
-        np.abs(beam.data_array[1, 0, 0, :, :, :]) ** 2.0
+        np.abs(beam.data_array[1, 0, :, :, :]) ** 2.0
     )  # Dec-Dec
-    mueller_mat[2, 0, 0, :, :, :] = beam.data_array[0, 0, 0, :, :, :] * np.conj(
-        beam.data_array[1, 0, 0, :, :, :]
+    mueller_mat[2, 0, 0, :, :, :] = beam.data_array[0, 0, :, :, :] * np.conj(
+        beam.data_array[1, 0, :, :, :]
     )  # RA-Dec
-    mueller_mat[3, 0, 0, :, :, :] = beam.data_array[1, 0, 0, :, :, :] * np.conj(
-        beam.data_array[0, 0, 0, :, :, :]
+    mueller_mat[3, 0, 0, :, :, :] = beam.data_array[1, 0, :, :, :] * np.conj(
+        beam.data_array[0, 0, :, :, :]
     )  # Dec-RA
 
     # YY pol
     mueller_mat[0, 0, 1, :, :, :] = (
-        np.abs(beam.data_array[0, 0, 1, :, :, :]) ** 2.0
+        np.abs(beam.data_array[0, 1, :, :, :]) ** 2.0
     )  # RA-RA
     mueller_mat[1, 0, 1, :, :, :] = (
-        np.abs(beam.data_array[1, 0, 1, :, :, :]) ** 2.0
+        np.abs(beam.data_array[1, 1, :, :, :]) ** 2.0
     )  # Dec-Dec
-    mueller_mat[2, 0, 1, :, :, :] = beam.data_array[0, 0, 1, :, :, :] * np.conj(
-        beam.data_array[1, 0, 1, :, :, :]
+    mueller_mat[2, 0, 1, :, :, :] = beam.data_array[0, 1, :, :, :] * np.conj(
+        beam.data_array[1, 1, :, :, :]
     )  # RA-Dec
-    mueller_mat[3, 0, 1, :, :, :] = beam.data_array[1, 0, 1, :, :, :] * np.conj(
-        beam.data_array[0, 0, 1, :, :, :]
+    mueller_mat[3, 0, 1, :, :, :] = beam.data_array[1, 1, :, :, :] * np.conj(
+        beam.data_array[0, 1, :, :, :]
     )  # Dec-RA
 
     # XY pol
-    mueller_mat[0, 0, 2, :, :, :] = beam.data_array[0, 0, 0, :, :, :] * np.conj(
-        beam.data_array[0, 0, 1, :, :, :]
+    mueller_mat[0, 0, 2, :, :, :] = beam.data_array[0, 0, :, :, :] * np.conj(
+        beam.data_array[0, 1, :, :, :]
     )  # RA-RA
-    mueller_mat[1, 0, 2, :, :, :] = beam.data_array[1, 0, 0, :, :, :] * np.conj(
-        beam.data_array[1, 0, 1, :, :, :]
+    mueller_mat[1, 0, 2, :, :, :] = beam.data_array[1, 0, :, :, :] * np.conj(
+        beam.data_array[1, 1, :, :, :]
     )  # Dec-Dec
-    mueller_mat[2, 0, 2, :, :, :] = beam.data_array[0, 0, 0, :, :, :] * np.conj(
-        beam.data_array[1, 0, 1, :, :, :]
+    mueller_mat[2, 0, 2, :, :, :] = beam.data_array[0, 0, :, :, :] * np.conj(
+        beam.data_array[1, 1, :, :, :]
     )  # RA-Dec
-    mueller_mat[3, 0, 2, :, :, :] = beam.data_array[1, 0, 0, :, :, :] * np.conj(
-        beam.data_array[0, 0, 1, :, :, :]
+    mueller_mat[3, 0, 2, :, :, :] = beam.data_array[1, 0, :, :, :] * np.conj(
+        beam.data_array[0, 1, :, :, :]
     )  # Dec-RA
 
     # YX pol
-    mueller_mat[0, 0, 3, :, :, :] = beam.data_array[0, 0, 1, :, :, :] * np.conj(
-        beam.data_array[0, 0, 0, :, :, :]
+    mueller_mat[0, 0, 3, :, :, :] = beam.data_array[0, 1, :, :, :] * np.conj(
+        beam.data_array[0, 0, :, :, :]
     )  # RA-RA
-    mueller_mat[1, 0, 3, :, :, :] = beam.data_array[1, 0, 1, :, :, :] * np.conj(
-        beam.data_array[1, 0, 0, :, :, :]
+    mueller_mat[1, 0, 3, :, :, :] = beam.data_array[1, 1, :, :, :] * np.conj(
+        beam.data_array[1, 0, :, :, :]
     )  # Dec-Dec
-    mueller_mat[2, 0, 3, :, :, :] = beam.data_array[0, 0, 1, :, :, :] * np.conj(
-        beam.data_array[1, 0, 0, :, :, :]
+    mueller_mat[2, 0, 3, :, :, :] = beam.data_array[0, 1, :, :, :] * np.conj(
+        beam.data_array[1, 0, :, :, :]
     )  # RA-Dec
-    mueller_mat[3, 0, 3, :, :, :] = beam.data_array[1, 0, 1, :, :, :] * np.conj(
-        beam.data_array[0, 0, 0, :, :, :]
+    mueller_mat[3, 0, 3, :, :, :] = beam.data_array[1, 1, :, :, :] * np.conj(
+        beam.data_array[0, 0, :, :, :]
     )  # Dec-RA
 
     return mueller_mat
