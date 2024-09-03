@@ -53,7 +53,9 @@ def run_fftvis_diffuse_sim(
         uvd.set_telescope_params(overwrite=True, warn=True)
     uvd.set_uvws_from_antenna_positions(update_vis=False)
     uvd.phase_to_time(np.mean(uvd.time_array))  # Phase data
-    uvd.flag_array[:, :, :] = False  # Unflag all
+    uvd.flag_array = np.zeros(
+        (uvd.Nblts, uvd.Nfreqs, uvd.Npols), dtype=bool
+    )  # Unflag all
 
     # Define antenna locations
     antpos, ants = uvd.get_ENU_antpos()
