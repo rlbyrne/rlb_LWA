@@ -45,7 +45,7 @@ def run_fftvis_diffuse_sim(
         input_data_path,
         read_data=False,
         use_future_array_shapes=True,
-        file_type="ms",
+        # file_type="ms",
         ignore_single_chan=False,
     )
     if uvd.telescope_name == "OVRO_MMA":  # Correct telescope location
