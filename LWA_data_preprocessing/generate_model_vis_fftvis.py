@@ -93,8 +93,26 @@ def run_fftvis_diffuse_sim(
     f = open(log_path, "a")
     f.write("Reading the sky model...\n")
     f.close()
-    model = pyradiosky.SkyModel.from_skyh5(map_path)
-    model.at_frequencies(Quantity(uvd.freq_array, "Hz"))
+    if map_path.endswith(".skyh5"):
+        model = pyradiosky.SkyModel.from_skyh5(map_path)
+    elif map_path.endswith(".sav"):
+        model = pyradiosky.SkyModel.from_fhd_catalog(map_path)
+    else:
+        model = pyradiosky.SkyModel()
+        model.read(map_path)
+    use_model_freq_array = uvd.freq_array
+    if (
+        model.spectral_type == "subband"
+    ):  # Define frequency extrapolation to use nearest neighbor values
+        if np.max(uvd.freq_array) > np.max(model.reference_frequency):
+            use_model_freq_array[
+                np.where(use_model_freq_array > np.max(model.reference_frequency))
+            ] = np.max(model.reference_frequency)
+        if np.min(uvd.freq_array) < np.min(model.reference_frequency):
+            use_model_freq_array[
+                np.where(use_model_freq_array < np.min(model.reference_frequency))
+            ] = np.min(model.reference_frequency)
+    model.at_frequencies(Quantity(use_model_freq_array, "Hz"))
     if model.component_type == "healpix":
         model.healpix_to_point()
     # Perform a coordinate transformation to account for time-dependent precession and nutation
