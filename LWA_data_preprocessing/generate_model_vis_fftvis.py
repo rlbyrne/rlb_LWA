@@ -194,7 +194,7 @@ def run_fftvis_diffuse_sim(
     f.close()
     try:
         uvd_out.write_uvfits(output_uvfits_path, fix_autos=True)
-    finally:
+    except:
         # Save as ms
         ms_path = f"{output_uvfits_path.removesuffix('.uvfits')}.ms"
         f = open(log_path, "a")
