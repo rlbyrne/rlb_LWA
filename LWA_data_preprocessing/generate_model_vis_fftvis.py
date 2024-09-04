@@ -91,6 +91,32 @@ def run_fftvis_diffuse_sim(
         uvb.feed_array = np.array(
             [pol_mapping[feed.lower()] for feed in uvb.feed_array]
         )
+    if np.max(uvd.freq_array) > np.max(uvb.freq_array):
+        print(
+            "WARNING: Max data frequency exceeds max beam model frequency. Using nearest neighbor value."
+        )
+        uvb_max_freq = uvb.select(frequencies=np.max(uvb.freq_array), inplace=False)
+        uvb.freq_array = np.append(uvb.freq_array, np.max(uvd.freq_array))
+        uvb.Nfreqs += 1
+        uvb.data_array = np.append(
+            uvb.data_array,
+            uvb_max_freq.data_array,
+            axis=2,
+        )
+        uvb.bandpass_array = np.append(uvb.bandpass_array, uvb_max_freq.bandpass_array)
+    if np.min(uvd.freq_array) < np.min(uvb.freq_array):
+        print(
+            "WARNING: Minimum data frequency is less than minimum beam model frequency. Using nearest neighbor value."
+        )
+        uvb_min_freq = uvb.select(frequencies=np.min(uvb.freq_array), inplace=False)
+        uvb.freq_array = np.append(np.min(uvd.freq_array), uvb.freq_array)
+        uvb.Nfreqs += 1
+        uvb.data_array = np.append(
+            uvb_min_freq.data_array,
+            uvb.data_array,
+            axis=2,
+        )
+        uvb.bandpass_array = np.append(uvb_min_freq.bandpass_array, uvb.bandpass_array)
     uvb.freq_interp_kind = "linear"  # Added for simulation speedup
 
     # Get model
@@ -109,10 +135,16 @@ def run_fftvis_diffuse_sim(
         model.spectral_type == "subband"
     ):  # Define frequency extrapolation to use nearest neighbor values
         if np.max(uvd.freq_array) > np.max(model.reference_frequency):
+            print(
+                "WARNING: Max data frequency exceeds max sky model frequency. Using nearest neighbor value."
+            )
             use_model_freq_array[
                 np.where(use_model_freq_array > np.max(model.reference_frequency))
             ] = np.max(model.reference_frequency)
         if np.min(uvd.freq_array) < np.min(model.reference_frequency):
+            print(
+                "WARNING: Minimum data frequency is less than minimum sky model frequency. Using nearest neighbor value."
+            )
             use_model_freq_array[
                 np.where(use_model_freq_array < np.min(model.reference_frequency))
             ] = np.min(model.reference_frequency)
