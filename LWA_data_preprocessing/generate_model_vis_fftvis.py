@@ -134,20 +134,20 @@ def run_fftvis_diffuse_sim(
     if (
         model.spectral_type == "subband"
     ):  # Define frequency extrapolation to use nearest neighbor values
-        if np.max(uvd.freq_array) > np.max(model.reference_frequency):
+        if np.max(uvd.freq_array) > np.max(model.freq_array):
             print(
                 "WARNING: Max data frequency exceeds max sky model frequency. Using nearest neighbor value."
             )
             use_model_freq_array[
-                np.where(use_model_freq_array > np.max(model.reference_frequency))
-            ] = np.max(model.reference_frequency)
-        if np.min(uvd.freq_array) < np.min(model.reference_frequency):
+                np.where(use_model_freq_array > np.max(model.freq_array))
+            ] = np.max(model.freq_array)
+        if np.min(uvd.freq_array) < np.min(model.freq_array):
             print(
                 "WARNING: Minimum data frequency is less than minimum sky model frequency. Using nearest neighbor value."
             )
             use_model_freq_array[
-                np.where(use_model_freq_array < np.min(model.reference_frequency))
-            ] = np.min(model.reference_frequency)
+                np.where(use_model_freq_array < np.min(model.freq_array))
+            ] = np.min(model.freq_array)
     model.at_frequencies(Quantity(use_model_freq_array, "Hz"))
     if model.component_type == "healpix":
         model.healpix_to_point()
