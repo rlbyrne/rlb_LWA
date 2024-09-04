@@ -51,6 +51,8 @@ def run_fftvis_diffuse_sim(
     if uvd.telescope_name == "OVRO_MMA":  # Correct telescope location
         uvd.telescope_name = "OVRO-LWA"
         uvd.set_telescope_params(overwrite=True, warn=True)
+    if uvd.telescope_name == "HERA":
+        uvd.compress_by_redundancy()
     uvd.set_uvws_from_antenna_positions(update_vis=False)
     uvd.phase_to_time(np.mean(uvd.time_array))  # Phase data
     uvd.flag_array = np.zeros(
@@ -79,17 +81,18 @@ def run_fftvis_diffuse_sim(
     f.close()
     uvb = pyuvdata.UVBeam.from_file(beam_path)
     uvb.peak_normalize()
-    if uvb.feed_array[0].lower() == "e":
-        pol_mapping = {
-            v: k
-            for k, v in pyuvdata.utils._x_orientation_rep_dict(
-                uvb.x_orientation
-            ).items()
-        }
-        uvb.feed_array = np.array(
-            [pol_mapping[feed.lower()] for feed in uvb.feed_array]
-        )
-    uvb.freq_interp_kind = "linear"
+    if uvb.beam_type != "power":
+        if uvb.feed_array[0].lower() == "e":
+            pol_mapping = {
+                v: k
+                for k, v in pyuvdata.utils._x_orientation_rep_dict(
+                    uvb.x_orientation
+                ).items()
+            }
+            uvb.feed_array = np.array(
+                [pol_mapping[feed.lower()] for feed in uvb.feed_array]
+            )
+    uvb.freq_interp_kind = "linear"  # Added for simulation speedup
 
     # Get model
     f = open(log_path, "a")
