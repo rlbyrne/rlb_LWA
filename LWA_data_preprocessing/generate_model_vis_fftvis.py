@@ -81,17 +81,16 @@ def run_fftvis_diffuse_sim(
     f.close()
     uvb = pyuvdata.UVBeam.from_file(beam_path)
     uvb.peak_normalize()
-    if uvb.beam_type != "power":
-        if uvb.feed_array[0].lower() == "e":
-            pol_mapping = {
-                v: k
-                for k, v in pyuvdata.utils._x_orientation_rep_dict(
-                    uvb.x_orientation
-                ).items()
-            }
-            uvb.feed_array = np.array(
-                [pol_mapping[feed.lower()] for feed in uvb.feed_array]
-            )
+    if uvb.feed_array[0].lower() == "e":
+        pol_mapping = {
+            v: k
+            for k, v in pyuvdata.utils._x_orientation_rep_dict(
+                uvb.x_orientation
+            ).items()
+        }
+        uvb.feed_array = np.array(
+            [pol_mapping[feed.lower()] for feed in uvb.feed_array]
+        )
     uvb.freq_interp_kind = "linear"  # Added for simulation speedup
 
     # Get model
