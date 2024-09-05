@@ -41,11 +41,15 @@ def run_fftvis_diffuse_sim(
     f = open(log_path, "a")
     f.write("Reading data...\n")
     f.close()
+    if input_data_path.endswith(".ms"):  # Data reading doesn't automatically detect file type
+        file_type="ms"
+    else:
+        file_type=None
     uvd = pyuvdata.UVData.from_file(
         input_data_path,
         read_data=False,
         use_future_array_shapes=True,
-        # file_type="ms",
+        file_type=file_type,
         ignore_single_chan=False,
     )
     if uvd.telescope_name == "OVRO_MMA":  # Correct telescope location
