@@ -91,7 +91,7 @@ def run_fftvis_diffuse_sim(
         uvb.feed_array = np.array(
             [pol_mapping[feed.lower()] for feed in uvb.feed_array]
         )
-    if np.max(uvd.freq_array) > np.max(uvb.freq_array):
+    if np.max(Quantity(uvd.freq_array, "Hz")) > np.max(Quantity(uvb.freq_array, "Hz")):
         print(
             "WARNING: Max data frequency exceeds max beam model frequency. Using nearest neighbor value."
         )
@@ -104,7 +104,7 @@ def run_fftvis_diffuse_sim(
             axis=2,
         )
         uvb.bandpass_array = np.append(uvb.bandpass_array, uvb_max_freq.bandpass_array)
-    if np.min(uvd.freq_array) < np.min(uvb.freq_array):
+    if np.min(Quantity(uvd.freq_array, "Hz")) < np.min(Quantity(uvb.freq_array, "Hz")):
         print(
             "WARNING: Minimum data frequency is less than minimum beam model frequency. Using nearest neighbor value."
         )
@@ -141,7 +141,7 @@ def run_fftvis_diffuse_sim(
             use_model_freq_array[
                 np.where(Quantity(use_model_freq_array, "Hz") > np.max(Quantity(model.freq_array, "Hz")))
             ] = np.max(model.freq_array)
-        if np.min(uvd.freq_array) < np.min(model.freq_array):
+        if np.min(Quantity(uvd.freq_array, "Hz")) < np.min(Quantity(model.freq_array, "Hz")):
             print(
                 "WARNING: Minimum data frequency is less than minimum sky model frequency. Using nearest neighbor value."
             )
@@ -151,6 +151,9 @@ def run_fftvis_diffuse_sim(
     model.at_frequencies(Quantity(use_model_freq_array, "Hz"))
     if model.component_type == "healpix":
         model.healpix_to_point()
+    use_comp_inds = np.where(np.isfinite(model.stokes[0]))[-1]
+    if len(use_comp_inds) < model.Ncomponents:  # Remove nan-ed sources
+        model.select(component_inds = use_comp_inds)
     # Perform a coordinate transformation to account for time-dependent precession and nutation
     ra_new, dec_new = matvis.conversions.equatorial_to_eci_coords(
         model.ra.rad,
