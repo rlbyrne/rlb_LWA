@@ -41,10 +41,12 @@ def run_fftvis_diffuse_sim(
     f = open(log_path, "a")
     f.write("Reading data...\n")
     f.close()
-    if input_data_path.endswith(".ms"):  # Data reading doesn't automatically detect file type
-        file_type="ms"
+    if input_data_path.endswith(
+        ".ms"
+    ):  # Data reading doesn't automatically detect file type
+        file_type = "ms"
     else:
-        file_type=None
+        file_type = None
     uvd = pyuvdata.UVData.from_file(
         input_data_path,
         read_data=False,
@@ -130,7 +132,7 @@ def run_fftvis_diffuse_sim(
     if map_path.endswith(".skyh5"):
         model = pyradiosky.SkyModel.from_skyh5(map_path)
     elif map_path.endswith(".sav"):
-        model = pyradiosky.SkyModel.from_fhd_catalog(map_path)
+        model = pyradiosky.SkyModel.from_fhd_catalog(map_path, expand_extended=True)
     else:
         model = pyradiosky.SkyModel()
         model.read(map_path)
@@ -138,26 +140,37 @@ def run_fftvis_diffuse_sim(
     if (
         model.spectral_type == "subband"
     ):  # Define frequency extrapolation to use nearest neighbor values
-        if np.max(Quantity(uvd.freq_array, "Hz")) > np.max(Quantity(model.freq_array, "Hz")):
+        if np.max(Quantity(uvd.freq_array, "Hz")) > np.max(
+            Quantity(model.freq_array, "Hz")
+        ):
             print(
                 "WARNING: Max data frequency exceeds max sky model frequency. Using nearest neighbor value."
             )
             use_model_freq_array[
-                np.where(Quantity(use_model_freq_array, "Hz") > np.max(Quantity(model.freq_array, "Hz")))
+                np.where(
+                    Quantity(use_model_freq_array, "Hz")
+                    > np.max(Quantity(model.freq_array, "Hz"))
+                )
             ] = np.max(model.freq_array)
-        if np.min(Quantity(uvd.freq_array, "Hz")) < np.min(Quantity(model.freq_array, "Hz")):
+        if np.min(Quantity(uvd.freq_array, "Hz")) < np.min(
+            Quantity(model.freq_array, "Hz")
+        ):
             print(
                 "WARNING: Minimum data frequency is less than minimum sky model frequency. Using nearest neighbor value."
             )
             use_model_freq_array[
-                np.where(Quantity(use_model_freq_array, "Hz") < np.min(Quantity(model.freq_array, "Hz")))
+                np.where(
+                    Quantity(use_model_freq_array, "Hz")
+                    < np.min(Quantity(model.freq_array, "Hz"))
+                )
             ] = np.min(model.freq_array)
     model.at_frequencies(Quantity(use_model_freq_array, "Hz"))
     if model.component_type == "healpix":
         model.healpix_to_point()
-    use_comp_inds = np.where(np.isfinite(model.stokes[0]))[-1]
+    use_comp_inds = np.where(np.isfinite(np.sum(model.stokes, axis=(0, 1))))[0]
     if len(use_comp_inds) < model.Ncomponents:  # Remove nan-ed sources
-        model.select(component_inds = use_comp_inds)
+        print("Removing nan flux values from input catalog.")
+        model.select(component_inds=use_comp_inds)
     # Perform a coordinate transformation to account for time-dependent precession and nutation
     ra_new, dec_new = matvis.conversions.equatorial_to_eci_coords(
         model.ra.rad,
