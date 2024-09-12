@@ -292,7 +292,12 @@ def plot_mueller_matrix(
     plt.show()
 
 
-def coordinate_transfrom_azza_to_radec(az_vals, za_vals, latitude, hour_angle=0.0):
+def coordinate_transfrom_azza_to_radec(
+    az_vals,  # Units radians
+    za_vals,  # Units radians
+    latitude,  # Units degrees
+    hour_angle=0.0  # Units radians
+):
 
     ra_vals = hour_angle - np.arctan2(
         -np.sin(za_vals) * np.sin(az_vals - np.pi / 2),

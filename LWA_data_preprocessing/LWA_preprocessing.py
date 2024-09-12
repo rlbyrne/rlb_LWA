@@ -7,8 +7,8 @@ import shlex
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib import cm
-import SSINS
-from SSINS import plot_lib
+#import SSINS
+#from SSINS import plot_lib
 
 matplotlib.use("Agg")
 
@@ -269,28 +269,29 @@ def flag_outriggers(
 ):
 
     # Get antennas positions in ECEF
-    antpos = uvd.antenna_positions + uvd.telescope_location
+    antpos = uvd.telescope.antenna_positions + uvd.telescope.telescope_location
     # Convert to topocentric (East, North, Up or ENU) coords.
-    antpos = pyuvdata.utils.ENU_from_ECEF(antpos, *uvd.telescope_location_lat_lon_alt)
+    antpos = pyuvdata.utils.ENU_from_ECEF(antpos, center_loc=uvd.telescope.location)
 
     if core_center_coords is None:
         core_center_coords = [np.median(antpos[:, 0]), np.median(antpos[:, 1])]
-    outrigger_ants = np.where(
+    outrigger_ant_inds = np.where(
         np.sqrt(
             (antpos[:, 0] - core_center_coords[0]) ** 2.0
             + (antpos[:, 1] - core_center_coords[1]) ** 2.0
         )
         > core_radius_m
     )[0]
+    outrigger_ants = uvd.telescope.antenna_numbers[outrigger_ant_inds]
 
     flag_arr = np.copy(uvd.flag_array)
     for ant in outrigger_ants:
         ant_1_bls = np.where(uvd.ant_1_array == ant)[0]
         if len(ant_1_bls) > 0:
-            flag_arr[ant_1_bls, :, :, :] = True
+            flag_arr[ant_1_bls, :, :] = True
         ant_2_bls = np.where(uvd.ant_2_array == ant)[0]
         if len(ant_2_bls) > 0:
-            flag_arr[ant_2_bls, :, :, :] = True
+            flag_arr[ant_2_bls, :, :] = True
 
     if inplace:
         uvd.flag_array = flag_arr
