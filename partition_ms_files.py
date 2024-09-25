@@ -10,28 +10,28 @@ time_step = 0
 use_n_timesteps = 30
 while time_step < 72:
     output_filename = f"41-82_{dirname}_{str(time_step+1).zfill(3)}_5min.ms"
-    if output_filename in os.listdir(pathname):
+    if output_filename in os.listdir(f"{pathname}/5_min_integrations"):
         print(f"{output_filename} exists. Skipping.")
         time_step += 1
     else:
         for filename in use_files:
             if f"{filename}_{dirname}_{str(time_step).zfill(3)}.ms" not in os.listdir(
-                pathname
+                f"{pathname}/5_min_integrations"
             ):  # Check if file already exists
                 print(f"Partitioning file {filename}.ms")
                 partition(
                     f"{pathname}/{filename}.ms",
-                    outputvis=f"{pathname}/{filename}_{dirname}_{str(time_step+1).zfill(3)}.ms",
+                    outputvis=f"{pathname}/5_min_integrations/{filename}_{dirname}_{str(time_step+1).zfill(3)}.ms",
                     scan=f"{int(time_step * use_n_timesteps + 1)}~{int(time_step * use_n_timesteps + use_n_timesteps)}",
                 )
 
         datafile_list = [
-            f"{pathname}/{filename}_{dirname}_{str(time_step+1).zfill(3)}.ms"
+            f"{pathname}/5_min_integrations/{filename}_{dirname}_{str(time_step+1).zfill(3)}.ms"
             for filename in use_files
         ]
         print(f"Concatenating files and saving to {output_filename}")
         virtualconcat(
             vis=datafile_list,
-            concatvis=output_filename,
+            concatvis=f"{pathname}/5_min_integrations/{output_filename}",
         )
         time_step += 1

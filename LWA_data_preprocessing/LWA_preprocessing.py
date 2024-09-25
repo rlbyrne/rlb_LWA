@@ -265,6 +265,7 @@ def flag_outriggers(
     uvd,
     core_center_coords=None,  # If None, defaults to median ant position
     core_radius_m=130.0,
+    remove_outriggers=False,
     inplace=False,
 ):
 
@@ -295,9 +296,15 @@ def flag_outriggers(
 
     if inplace:
         uvd.flag_array = flag_arr
+        if remove_outriggers:
+            keep_ants = [antnum for antnum in uvd.telescope.antenna_numbers if antnum not in outrigger_ants]
+            uvd.select(antenna_nums=keep_ants)
     else:
         uvd_new = uvd.copy()
         uvd_new.flag_array = flag_arr
+        if remove_outriggers:
+            keep_ants = [antnum for antnum in uvd.telescope.antenna_numbers if antnum not in outrigger_ants]
+            uvd_new.select(antenna_nums=keep_ants)
         return uvd_new
 
 

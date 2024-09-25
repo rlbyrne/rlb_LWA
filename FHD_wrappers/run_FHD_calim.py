@@ -2,12 +2,12 @@ import subprocess
 import shlex
 import os
 
-obsids_list = ["46_1time_1freq"]
-versions_list = ["rlb_LWA_model_diffuse_Jul2024"]
-uvfits_path = "/data03/rbyrne/20231222"
-outdir = "/data03/rbyrne/20231222/fhd_outputs"
+obsids_list = ["41-82_10_001_core"]
+versions_list = ["rlb_process_LWA_Sept2024"]
+uvfits_path = "/lustre/rbyrne/2024-03-02/10"
+outdir = "/lustre/rbyrne/fhd_outputs"
 run_fhd = True
-run_eppsilon = False
+run_eppsilon = True
 
 # Define wrappers
 fhd_versions_script = "fhd_versions_calim"
@@ -16,7 +16,7 @@ eppsilon_script = "ps_single_obs_wrapper"
 # Set eppsilon options
 refresh_ps = 1
 uvf_input = 1
-no_evenodd = 1  # Use this option if only one time step is present
+no_evenodd = 0  # Use this option if only one time step is present
 xx_only = 0
 
 for version in versions_list:

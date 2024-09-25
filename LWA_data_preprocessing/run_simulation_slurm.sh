@@ -12,5 +12,5 @@ cd ~
 source ~/.bashrc
 conda activate py310
 date
-python /home/rbyrne/rlb_LWA/LWA_data_preprocessing/generate_model_vis_fftvis.py $1 $2 $3 $4 
+python /home/rbyrne/rlb_LWA/LWA_data_preprocessing/generate_model_vis_fftvis.py $1 $2 $3 $4 $5
 

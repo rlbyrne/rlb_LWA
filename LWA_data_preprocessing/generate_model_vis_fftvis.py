@@ -20,6 +20,7 @@ def run_fftvis_diffuse_sim(
     input_data_path=None,
     output_uvfits_path=None,
     log_path=None,
+    offset_timesteps=0,
 ):
 
     if log_path is None:
@@ -59,6 +60,11 @@ def run_fftvis_diffuse_sim(
         uvd.set_telescope_params(overwrite=True, warn=True)
     if uvd.telescope_name == "HERA":
         uvd.compress_by_redundancy()
+
+    if offset_timesteps:
+        uvd.time_array += np.max(uvd.time_array) - np.min(uvd.time_array) + np.mean(uvd.integration_time) / (60.0*60.0*24.0)
+        uvd.set_lsts_from_time_array()
+
     uvd.set_uvws_from_antenna_positions(update_vis=False)
     uvd.phase_to_time(np.mean(uvd.time_array))  # Phase data
     uvd.flag_array = np.zeros(
@@ -271,5 +277,6 @@ if __name__ == "__main__":
     beam_path = args[2]
     input_data_path = args[3]
     output_uvfits_path = args[4]
+    offset_timesteps = args[5]
 
-    run_fftvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_path)
+    run_fftvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_path, offset_timesteps)
