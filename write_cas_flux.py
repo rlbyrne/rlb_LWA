@@ -18,6 +18,6 @@ for freq_band in [
 ]:
     use_map = pyradiosky.SkyModel()
     use_map.read(f"/lustre/rbyrne/skymodels/Gasperin2020_point_sources_plus_{freq_band}.skyh5")
-    comp_ind = np.where([name.startswith("Cas") for name in use_map.name])
-    vir_flux = use_map.stokes[0, 0, comp_ind][0][0]
-    print(f"{use_map.name[comp_ind][0][:3]} flux, {freq_band} MHz: {vir_flux}")
+    comp_ind = np.where([name.startswith("Cyg") for name in use_map.name])
+    flux = use_map.stokes[0, 0, comp_ind][0][0]
+    print(f"{use_map.name[comp_ind][0][:3]} flux, {freq_band} MHz: {flux}")
