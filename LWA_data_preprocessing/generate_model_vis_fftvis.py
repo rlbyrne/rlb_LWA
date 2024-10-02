@@ -61,7 +61,9 @@ def run_fftvis_diffuse_sim(
         uvd.compress_by_redundancy()
 
     if offset_timesteps:
-        uvd.time_array += offset_timesteps * (
+        with open(log_path, "a") as f:
+            f.write(f"Implementing time offset of {offset_timesteps}.\n")
+        uvd.time_array += float(offset_timesteps) * (
             np.max(uvd.time_array)
             - np.min(uvd.time_array)
             + np.mean(uvd.integration_time) / (60.0 * 60.0 * 24.0)
