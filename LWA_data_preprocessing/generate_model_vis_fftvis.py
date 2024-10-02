@@ -61,7 +61,11 @@ def run_fftvis_diffuse_sim(
         uvd.compress_by_redundancy()
 
     if offset_timesteps:
-        uvd.time_array += np.max(uvd.time_array) - np.min(uvd.time_array) + np.mean(uvd.integration_time) / (60.0*60.0*24.0)
+        uvd.time_array += offset_timesteps * (
+            np.max(uvd.time_array)
+            - np.min(uvd.time_array)
+            + np.mean(uvd.integration_time) / (60.0 * 60.0 * 24.0)
+        )
         uvd.set_lsts_from_time_array()
 
     uvd.set_uvws_from_antenna_positions(update_vis=False)
@@ -139,7 +143,7 @@ def run_fftvis_diffuse_sim(
     else:
         model = pyradiosky.SkyModel()
         model.read(map_path)
-    use_model_freq_array = uvd.freq_array
+    use_model_freq_array = np.copy(uvd.freq_array)
     if (
         model.spectral_type == "subband"
     ):  # Define frequency extrapolation to use nearest neighbor values
