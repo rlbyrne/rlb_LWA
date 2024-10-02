@@ -1874,6 +1874,61 @@ def run_newcal_Aug12():
             clobber=True,
         )
 
+def run_newcal_CygA_Oct2():
+
+    use_filenames = [
+        "18",
+        "23",
+        "27",
+        "36",
+        "41",
+        "46",
+        "50",
+        "55",
+        "59",
+        "64",
+        "73",
+        "78",
+        "82",
+    ]
+
+    for file_name in use_filenames:
+
+        datafile = f"/lustre/gh/2024-03-02/calibration/ruby/{file_name}.ms"
+        model_file = f"/lustre/rbyrne/2024-03-02/calibration_models/{file_name}_deGasperin_sources.ms"
+
+        uvcal = calibration_wrappers.calibration_per_pol(
+            datafile,
+            model_file,
+            data_use_column="DATA",
+            model_use_column="DATA",
+            conjugate_model=True,
+            min_cal_baseline_lambda=10,
+            max_cal_baseline_lambda=125,
+            verbose=True,
+            get_crosspol_phase=False,
+            log_file_path=f"/lustre/rbyrne/2024-03-02/calibration_outputs/{file_name}_cal_log_v2.txt",
+            xtol=1e-5,
+            maxiter=200,  # reduce maxiter for debugging
+            antenna_flagging_iterations=0,
+        )
+        uvcal.write_calfits(
+            f"/lustre/rbyrne/2024-03-02/calibration_outputs/{file_name}_extended_sources.calfits",
+            clobber=True,
+        )
+        data = pyuvdata.UVData()
+        data.read_ms(
+            datafile,
+            data_column="DATA",
+        )
+        pyuvdata.utils.uvcalibrate(data, uvcal, inplace=True, time_check=False)
+        data.reorder_pols(order="CASA")
+        data.write_ms(
+            f"/lustre/rbyrne/2024-03-02/calibration_outputs/{file_name}_extended_sources_calibrated.ms",
+            fix_autos=True,
+            clobber=True,
+        )
+
 
 if __name__ == "__main__":
     run_newcal_Aug12()
