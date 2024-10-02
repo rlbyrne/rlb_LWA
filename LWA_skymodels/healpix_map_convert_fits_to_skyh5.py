@@ -194,7 +194,7 @@ if __name__ == "__main__":
         fits_filepath = f"{filedir}/ovro_lwa_sky_map_{freq}MHz.fits"
         skymodel_new = convert_fits_to_pyradiosky(
             fits_filepath,
-            float(freq_ind),
+            float(freq),
             output_frame="equatorial",
         )
         skymodel_new = downsample_healpix(skymodel_new, 512)

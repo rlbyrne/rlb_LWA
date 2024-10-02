@@ -26,22 +26,21 @@ def run_fftvis_diffuse_sim(
     if log_path is None:
         log_path = f"{output_uvfits_path.removesuffix('.uvfits')}_log.txt"
 
-    f = open(log_path, "w")
-    f.write("Starting fftvis simulation.\n")
-    f.write(f"Running on {socket.gethostname()}")
-    f.write(f"Simulation skymodel: {map_path}\n")
-    f.write(f"Simulation beam model: {beam_path}\n")
-    f.write(f"Simulation input datafile: {input_data_path}\n")
-    f.close()
+    with open(log_path, "w") as f:
+        f.write("Starting fftvis simulation.\n")
+        f.write(f"Running on {socket.gethostname()}")
+        f.write(f"Simulation skymodel: {map_path}\n")
+        f.write(f"Simulation beam model: {beam_path}\n")
+        f.write(f"Simulation input datafile: {input_data_path}\n")
 
     # stdout_orig = sys.stdout
     # stderr_orig = sys.stderr
     # sys.stdout = sys.stderr = log_file_new = open(log_path, "a")
 
     # Read metadata from file
-    f = open(log_path, "a")
-    f.write("Reading data...\n")
-    f.close()
+    with open(log_path, "a") as f:
+        f.write("Reading data...\n")
+
     if input_data_path.endswith(
         ".ms"
     ):  # Data reading doesn't automatically detect file type
@@ -88,9 +87,8 @@ def run_fftvis_diffuse_sim(
     lsts = obstimes.sidereal_time("apparent")
 
     # Get beam
-    f = open(log_path, "a")
-    f.write("Reading the beam model...\n")
-    f.close()
+    with open(log_path, "a") as f:
+        f.write("Reading the beam model...\n")
     uvb = pyuvdata.UVBeam.from_file(beam_path)
     uvb.peak_normalize()
     if uvb.feed_array[0].lower() == "e":
@@ -132,9 +130,8 @@ def run_fftvis_diffuse_sim(
     uvb.freq_interp_kind = "linear"  # Added for simulation speedup
 
     # Get model
-    f = open(log_path, "a")
-    f.write("Reading the sky model...\n")
-    f.close()
+    with open(log_path, "a") as f:
+        f.write("Reading the sky model...\n")
     if map_path.endswith(".skyh5"):
         model = pyradiosky.SkyModel.from_skyh5(map_path)
     elif map_path.endswith(".sav"):
@@ -188,16 +185,14 @@ def run_fftvis_diffuse_sim(
     )
 
     # Run simulation
-    f = open(log_path, "a")
-    f.write("Starting the simulation...\n")
-    f.close()
+    with open(log_path, "a") as f:
+        f.write("Starting the simulation...\n")
     sim_start_time = time.time()
 
     vis_full = np.zeros((uvd.Nfreqs, uvd.Ntimes, 2, 2, len(antpairs)), dtype=complex)
     for freq_ind in range(uvd.Nfreqs):
-        f = open(log_path, "a")
-        f.write(f"Simulating frequency {freq_ind + 1}/{uvd.Nfreqs}.\n")
-        f.close()
+        with open(log_path, "a") as f:
+            f.write(f"Simulating frequency {freq_ind + 1}/{uvd.Nfreqs}.\n")
         vis_full[freq_ind, :, :, :, :] = fftvis.simulate.simulate_vis(
             ants=antpos,
             baselines=antpairs,
@@ -212,10 +207,9 @@ def run_fftvis_diffuse_sim(
             latitude=location.lat.rad,
         )
     sim_duration = time.time() - sim_start_time
-    f = open(log_path, "a")
-    f.write(f"Simulation completed. Timing {sim_duration/60.0} minutes.\n")
-    f.write("Formatting simulation output...\n")
-    f.close()
+    with open(log_path, "a") as f:
+        f.write(f"Simulation completed. Timing {sim_duration/60.0} minutes.\n")
+        f.write("Formatting simulation output...\n")
 
     formatting_start_time = time.time()
     uvd_out = pyuvdata.UVData.new(
@@ -244,24 +238,21 @@ def run_fftvis_diffuse_sim(
     uvd_out.reorder_freqs(channel_order="freq")
     uvd_out.phase_to_time(np.mean(uvd.time_array))
     uvd_out.check()
-    f = open(log_path, "a")
-    f.write(
-        f"Formatting completed. Timing {(time.time()-formatting_start_time)/60.0} minutes.\n"
-    )
-    f.close()
+    with open(log_path, "a") as f:
+        f.write(
+            f"Formatting completed. Timing {(time.time()-formatting_start_time)/60.0} minutes.\n"
+        )
 
     # Save as uvfits
-    f = open(log_path, "a")
-    f.write(f"Saving simulation output to {output_uvfits_path}\n")
-    f.close()
+    with open(log_path, "a") as f:
+        f.write(f"Saving simulation output to {output_uvfits_path}\n")
     try:
         uvd_out.write_uvfits(output_uvfits_path, fix_autos=True)
     except:
         # Save as ms
         ms_path = f"{output_uvfits_path.removesuffix('.uvfits')}.ms"
-        f = open(log_path, "a")
-        f.write(f"Saving simulation output to {ms_path}\n")
-        f.close()
+        with open(log_path, "a") as f:
+            f.write(f"Saving simulation output to {ms_path}\n")
         uvd_out.reorder_pols(order="CASA")
         uvd_out.write_ms(ms_path, clobber=True)
 
@@ -279,4 +270,11 @@ if __name__ == "__main__":
     output_uvfits_path = args[4]
     offset_timesteps = args[5]
 
-    run_fftvis_diffuse_sim(map_path, beam_path, input_data_path, output_uvfits_path, offset_timesteps)
+    run_fftvis_diffuse_sim(
+        map_path=map_path,
+        beam_path=beam_path,
+        input_data_path=input_data_path,
+        output_uvfits_path=output_uvfits_path,
+        log_path=None,
+        offset_timesteps=offset_timesteps,
+    )
