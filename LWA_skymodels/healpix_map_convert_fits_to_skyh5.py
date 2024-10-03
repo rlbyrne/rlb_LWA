@@ -197,7 +197,8 @@ if __name__ == "__main__":
             float(freq),
             output_frame="equatorial",
         )
-        skymodel_new = downsample_healpix(skymodel_new, 512)
+        #skymodel_new = downsample_healpix(skymodel_new, 512)
+        skymodel_new = downsample_healpix(skymodel_new, 32)
         if freq_ind == 0:
             skymodel = skymodel_new
         else:
@@ -205,7 +206,7 @@ if __name__ == "__main__":
                 [skymodel, skymodel_new]
             )
     skymodel.write_skyh5(
-        f"{filedir}/ovro_lwa_sky_map_36-73MHz_nside512.skyh5",
+        f"{filedir}/ovro_lwa_sky_map_36-73MHz_nside32.skyh5",
         run_check=True,
         clobber=True,
     )

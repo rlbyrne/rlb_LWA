@@ -57,7 +57,7 @@ def cygA_only_sims_Oct2():
         source_skymodel = (
             "/lustre/rbyrne/skymodels/Gasperin2020_CygA_point_source_48MHz.skyh5"
         )
-        output_file = f"/lustre/rbyrne/2024-03-02/calibration_models/{file_name}_cygA_point_source.uvfits"
+        output_file = f"/lustre/rbyrne/2024-03-02/ruby/calibration_models/{file_name}_cygA_point_source.uvfits"
         os.system(
             f"sbatch /home/rbyrne/rlb_LWA/LWA_data_preprocessing/run_simulation_slurm.sh '{source_skymodel}' '{beam}' '{datafile}' '{output_file}' 0"
         )
