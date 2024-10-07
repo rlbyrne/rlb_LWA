@@ -7,8 +7,9 @@ import shlex
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib import cm
-#import SSINS
-#from SSINS import plot_lib
+
+# import SSINS
+# from SSINS import plot_lib
 
 matplotlib.use("Agg")
 
@@ -18,6 +19,7 @@ def convert_raw_ms_to_uvdata(
     untar_dir=None,  # Used if files are tar-ed. None defaults to original data dir.
     data_column="DATA",  # Other options are "CORRECTED_DATA" or "MODEL_DATA"
     combine_spws=True,  # Option to combine all spectral windows for compatibility
+    run_aoflagger=False,
 ):
 
     if type(ms_filenames) == str:
@@ -37,30 +39,36 @@ def convert_raw_ms_to_uvdata(
                 shlex.split(f"tar -xvf {data_dir}/{filename} -C {untar_dir}")
             )
             untar_filename = ".".join(filename.split(".")[:-1])
+            if run_aoflagger:
+                subprocess.call(f"aoflagger {untar_dir}/{untar_filename}")
             uvd_new.read_ms(
                 f"{untar_dir}/{untar_filename}",
                 data_column=data_column,
-                #run_check=False,  # Required to preserve baseline conjugation
+                # run_check=False,  # Required to preserve baseline conjugation
                 raise_error=False,  # May be needed when multiple spw are present
             )
             subprocess.call(shlex.split(f"rm -r {untar_dir}/{untar_filename}"))
         else:
+            if run_aoflagger:
+                os.system(f"aoflagger {ms_file}")
             uvd_new.read_ms(
                 ms_file,
                 data_column=data_column,
-                #run_check=False,  # Required to preserve baseline conjugation
+                # run_check=False,  # Required to preserve baseline conjugation
                 raise_error=False,  # May be needed when multiple spw are present
             )
         uvd_new.scan_number_array = None  # Fixes a pyuvdata bug
+        uvd_new.instrument = "OVRO-LWA"
+        uvd_new.telescope_name = "OVRO-LWA"
+        uvd_new.set_telescope_params()
+        uvd_new.set_uvws_from_antenna_positions(
+            update_vis=False
+        )  # Fixes incorrect telescope location
         uvd_new.unproject_phase()
         if file_ind == 0:
             uvd = uvd_new
         else:
             uvd = uvd + uvd_new
-
-    uvd.instrument = "OVRO-LWA"
-    uvd.telescope_name = "OVRO-LWA"
-    uvd.set_telescope_params()
 
     if combine_spws and uvd.Nspws > 1:
         uvd.Nspws = 1
@@ -297,13 +305,21 @@ def flag_outriggers(
     if inplace:
         uvd.flag_array = flag_arr
         if remove_outriggers:
-            keep_ants = [antnum for antnum in uvd.telescope.antenna_numbers if antnum not in outrigger_ants]
+            keep_ants = [
+                antnum
+                for antnum in uvd.telescope.antenna_numbers
+                if antnum not in outrigger_ants
+            ]
             uvd.select(antenna_nums=keep_ants)
     else:
         uvd_new = uvd.copy()
         uvd_new.flag_array = flag_arr
         if remove_outriggers:
-            keep_ants = [antnum for antnum in uvd.telescope.antenna_numbers if antnum not in outrigger_ants]
+            keep_ants = [
+                antnum
+                for antnum in uvd.telescope.antenna_numbers
+                if antnum not in outrigger_ants
+            ]
             uvd_new.select(antenna_nums=keep_ants)
         return uvd_new
 

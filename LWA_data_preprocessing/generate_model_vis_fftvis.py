@@ -18,13 +18,16 @@ def run_fftvis_diffuse_sim(
     map_path=None,
     beam_path=None,
     input_data_path=None,
-    output_uvfits_path=None,
+    output_path=None,
     log_path=None,
     offset_timesteps=0,
 ):
 
     if log_path is None:
-        log_path = f"{output_uvfits_path.removesuffix('.uvfits')}_log.txt"
+        if output_path.endswith(".uvfits"):
+            log_path = f"{output_path.removesuffix('.uvfits')}_log.txt"
+        elif output_path.endswith(".ms"):
+            log_path = f"{output_path.removesuffix('.ms')}_log.txt"
 
     with open(log_path, "w") as f:
         f.write("Starting fftvis simulation.\n")
@@ -249,18 +252,33 @@ def run_fftvis_diffuse_sim(
             f"Formatting completed. Timing {(time.time()-formatting_start_time)/60.0} minutes.\n"
         )
 
-    # Save as uvfits
+    # Save output
     with open(log_path, "a") as f:
-        f.write(f"Saving simulation output to {output_uvfits_path}\n")
-    try:
-        uvd_out.write_uvfits(output_uvfits_path, fix_autos=True)
-    except:
-        # Save as ms
-        ms_path = f"{output_uvfits_path.removesuffix('.uvfits')}.ms"
-        with open(log_path, "a") as f:
-            f.write(f"Saving simulation output to {ms_path}\n")
-        uvd_out.reorder_pols(order="CASA")
-        uvd_out.write_ms(ms_path, clobber=True)
+        f.write(f"Saving simulation output to {output_path}\n")
+    if output_path.endswith(".uvfits"):
+        try:
+            uvd_out.write_uvfits(output_path, fix_autos=True)
+        except:
+            # Save as ms
+            ms_path = f"{output_path.removesuffix('.uvfits')}.ms"
+            with open(log_path, "a") as f:
+                f.write(
+                    f"uvfits saving failed. Saving simulation output to {ms_path}\n"
+                )
+            uvd_out.reorder_pols(order="CASA")
+            uvd_out.write_ms(ms_path, clobber=True, fix_autos=True)
+    elif output_path.endswith(".ms"):
+        try:
+            uvd_out.reorder_pols(order="CASA")
+            uvd_out.write_ms(output_path, clobber=True, fix_autos=True)
+        except:
+            # Save as uvfits
+            uvfits_output_path = f"{output_path.removesuffix('.ms')}.uvfits"
+            with open(log_path, "a") as f:
+                f.write(
+                    f"ms saving failed. Saving simulation output to {uvfits_output_path}\n"
+                )
+            uvd_out.write_uvfits(uvfits_output_path, fix_autos=True)
 
     # sys.stdout = stdout_orig
     # sys.stderr = stderr_orig
@@ -273,14 +291,14 @@ if __name__ == "__main__":
     map_path = args[1]
     beam_path = args[2]
     input_data_path = args[3]
-    output_uvfits_path = args[4]
+    output_path = args[4]
     offset_timesteps = args[5]
 
     run_fftvis_diffuse_sim(
         map_path=map_path,
         beam_path=beam_path,
         input_data_path=input_data_path,
-        output_uvfits_path=output_uvfits_path,
+        output_path=output_path,
         log_path=None,
         offset_timesteps=offset_timesteps,
     )
