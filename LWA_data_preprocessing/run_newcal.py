@@ -1895,9 +1895,9 @@ def run_newcal_CygA_Oct2():
     for file_name in use_filenames:
 
         datafile = f"/lustre/gh/2024-03-02/calibration/ruby/{file_name}.ms"
-        model_file = f"/lustre/rbyrne/2024-03-02/calibration_models/{file_name}_cygA_point_source.uvfits"
+        model_file = f"/lustre/rbyrne/2024-03-02/ruby/calibration_models/{file_name}_cygA_point_source.ms"
 
-        uvcal = calibration_wrappers.calibration_per_pol(
+        uvcal = calibration_wrappers.calibration_per_pol_wrapper(
             datafile,
             model_file,
             data_use_column="DATA",
@@ -1907,13 +1907,13 @@ def run_newcal_CygA_Oct2():
             max_cal_baseline_lambda=125,
             verbose=True,
             get_crosspol_phase=False,
-            log_file_path=f"/lustre/rbyrne/2024-03-02/calibration_outputs/{file_name}_cal_log_cygA.txt",
+            log_file_path=f"/lustre/rbyrne/2024-03-02/ruby/calibration_outputs/{file_name}_cal_log_cygA.txt",
             xtol=1e-5,
             maxiter=200,  # reduce maxiter for debugging
             antenna_flagging_iterations=0,
         )
         uvcal.write_calfits(
-            f"/lustre/rbyrne/2024-03-02/calibration_outputs/{file_name}_cygA_point.calfits",
+            f"/lustre/rbyrne/2024-03-02/ruby/calibration_outputs/{file_name}_cygA_point.calfits",
             clobber=True,
         )
         data = pyuvdata.UVData()
@@ -1924,7 +1924,7 @@ def run_newcal_CygA_Oct2():
         pyuvdata.utils.uvcalibrate(data, uvcal, inplace=True, time_check=False)
         data.reorder_pols(order="CASA")
         data.write_ms(
-            f"/lustre/rbyrne/2024-03-02/calibration_outputs/{file_name}_cygA_point_calibrated.ms",
+            f"/lustre/rbyrne/2024-03-02/ruby/calibration_outputs/{file_name}_cygA_point_calibrated.ms",
             fix_autos=True,
             clobber=True,
         )

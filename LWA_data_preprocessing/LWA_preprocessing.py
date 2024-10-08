@@ -343,30 +343,30 @@ def flag_antennas(
             flag_bls_2 = np.where(uvd.ant_2_array == ant_ind)[0]
             flag_bls = np.unique(np.concatenate((flag_bls_1, flag_bls_2)))
             if flag_pol == "all":
-                flag_arr[flag_bls, :, :, :] = True
+                flag_arr[flag_bls, :, :] = True
             elif flag_pol in ["XX", "YY", "XY", "YX"]:
                 pol_ind = np.where(pol_names == flag_pol)[0]
-                flag_arr[flag_bls, :, :, pol_ind] = True
+                flag_arr[flag_bls, :, pol_ind] = True
             elif flag_pol == "X":
                 pol_ind_xx = np.where(pol_names == "XX")[0]
                 if np.size(pol_ind_xx) > 0:
-                    flag_arr[flag_bls, :, :, pol_ind_xx] = True
+                    flag_arr[flag_bls, :, pol_ind_xx] = True
                 pol_ind_xy = np.where(pol_names == "XY")[0]
                 if np.size(pol_ind_xy) > 0:
-                    flag_arr[flag_bls_1, :, :, pol_ind_xy] = True
+                    flag_arr[flag_bls_1, :, pol_ind_xy] = True
                 pol_ind_yx = np.where(pol_names == "YX")[0]
                 if np.size(pol_ind_yx) > 0:
-                    flag_arr[flag_bls_2, :, :, pol_ind_yx] = True
+                    flag_arr[flag_bls_2, :, pol_ind_yx] = True
             elif flag_pol == "Y":
                 pol_ind_yy = np.where(pol_names == "YY")[0]
                 if np.size(pol_ind_yy) > 0:
-                    flag_arr[flag_bls, :, :, pol_ind_yy] = True
+                    flag_arr[flag_bls, :, pol_ind_yy] = True
                 pol_ind_xy = np.where(pol_names == "XY")[0]
                 if np.size(pol_ind_xy) > 0:
-                    flag_arr[flag_bls_2, :, :, pol_ind_xy] = True
+                    flag_arr[flag_bls_2, :, pol_ind_xy] = True
                 pol_ind_yx = np.where(pol_names == "YX")[0]
                 if np.size(pol_ind_yx) > 0:
-                    flag_arr[flag_bls_1, :, :, pol_ind_yx] = True
+                    flag_arr[flag_bls_1, :, pol_ind_yx] = True
             else:
                 print(f"ERROR: Unknown flag_pol option {flag_pol}.")
                 sys.exit(1)
