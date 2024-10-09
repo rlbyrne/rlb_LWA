@@ -66,6 +66,15 @@ def cygA_only_sims_Oct2():
             )
 
 
+def format_data_Oct9():
+
+    freq_bands = ["41", "46", "50", "55", "59", "64", "69", "73", "78", "82"]
+    for use_band in freq_bands:
+        os.system(
+            f"sbatch /home/rbyrne/rlb_LWA/LWA_data_preprocessing/run_format_data_slurm.sh '{use_band}'"
+        )
+
+
 if __name__ == "__main__":
 
-    extended_source_and_diffuse_sims_Oct2()
+    format_data_Oct9()

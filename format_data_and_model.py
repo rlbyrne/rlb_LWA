@@ -3,54 +3,54 @@ import numpy as np
 import os
 import sys
 
-sys.path.append("LWA_data_preprocessing")
+sys.path.append("/home/rbyrne/rlb_LWA/LWA_data_preprocessing")
 import LWA_preprocessing
 
-subbands = ["41", "46", "50", "55", "59", "64", "69", "73", "78", "82"]
-use_time_offsets = np.arange(0, 12)
 
-min_time_str = "093000"
-max_time_str = "093200"
+def process_data_files(
+    use_band,  # One of ["41", "46", "50", "55", "59", "64", "69", "73", "78", "82"]
+):
+    min_time_str = "093000"
+    max_time_str = "093200"
 
-flag_ants = [
-    "LWA009",
-    "LWA041",
-    "LWA044",
-    "LWA052",
-    "LWA058",
-    "LWA076",
-    "LWA095",
-    "LWA105",
-    "LWA111",
-    "LWA120",
-    "LWA124",
-    "LWA138",
-    "LWA150",
-    "LWA159",
-    "LWA191",
-    "LWA204",
-    "LWA208",
-    "LWA209",
-    "LWA232",
-    "LWA234",
-    "LWA255",
-    "LWA267",
-    "LWA280",
-    "LWA288",
-    "LWA292",
-    "LWA302",
-    "LWA307",
-    "LWA309",
-    "LWA310",
-    "LWA314",
-    "LWA325",
-    "LWA341",
-    "LWA352",
-    "LWA364",
-    "LWA365",
-]
+    flag_ants = [
+        "LWA009",
+        "LWA041",
+        "LWA044",
+        "LWA052",
+        "LWA058",
+        "LWA076",
+        "LWA095",
+        "LWA105",
+        "LWA111",
+        "LWA120",
+        "LWA124",
+        "LWA138",
+        "LWA150",
+        "LWA159",
+        "LWA191",
+        "LWA204",
+        "LWA208",
+        "LWA209",
+        "LWA232",
+        "LWA234",
+        "LWA255",
+        "LWA267",
+        "LWA280",
+        "LWA288",
+        "LWA292",
+        "LWA302",
+        "LWA307",
+        "LWA309",
+        "LWA310",
+        "LWA314",
+        "LWA325",
+        "LWA341",
+        "LWA352",
+        "LWA364",
+        "LWA365",
+    ]
 
-for use_band in subbands:
     datadir = f"/lustre/xhall/2024-03-02_rainy_day_data/{use_band}MHz/2024-03-03"
     copied_data_dir = "/lustre/rbyrne/2024-03-03"
 
@@ -68,14 +68,14 @@ for use_band in subbands:
     ]
     use_files.sort()
 
-    use_files = use_files[:1]  # added for debugging
+    # use_files = use_files[:1]  # added for debugging
 
     for filename in use_files:
         if not os.path.isfile(f"{copied_data_dir}/{filename}"):
             os.system(f"cp -r {datadir}/{filename} {copied_data_dir}/{filename}")
     use_files_full_paths = [f"{copied_data_dir}/{filename}" for filename in use_files]
     uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(
-        use_files_full_paths, data_column="DATA", combine_spws=True, #run_aoflagger=True
+        use_files_full_paths, data_column="DATA", combine_spws=True, run_aoflagger=True
     )
     LWA_preprocessing.flag_antennas(
         uvd,
@@ -87,24 +87,23 @@ for use_band in subbands:
     uvd.write_uvfits(
         f"{copied_data_dir}/{output_filename}",
         fix_autos=True,
+        force_phase=True,
     )
     if os.path.isfile(f"{copied_data_dir}/{output_filename}"):  # Delete copied files
-        for filename in enumerate(use_files):
+        for filename in use_files:
             os.system(f"rm -r {datadir}/{filename} {copied_data_dir}/{filename}")
 
     # Get model
     model_filepath = "/lustre/rbyrne/simulation_outputs"
-    model_filenames = os.listdir(model_filepath)
-    model_filenames = [filename for filename in model_filenames if filename.endswith(f"{use_band}MHz_source_sim.uvfits")]
+    lst_lookup_table_path = f"{model_filepath}/lst_lookup_table.csv"
+    with open(lst_lookup_table_path, "r") as f:
+        lst_data = f.readlines()
     model_lsts = []
     model_lst_filenames = []
-    for model_file in model_filenames:
-        model_uv = pyuvdata.UVData()
-        model_uv.read(f"{model_filepath}/{model_file}", read_data=False)
-        lsts_new = list(set(model_uv.lst_array))
-        model_lsts = np.concatenate((model_lsts, lsts_new))
-        filenames_new = np.repeat([model_file], len(lsts_new))
-        model_lst_filenames = np.concatenate((model_lst_filenames, filenames_new))
+    for line in lst_data[1:]:
+        line_split = line.replace("\n", "").strip().split(",")
+        model_lsts.append(float(line_split[0]))
+        model_lst_filenames.append(f"{line_split[1]}_{use_band}MHz_source_sim.uvfits")
 
     model_uv_list = []
     for time_ind, use_lst in enumerate(list(set(uvd.lst_array))):
@@ -125,7 +124,9 @@ for use_band in subbands:
         model1_uv.select(lsts=[lst1])
         model1_uv.filename = [""]
         model1_uv_diffuse = pyuvdata.UVData()
-        model1_uv_diffuse.read(f"{model_filepath}/{model_filename1.removesuffix('source_sim.uvfits')}diffuse_sim.uvfits")
+        model1_uv_diffuse.read(
+            f"{model_filepath}/{model_filename1.removesuffix('source_sim.uvfits')}diffuse_sim.uvfits"
+        )
         model1_uv_diffuse.select(lsts=[lst1])
         model1_uv_diffuse.filename = [""]
         model1_uv.sum_vis(model1_uv_diffuse, inplace=True)
@@ -135,7 +136,9 @@ for use_band in subbands:
         model2_uv.select(lsts=[lst2])
         model2_uv.filename = [""]
         model2_uv_diffuse = pyuvdata.UVData()
-        model2_uv_diffuse.read(f"{model_filepath}/{model_filename2.removesuffix('source_sim.uvfits')}diffuse_sim.uvfits")
+        model2_uv_diffuse.read(
+            f"{model_filepath}/{model_filename2.removesuffix('source_sim.uvfits')}diffuse_sim.uvfits"
+        )
         model2_uv_diffuse.select(lsts=[lst2])
         model2_uv_diffuse.filename = [""]
         model2_uv.sum_vis(model2_uv_diffuse, inplace=True)
@@ -182,5 +185,37 @@ for use_band in subbands:
     if len(model_uv_list) > 1:
         for model_uv_use in model_uv_list[1:]:
             combined_model_uv.fast_concat(model_uv_use, "blt", inplace=True)
-    data_file_name = f"{copied_data_dir}/{output_filename.replace('.uvfits', '_model.uvfits')}"
-    combined_model_uv.write_uvfits(data_file_name)
+    data_file_name = (
+        f"{copied_data_dir}/{output_filename.replace('.uvfits', '_model.uvfits')}"
+    )
+    combined_model_uv.write_uvfits(data_file_name, force_phase=True)
+
+
+def create_model_lst_lookup_table():
+
+    model_filepath = "/lustre/rbyrne/simulation_outputs"
+    use_band = "41"
+    model_filenames = os.listdir(model_filepath)
+    model_filenames = [
+        filename
+        for filename in model_filenames
+        if filename.endswith(f"{use_band}MHz_source_sim.uvfits")
+    ]
+    output_filename = f"{model_filepath}/lst_lookup_table.csv"
+    with open(output_filename, "w") as f:
+        f.write("LST, filename \n")
+    for model_file in model_filenames:
+        model_uv = pyuvdata.UVData()
+        model_uv.read(f"{model_filepath}/{model_file}", read_data=False)
+        lsts_new = list(set(model_uv.lst_array))
+        for lst in lsts_new:
+            with open(output_filename, "a") as f:
+                f.write(
+                    f"{lst}, {model_file.removesuffix(f'_{use_band}MHz_source_sim.uvfits')} \n"
+                )
+
+
+if __name__ == "__main__":
+    args = sys.argv
+    use_band = args[1]
+    process_data_files(use_band)
