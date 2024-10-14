@@ -1874,6 +1874,7 @@ def run_newcal_Aug12():
             clobber=True,
         )
 
+
 def run_newcal_CygA_Oct2():
 
     use_filenames = [
@@ -1930,5 +1931,115 @@ def run_newcal_CygA_Oct2():
         )
 
 
+def run_newcal_single_freq_Oct10():
+
+    file_name = 18
+    datafile = f"/lustre/rbyrne/2024-03-02/ruby/{file_name}_1freq_1time.ms"
+    model_file = f"/lustre/rbyrne/2024-03-02/ruby/{file_name}_1freq_1time_model.ms"
+
+    """uvcal = calibration_wrappers.calibration_per_pol_wrapper(
+        datafile,
+        model_file,
+        data_use_column="DATA",
+        model_use_column="DATA",
+        conjugate_model=True,
+        min_cal_baseline_lambda=10,
+        max_cal_baseline_lambda=125,
+        verbose=True,
+        get_crosspol_phase=False,
+        log_file_path=f"/lustre/rbyrne/2024-03-02/ruby/calibration_outputs/{file_name}_cal_log_cygA_1freq_1time.txt",
+        xtol=1e-5,
+        maxiter=200,  # reduce maxiter for debugging
+        antenna_flagging_iterations=0,
+    )
+    uvcal.write_calfits(
+        f"/lustre/rbyrne/2024-03-02/ruby/calibration_outputs/{file_name}_cygA_point_1freq_1time.calfits",
+        clobber=True,
+    )
+    
+    #uvcal = pyuvdata.UVCal()
+    #uvcal.read(f"/lustre/rbyrne/2024-03-02/ruby/calibration_outputs/{file_name}_cygA_point_1freq_1time.calfits")
+
+    data = pyuvdata.UVData()
+    data.read_ms(
+        datafile,
+        data_column="DATA",
+        ignore_single_chan=False,
+    )
+    pyuvdata.utils.uvcalibrate(data, uvcal, inplace=True, time_check=False)
+    data.reorder_pols(order="CASA")
+    data.write_ms(
+        f"/lustre/rbyrne/2024-03-02/ruby/calibration_outputs/{file_name}_cygA_point_1freq_1time_calibrated.ms",
+        fix_autos=True,
+        clobber=True,
+    )"""
+
+    uvcal = calibration_wrappers.calibration_per_pol_wrapper(
+        datafile,
+        model_file,
+        data_use_column="DATA",
+        model_use_column="DATA",
+        conjugate_model=True,
+        min_cal_baseline_lambda=10,
+        max_cal_baseline_lambda=125,
+        gains_multiply_model=True,
+        verbose=True,
+        get_crosspol_phase=False,
+        log_file_path=f"/lustre/rbyrne/2024-03-02/ruby/calibration_outputs/{file_name}_cal_log_cygA_1freq_1time_inverse.txt",
+        xtol=1e-10,  # reduce for inverse gains
+        maxiter=200,  # reduce maxiter for debugging
+        antenna_flagging_iterations=0,
+    )
+    uvcal.write_calfits(
+        f"/lustre/rbyrne/2024-03-02/ruby/calibration_outputs/{file_name}_cygA_point_1freq_1time_inverse_lowtol.calfits",
+        clobber=True,
+    )
+    data = pyuvdata.UVData()
+    data.read_ms(
+        datafile,
+        data_column="DATA",
+        ignore_single_chan=False,
+    )
+    pyuvdata.utils.uvcalibrate(data, uvcal, inplace=True, time_check=False)
+    data.reorder_pols(order="CASA")
+    data.write_ms(
+        f"/lustre/rbyrne/2024-03-02/ruby/calibration_outputs/{file_name}_cygA_point_1freq_1time_calibrated_inverse_lowtol.ms",
+        fix_autos=True,
+        clobber=True,
+    )
+
+
+def calibrate_data_Oct14():
+
+    datafile = "/lustre/rbyrne/2024-03-03/20240303_093000-093151_41MHz.uvfits"
+    model_file = "/lustre/rbyrne/2024-03-03/20240303_093000-093151_41MHz_model.uvfits"
+
+    uvcal = calibration_wrappers.calibration_per_pol_wrapper(
+        datafile,
+        model_file,
+        conjugate_model=False,
+        min_cal_baseline_lambda=10,
+        max_cal_baseline_lambda=125,
+        verbose=True,
+        get_crosspol_phase=False,
+        log_file_path=f"/lustre/rbyrne/2024-03-03/calibration_logs/20240303_093000-093151_41MHz_cal_log.txt",
+        xtol=1e-5,
+        maxiter=200,  # reduce maxiter for debugging
+        antenna_flagging_iterations=0,
+    )
+    uvcal.write_calfits(
+        "/lustre/rbyrne/2024-03-03/20240303_093000-093151_41MHz.calfits",
+        clobber=True,
+    )
+
+    data = pyuvdata.UVData()
+    data.read_uvfits(datafile)
+    pyuvdata.utils.uvcalibrate(data, uvcal, inplace=True, time_check=False)
+    data.write_uvfits(
+        "/lustre/rbyrne/2024-03-03/20240303_093000-093151_41MHz_calibrated.uvfits",
+        fix_autos=True,
+    )
+
+
 if __name__ == "__main__":
-    run_newcal_CygA_Oct2()
+    calibrate_data_Oct14()

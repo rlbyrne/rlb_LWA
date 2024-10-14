@@ -9,7 +9,7 @@ def extended_source_and_diffuse_sims_Oct2():
     )
     beam = "/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits"
     subbands = ["41", "46", "50", "55", "59", "64", "69", "73", "78", "82"]
-    use_time_offsets = np.arange(12, 24)
+    use_time_offsets = np.arange(12, 48)
 
     for time_offset in use_time_offsets:
         for use_subband in subbands:
@@ -69,6 +69,7 @@ def cygA_only_sims_Oct2():
 def format_data_Oct9():
 
     freq_bands = ["41", "46", "50", "55", "59", "64", "69", "73", "78", "82"]
+    freq_bands = freq_bands[:1]
     for use_band in freq_bands:
         os.system(
             f"sbatch /home/rbyrne/rlb_LWA/LWA_data_preprocessing/run_format_data_slurm.sh '{use_band}'"
@@ -77,4 +78,4 @@ def format_data_Oct9():
 
 if __name__ == "__main__":
 
-    format_data_Oct9()
+    extended_source_and_diffuse_sims_Oct2()
