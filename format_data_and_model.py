@@ -70,15 +70,18 @@ def process_data_files(
     output_filename = f"20240303_{use_files[0].split('_')[-2]}-{use_files[-1].split('_')[-2]}_{use_band}MHz.uvfits"
 
     if os.path.isfile(f"{copied_data_dir}/{output_filename}"):
+        print(f"Reading data file {copied_data_dir}/{output_filename}.")
         uvd = pyuvdata.UVData()
         uvd.read(f"{copied_data_dir}/{output_filename}")
     else:  # Generate combined file
         for filename in use_files:
             if not os.path.isfile(f"{copied_data_dir}/{filename}"):
+                print(f"Copying file {filename}.")
                 os.system(f"cp -r {datadir}/{filename} {copied_data_dir}/{filename}")
         use_files_full_paths = [
             f"{copied_data_dir}/{filename}" for filename in use_files
         ]
+        print(f"Generating combined data file.")
         uvd = LWA_preprocessing.convert_raw_ms_to_uvdata(
             use_files_full_paths,
             data_column="DATA",
@@ -91,6 +94,7 @@ def process_data_files(
             flag_pol="all",
             inplace=True,
         )
+        print(f"Saving data file to {copied_data_dir}/{output_filename}.")
         uvd.write_uvfits(
             f"{copied_data_dir}/{output_filename}",
             fix_autos=True,
@@ -121,6 +125,7 @@ def process_data_files(
 
         model_uv_list = []
         for time_ind, use_lst in enumerate(list(set(uvd.lst_array))):
+            print(f"Calculating model visibilities for time step {time_ind+1} of {len(list(set(uvd.lst_array)))}.")
             lst_distance = np.abs(model_lsts - use_lst)
             ind1 = np.where(lst_distance == np.min(lst_distance))[0]
             ind2 = np.where(lst_distance == np.sort(lst_distance)[1])[0]
@@ -200,6 +205,7 @@ def process_data_files(
             for model_uv_use in model_uv_list[1:]:
                 combined_model_uv.fast_concat(model_uv_use, "blt", inplace=True)
 
+        print(f"Saving model file to {model_file_name}.")
         combined_model_uv.write_uvfits(model_file_name, force_phase=True)
 
 
@@ -225,6 +231,19 @@ def create_model_lst_lookup_table():
                 f.write(
                     f"{lst}, {model_file.removesuffix(f'_{use_band}MHz_source_sim.uvfits')} \n"
                 )
+
+def convert_to_ms():
+    uv = pyuvdata.UVData()
+    #uv.read("/lustre/rbyrne/2024-03-03/20240303_093000-093151_41MHz_model.uvfits")
+    #uv.reorder_pols(order="CASA")
+    #uv.write_ms("/lustre/rbyrne/2024-03-03/20240303_093000-093151_41MHz_model.ms")
+    #uv = pyuvdata.UVData()
+    #uv.read("/lustre/rbyrne/2024-03-03/20240303_093000-093151_41MHz.uvfits")
+    #uv.reorder_pols(order="CASA")
+    #uv.write_ms("/lustre/rbyrne/2024-03-03/20240303_093000-093151_41MHz.ms")
+    uv.read("/lustre/rbyrne/2024-03-03/20240303_093000-093151_41MHz_calibrated.uvfits")
+    uv.reorder_pols(order="CASA")
+    uv.write_ms("/lustre/rbyrne/2024-03-03/20240303_093000-093151_41MHz_calibrated.ms")
 
 
 if __name__ == "__main__":
