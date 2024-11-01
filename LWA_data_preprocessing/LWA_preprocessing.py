@@ -20,6 +20,7 @@ def convert_raw_ms_to_uvdata(
     data_column="DATA",  # Other options are "CORRECTED_DATA" or "MODEL_DATA"
     combine_spws=True,  # Option to combine all spectral windows for compatibility
     run_aoflagger=False,
+    conjugate_data=False,
 ):
 
     if type(ms_filenames) == str:
@@ -57,6 +58,8 @@ def convert_raw_ms_to_uvdata(
                 # run_check=False,  # Required to preserve baseline conjugation
                 raise_error=False,  # May be needed when multiple spw are present
             )
+        if conjugate_data:
+            uvd_new.data_array = np.conj(uvd_new.data_array)
         uvd_new.scan_number_array = None  # Fixes a pyuvdata bug
         uvd_new.instrument = "OVRO-LWA"
         uvd_new.telescope_name = "OVRO-LWA"

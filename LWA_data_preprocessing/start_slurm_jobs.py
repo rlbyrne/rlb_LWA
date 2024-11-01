@@ -9,7 +9,7 @@ def extended_source_and_diffuse_sims_Oct2():
     )
     beam = "/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits"
     subbands = ["41", "46", "50", "55", "59", "64", "69", "73", "78", "82"]
-    use_time_offsets = np.arange(96, 180)
+    use_time_offsets = np.arange(180, 240)
 
     for time_offset in use_time_offsets:
         for use_subband in subbands:
@@ -80,8 +80,8 @@ def calibrate_data_Oct18():
 
     freq_bands = [
         #"41",
-        "46",
-        "50",
+        #"46",
+        #"50",
         #"55",
         #"59",
         "64",
@@ -98,4 +98,4 @@ def calibrate_data_Oct18():
 
 if __name__ == "__main__":
 
-    calibrate_data_Oct18()
+    extended_source_and_diffuse_sims_Oct2()

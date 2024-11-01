@@ -2,9 +2,9 @@ import subprocess
 import shlex
 import os
 
-obsids_list = ["41-82_10_001_core"]
+obsids_list = ["41-20240303_093000-093151_41-82MHz_calibrated_core"]
 versions_list = ["rlb_process_LWA_Sept2024"]
-uvfits_path = "/lustre/rbyrne/2024-03-02/10"
+uvfits_path = "/lustre/rbyrne/2024-03-03"
 outdir = "/lustre/rbyrne/fhd_outputs"
 run_fhd = True
 run_eppsilon = True

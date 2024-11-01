@@ -87,6 +87,7 @@ def process_data_files(
             data_column="DATA",
             combine_spws=True,
             run_aoflagger=True,
+            # conjugate_data=True,  # Add in for next run
         )
         LWA_preprocessing.flag_antennas(
             uvd,
@@ -120,12 +121,15 @@ def process_data_files(
             line_split = line.replace("\n", "").strip().split(",")
             model_lsts = np.append(model_lsts, float(line_split[0]))
             model_lst_filenames = np.append(
-                model_lst_filenames, f"{line_split[1]}_{use_band}MHz_source_sim.uvfits".strip()
+                model_lst_filenames,
+                f"{line_split[1]}_{use_band}MHz_source_sim.uvfits".strip(),
             )
 
         model_uv_list = []
         for time_ind, use_lst in enumerate(list(set(uvd.lst_array))):
-            print(f"Calculating model visibilities for time step {time_ind+1} of {len(list(set(uvd.lst_array)))}.")
+            print(
+                f"Calculating model visibilities for time step {time_ind+1} of {len(list(set(uvd.lst_array)))}."
+            )
             lst_distance = np.abs(model_lsts - use_lst)
             ind1 = np.where(lst_distance == np.min(lst_distance))[0]
             ind2 = np.where(lst_distance == np.sort(lst_distance)[1])[0]
@@ -232,21 +236,53 @@ def create_model_lst_lookup_table():
                     f"{lst}, {model_file.removesuffix(f'_{use_band}MHz_source_sim.uvfits')} \n"
                 )
 
+
 def convert_to_ms():
     uv = pyuvdata.UVData()
-    #uv.read("/lustre/rbyrne/2024-03-03/20240303_093000-093151_41MHz_model.uvfits")
-    #uv.reorder_pols(order="CASA")
-    #uv.write_ms("/lustre/rbyrne/2024-03-03/20240303_093000-093151_41MHz_model.ms")
-    #uv = pyuvdata.UVData()
-    #uv.read("/lustre/rbyrne/2024-03-03/20240303_093000-093151_41MHz.uvfits")
-    #uv.reorder_pols(order="CASA")
-    #uv.write_ms("/lustre/rbyrne/2024-03-03/20240303_093000-093151_41MHz.ms")
+    # uv.read("/lustre/rbyrne/2024-03-03/20240303_093000-093151_41MHz_model.uvfits")
+    # uv.reorder_pols(order="CASA")
+    # uv.write_ms("/lustre/rbyrne/2024-03-03/20240303_093000-093151_41MHz_model.ms")
+    # uv = pyuvdata.UVData()
+    # uv.read("/lustre/rbyrne/2024-03-03/20240303_093000-093151_41MHz.uvfits")
+    # uv.reorder_pols(order="CASA")
+    # uv.write_ms("/lustre/rbyrne/2024-03-03/20240303_093000-093151_41MHz.ms")
     uv.read("/lustre/rbyrne/2024-03-03/20240303_093000-093151_41MHz_calibrated.uvfits")
     uv.reorder_pols(order="CASA")
     uv.write_ms("/lustre/rbyrne/2024-03-03/20240303_093000-093151_41MHz_calibrated.ms")
 
 
+def combine_subbands():
+
+    freq_bands = [
+        "41",
+        "46",
+        "50",
+        "55",
+        "59",
+        "64",
+        "69",
+        "73",
+        "78",
+        "82",
+    ]
+    for freq_band_ind, use_freq_band in enumerate(freq_bands):
+        uvd_new = pyuvdata.UVData()
+        uvd_new.read(
+            f"/lustre/rbyrne/2024-03-03/20240303_093000-093151_{use_freq_band}MHz_calibrated.uvfits"
+        )
+        LWA_preprocessing.flag_outriggers(uvd_new, remove_outriggers=True, inplace=True)
+        if freq_band_ind == 0:
+            uvd = uvd_new
+        else:
+            uvd.fast_concat(uvd_new, "freq", inplace=True)
+    uvd.write_uvfits(
+        f"/lustre/rbyrne/2024-03-03/20240303_093000-093151_{freq_bands[0]}-{freq_bands[-1]}MHz_calibrated_core.uvfits",
+        fix_autos=True,
+    )
+
+
 if __name__ == "__main__":
-    args = sys.argv
-    use_band = args[1]
-    process_data_files(use_band)
+    #args = sys.argv
+    #use_band = args[1]
+    #process_data_files(use_band)
+    combine_subbands()

@@ -2020,7 +2020,7 @@ def calibrate_data_Oct14(freq_band):
     uvcal = calibration_wrappers.calibration_per_pol_wrapper(
         datafile,
         model_file,
-        conjugate_model=True,
+        conjugate_data=True,
         min_cal_baseline_lambda=10,
         max_cal_baseline_lambda=125,
         verbose=True,
@@ -2038,6 +2038,7 @@ def calibrate_data_Oct14(freq_band):
 
     data = pyuvdata.UVData()
     data.read_uvfits(datafile)
+    data.data_array = np.conj(data.data_array)  # Conjugate data
     pyuvdata.utils.uvcalibrate(data, uvcal, inplace=True, time_check=False)
     data.write_uvfits(
         f"/lustre/rbyrne/2024-03-03/20240303_093000-093151_{freq_band}MHz_calibrated.uvfits",
@@ -2059,14 +2060,14 @@ def casa_cal_comparison_Oct21():
         min_cal_baseline_lambda=15,
         verbose=True,
         get_crosspol_phase=True,
-        log_file_path=f"/lustre/rbyrne/2024-03-02/ruby/18_1freq_1time_casa_comparison_lambda0_log.txt",
+        log_file_path=f"/lustre/rbyrne/2024-03-02/ruby/18_1freq_1time_casa_comparison_log.txt",
         xtol=1e-9,
         maxiter=200,  # reduce maxiter for debugging
         antenna_flagging_iterations=0,
         lambda_val=0,
     )
     uvcal.write_calfits(
-        f"/lustre/rbyrne/2024-03-02/ruby/18_1freq_1time_casa_compare_lambda0.calfits",
+        f"/lustre/rbyrne/2024-03-02/ruby/18_1freq_1time_casa_compare.calfits",
         clobber=True,
     )
 
@@ -2078,7 +2079,7 @@ def casa_cal_comparison_Oct21():
     )
     pyuvdata.utils.uvcalibrate(data, uvcal, inplace=True, time_check=False)
     data.write_ms(
-        f"/lustre/rbyrne/2024-03-02/ruby/18_1freq_1time_casa_compare_newcal_lambda0.ms",
+        f"/lustre/rbyrne/2024-03-02/ruby/18_1freq_1time_casa_compare_newcal.ms",
         fix_autos=True,
         clobber=True,
     )
