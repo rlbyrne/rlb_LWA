@@ -14,7 +14,7 @@ import fftvis
 import socket
 
 
-def run_fftvis_diffuse_sim(
+def run_fftvis_sim(
     map_path=None,
     beam_path=None,
     input_data_path=None,
@@ -294,7 +294,7 @@ if __name__ == "__main__":
     output_path = args[4]
     offset_timesteps = args[5]
 
-    run_fftvis_diffuse_sim(
+    run_fftvis_sim(
         map_path=map_path,
         beam_path=beam_path,
         input_data_path=input_data_path,

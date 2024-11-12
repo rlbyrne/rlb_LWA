@@ -2,11 +2,11 @@ import subprocess
 import shlex
 import os
 
-obsids_list = ["41-20240303_093000-093151_41-82MHz_calibrated_core"]
-versions_list = ["rlb_process_LWA_Sept2024"]
+obsids_list = ["20240303_093000-093151_41-82MHz_calibrated_core"]
+versions_list = ["rlb_process_LWA_old_beam_Nov2024"]
 uvfits_path = "/lustre/rbyrne/2024-03-03"
 outdir = "/lustre/rbyrne/fhd_outputs"
-run_fhd = True
+run_fhd = False
 run_eppsilon = True
 
 # Define wrappers
@@ -15,7 +15,7 @@ eppsilon_script = "ps_single_obs_wrapper"
 
 # Set eppsilon options
 refresh_ps = 1
-uvf_input = 1
+uvf_input = 0
 no_evenodd = 0  # Use this option if only one time step is present
 xx_only = 0
 

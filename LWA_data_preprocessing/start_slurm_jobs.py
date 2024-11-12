@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import pyradiosky
 
 
 def extended_source_and_diffuse_sims_Oct2():
@@ -9,7 +10,7 @@ def extended_source_and_diffuse_sims_Oct2():
     )
     beam = "/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits"
     subbands = ["41", "46", "50", "55", "59", "64", "69", "73", "78", "82"]
-    use_time_offsets = np.arange(180, 240)
+    use_time_offsets = np.arange(240, 400)
 
     for time_offset in use_time_offsets:
         for use_subband in subbands:
@@ -95,6 +96,40 @@ def calibrate_data_Oct18():
             f"sbatch /home/rbyrne/rlb_LWA/LWA_data_preprocessing/run_newcal_slurm.sh '{use_band}'"
         )
 
+def create_ddcal_sims_Nov11():
+
+    source_skymodel = "/lustre/rbyrne/skymodels/Gasperin2020_sources_plus_64.skyh5"
+    diffuse_skymodel = "/lustre/rbyrne/skymodels/ovro_lwa_sky_map_36-73MHz_nside512.skyh5"
+
+    skymodel_names = [
+        "Cas",
+        "Cyg",
+        "Vir",
+    ]
+
+    beam = "/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits"
+    use_subband = "73"
+    time_offset = 0
+
+    reference_file = f"/lustre/rbyrne/2024-03-03/20240303_133205_73MHz.ms"
+
+    # Run diffuse
+    output_file_diffuse = f"/lustre/rbyrne/2024-03-03/20240303_133205_73MHz_model_diffuse.ms"
+    #os.system(
+    #    f"sbatch /home/rbyrne/rlb_LWA/LWA_data_preprocessing/run_simulation_slurm.sh '{diffuse_skymodel}' '{beam}' '{reference_file}' '{output_file_diffuse}' {time_offset}"
+    #)
+
+    for use_name in skymodel_names:
+        output_cat_name = f"/lustre/rbyrne/skymodels/Gasperin2020_sources_{use_name}_64.skyh5"
+        output_file_source_sim = f"/lustre/rbyrne/2024-03-03/20240303_133205_73MHz_model_{use_name}.ms"
+        cat = pyradiosky.SkyModel()
+        cat.read(source_skymodel)
+        comp_inds = np.where([name.startswith(use_name) for name in cat.name])[0]
+        cat.select(component_inds=comp_inds, inplace=True)
+        cat.write_skyh5(output_cat_name)
+        os.system(
+            f"sbatch /home/rbyrne/rlb_LWA/LWA_data_preprocessing/run_simulation_slurm.sh '{output_cat_name}' '{beam}' '{reference_file}' '{output_file_source_sim}' {time_offset}"
+        )
 
 if __name__ == "__main__":
 
