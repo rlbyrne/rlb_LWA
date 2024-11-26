@@ -10,7 +10,8 @@ def extended_source_and_diffuse_sims_Oct2():
     )
     beam = "/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits"
     subbands = ["41", "46", "50", "55", "59", "64", "69", "73", "78", "82"]
-    use_time_offsets = np.arange(240, 400)
+    #use_time_offsets = np.arange(500, 600)
+    use_time_offsets = np.arange(600, 700)
 
     for time_offset in use_time_offsets:
         for use_subband in subbands:
@@ -22,7 +23,7 @@ def extended_source_and_diffuse_sims_Oct2():
                 print(f"File {output_file} exists. Skipping.")
             else:
                 os.system(
-                    f"sbatch /home/rbyrne/rlb_LWA/LWA_data_preprocessing/run_simulation_slurm.sh '{source_skymodel}' '{beam}' '{reference_file}' '{output_file}' {time_offset}"
+                    f"sbatch --nice=1000 /home/rbyrne/rlb_LWA/LWA_data_preprocessing/run_simulation_slurm.sh '{source_skymodel}' '{beam}' '{reference_file}' '{output_file}' {time_offset}"
                 )
 
             output_file = f"/lustre/rbyrne/simulation_outputs/20240303_{time_string}_{use_subband}MHz_diffuse_sim.uvfits"
@@ -30,7 +31,7 @@ def extended_source_and_diffuse_sims_Oct2():
                 print(f"File {output_file} exists. Skipping.")
             else:
                 os.system(
-                    f"sbatch /home/rbyrne/rlb_LWA/LWA_data_preprocessing/run_simulation_slurm.sh '{diffuse_skymodel}' '{beam}' '{reference_file}' '{output_file}' {time_offset}"
+                    f"sbatch --nice=1000 /home/rbyrne/rlb_LWA/LWA_data_preprocessing/run_simulation_slurm.sh '{diffuse_skymodel}' '{beam}' '{reference_file}' '{output_file}' {time_offset}"
                 )
 
 

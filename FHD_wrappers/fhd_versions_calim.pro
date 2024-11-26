@@ -4,9 +4,13 @@ pro fhd_versions_calim
   heap_gc
 
   args = Command_Line_Args(count=nargs)
-  output_directory = args[0]
-  version = args[1]
-  vis_file_list = args[2]
+  ;output_directory = args[0]
+  ;version = args[1]
+  ;vis_file_list = args[2]
+
+  output_directory = '/lustre/rbyrne/fhd_outputs'
+  version = 'rlb_process_LWA_Sept2024'
+  vis_file_list = '/lustre/rbyrne/2024-03-03/20240303_093000-093151_41-82MHz_calibrated_core_small.uvfits'
 
   case version of
 

@@ -3,7 +3,7 @@
 #SBATCH --partition=general
 # BATCH --nodes=1  #activate to request exclusive use of a node
 # BATCH --ntasks-per-node=10  #for exlusive node request. number of cores
-#SBATCH --mem=100G
+#SBATCH --mem=75G
 #SBATCH --time=336:00:00
 #SBATCH --output=/home/rbyrne/slurmtest.out
 #SBATCH --export=ALL
