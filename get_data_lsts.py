@@ -16,8 +16,11 @@ use_subband_dirs = [
 lst_start = astropy.coordinates.Longitude(11, unit="hour")
 lst_end = astropy.coordinates.Longitude(14, unit="hour")
 
-output_filename = f"/lustre/rbyrne/datafile_lsts.csv"
-with open(output_filename, "w") as f:
+output_filename_all = f"/lustre/rbyrne/datafile_lsts.csv"
+output_filename_lst_cut = f"/lustre/rbyrne/datafile_lsts_11-14.csv"
+with open(output_filename_all, "w") as f:
+    f.write("filename, full path, LST, in LST range? (T/F), nighttime? (T/F) \n")
+with open(output_filename_lst_cut, "w") as f:
     f.write("filename, full path, LST, in LST range? (T/F), nighttime? (T/F) \n")
 filenames = []
 full_filepaths = []
@@ -30,7 +33,13 @@ for subband in use_subband_dirs:
         hours = np.sort(os.listdir(f"/lustre/pipeline/night-time/{subband}/{day}"))
         for hour in hours:
             files = np.sort(
-                os.listdir(f"/lustre/pipeline/night-time/{subband}/{day}/{hour}")
+                [
+                    filename
+                    for filename in os.listdir(
+                        f"/lustre/pipeline/night-time/{subband}/{day}/{hour}"
+                    )
+                    if filename.endswith(".ms")
+                ]
             )
             for filename in files:
                 file_time = datetime.datetime(
@@ -62,7 +71,16 @@ for subband in use_subband_dirs:
                 in_nighttime.append(
                     sun_altaz.alt < -10 * units.deg
                 )  # Sun must be lower than 10 degrees below the horizon
-                with open(output_filename, "a") as f:
+                with open(output_filename_all, "a") as f:
                     f.write(
-                        f"{filename}, /lustre/pipeline/night-time/{subband}/{day}/{hour}/{filename}, {lst}, {lst > lst_start and lst < lst_end}, {sun_altaz.alt < 0} \n"
+                        f"{filename}, /lustre/pipeline/night-time/{subband}/{day}/{hour}/{filename}, {lst}, {lst > lst_start and lst < lst_end}, {sun_altaz.alt < -10 * units.deg} \n"
                     )
+                if (
+                    lst > lst_start
+                    and lst < lst_end
+                    and sun_altaz.alt < -10 * units.deg
+                ):
+                    with open(output_filename_lst_cut, "a") as f:
+                        f.write(
+                            f"{filename}, /lustre/pipeline/night-time/{subband}/{day}/{hour}/{filename}, {lst}, {lst > lst_start and lst < lst_end}, {sun_altaz.alt < -10 * units.deg} \n"
+                        )
