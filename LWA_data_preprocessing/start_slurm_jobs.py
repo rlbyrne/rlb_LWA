@@ -10,13 +10,28 @@ def extended_source_and_diffuse_sims_Oct2():
     )
     beam = "/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits"
     subbands = ["41", "46", "50", "55", "59", "64", "69", "73", "78", "82"]
-    # use_time_offsets = np.arange(500, 700)
-    use_time_offsets = np.arange(700, 800)
+    use_time_offsets = np.arange(-100, 0)
 
     for time_offset in use_time_offsets:
         for use_subband in subbands:
             reference_file = f"/lustre/rbyrne/2024-03-03/reference_data_for_sims/20240303_093000_{use_subband}MHz.ms"
-            time_string = str(93000 + 10 * time_offset).zfill(6)
+            delta_time = 10 * time_offset  # time_offset is in 10 second increments
+            delta_time_seconds = delta_time % 60
+            delta_time_minutes = ((delta_time - delta_time_seconds) / 60) % 60
+            delta_time_hours = ((delta_time - delta_time_minutes* 60 - delta_time_seconds) / 60) % 60
+
+            # Reference time is 09:30:00
+            time_hours = 9 + delta_time_hours
+            time_minutes = 30 + delta_time_minutes
+            time_seconds = 0 + delta_time_minutes
+            if time_seconds > 59:
+                time_minutes += int(np.floor(time_seconds/60.0))
+                time_seconds = time_seconds % 60
+            if time_minutes > 59:
+                time_hours += int(np.floor(time_minutes/60.0))
+                time_minutes = time_minutes % 60
+            time_hours = time_hours % 24
+            time_string = f"{str(time_hours).zfill(2)}{str(time_minutes).zfill(2)}{str(time_seconds).zfill(2)}"
 
             output_file = f"/lustre/rbyrne/simulation_outputs/20240303_{time_string}_{use_subband}MHz_source_sim.uvfits"
             if os.path.isfile(output_file):
