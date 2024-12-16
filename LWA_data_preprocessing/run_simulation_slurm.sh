@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=fftvis_sim
-#SBATCH --partition=lowprio
+#SBATCH --partition=lowprio_limited
 # BATCH --nodes=1  #activate to request exclusive use of a node
 # BATCH --ntasks-per-node=10  #for exlusive node request. number of cores
 #SBATCH --mem=75G
