@@ -3,7 +3,7 @@ import shlex
 import os
 
 obsids_list = ["20240303_093000-093151_41-82MHz_calibrated_core_small"]
-versions_list = ["rlb_process_LWA_Sept2024"]
+versions_list = ["rlb_process_LWA_uvbeam_support_branch_Dec2024"]
 uvfits_path = "/lustre/rbyrne/2024-03-03"
 outdir = "/lustre/rbyrne/fhd_outputs"
 run_fhd = True

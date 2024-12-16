@@ -4,13 +4,13 @@ pro fhd_versions_calim
   heap_gc
 
   args = Command_Line_Args(count=nargs)
-  ;output_directory = args[0]
-  ;version = args[1]
-  ;vis_file_list = args[2]
+  output_directory = args[0]
+  version = args[1]
+  vis_file_list = args[2]
 
-  output_directory = '/lustre/rbyrne/fhd_outputs'
-  version = 'rlb_process_LWA_Sept2024'
-  vis_file_list = '/lustre/rbyrne/2024-03-03/20240303_093000-093151_41-82MHz_calibrated_core_small.uvfits'
+  ;output_directory = '/lustre/rbyrne/fhd_outputs'
+  ;version = 'rlb_process_LWA_Sept2024'
+  ;vis_file_list = '/lustre/rbyrne/2024-03-03/20240303_093000-093151_41-82MHz_calibrated_core_small.uvfits'
 
   case version of
 
@@ -79,6 +79,22 @@ pro fhd_versions_calim
         recalculate_all = 1
         instrument = 'lwa'
         import_pyuvdata_beam_filepath = '/home/rbyrne/rlb_LWA/LWAbeam_2015.fits'
+        kernel_window = 'Blackman-Harris^2'
+        restrict_hpx_inds = 0
+        snapshot_healpix_export = 1
+        calibrate_visibilities = 0
+        return_cal_visibilities = 0
+        model_visibilities = 0
+        n_pol = 2
+        save_uvf = 1
+        beam_nfreq_avg = 1728  ;average beam
+    end
+
+    'rlb_process_LWA_uvbeam_support_branch_Dec2024': begin
+        recalculate_all = 1
+        instrument = 'lwa'
+        ;import_pyuvdata_beam_filepath = '/lustre/rbyrne/LWA_avg_41to82_MROsoil_efields.fits'
+        import_pyuvdata_beam_filepath = '/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits'
         kernel_window = 'Blackman-Harris^2'
         restrict_hpx_inds = 0
         snapshot_healpix_export = 1
