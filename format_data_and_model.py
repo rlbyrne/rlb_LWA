@@ -2,8 +2,9 @@ import pyuvdata
 import numpy as np
 import os
 import sys
+import casatasks
 
-sys.path.append("/home/rbyrne/rlb_LWA/LWA_data_preprocessing")
+sys.path.append("/opt/devel/rbyrne/rlb_LWA/LWA_data_preprocessing")
 import LWA_preprocessing
 
 
@@ -213,6 +214,81 @@ def process_data_files(
         combined_model_uv.write_uvfits(model_file_name, force_phase=True)
 
 
+def process_data_files_with_casatools(use_band):
+
+    min_time_str = "093000"
+    max_time_str = "093200"
+
+    flag_ants = [
+        "LWA009",
+        "LWA041",
+        "LWA044",
+        "LWA052",
+        "LWA058",
+        "LWA076",
+        "LWA095",
+        "LWA105",
+        "LWA111",
+        "LWA120",
+        "LWA124",
+        "LWA138",
+        "LWA150",
+        "LWA159",
+        "LWA191",
+        "LWA204",
+        "LWA208",
+        "LWA209",
+        "LWA232",
+        "LWA234",
+        "LWA255",
+        "LWA267",
+        "LWA280",
+        "LWA288",
+        "LWA292",
+        "LWA302",
+        "LWA307",
+        "LWA309",
+        "LWA310",
+        "LWA314",
+        "LWA325",
+        "LWA341",
+        "LWA352",
+        "LWA364",
+        "LWA365",
+    ]
+
+    datadir = f"/lustre/xhall/2024-03-02_rainy_day_data/{use_band}MHz/2024-03-03"
+    copied_data_dir = "/lustre/rbyrne/2024-03-03"
+
+    all_files = os.listdir(datadir)
+    use_files = [
+        filename
+        for filename in all_files
+        if filename.startswith("20240303") and filename.endswith(".ms")
+    ]
+    use_files = [
+        filename
+        for filename in use_files
+        if (int(filename.split("_")[-2]) >= int(min_time_str))
+        and int(filename.split("_")[-2]) < int(max_time_str)
+    ]
+    use_files.sort()
+    output_filename = f"20240303_{use_files[0].split('_')[-2]}-{use_files[-1].split('_')[-2]}_{use_band}MHz_reprocess_Dec2024.ms"
+
+    # Copy files
+    for filename in use_files:
+        if not os.path.isfile(f"{copied_data_dir}/{filename}"):
+            print(f"Copying file {filename}.")
+            os.system(f"cp -r {datadir}/{filename} {copied_data_dir}/{filename}")
+    use_files_full_paths = [f"{copied_data_dir}/{filename}" for filename in use_files]
+
+    # Concatenate files
+    casatasks.virtualconcat(
+        vis=use_files_full_paths, concatvis=f"{copied_data_dir}/{output_filename}"
+    )
+    os.system(f"aoflagger {copied_data_dir}/{output_filename}")
+
+
 def create_model_lst_lookup_table():
 
     model_filepath = "/lustre/rbyrne/simulation_outputs"
@@ -282,7 +358,8 @@ def combine_subbands():
 
 
 if __name__ == "__main__":
-    #args = sys.argv
-    #use_band = args[1]
-    #process_data_files(use_band)
-    combine_subbands()
+    # args = sys.argv
+    # use_band = args[1]
+    # process_data_files_with_casatools(use_band)
+    # combine_subbands()
+    create_model_lst_lookup_table()

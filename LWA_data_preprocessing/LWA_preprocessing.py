@@ -8,8 +8,11 @@ import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
-# import SSINS
-# from SSINS import plot_lib
+try:
+    import SSINS
+except:
+    print("WARNING: SSINS import failed. Some functionality will be unavailable.")
+
 
 matplotlib.use("Agg")
 
