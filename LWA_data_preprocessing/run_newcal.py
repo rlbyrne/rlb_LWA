@@ -2255,7 +2255,7 @@ def calibrate_data_Dec2024():
         log_file_path=f"/lustre/rbyrne/2024-03-03/20240303_093000-093151_41MHz_reprocess_Dec2024_cal_log.txt",
         xtol=1e-5,
         maxiter=200,
-        antenna_flagging_iterations=1,
+        antenna_flagging_iterations=0,
         parallel=False,
     )
     uvcal.write_calfits(

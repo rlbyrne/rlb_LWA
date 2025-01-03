@@ -2,8 +2,12 @@ import subprocess
 import shlex
 import os
 
-obsids_list = ["20240303_093000-093151_41-82MHz_calibrated_core_small"]
-versions_list = ["rlb_process_LWA_uvbeam_support_branch_Dec2024"]
+obsids_list = [
+    "20240303_093000-093151_41MHz_reprocess_Dec2024_calibrated_core", 
+    "20240303_093000-093151_41MHz_reprocess_Dec2024_model_core", 
+    "20240303_093000-093151_41MHz_reprocess_Dec2024_calibrated_res_core",
+]
+versions_list = ["rlb_process_LWA_Jan2025", "rlb_process_LWA_highres_beam_Jan2025"]
 uvfits_path = "/lustre/rbyrne/2024-03-03"
 outdir = "/lustre/rbyrne/fhd_outputs"
 run_fhd = True
