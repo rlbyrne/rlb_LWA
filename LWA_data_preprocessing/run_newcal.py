@@ -2334,7 +2334,7 @@ def apply_calibration_Jan2025():
     cal = pyuvdata.UVCal()
     cal.read_calfits(calfits_file)
     pyuvdata.utils.uvcalibrate(uv, cal, inplace=True, time_check=False)
-    uv.write_uvfits(data_filepath.replace(".ms", "_calibrated_core.uvfits"))
+    uv.write_uvfits(data_filepath.replace(".ms", "_calibrated_core.uvfits"), fix_autos=True)
 
     model_uv = pyuvdata.UVData()
     print(f"Reading file {model_file_name}.")
@@ -2346,7 +2346,7 @@ def apply_calibration_Jan2025():
         inplace=True,
         remove_outriggers=True,
     )
-    model_uv.write_uvfits(model_file_name.replace(".ms", "_core.uvfits"))
+    model_uv.write_uvfits(model_file_name.replace(".ms", "_core.uvfits"), fix_autos=True)
 
     # Subtract model from data
     uv.filename = [""]
@@ -2371,7 +2371,7 @@ def apply_calibration_Jan2025():
             "phase_center_app_ra",
         ],
     )
-    uv.write_uvfits(data_filepath.replace(".ms", "_calibrated_res_core.uvfits"))
+    uv.write_uvfits(data_filepath.replace(".ms", "_calibrated_res_core.uvfits"), fix_autos=True)
 
 
 if __name__ == "__main__":
