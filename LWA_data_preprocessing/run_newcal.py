@@ -2252,8 +2252,8 @@ def calibrate_data_Dec2024():
         max_cal_baseline_lambda=125,
         verbose=True,
         get_crosspol_phase=False,
-        log_file_path=f"/lustre/rbyrne/2024-03-03/20240303_093000-093151_41MHz_reprocess_Dec2024_cal_log.txt",
-        xtol=1e-5,
+        log_file_path=f"/lustre/rbyrne/2024-03-03/20240303_093000-093151_41MHz_reprocess_Dec2024_cal_log_2.txt",
+        xtol=1e-4,
         maxiter=200,
         antenna_flagging_iterations=0,
         parallel=False,
@@ -2377,5 +2377,5 @@ def apply_calibration_Jan2025():
 if __name__ == "__main__":
     # args = sys.argv
     # freq_band = args[1]
-    calibrate_data_Dec2024()
+    apply_calibration_Jan2025()
     # casa_cal_comparison_Oct21()
