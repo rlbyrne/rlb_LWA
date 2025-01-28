@@ -2266,11 +2266,18 @@ def calibrate_data_Dec2024():
 
 def apply_calibration_Jan2025():
 
-    calfits_file = "/lustre/rbyrne/2024-03-03/20240303_093000-093151_41MHz_reprocess_Dec2024.calfits"
-    data_filepath = (
-        "/lustre/rbyrne/2024-03-03/20240303_093000-093151_41MHz_reprocess_Dec2024.ms"
-    )
-    model_file_name = data_filepath.replace(".ms", "_model.ms")
+    use_freq_bands = [
+        "41",
+        "46",
+        "50",
+        "55",
+        "59",
+        "64",
+        "69",
+        "73",
+        "78",
+        "82",
+    ]
 
     flag_ants = [
         "LWA009",
@@ -2310,72 +2317,325 @@ def apply_calibration_Jan2025():
         "LWA365",
     ]
 
-    # Convert to uvdata object
-    uv = pyuvdata.UVData()
-    print(f"Reading file {data_filepath}.")
-    uv.read(data_filepath, data_column="DATA")
-    uv.set_uvws_from_antenna_positions(update_vis=False)
-    uv.data_array = np.conj(uv.data_array)
-    uv.phase_to_time(np.mean(uv.time_array))
-    # Flag outriggers
-    LWA_preprocessing.flag_outriggers(
-        uv,
-        inplace=True,
-        remove_outriggers=True,
-    )
-    # Flag antennas
-    LWA_preprocessing.flag_antennas(
-        uv,
-        antenna_names=flag_ants,
-        flag_pol="all",  # Options are "all", "X", "Y", "XX", "YY", "XY", or "YX"
-        inplace=True,
-    )
-    # Calibrate
-    cal = pyuvdata.UVCal()
-    cal.read_calfits(calfits_file)
-    pyuvdata.utils.uvcalibrate(uv, cal, inplace=True, time_check=False)
-    uv.write_uvfits(data_filepath.replace(".ms", "_calibrated_core.uvfits"), fix_autos=True)
+    for freq_band in use_freq_bands:
+        calfits_file = (
+            f"/lustre/rbyrne/2024-03-03/20240303_093000-093151_{freq_band}MHz.calfits"
+        )
+        data_filepath = (
+            f"/lustre/rbyrne/2024-03-03/20240303_093000-093151_{freq_band}MHz.ms"
+        )
+        model_file_name = data_filepath.replace(".ms", "_model.ms")
 
-    model_uv = pyuvdata.UVData()
-    print(f"Reading file {model_file_name}.")
-    model_uv.read(model_file_name)
-    model_uv.phase_to_time(np.mean(uv.time_array))
-    # Flag outriggers
-    LWA_preprocessing.flag_outriggers(
-        model_uv,
-        inplace=True,
-        remove_outriggers=True,
-    )
-    model_uv.write_uvfits(model_file_name.replace(".ms", "_core.uvfits"), fix_autos=True)
+        # Convert to uvdata object
+        uv = pyuvdata.UVData()
+        print(f"Reading file {data_filepath}.")
+        uv.read(data_filepath, data_column="DATA")
+        uv.set_uvws_from_antenna_positions(update_vis=False)
+        uv.data_array = np.conj(uv.data_array)
+        uv.phase_to_time(np.mean(uv.time_array))
+        # Flag outriggers
+        LWA_preprocessing.flag_outriggers(
+            uv,
+            inplace=True,
+            remove_outriggers=True,
+        )
+        # Flag antennas
+        LWA_preprocessing.flag_antennas(
+            uv,
+            antenna_names=flag_ants,
+            flag_pol="all",  # Options are "all", "X", "Y", "XX", "YY", "XY", or "YX"
+            inplace=True,
+        )
+        # Calibrate
+        cal = pyuvdata.UVCal()
+        cal.read_calfits(calfits_file)
+        pyuvdata.utils.uvcalibrate(uv, cal, inplace=True, time_check=False)
+        uv.write_uvfits(
+            data_filepath.replace(".ms", "_calibrated_core.uvfits"), fix_autos=True
+        )
 
-    # Subtract model from data
-    uv.filename = [""]
-    model_uv.filename = [""]
-    uv.sum_vis(
-        model_uv,
-        difference=True,
-        inplace=True,
-        override_params=[
-            "scan_number_array",
-            "phase_center_id_array",
-            "telescope",
-            "phase_center_catalog",
-            "filename",
-            "phase_center_app_dec",
-            "nsample_array",
-            "integration_time",
-            "phase_center_frame_pa",
-            "flag_array",
-            "uvw_array",
-            "lst_array",
-            "phase_center_app_ra",
-        ],
-    )
-    uv.write_uvfits(data_filepath.replace(".ms", "_calibrated_res_core.uvfits"), fix_autos=True)
+        model_uv = pyuvdata.UVData()
+        print(f"Reading file {model_file_name}.")
+        model_uv.read(model_file_name)
+        model_uv.phase_to_time(np.mean(uv.time_array))
+        # Flag outriggers
+        LWA_preprocessing.flag_outriggers(
+            model_uv,
+            inplace=True,
+            remove_outriggers=True,
+        )
+        model_uv.write_uvfits(
+            model_file_name.replace(".ms", "_core.uvfits"), fix_autos=True
+        )
+
+        # Subtract model from data
+        uv.filename = [""]
+        model_uv.filename = [""]
+        uv.sum_vis(
+            model_uv,
+            difference=True,
+            inplace=True,
+            override_params=[
+                "scan_number_array",
+                "phase_center_id_array",
+                "telescope",
+                "phase_center_catalog",
+                "filename",
+                "phase_center_app_dec",
+                "nsample_array",
+                "integration_time",
+                "phase_center_frame_pa",
+                "flag_array",
+                "uvw_array",
+                "lst_array",
+                "phase_center_app_ra",
+            ],
+        )
+        uv.write_uvfits(
+            data_filepath.replace(".ms", "_calibrated_res_core.uvfits"), fix_autos=True
+        )
+
+
+def calibrate_data_Jan2025():
+
+    use_freq_bands = [
+        # "41",
+        "46",
+        "50",
+        "55",
+        "59",
+        "64",
+        "69",
+        "73",
+        "78",
+        "82",
+    ]
+
+    flag_ants = [
+        "LWA009",
+        "LWA041",
+        "LWA044",
+        "LWA052",
+        "LWA058",
+        "LWA076",
+        "LWA095",
+        "LWA105",
+        "LWA111",
+        "LWA120",
+        "LWA124",
+        "LWA138",
+        "LWA150",
+        "LWA159",
+        "LWA191",
+        "LWA204",
+        "LWA208",
+        "LWA209",
+        "LWA232",
+        "LWA234",
+        "LWA255",
+        "LWA267",
+        "LWA280",
+        "LWA288",
+        "LWA292",
+        "LWA302",
+        "LWA307",
+        "LWA309",
+        "LWA310",
+        "LWA314",
+        "LWA325",
+        "LWA341",
+        "LWA352",
+        "LWA364",
+        "LWA365",
+    ]
+
+    for freq_band in use_freq_bands:
+
+        data_filepath = f"/lustre/rbyrne/2024-03-03/20240303_093000-093151_{freq_band}MHz.ms"  # Created with concatenate_ms_files.py
+
+        # Convert to uvdata object
+        uv = pyuvdata.UVData()
+        print(f"Reading file {data_filepath}.")
+        uv.read(data_filepath, data_column="DATA")
+        uv.set_uvws_from_antenna_positions(update_vis=False)
+        uv.data_array = np.conj(uv.data_array)
+        uv.phase_to_time(np.mean(uv.time_array))
+
+        # Flag antennas
+        LWA_preprocessing.flag_antennas(
+            uv,
+            antenna_names=flag_ants,
+            flag_pol="all",  # Options are "all", "X", "Y", "XX", "YY", "XY", or "YX"
+            inplace=True,
+        )
+
+        model_file_name = data_filepath.replace(".ms", "_model.ms")
+        if os.path.isdir(model_file_name):
+            combined_model_uv = pyuvdata.UVData()
+            combined_model_uv.read(model_file_name)
+        else:  # Get model
+            model_filepath = "/lustre/rbyrne/simulation_outputs"
+            lst_lookup_table_path = f"{model_filepath}/lst_lookup_table.csv"
+            with open(lst_lookup_table_path, "r") as f:
+                lst_data = f.readlines()
+            model_lsts = np.array([])
+            model_lst_filenames = np.array([])
+            for line in lst_data[1:]:
+                line_split = line.replace("\n", "").strip().split(",")
+                model_lsts = np.append(model_lsts, float(line_split[0]))
+                model_lst_filenames = np.append(
+                    model_lst_filenames,
+                    f"{line_split[1]}_{freq_band}MHz_source_sim.uvfits".strip(),
+                )
+
+            model_uv_list = []
+            for time_ind, use_lst in enumerate(list(set(uv.lst_array))):
+                print(
+                    f"Calculating model visibilities for time step {time_ind+1} of {len(list(set(uv.lst_array)))}."
+                )
+                lst_distance = np.abs(model_lsts - use_lst)
+                ind1 = np.where(lst_distance == np.min(lst_distance))[0]
+                ind2 = np.where(lst_distance == np.sort(lst_distance)[1])[0]
+                lst1 = model_lsts[ind1]
+                model_filename1 = model_lst_filenames[ind1][0]
+                lst2 = model_lsts[ind2]
+                model_filename2 = model_lst_filenames[ind2][0]
+
+                # Interpolate models
+                model1_uv = pyuvdata.UVData()
+                model1_uv.read(f"{model_filepath}/{model_filename1}")
+                model1_uv.select(lsts=[lst1])
+                model1_uv.filename = [""]
+                model1_uv_diffuse = pyuvdata.UVData()
+                model1_uv_diffuse.read(
+                    f"{model_filepath}/{model_filename1.removesuffix('source_sim.uvfits')}diffuse_sim.uvfits"
+                )
+                model1_uv_diffuse.select(lsts=[lst1])
+                model1_uv_diffuse.filename = [""]
+                model1_uv.sum_vis(model1_uv_diffuse, inplace=True)
+
+                model2_uv = pyuvdata.UVData()
+                model2_uv.read(f"{model_filepath}/{model_filename2}")
+                model2_uv.select(lsts=[lst2])
+                model2_uv.filename = [""]
+                model2_uv_diffuse = pyuvdata.UVData()
+                model2_uv_diffuse.read(
+                    f"{model_filepath}/{model_filename2.removesuffix('source_sim.uvfits')}diffuse_sim.uvfits"
+                )
+                model2_uv_diffuse.select(lsts=[lst2])
+                model2_uv_diffuse.filename = [""]
+                model2_uv.sum_vis(model2_uv_diffuse, inplace=True)
+
+                # Phase to consistent phase center
+                model1_uv.phase_to_time(np.mean(uv.time_array))
+                model2_uv.phase_to_time(np.mean(uv.time_array))
+
+                # Combine data
+                model1_uv.data_array *= np.abs(lst1 - use_lst) / np.abs(lst2 - lst1)
+                model2_uv.data_array *= np.abs(lst2 - use_lst) / np.abs(lst2 - lst1)
+                model_uv = model1_uv.sum_vis(
+                    model2_uv,
+                    inplace=False,
+                    run_check=False,
+                    check_extra=False,
+                    run_check_acceptability=False,
+                    override_params=[
+                        "lst_array",
+                        "time_array",
+                        "uvw_array",
+                        "filename",
+                    ],
+                )
+                # Correct for decoherence
+                model1_uv.data_array = np.abs(model1_uv.data_array) + 0 * 1j
+                model2_uv.data_array = np.abs(model2_uv.data_array) + 0 * 1j
+                model_uv_abs = model1_uv.sum_vis(
+                    model2_uv,
+                    inplace=False,
+                    run_check=False,
+                    check_extra=False,
+                    run_check_acceptability=False,
+                    override_params=[
+                        "lst_array",
+                        "time_array",
+                        "uvw_array",
+                        "filename",
+                    ],
+                )
+                model_uv.data_array *= np.abs(model_uv_abs.data_array) / np.abs(
+                    model_uv.data_array
+                )
+
+                model_uv.time_array = np.full(
+                    model_uv.Nblts, np.sort(list(set(uv.time_array)))[time_ind]
+                )
+                model_uv.lst_array = np.full(model_uv.Nblts, use_lst)
+                model_uv_list.append(model_uv)
+
+            # Combine LSTs
+            combined_model_uv = model_uv_list[0]
+            if len(model_uv_list) > 1:
+                for model_uv_use in model_uv_list[1:]:
+                    combined_model_uv.fast_concat(model_uv_use, "blt", inplace=True)
+
+            print(f"Saving model file to {model_file_name}.")
+            combined_model_uv.write_ms(model_file_name, force_phase=True)
+
+        uvcal = calibration_wrappers.sky_based_calibration_wrapper(
+            uv,
+            combined_model_uv,
+            min_cal_baseline_lambda=10,
+            max_cal_baseline_lambda=125,
+            verbose=True,
+            get_crosspol_phase=False,
+            log_file_path=f"/lustre/rbyrne/2024-03-03/20240303_093000-093151_{freq_band}MHz_cal_log.txt",
+            xtol=1e-4,
+            maxiter=200,
+            antenna_flagging_iterations=0,
+            parallel=False,
+        )
+        uvcal.write_calfits(
+            f"/lustre/rbyrne/2024-03-03/20240303_093000-093151_{freq_band}MHz.calfits",
+            clobber=True,
+        )
+
+
+def concatenate_calibrated_data_Jan2025():
+
+    use_freq_bands = [
+        "41",
+        "46",
+        "50",
+        "55",
+        "59",
+        "64",
+        "69",
+        "73",
+        "78",
+        "82",
+    ]
+
+    file_type_names = ["calibrated_core", "calibrated_res_core", "model_core"]
+
+    for file_type_name in file_type_names:
+        for freq_band_ind, freq_band in enumerate(use_freq_bands):
+
+            uv_new = pyuvdata.UVData()
+            uv_new.read(
+                f"/lustre/rbyrne/2024-03-03/20240303_093000-093151_{freq_band}MHz_{file_type_name}.uvfits"
+            )
+            if freq_band_ind == 0:
+                uv = uv_new
+            else:
+                uv.fast_concat(uv_new, "freq")
+        uv.write_uvfits(
+            f"/lustre/rbyrne/2024-03-03/20240303_093000-093151_41-82MHz_{file_type_name}.uvfits",
+            fix_autos=True,
+        )
 
 
 if __name__ == "__main__":
     # args = sys.argv
     # freq_band = args[1]
-    apply_calibration_Jan2025()
+    concatenate_calibrated_data_Jan2025()
     # casa_cal_comparison_Oct21()
