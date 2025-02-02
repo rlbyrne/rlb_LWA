@@ -280,11 +280,11 @@ def plot_weighting_function_exponential(
 def plot_model_visibility_error():
 
     data, model = dwcal.get_test_data(
-        model_path="/Users/ruby/Astro/FHD_outputs/fhd_rlb_model_GLEAM_bright_sources_Jun2022",
-        # model_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Jun2022",
+        #model_path="/Users/ruby/Astro/FHD_outputs/fhd_rlb_model_GLEAM_bright_sources_Jun2022",
+        model_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_bright_sources_Jun2022",
         model_use_model=True,
-        data_path="/Users/ruby/Astro/FHD_outputs/fhd_rlb_model_GLEAM_Jun2022",
-        # data_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_Jun2022",
+        #data_path="/Users/ruby/Astro/FHD_outputs/fhd_rlb_model_GLEAM_Jun2022",
+        data_path="/safepool/rbyrne/fhd_outputs/fhd_rlb_model_GLEAM_Jun2022",
         data_use_model=True,
         obsid="1061316296",
         pol="XX",
@@ -308,8 +308,8 @@ def plot_model_visibility_error():
         add_lines=[1.0],
         vmin=1e9,
         vmax=1e13,
-        savepath="/Users/ruby/Astro/dwcal_paper_plots/model_vis_error_Jun2022.png",
-        # savepath="/home/rbyrne/model_vis_error.png"
+        #savepath="/Users/ruby/Astro/dwcal_paper_plots/model_vis_error_Jun2022.png",
+        savepath="/home/rbyrne/model_vis_error.png"
     )
 
     plot_weighting_function_exponential(bin_edges, delay_array, diff_vis.channel_width)
@@ -470,4 +470,4 @@ def plot_example_baseline_weights():
 
 if __name__ == "__main__":
 
-    plot_example_baseline_weights()
+    plot_model_visibility_error()
