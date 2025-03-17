@@ -2,10 +2,25 @@ import subprocess
 import shlex
 import os
 
-obsids_list = ["20230819_093023_73MHz_cyg_cas_sim", "20230819_093023_73MHz_mmode_sim"]
-versions_list = ["rlb_LWA_generate_ps_Jan2024"]
-uvfits_path = "/safepool/rbyrne/pyuvsim_sims_Dec2023"
-outdir = "/safepool/rbyrne/fhd_outputs"
+obsids_list = [
+    "density1.5_gleam",
+    "density1.5_gsm08",
+    "density1.75_gleam",
+    "density1.75_gsm08",
+    "density2.0_gleam",
+    "density2.0_gsm08",
+    "density3.0_gleam",
+    "density3.0_gsm08",
+    "hexa_gleam",
+    "hexa_gsm08",
+    "pos_error1e-3_gleam",
+    "pos_error1e-3_gsm08",
+    "random_gleam",
+    "random_gsm08",
+]
+versions_list = ["rlb_vincent_sims_Mar2025"]
+uvfits_path = "/safepool/rbyrne/vincent_sims"
+outdir = "/safepool/rbyrne/vincent_sims"
 run_fhd = True
 run_eppsilon = True
 
