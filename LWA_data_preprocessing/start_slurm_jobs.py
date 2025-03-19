@@ -10,9 +10,7 @@ def extended_source_and_diffuse_sims_Oct2():
     )
     beam = "/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits"
     subbands = ["41", "46", "50", "55", "59", "64", "69", "73", "78", "82"]
-    #use_time_offsets = np.arange(-300, -200)
-    #use_time_offsets = np.arange(-400, -300)
-    use_time_offsets = np.arange(-500, -400)
+    use_time_offsets = np.arange(-900, -800)
 
     for time_offset in use_time_offsets:
         for use_subband in subbands:
@@ -158,6 +156,25 @@ def create_ddcal_sims_Nov11():
         cat.write_skyh5(output_cat_name)
         os.system(
             f"sbatch /home/rbyrne/rlb_LWA/LWA_data_preprocessing/run_simulation_slurm.sh '{output_cat_name}' '{beam}' '{reference_file}' '{output_file_source_sim}' {time_offset}"
+        )
+
+def calibrate_Mar2025():
+
+    use_freq_bands = [
+        "41",
+        "46",
+        "50",
+        "55",
+        "59",
+        "64",
+        "69",
+        "73",
+        "78",
+        "82",
+    ]
+    for freq_band in use_freq_bands:
+        os.system(
+            f"sbatch /opt/devel/rbyrne/rlb_LWA/LWA_data_preprocessing/run_newcal_slurm.sh '{freq_band}'"
         )
 
 

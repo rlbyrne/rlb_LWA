@@ -12,5 +12,5 @@ cd ~
 source ~/.bashrc
 conda activate py310
 date
-python /home/rbyrne/rlb_LWA/LWA_data_preprocessing/run_newcal.py $1
+python /opt/devel/rbyrne/rlb_LWA/LWA_data_preprocessing/run_newcal.py $1
 
