@@ -27,7 +27,7 @@ def data_generator():
     # Get data
     uv = pyuvdata.UVData()
     uv.read(data_ms)
-    uv.select(times=np.min(uv.time_array))
+    uv.select(times=np.min(uv.time_array), frequencies=np.min(uv.freq_array))
     uv.read(data_ms)
     uv.reorder_pols(order="AIPS")
     uv.reorder_blts()
@@ -43,7 +43,7 @@ def data_generator():
     # Get background
     model = pyuvdata.UVData()
     model.read(background_ms)
-    model.select(times=np.min(uv.time_array))
+    model.select(times=np.min(uv.time_array), frequencies=np.min(uv.freq_array))
     model.read(data_ms)
     model.reorder_pols(order="AIPS")
     model.reorder_blts()
@@ -66,7 +66,7 @@ def data_generator():
     for file_ind, ms_file in enumerate(bright_sources_ms_list):
         source_model = pyuvdata.UVData()
         source_model.read(ms_file)
-        source_model.select(times=np.min(uv.time_array))
+        source_model.select(times=np.min(uv.time_array), frequencies=np.min(uv.freq_array))
         source_model.read(data_ms)
         source_model.reorder_pols(order="AIPS")
         source_model.reorder_blts()
@@ -93,10 +93,13 @@ def data_generator():
 
 
 if __name__ == "__main__":
+
+    print("Initializing data_generator")
     your_generator = data_generator()
 
     # Get antenna locations
     # TODO: Ensure that antenna ordering matches that of data_generator
+    print("Getting antenna locations")
     data_ms = "/lustre/rbyrne/2024-03-03/ddcal/20240303_133205_73MHz.ms"
     uv = pyuvdata.UVData()
     uv.read(data_ms)
@@ -104,6 +107,7 @@ if __name__ == "__main__":
     antpos = uv.telescope.antenna_positions + telescope_ecef_xyz
     antenna_locs = ac.EarthLocation.from_geocentric(antpos[:, 0], antpos[:, 1], antpos[:,2], unit="m")
 
+    print("Initializing gains")
     gain_prior_model = GainPriorModel(
         gain_stddev=1.0,
         dd_dof=1,
@@ -113,6 +117,7 @@ if __name__ == "__main__":
         di_type="unconstrained",
         full_stokes=True,
     )
+    print("Initializing calibrator")
     calibrator = IterativeCalibrator(
         plot_folder="demo_plots",
         run_name="demo",
