@@ -5,7 +5,7 @@ from dsa2000_cal.iterative_calibrator import (
     IterativeCalibrator,
     DataGenInput,
 )
-from dsa2000_cal.probabilistic_models.gain_prior_models import GainPriorModel
+from dsa2000_cal.model_utils import average_model
 import numpy as np
 from astropy import time as at, units as au, coordinates as ac
 import time
@@ -23,12 +23,16 @@ def data_generator():
     )
 
     coherencies = ("XX", "XY", "YX", "YY")
+    use_times = 1
+    use_freqs = 192
 
     # Get data
     uv = pyuvdata.UVData()
     uv.read(data_ms)
-    uv.select(times=np.min(uv.time_array), frequencies=np.min(uv.freq_array))
-    uv.read(data_ms)
+    uv.select(
+        times=list(set(uv.time_array))[:use_times],
+        frequencies=uv.freq_array[:use_freqs],
+    )
     uv.reorder_pols(order="AIPS")
     uv.reorder_blts()
     uv.reorder_freqs(channel_order="freq")
@@ -43,8 +47,7 @@ def data_generator():
     # Get background
     model = pyuvdata.UVData()
     model.read(background_ms)
-    model.select(times=np.min(uv.time_array), frequencies=np.min(uv.freq_array))
-    model.read(data_ms)
+    model.select(times=list(set(uv.time_array)), frequencies=uv.freq_array)
     model.reorder_pols(order="AIPS")
     model.reorder_blts()
     model.reorder_freqs(channel_order="freq")
@@ -52,6 +55,7 @@ def data_generator():
     vis_background = model.data_array[
         np.newaxis, np.newaxis, :, :, :
     ]  # Shape 1, Ntimes, Nbls, Nfreqs, Npols
+    # vis_background = average_model(vis_background, Tm=1, Cm=24)  # Added for debugging
 
     vis_bright_sources = np.zeros(
         (
@@ -66,15 +70,16 @@ def data_generator():
     for file_ind, ms_file in enumerate(bright_sources_ms_list):
         source_model = pyuvdata.UVData()
         source_model.read(ms_file)
-        source_model.select(times=np.min(uv.time_array), frequencies=np.min(uv.freq_array))
-        source_model.read(data_ms)
+        source_model.select(times=list(set(uv.time_array)), frequencies=uv.freq_array)
         source_model.reorder_pols(order="AIPS")
         source_model.reorder_blts()
         source_model.reorder_freqs(channel_order="freq")
         source_model.phase_to_time(np.mean(uv.time_array))
-        vis_bright_sources[file_ind, :, :, :, :] = source_model.data_array[
-            np.newaxis, :, :, :
+        vis_bright_sources_new = source_model.data_array[
+            np.newaxis, np.newaxis, :, :, :
         ]
+        # vis_bright_sources_new = average_model(vis_bright_sources_new, Tm=1, Cm=24)  # Added for debugging
+        vis_bright_sources[file_ind, :, :, :, :] = vis_bright_sources_new[0, :, :, :, :]
 
     return_data = yield Data(
         sol_int_time_idx=0,
@@ -105,10 +110,14 @@ if __name__ == "__main__":
     uv.read(data_ms)
     telescope_ecef_xyz = au.Quantity(uv.telescope.location.geocentric).to_value("m")
     antpos = uv.telescope.antenna_positions + telescope_ecef_xyz
-    antenna_locs = ac.EarthLocation.from_geocentric(antpos[:, 0], antpos[:, 1], antpos[:,2], unit="m")
+    antenna_locs = ac.EarthLocation.from_geocentric(
+        antpos[:, 0], antpos[:, 1], antpos[:, 2], unit="m"
+    )
 
-    print("Initializing gains")
-    gain_prior_model = GainPriorModel(
+    print("Initializing calibrator")
+    calibrator = IterativeCalibrator(
+        plot_folder="demo_plots",
+        run_name="demo",
         gain_stddev=1.0,
         dd_dof=1,
         di_dof=1,
@@ -116,17 +125,12 @@ if __name__ == "__main__":
         dd_type="unconstrained",
         di_type="unconstrained",
         full_stokes=True,
-    )
-    print("Initializing calibrator")
-    calibrator = IterativeCalibrator(
-        plot_folder="demo_plots",
-        run_name="demo",
-        gain_probabilistic_model=gain_prior_model,
-        full_stokes=True,
         antennas=antenna_locs,
         verbose=True,  # if using GPU's set to False
-        devices=None,
+        num_devices=8,
+        backend="cpu",
     )
+
     print("Starting calibration.")
     start_time = time.time()
     calibrator.run(your_generator, Ts=None, Cs=None)
