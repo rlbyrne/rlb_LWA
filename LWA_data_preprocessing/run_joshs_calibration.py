@@ -96,6 +96,8 @@ def data_generator():
         ref_time=times[0],
     )
 
+    np.save("/lustre/rbyrne/2024-03-03/ddcal/output_gains.npy", return_data.gains)
+
 
 if __name__ == "__main__":
 

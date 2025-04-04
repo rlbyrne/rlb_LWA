@@ -2840,19 +2840,11 @@ def plot_gains_Mar2025():
         "78",
         "82",
     ]
-    for freq_band_ind, freq_band in enumerate(use_freq_bands):
-        calfits_file = f"/lustre/rbyrne/2024-03-03/20240303_093000-093151_{freq_band}MHz_gains_multiply_model_lowtol.calfits"
-        new_cal_obj = pyuvdata.UVCal()
-        new_cal_obj.read(calfits_file)
-        if freq_band_ind == 0:
-            cal = new_cal_obj
-        else:
-            cal.fast_concat(new_cal_obj, "freq", inplace=True)
 
     calibration_qa.plot_gains(
-        cal,
+        [f"/lustre/rbyrne/2024-03-03/20240303_093000-093151_{freq_band}MHz_lambda0.calfits" for freq_band in use_freq_bands],
         f"/lustre/rbyrne/2024-03-03/gains_plots",
-        plot_prefix="20240303_093000-093151_gains_multiply_model",
+        plot_prefix="20240303_093000-093151_lambda0",
         plot_reciprocal=False,
         ymin=0,
         ymax=None,
@@ -2990,8 +2982,8 @@ def apply_calibration_Mar2025():
 
 
 if __name__ == "__main__":
-    args = sys.argv
-    freq_band = args[1]
+    #args = sys.argv
+    #freq_band = args[1]
     #freq_band = "41"
-    calibrate_data_Mar2025(freq_band)
-    #plot_gains_Mar2025()
+    #calibrate_data_Mar2025(freq_band)
+    plot_gains_Mar2025()
