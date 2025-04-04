@@ -1,7 +1,7 @@
 import pyuvdata
 
 obsids_list = [
-    #"density1.5_gleam",
+    "density1.5_gleam",
     "density1.5_gsm08",
     "density1.75_gleam",
     "density1.75_gsm08",
@@ -19,5 +19,5 @@ obsids_list = [
 
 for obs in obsids_list:
     uv = pyuvdata.UVData()
-    uv.read(f"/safepool/rbyrne/vincent_sims/{obs}.uvh5")
-    uv.write_uvfits(f"/safepool/rbyrne/vincent_sims/{obs}.uvfits", force_phase=True)
+    uv.read(f"/lustre/rbyrne/vincent_sims/{obs}.uvh5")
+    uv.write_uvfits(f"/lustre/rbyrne/vincent_sims/{obs}.uvfits", force_phase=True)

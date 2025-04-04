@@ -3,13 +3,24 @@ import shlex
 import os
 
 obsids_list = [
-    "20240303_093000-093151_41-82MHz_calibrated_core",
-    "20240303_093000-093151_41-82MHz_model_core",
-    "20240303_093000-093151_41-82MHz_calibrated_res_core",
+    "density1.5_gleam",
+    "density1.5_gsm08",
+    "density1.75_gleam",
+    "density1.75_gsm08",
+    "density2.0_gleam",
+    "density2.0_gsm08",
+    "density3.0_gleam",
+    "density3.0_gsm08",
+    "hexa_gleam",
+    "hexa_gsm08",
+    "pos_error1e-3_gleam",
+    "pos_error1e-3_gsm08",
+    "random_gleam",
+    "random_gsm08",
 ]
-versions_list = ["rlb_process_LWA_Jan2025", "rlb_process_LWA_highres_beam_Jan2025"]
-uvfits_path = "/lustre/rbyrne/2024-03-03"
-outdir = "/lustre/rbyrne/fhd_outputs"
+versions_list = ["rlb_vincent_sims_Apr2025"]
+uvfits_path = "/lustre/rbyrne/vincent_sims"
+outdir = "/lustre/rbyrne/vincent_sims"
 run_fhd = True
 run_eppsilon = True
 
@@ -19,9 +30,9 @@ eppsilon_script = "ps_single_obs_wrapper"
 
 # Set eppsilon options
 refresh_ps = 1
-uvf_input = 0
-no_evenodd = 0  # Use this option if only one time step is present
-xx_only = 0
+uvf_input = 1
+no_evenodd = 1  # Use this option if only one time step is present
+xx_only = 1
 
 for version in versions_list:
     # Create directories

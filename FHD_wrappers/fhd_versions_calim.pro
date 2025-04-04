@@ -136,6 +136,21 @@ pro fhd_versions_calim
         beam_nfreq_avg = 1  ;average beam
     end
 
+    'rlb_vincent_sims_Apr2025': begin
+      recalculate_all = 1
+      instrument = 'lwa'
+      import_pyuvdata_beam_filepath = '/lustre/rbyrne/vincent_sims/airy_efield_10m.fits'
+      calibrate_visibilities = 0
+      return_cal_visibilities = 0
+      model_visibilities = 0
+      n_pol = 2
+      ;snapshot_healpix_export = 0
+      image_filter_fn = "filter_uv_optimal"
+      split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
+      save_uvf = 1
+      ps_nfreq_avg = 1  ;do not average in frequency
+    end
+
   endcase
 
   undefine, uvfits_subversion, uvfits_version
