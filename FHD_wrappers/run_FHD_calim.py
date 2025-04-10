@@ -3,7 +3,7 @@ import shlex
 import os
 
 obsids_list = [
-    "density1.5_gleam",
+    #"density1.5_gleam",
     "density1.5_gsm08",
     "density1.75_gleam",
     "density1.75_gsm08",

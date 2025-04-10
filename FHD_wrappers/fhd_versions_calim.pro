@@ -149,6 +149,7 @@ pro fhd_versions_calim
       split_ps_export = 0  ;do not attempt even-odd splitting, required when only one time step is present
       save_uvf = 1
       ps_nfreq_avg = 1  ;do not average in frequency
+      n_avg = 1  ;do not average in frequency
     end
 
   endcase
