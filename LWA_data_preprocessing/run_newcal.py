@@ -2980,10 +2980,74 @@ def apply_calibration_Mar2025():
             data_filepath.replace(".ms", "_calibrated_res_core.uvfits"), fix_autos=True
         )
 
+def recalibrate_data_Apr2025():
+
+    uvcal = calibration_wrappers.sky_based_calibration_wrapper(
+        "/lustre/rbyrne/2024-03-02/gregg_calibrated/73.ms",
+        "/lustre/rbyrne/2024-03-02/gregg_calibrated/73.ms",
+        data_use_column="DATA",
+        model_use_column="MODEL_DATA",
+        min_cal_baseline_lambda=15,
+        max_cal_baseline_lambda=None,
+        gains_multiply_model=True,
+        verbose=True,
+        get_crosspol_phase=False,
+        log_file_path=f"/lustre/rbyrne/2024-03-02/gregg_calibrated/73_calico_log.txt",
+        xtol=1e-6,
+        maxiter=200,
+        antenna_flagging_iterations=0,
+        parallel=False,
+        lambda_val=0,
+    )
+    uvcal.write_calfits(
+        f"/lustre/rbyrne/2024-03-02/gregg_calibrated/73_calico.calfits",
+        clobber=True,
+    )
+
+def plot_gains_Apr2025():
+
+    calfiles = [
+        "/lustre/rbyrne/2024-03-02/gregg_calibrated/73_gregg_calibrated.bcal",
+        "/lustre/rbyrne/2024-03-02/gregg_calibrated/73.bcal",
+        "/lustre/rbyrne/2024-03-02/gregg_calibrated/73_calico.calfits"
+    ]
+    plot_prefixes = [
+        "73_gregg_calibrated",
+        "73_casa",
+        "73_calico",
+    ]
+    for file_ind in range(len(calfiles)):
+        calibration_qa.plot_gains(
+            calfiles[file_ind],
+            f"/lustre/rbyrne/2024-03-02/gregg_calibrated/gains_plots",
+            plot_prefix=plot_prefixes[file_ind],
+            plot_reciprocal=False,
+            ymin=0,
+            ymax=None,
+            zero_mean_phase=True,
+        )
+
+def overplot_gains_Apr2025():
+
+    plot_prefixes = [
+        "gregg_calibrated",
+        "calico",
+    ]
+    calibration_qa.plot_gains(
+        "/lustre/rbyrne/2024-03-02/gregg_calibrated/73_gregg_calibrated.bcal",
+        cal2="/lustre/rbyrne/2024-03-02/gregg_calibrated/73_calico.calfits",
+        plot_output_dir=f"/lustre/rbyrne/2024-03-02/gregg_calibrated/gains_plots",
+        cal_name=plot_prefixes,
+        plot_reciprocal=False,
+        ymin=0,
+        ymax=None,
+        zero_mean_phase=True,
+    )
+
 
 if __name__ == "__main__":
     #args = sys.argv
     #freq_band = args[1]
     #freq_band = "41"
     #calibrate_data_Mar2025(freq_band)
-    plot_gains_Mar2025()
+    overplot_gains_Apr2025()
