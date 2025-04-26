@@ -252,4 +252,4 @@ def add_2025_data():
 
 
 if __name__ == "__main__":
-    add_2025_data()
+    find_missing_subbands()
