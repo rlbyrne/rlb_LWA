@@ -3063,6 +3063,7 @@ def calibrate_data_Apr2025(freq_band):
         'LWA292',
         'LWA365',
     ]
+    use_diffuse = False
 
     data_filepath = f"/lustre/rbyrne/2025-01-17/20250117_140158-140348_{freq_band}MHz.ms"  # Created with concatenate_ms_files.py
 
@@ -3082,7 +3083,10 @@ def calibrate_data_Apr2025(freq_band):
         inplace=True,
     )
 
-    model_file_name = data_filepath.replace(".ms", "_model.ms")
+    if use_diffuse:
+        model_file_name = data_filepath.replace(".ms", "_model.ms")
+    else:
+        model_file_name = data_filepath.replace(".ms", "_compact_model.ms")
     if os.path.isdir(model_file_name):
         combined_model_uv = pyuvdata.UVData()
         print(f"Reading file {model_file_name}.")
@@ -3121,24 +3125,28 @@ def calibrate_data_Apr2025(freq_band):
             model1_uv.select(lsts=[lst1])
             model1_uv.filename = [""]
             model1_uv_diffuse = pyuvdata.UVData()
-            model1_uv_diffuse.read(
-                f"{model_filepath}/{model_filename1.removesuffix('source_sim.uvfits')}diffuse_sim.uvfits"
-            )
-            model1_uv_diffuse.select(lsts=[lst1])
-            model1_uv_diffuse.filename = [""]
-            model1_uv.sum_vis(model1_uv_diffuse, inplace=True)
+
+            if use_diffuse:
+                model1_uv_diffuse.read(
+                    f"{model_filepath}/{model_filename1.removesuffix('source_sim.uvfits')}diffuse_sim.uvfits"
+                )
+                model1_uv_diffuse.select(lsts=[lst1])
+                model1_uv_diffuse.filename = [""]
+                model1_uv.sum_vis(model1_uv_diffuse, inplace=True)
 
             model2_uv = pyuvdata.UVData()
             model2_uv.read(f"{model_filepath}/{model_filename2}")
             model2_uv.select(lsts=[lst2])
             model2_uv.filename = [""]
-            model2_uv_diffuse = pyuvdata.UVData()
-            model2_uv_diffuse.read(
-                f"{model_filepath}/{model_filename2.removesuffix('source_sim.uvfits')}diffuse_sim.uvfits"
-            )
-            model2_uv_diffuse.select(lsts=[lst2])
-            model2_uv_diffuse.filename = [""]
-            model2_uv.sum_vis(model2_uv_diffuse, inplace=True)
+
+            if use_diffuse:
+                model2_uv_diffuse = pyuvdata.UVData()
+                model2_uv_diffuse.read(
+                    f"{model_filepath}/{model_filename2.removesuffix('source_sim.uvfits')}diffuse_sim.uvfits"
+                )
+                model2_uv_diffuse.select(lsts=[lst2])
+                model2_uv_diffuse.filename = [""]
+                model2_uv.sum_vis(model2_uv_diffuse, inplace=True)
 
             # Phase to consistent phase center
             model1_uv.phase_to_time(np.mean(uv.time_array))
@@ -3203,7 +3211,7 @@ def calibrate_data_Apr2025(freq_band):
         gains_multiply_model=True,
         verbose=True,
         get_crosspol_phase=False,
-        log_file_path=f"/lustre/rbyrne/2025-01-17/cal_logs/20250117_140158-140348_{freq_band}MHz_cal_log.txt",
+        log_file_path=f"/lustre/rbyrne/2025-01-17/cal_logs/20250117_140158-140348_{freq_band}MHz_compact_cal_log.txt",
         xtol=1e-6,
         maxiter=200,
         antenna_flagging_iterations=0,
@@ -3211,22 +3219,134 @@ def calibrate_data_Apr2025(freq_band):
         lambda_val=1,
     )
     uvcal.write_calfits(
-        f"/lustre/rbyrne/2025-01-17/20250117_140158-140348_{freq_band}MHz.calfits",
+        f"/lustre/rbyrne/2025-01-17/20250117_140158-140348_{freq_band}MHz_compact.calfits",
         clobber=True,
     )
+
+
+def plot_gains_Apr2025():
+
+    use_freq_bands = [
+        "41",
+        "46",
+        "50",
+        "55",
+        "59",
+        "64",
+        "69",
+        "73",
+        "78",
+        "82",
+    ]
+    cal_files1 = [f"/lustre/rbyrne/2025-01-17/20250117_140158-140348_{freq_band}MHz.calfits" for freq_band in use_freq_bands]
+    cal_files2 = [f"/lustre/rbyrne/2025-01-17/20250117_140158-140348_{freq_band}MHz_compact.calfits" for freq_band in use_freq_bands]
     calibration_qa.plot_gains(
-        uvcal,
+        cal_files1,
+        cal2 = cal_files2,
         plot_output_dir=f"/lustre/rbyrne/2025-01-17/gains_plots",
-        cal_name=f"20250117_140158-140348_{freq_band}MHz",
+        cal_name=[f"20250117_140158-140348", f"20250117_140158-140348_compact_sources"],
         plot_reciprocal=False,
         ymin=0,
         ymax=None,
         zero_mean_phase=True,
     )
 
+def image_data_Apr2025():
+
+    use_freq_bands = [
+        "41",
+        "46",
+        "50",
+        "55",
+        "59",
+        "64",
+        "69",
+        "73",
+        "78",
+        "82",
+    ]
+    flag_ants =  [
+        'LWA005',
+        'LWA011',
+        'LWA069',
+        'LWA105',
+        'LWA110',
+        'LWA124',
+        'LWA131',
+        'LWA186',
+        'LWA190',
+        'LWA209',
+        'LWA226',
+        'LWA235',
+        'LWA280',
+        'LWA292',
+        'LWA365',
+    ]
+
+    for use_freq in use_freq_bands:
+        data_file = f"/lustre/rbyrne/2025-01-17/20250117_140158-140348_{use_freq}MHz.ms"
+        cal_file = f"/lustre/rbyrne/2025-01-17/20250117_140158-140348_{use_freq}MHz.calfits"
+        model_file = f"/lustre/rbyrne/2025-01-17/20250117_140158-140348_{use_freq}MHz_model.ms"
+
+        # Convert to uvdata object
+        uv = pyuvdata.UVData()
+        uv.read(data_file, data_column="DATA")
+        uv.set_uvws_from_antenna_positions(update_vis=False)
+        uv.data_array = np.conj(uv.data_array)
+        uv.phase_to_time(np.mean(uv.time_array))
+        LWA_preprocessing.flag_antennas(
+            uv,
+            antenna_names=flag_ants,
+            flag_pol="all",
+            inplace=True,
+        )
+        
+        # Calibrate
+        cal = pyuvdata.UVCal()
+        cal.read_calfits(cal_file)
+        pyuvdata.utils.uvcalibrate(uv, cal, inplace=True, time_check=False)
+        uv.write_ms(
+            data_file.replace(".ms", "_calibrated.ms"), fix_autos=True
+        )
+        os.system(f"/opt/bin/wsclean -pol I -size 4096 4096 -niter 0 -weight briggs 0 -no-update-model-required -name {data_file.replace('.ms', '_calibrated')} {data_file.replace('.ms', '_calibrated.ms')}")
+        os.system(f"/opt/bin/wsclean -pol I -size 4096 4096 -niter 0 -weight briggs 0 -no-update-model-required -name {model_file.replace('.ms', '')} {model_file}")
+
+        model_uv = pyuvdata.UVData()
+        model_uv.read(model_file)
+        model_uv.phase_to_time(np.mean(uv.time_array))
+
+        # Subtract model from data
+        uv.filename = [""]
+        model_uv.filename = [""]
+        uv.sum_vis(
+            model_uv,
+            difference=True,
+            inplace=True,
+            override_params=[
+                "scan_number_array",
+                "phase_center_id_array",
+                "telescope",
+                "phase_center_catalog",
+                "filename",
+                "phase_center_app_dec",
+                "nsample_array",
+                "integration_time",
+                "phase_center_frame_pa",
+                "flag_array",
+                "uvw_array",
+                "lst_array",
+                "phase_center_app_ra",
+            ],
+        )
+        uv.write_ms(
+            data_file.replace(".ms", "_res.ms"), fix_autos=True
+        )
+        os.system(f"/opt/bin/wsclean -pol I -size 4096 4096 -niter 0 -weight briggs 0 -no-update-model-required -name {data_file.replace('.ms', '_res')} {data_file.replace('.ms', '_res.ms')}")
+
+
 
 if __name__ == "__main__":
-    args = sys.argv
-    freq_band = args[1]
-    calibrate_data_Apr2025(freq_band)
-    #overplot_gains_Apr2025()
+    #args = sys.argv
+    #freq_band = args[1]
+    #calibrate_data_Apr2025(freq_band)
+    image_data_Apr2025()
