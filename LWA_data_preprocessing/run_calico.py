@@ -3288,6 +3288,9 @@ def image_data_Apr2025():
         cal_file = f"/lustre/rbyrne/2025-01-17/20250117_140158-140348_{use_freq}MHz.calfits"
         model_file = f"/lustre/rbyrne/2025-01-17/20250117_140158-140348_{use_freq}MHz_model.ms"
 
+        data_calibrated_output_path = data_file.replace(".ms", "_calibrated.ms")
+        res_output_path = data_file.replace(".ms", "_res.ms")
+
         # Convert to uvdata object
         uv = pyuvdata.UVData()
         uv.read(data_file, data_column="DATA")
@@ -3305,14 +3308,14 @@ def image_data_Apr2025():
         cal = pyuvdata.UVCal()
         cal.read_calfits(cal_file)
         pyuvdata.utils.uvcalibrate(uv, cal, inplace=True, time_check=False)
-        uv.write_ms(
-            data_file.replace(".ms", "_calibrated.ms"), fix_autos=True
-        )
-        os.system(f"/opt/bin/wsclean -pol I -size 4096 4096 -niter 0 -weight briggs 0 -no-update-model-required -name {data_file.replace('.ms', '_calibrated')} {data_file.replace('.ms', '_calibrated.ms')}")
-        os.system(f"/opt/bin/wsclean -pol I -size 4096 4096 -niter 0 -weight briggs 0 -no-update-model-required -name {model_file.replace('.ms', '')} {model_file}")
+        if not os.path.isdir(data_calibrated_output_path):
+            uv.write_ms(data_calibrated_output_path, fix_autos=True)
+        os.system(f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {data_file.replace('.ms', '_calibrated')} {data_calibrated_output_path}")
+        os.system(f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {model_file.replace('.ms', '')} {model_file}")
 
         model_uv = pyuvdata.UVData()
         model_uv.read(model_file)
+        model_uv.select(polarizations=(-5,-6))
         model_uv.phase_to_time(np.mean(uv.time_array))
 
         # Subtract model from data
@@ -3338,10 +3341,9 @@ def image_data_Apr2025():
                 "phase_center_app_ra",
             ],
         )
-        uv.write_ms(
-            data_file.replace(".ms", "_res.ms"), fix_autos=True
-        )
-        os.system(f"/opt/bin/wsclean -pol I -size 4096 4096 -niter 0 -weight briggs 0 -no-update-model-required -name {data_file.replace('.ms', '_res')} {data_file.replace('.ms', '_res.ms')}")
+        if not os.path.isdir(res_output_path):
+            uv.write_ms(res_output_path, fix_autos=True)
+        os.system(f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {data_file.replace('.ms', '_res')} {res_output_path}")
 
 
 
