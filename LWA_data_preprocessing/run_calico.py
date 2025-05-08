@@ -2842,7 +2842,10 @@ def plot_gains_Mar2025():
     ]
 
     calibration_qa.plot_gains(
-        [f"/lustre/rbyrne/2024-03-03/20240303_093000-093151_{freq_band}MHz_lambda0.calfits" for freq_band in use_freq_bands],
+        [
+            f"/lustre/rbyrne/2024-03-03/20240303_093000-093151_{freq_band}MHz_lambda0.calfits"
+            for freq_band in use_freq_bands
+        ],
         f"/lustre/rbyrne/2024-03-03/gains_plots",
         plot_prefix="20240303_093000-093151_lambda0",
         plot_reciprocal=False,
@@ -2980,6 +2983,7 @@ def apply_calibration_Mar2025():
             data_filepath.replace(".ms", "_calibrated_res_core.uvfits"), fix_autos=True
         )
 
+
 def recalibrate_data_Apr2025():
 
     uvcal = calibration_wrappers.sky_based_calibration_wrapper(
@@ -3004,12 +3008,13 @@ def recalibrate_data_Apr2025():
         clobber=True,
     )
 
+
 def plot_gains_Apr2025():
 
     calfiles = [
         "/lustre/rbyrne/2024-03-02/gregg_calibrated/73_gregg_calibrated.bcal",
         "/lustre/rbyrne/2024-03-02/gregg_calibrated/73.bcal",
-        "/lustre/rbyrne/2024-03-02/gregg_calibrated/73_calico.calfits"
+        "/lustre/rbyrne/2024-03-02/gregg_calibrated/73_calico.calfits",
     ]
     plot_prefixes = [
         "73_gregg_calibrated",
@@ -3026,6 +3031,7 @@ def plot_gains_Apr2025():
             ymax=None,
             zero_mean_phase=True,
         )
+
 
 def overplot_gains_Apr2025():
 
@@ -3044,24 +3050,25 @@ def overplot_gains_Apr2025():
         zero_mean_phase=True,
     )
 
+
 def calibrate_data_Apr2025(freq_band):
 
-    flag_ants =  [
-        'LWA005',
-        'LWA011',
-        'LWA069',
-        'LWA105',
-        'LWA110',
-        'LWA124',
-        'LWA131',
-        'LWA186',
-        'LWA190',
-        'LWA209',
-        'LWA226',
-        'LWA235',
-        'LWA280',
-        'LWA292',
-        'LWA365',
+    flag_ants = [
+        "LWA005",
+        "LWA011",
+        "LWA069",
+        "LWA105",
+        "LWA110",
+        "LWA124",
+        "LWA131",
+        "LWA186",
+        "LWA190",
+        "LWA209",
+        "LWA226",
+        "LWA235",
+        "LWA280",
+        "LWA292",
+        "LWA365",
     ]
     use_diffuse = False
 
@@ -3238,11 +3245,17 @@ def plot_gains_Apr2025():
         "78",
         "82",
     ]
-    cal_files1 = [f"/lustre/rbyrne/2025-01-17/20250117_140158-140348_{freq_band}MHz.calfits" for freq_band in use_freq_bands]
-    cal_files2 = [f"/lustre/rbyrne/2025-01-17/20250117_140158-140348_{freq_band}MHz_compact.calfits" for freq_band in use_freq_bands]
+    cal_files1 = [
+        f"/lustre/rbyrne/2025-01-17/20250117_140158-140348_{freq_band}MHz.calfits"
+        for freq_band in use_freq_bands
+    ]
+    cal_files2 = [
+        f"/lustre/rbyrne/2025-01-17/20250117_140158-140348_{freq_band}MHz_compact.calfits"
+        for freq_band in use_freq_bands
+    ]
     calibration_qa.plot_gains(
         cal_files1,
-        cal2 = cal_files2,
+        cal2=cal_files2,
         plot_output_dir=f"/lustre/rbyrne/2025-01-17/gains_plots",
         cal_name=[f"20250117_140158-140348", f"20250117_140158-140348_compact_sources"],
         plot_reciprocal=False,
@@ -3250,6 +3263,7 @@ def plot_gains_Apr2025():
         ymax=None,
         zero_mean_phase=True,
     )
+
 
 def image_data_Apr2025():
 
@@ -3265,28 +3279,32 @@ def image_data_Apr2025():
         "78",
         "82",
     ]
-    flag_ants =  [
-        'LWA005',
-        'LWA011',
-        'LWA069',
-        'LWA105',
-        'LWA110',
-        'LWA124',
-        'LWA131',
-        'LWA186',
-        'LWA190',
-        'LWA209',
-        'LWA226',
-        'LWA235',
-        'LWA280',
-        'LWA292',
-        'LWA365',
+    flag_ants = [
+        "LWA005",
+        "LWA011",
+        "LWA069",
+        "LWA105",
+        "LWA110",
+        "LWA124",
+        "LWA131",
+        "LWA186",
+        "LWA190",
+        "LWA209",
+        "LWA226",
+        "LWA235",
+        "LWA280",
+        "LWA292",
+        "LWA365",
     ]
 
     for use_freq in use_freq_bands:
         data_file = f"/lustre/rbyrne/2025-01-17/20250117_140158-140348_{use_freq}MHz.ms"
-        cal_file = f"/lustre/rbyrne/2025-01-17/20250117_140158-140348_{use_freq}MHz.calfits"
-        model_file = f"/lustre/rbyrne/2025-01-17/20250117_140158-140348_{use_freq}MHz_model.ms"
+        cal_file = (
+            f"/lustre/rbyrne/2025-01-17/20250117_140158-140348_{use_freq}MHz.calfits"
+        )
+        model_file = (
+            f"/lustre/rbyrne/2025-01-17/20250117_140158-140348_{use_freq}MHz_model.ms"
+        )
 
         data_calibrated_output_path = data_file.replace(".ms", "_calibrated.ms")
         res_output_path = data_file.replace(".ms", "_res.ms")
@@ -3303,19 +3321,23 @@ def image_data_Apr2025():
             flag_pol="all",
             inplace=True,
         )
-        
+
         # Calibrate
         cal = pyuvdata.UVCal()
         cal.read_calfits(cal_file)
         pyuvdata.utils.uvcalibrate(uv, cal, inplace=True, time_check=False)
         if not os.path.isdir(data_calibrated_output_path):
             uv.write_ms(data_calibrated_output_path, fix_autos=True)
-        os.system(f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {data_file.replace('.ms', '_calibrated')} {data_calibrated_output_path}")
-        os.system(f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {model_file.replace('.ms', '')} {model_file}")
+        os.system(
+            f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {data_file.replace('.ms', '_calibrated')} {data_calibrated_output_path}"
+        )
+        os.system(
+            f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {model_file.replace('.ms', '')} {model_file}"
+        )
 
         model_uv = pyuvdata.UVData()
         model_uv.read(model_file)
-        model_uv.select(polarizations=(-5,-6))
+        model_uv.select(polarizations=(-5, -6))
         model_uv.phase_to_time(np.mean(uv.time_array))
 
         # Subtract model from data
@@ -3343,12 +3365,142 @@ def image_data_Apr2025():
         )
         if not os.path.isdir(res_output_path):
             uv.write_ms(res_output_path, fix_autos=True)
-        os.system(f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {data_file.replace('.ms', '_res')} {res_output_path}")
+        os.system(
+            f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {data_file.replace('.ms', '_res')} {res_output_path}"
+        )
 
+
+def calibrate_May2025(use_freq):
+
+    flag_ants = [
+        "LWA005",
+        "LWA068",
+        "LWA069",
+        "LWA103",
+        "LWA103",
+        "LWA110",
+        "LWA124",
+        "LWA127",
+        "LWA129",
+        "LWA129",
+        "LWA185",
+        "LWA185",
+        "LWA186",
+        "LWA190",
+        "LWA203",
+        "LWA209",
+        "LWA227",
+        "LWA235",
+        "LWA249",
+        "LWA280",
+        "LWA292",
+        "LWA317",
+        "LWA331",
+        "LWA365",
+    ]
+
+    data_file = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz.ms"
+    model_file = (
+        f"/lustre/rbyrne/simulation_outputs/20250505_123014-123204_{use_freq}MHz_source_sim.uvfits"
+    )
+
+    # Set up output filepaths
+    output_calfits = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact.calfits"
+    calibration_log = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_cal_log.txt"
+    calibrated_data_ms = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_calibrated.ms"
+    model_ms = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_model.ms"
+    res_ms = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_res.ms"
+    calibrated_data_image = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_calibrated"
+    model_image = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_model"
+    res_image = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_res"
+
+    # Read data
+    uv = pyuvdata.UVData()
+    print(f"Reading file {data_file}.")
+    uv.read(data_file, data_column="DATA")
+    uv.set_uvws_from_antenna_positions(update_vis=False)
+    uv.data_array = np.conj(uv.data_array)
+    uv.phase_to_time(np.mean(uv.time_array))
+
+    # Read model
+    model_uv = pyuvdata.UVData()
+    print(f"Reading file {model_file}.")
+    model_uv.read(model_file)
+    model_uv.set_uvws_from_antenna_positions(update_vis=False)
+    model_uv.phase_to_time(np.mean(uv.time_array))
+
+    # Flag antennas
+    LWA_preprocessing.flag_antennas(
+        uv,
+        antenna_names=flag_ants,
+        flag_pol="all",  # Options are "all", "X", "Y", "XX", "YY", "XY", or "YX"
+        inplace=True,
+    )
+
+    uvcal = calibration_wrappers.sky_based_calibration_wrapper(
+        uv,
+        model_uv,
+        min_cal_baseline_lambda=10,
+        max_cal_baseline_lambda=125,
+        gains_multiply_model=True,
+        verbose=True,
+        get_crosspol_phase=False,
+        log_file_path=calibration_log,
+        xtol=1e-6,
+        maxiter=200,
+        antenna_flagging_iterations=0,
+        parallel=False,
+        lambda_val=1,
+    )
+    uvcal.write_calfits(
+        output_calfits,
+        clobber=True,
+    )
+
+    # Calibrate
+    pyuvdata.utils.uvcalibrate(uv, uvcal, inplace=True, time_check=False)
+    if not os.path.isdir(calibrated_data_ms):
+        uv.write_ms(calibrated_data_ms, fix_autos=True)
+    # Image calibrated data
+    os.system(
+        f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {calibrated_data_image} {calibrated_data_ms}"
+    )
+    os.system(
+        f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {model_image} {model_ms}"
+    )
+
+    # Subtract model from data
+    uv.filename = [""]
+    model_uv.filename = [""]
+    uv.sum_vis(
+        model_uv,
+        difference=True,
+        inplace=True,
+        override_params=[
+            "scan_number_array",
+            "phase_center_id_array",
+            "telescope",
+            "phase_center_catalog",
+            "filename",
+            "phase_center_app_dec",
+            "nsample_array",
+            "integration_time",
+            "phase_center_frame_pa",
+            "flag_array",
+            "uvw_array",
+            "lst_array",
+            "phase_center_app_ra",
+        ],
+    )
+    if not os.path.isdir(res_ms):
+        uv.write_ms(res_ms, fix_autos=True)
+    os.system(
+        f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {res_image} {res_ms}"
+    )
 
 
 if __name__ == "__main__":
-    #args = sys.argv
-    #freq_band = args[1]
-    #calibrate_data_Apr2025(freq_band)
-    image_data_Apr2025()
+    args = sys.argv
+    freq_band = args[1]
+    calibrate_May2025(freq_band)
+    #image_data_Apr2025()

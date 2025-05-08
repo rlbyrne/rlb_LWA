@@ -1,5 +1,6 @@
 import casatasks
 import os
+import sys
 
 use_freq_bands = [
     "41",
@@ -16,27 +17,36 @@ use_freq_bands = [
 
 for freq_band in use_freq_bands:
 
-    min_time_str = "140158"
-    max_time_str = "140358"
+    year = "2025"
+    month = "05"
+    day = "05"
+    min_time_str = "123005"
+    max_time_str = "123205"
 
-    datadir = f"/lustre/pipeline/cosmology/{freq_band}MHz/2025-01-17/14"
-    copied_data_dir = "/lustre/rbyrne/2025-01-17"
+    datadir = f"/lustre/pipeline/slow/{freq_band}MHz/{year}-{month}-{day}/12"
+    copied_data_dir = f"/lustre/rbyrne/{year}-{month}-{day}"
+
+    if not os.path.isdir(copied_data_dir):  # Make target directory if it does not exist
+        os.mkdir(copied_data_dir)
 
     all_files = os.listdir(datadir)
-    #use_files = [
-    #    filename
-    #    for filename in all_files
-    #    if filename.startswith("20240303") and filename.endswith(".ms")
-    #]
-    use_files = all_files
+    use_files = [
+        filename
+        for filename in all_files
+        if filename.startswith(f"{year}{month}{day}") and filename.endswith(".ms")
+    ]
     use_files = [
         filename            
         for filename in use_files
-        if (int(filename.split("_")[-3]) >= int(min_time_str))
-        and int(filename.split("_")[-3]) < int(max_time_str)
+        if (int(filename.split("_")[1]) >= int(min_time_str))
+        and int(filename.split("_")[1]) < int(max_time_str)
     ]
+    if len(use_files) != 12:
+        print("WARNING: Number of files found is not 12.")
+        sys.exit()
+
     use_files.sort()
-    output_filename = f"20250117_{use_files[0].split('_')[-3]}-{use_files[-1].split('_')[-3]}_{freq_band}MHz.ms"
+    output_filename = f"{year}{month}{day}_{use_files[0].split('_')[1]}-{use_files[-1].split('_')[1]}_{freq_band}MHz.ms"
 
     if not os.path.isdir(f"{copied_data_dir}/{output_filename}"):
         # Copy files
