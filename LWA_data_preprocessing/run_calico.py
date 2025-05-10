@@ -3399,12 +3399,13 @@ def calibrate_May2025(use_freq):
         "LWA365",
     ]
 
+    # Input filepaths
     data_file = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz.ms"
     model_file = (
         f"/lustre/rbyrne/simulation_outputs/20250505_123014-123204_{use_freq}MHz_source_sim.uvfits"
     )
 
-    # Set up output filepaths
+    # Output filepaths
     output_calfits = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact.calfits"
     calibration_log = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_cal_log.txt"
     calibrated_data_ms = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_calibrated.ms"
@@ -3428,6 +3429,8 @@ def calibrate_May2025(use_freq):
     model_uv.read(model_file)
     model_uv.set_uvws_from_antenna_positions(update_vis=False)
     model_uv.phase_to_time(np.mean(uv.time_array))
+    if not os.path.isdir(model_ms):
+        model_uv.write_ms(model_ms, fix_autos=True)  # Convert to ms
 
     # Flag antennas
     LWA_preprocessing.flag_antennas(
@@ -3490,6 +3493,107 @@ def calibrate_May2025(use_freq):
             "uvw_array",
             "lst_array",
             "phase_center_app_ra",
+            "dut1",
+        ],
+    )
+    if not os.path.isdir(res_ms):
+        uv.write_ms(res_ms, fix_autos=True)
+    os.system(
+        f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {res_image} {res_ms}"
+    )
+
+
+def plot_model_and_res_May2025(use_freq):
+
+    flag_ants = [
+        "LWA005",
+        "LWA068",
+        "LWA069",
+        "LWA103",
+        "LWA103",
+        "LWA110",
+        "LWA124",
+        "LWA127",
+        "LWA129",
+        "LWA129",
+        "LWA185",
+        "LWA185",
+        "LWA186",
+        "LWA190",
+        "LWA203",
+        "LWA209",
+        "LWA227",
+        "LWA235",
+        "LWA249",
+        "LWA280",
+        "LWA292",
+        "LWA317",
+        "LWA331",
+        "LWA365",
+    ]
+
+    # Input filepaths
+    model_file = (
+        f"/lustre/rbyrne/simulation_outputs/20250505_123014-123204_{use_freq}MHz_source_sim.uvfits"
+    )
+    calibrated_data_ms = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_calibrated.ms"
+    model_ms = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_model.ms"
+    res_ms = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_res.ms"
+    calibrated_data_image = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_calibrated"
+    model_image = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_model"
+    res_image = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_res"
+
+    # Read data
+    uv = pyuvdata.UVData()
+    print(f"Reading file {calibrated_data_ms}.")
+    uv.read(calibrated_data_ms, data_column="DATA")
+    uv.set_uvws_from_antenna_positions(update_vis=False)
+    #uv.data_array = np.conj(uv.data_array)
+    uv.phase_to_time(np.mean(uv.time_array))
+
+    # Read model
+    model_uv = pyuvdata.UVData()
+    print(f"Reading file {model_file}.")
+    model_uv.read(model_file)
+    model_uv.set_uvws_from_antenna_positions(update_vis=False)
+    model_uv.phase_to_time(np.mean(uv.time_array))
+    if not os.path.isdir(model_ms):
+        model_uv.write_ms(model_ms, fix_autos=True)  # Convert to ms
+
+    # Flag antennas
+    LWA_preprocessing.flag_antennas(
+        uv,
+        antenna_names=flag_ants,
+        flag_pol="all",  # Options are "all", "X", "Y", "XX", "YY", "XY", or "YX"
+        inplace=True,
+    )
+
+    os.system(
+        f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {model_image} {model_ms}"
+    )
+
+    # Subtract model from data
+    uv.filename = [""]
+    model_uv.filename = [""]
+    uv.sum_vis(
+        model_uv,
+        difference=True,
+        inplace=True,
+        override_params=[
+            "scan_number_array",
+            "phase_center_id_array",
+            "telescope",
+            "phase_center_catalog",
+            "filename",
+            "phase_center_app_dec",
+            "nsample_array",
+            "integration_time",
+            "phase_center_frame_pa",
+            "flag_array",
+            "uvw_array",
+            "lst_array",
+            "phase_center_app_ra",
+            "dut1",
         ],
     )
     if not os.path.isdir(res_ms):
@@ -3502,5 +3606,5 @@ def calibrate_May2025(use_freq):
 if __name__ == "__main__":
     args = sys.argv
     freq_band = args[1]
-    calibrate_May2025(freq_band)
+    plot_model_and_res_May2025(freq_band)
     #image_data_Apr2025()
