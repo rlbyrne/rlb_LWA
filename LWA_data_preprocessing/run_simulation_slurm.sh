@@ -6,7 +6,7 @@
 # BATCH --ntasks-per-node=10  #for exlusive node request. number of cores
 #SBATCH --mem=75G
 #SBATCH --time=336:00:00
-#SBATCH --output=/home/rbyrne/slurmtest.out
+#SBATCH --output=/home/rbyrne/slurm_fftvis.out
 #SBATCH --export=ALL
 
 cd ~

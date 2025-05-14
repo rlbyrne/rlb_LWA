@@ -3401,19 +3401,23 @@ def calibrate_May2025(use_freq):
 
     # Input filepaths
     data_file = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz.ms"
-    model_file = (
-        f"/lustre/rbyrne/simulation_outputs/20250505_123014-123204_{use_freq}MHz_source_sim.uvfits"
-    )
+    model_file = f"/lustre/rbyrne/simulation_outputs/20250505_123014-123204_{use_freq}MHz_source_sim.uvfits"
 
     # Output filepaths
     output_calfits = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact.calfits"
     calibration_log = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_cal_log.txt"
     calibrated_data_ms = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_calibrated.ms"
     model_ms = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_model.ms"
-    res_ms = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_res.ms"
+    res_ms = (
+        f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_res.ms"
+    )
     calibrated_data_image = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_calibrated"
-    model_image = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_model"
-    res_image = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_res"
+    model_image = (
+        f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_model"
+    )
+    res_image = (
+        f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_res"
+    )
 
     # Read data
     uv = pyuvdata.UVData()
@@ -3533,22 +3537,26 @@ def plot_model_and_res_May2025(use_freq):
     ]
 
     # Input filepaths
-    model_file = (
-        f"/lustre/rbyrne/simulation_outputs/20250505_123014-123204_{use_freq}MHz_source_sim.uvfits"
-    )
+    model_file = f"/lustre/rbyrne/simulation_outputs/20250505_123014-123204_{use_freq}MHz_source_sim.uvfits"
     calibrated_data_ms = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_calibrated.ms"
     model_ms = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_model.ms"
-    res_ms = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_res.ms"
+    res_ms = (
+        f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_res.ms"
+    )
     calibrated_data_image = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_calibrated"
-    model_image = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_model"
-    res_image = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_res"
+    model_image = (
+        f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_model"
+    )
+    res_image = (
+        f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_res"
+    )
 
     # Read data
     uv = pyuvdata.UVData()
     print(f"Reading file {calibrated_data_ms}.")
     uv.read(calibrated_data_ms, data_column="DATA")
     uv.set_uvws_from_antenna_positions(update_vis=False)
-    #uv.data_array = np.conj(uv.data_array)
+    # uv.data_array = np.conj(uv.data_array)
     uv.phase_to_time(np.mean(uv.time_array))
 
     # Read model
@@ -3579,6 +3587,8 @@ def plot_model_and_res_May2025(use_freq):
         model_uv,
         difference=True,
         inplace=True,
+        run_check=False,
+        check_extra=False,
         override_params=[
             "scan_number_array",
             "phase_center_id_array",
@@ -3594,6 +3604,10 @@ def plot_model_and_res_May2025(use_freq):
             "lst_array",
             "phase_center_app_ra",
             "dut1",
+            "earth_omega",
+            "gst0",
+            "rdate",
+            "time_array",
         ],
     )
     if not os.path.isdir(res_ms):
@@ -3607,4 +3621,4 @@ if __name__ == "__main__":
     args = sys.argv
     freq_band = args[1]
     plot_model_and_res_May2025(freq_band)
-    #image_data_Apr2025()
+    # image_data_Apr2025()
