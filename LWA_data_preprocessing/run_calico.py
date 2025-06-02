@@ -3444,6 +3444,7 @@ def calibrate_May2025(use_freq):
         inplace=True,
     )
 
+    # Calibrate
     uvcal = calibration_wrappers.sky_based_calibration_wrapper(
         uv,
         model_uv,
@@ -3464,7 +3465,7 @@ def calibrate_May2025(use_freq):
         clobber=True,
     )
 
-    # Calibrate
+    # Apply calibration
     pyuvdata.utils.uvcalibrate(uv, uvcal, inplace=True, time_check=False)
     if not os.path.isdir(calibrated_data_ms):
         uv.write_ms(calibrated_data_ms, fix_autos=True)
@@ -3483,6 +3484,8 @@ def calibrate_May2025(use_freq):
         model_uv,
         difference=True,
         inplace=True,
+        run_check=False,
+        check_extra=False,
         override_params=[
             "scan_number_array",
             "phase_center_id_array",
@@ -3498,6 +3501,11 @@ def calibrate_May2025(use_freq):
             "lst_array",
             "phase_center_app_ra",
             "dut1",
+            "earth_omega",
+            "gst0",
+            "rdate",
+            "time_array",
+            "timesys",
         ],
     )
     if not os.path.isdir(res_ms):
@@ -3538,8 +3546,11 @@ def plot_model_and_res_May2025(use_freq):
 
     # Input filepaths
     model_file = f"/lustre/rbyrne/simulation_outputs/20250505_123014-123204_{use_freq}MHz_source_sim.uvfits"
-    calibrated_data_ms = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_calibrated.ms"
+    data_file = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz.ms"
     model_ms = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_model.ms"
+    calfits_file = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact.calfits"
+
+    calibrated_data_ms = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_calibrated.ms"
     res_ms = (
         f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_res.ms"
     )
@@ -3553,10 +3564,10 @@ def plot_model_and_res_May2025(use_freq):
 
     # Read data
     uv = pyuvdata.UVData()
-    print(f"Reading file {calibrated_data_ms}.")
-    uv.read(calibrated_data_ms, data_column="DATA")
+    print(f"Reading file {data_file}.")
+    uv.read(data_file, data_column="DATA")
     uv.set_uvws_from_antenna_positions(update_vis=False)
-    # uv.data_array = np.conj(uv.data_array)
+    uv.data_array = np.conj(uv.data_array)
     uv.phase_to_time(np.mean(uv.time_array))
 
     # Read model
@@ -3576,9 +3587,10 @@ def plot_model_and_res_May2025(use_freq):
         inplace=True,
     )
 
-    os.system(
-        f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {model_image} {model_ms}"
-    )
+    uvcal = pyuvdata.UVCal()
+    uvcal.read(calfits_file)
+    pyuvdata.utils.uvcalibrate(uv, uvcal, inplace=True, time_check=False)
+    uv.write_ms(calibrated_data_ms, fix_autos=True, clobber=True)
 
     # Subtract model from data
     uv.filename = [""]
@@ -3608,17 +3620,34 @@ def plot_model_and_res_May2025(use_freq):
             "gst0",
             "rdate",
             "time_array",
+            "timesys",
         ],
     )
     if not os.path.isdir(res_ms):
         uv.write_ms(res_ms, fix_autos=True)
+    os.system(
+        f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {model_image} {model_ms}"
+    )
     os.system(
         f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {res_image} {res_ms}"
     )
 
 
 if __name__ == "__main__":
-    args = sys.argv
-    freq_band = args[1]
-    plot_model_and_res_May2025(freq_band)
+    #args = sys.argv
+    #freq_band = args[1]
+    use_freq_bands = [
+        "41",
+        "46",
+        "50",
+        "55",
+        "59",
+        "64",
+        "69",
+        "73",
+        "78",
+        "82",
+    ]
+    for freq_band in use_freq_bands[1:]:
+        plot_model_and_res_May2025(freq_band)
     # image_data_Apr2025()
