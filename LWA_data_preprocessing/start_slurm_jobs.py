@@ -10,7 +10,7 @@ def extended_source_and_diffuse_sims_Oct2():
     )
     beam = "/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits"
     subbands = ["41", "46", "50", "55", "59", "64", "69", "73", "78", "82"]
-    #use_time_offsets = np.arange(-900, -800)
+    # use_time_offsets = np.arange(-900, -800)
     use_time_offsets = np.arange(-1000, -900)
 
     for time_offset in use_time_offsets:
@@ -159,6 +159,7 @@ def create_ddcal_sims_Nov11():
             f"sbatch /home/rbyrne/rlb_LWA/LWA_data_preprocessing/run_simulation_slurm.sh '{output_cat_name}' '{beam}' '{reference_file}' '{output_file_source_sim}' {time_offset}"
         )
 
+
 def calibrate_Mar2025():
 
     use_freq_bands = [
@@ -178,6 +179,7 @@ def calibrate_Mar2025():
             f"sbatch /opt/devel/rbyrne/rlb_LWA/LWA_data_preprocessing/run_calico_slurm.sh '{freq_band}'"
         )
 
+
 def generate_model_vis_May2025():
     source_skymodel = "/lustre/rbyrne/skymodels/Gasperin2020_sources_plus_64.skyh5"
     diffuse_skymodel = (
@@ -187,7 +189,9 @@ def generate_model_vis_May2025():
     subbands = ["41", "46", "50", "55", "59", "64", "69", "73", "78", "82"]
 
     for use_subband in subbands:
-        reference_file = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_subband}MHz.ms"
+        reference_file = (
+            f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_subband}MHz.ms"
+        )
 
         output_file = f"/lustre/rbyrne/simulation_outputs/20250505_123014-123204_{use_subband}MHz_source_sim.uvfits"
         if os.path.isfile(output_file):

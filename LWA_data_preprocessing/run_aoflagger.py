@@ -65,17 +65,17 @@ if False:
     data1 = flagger.make_image_set(nch, datasets, 8)
     strategy_aa = flagger.load_strategy_file(args.strategy_path)
 
-    def read_datacolumn(msname,datacolumn,startrow):
+    def read_datacolumn(msname, datacolumn, startrow):
         with tbl.table(msname, readonly=True) as t:
-           data = t.getcol(datacolumn,startrow)
+            data = t.getcol(datacolumn, startrow)
         enablePrint()
         return data
 
-    def read_data_from_ms(fulldayrun_path, read_progress,count):
-        #times, ntimes, freqs, nfreqs, uvw, nbls, ant1, ant2, nants = read_metadata(fulldayrun_path)
-        full_data_set = read_datacolumn(fulldayrun_path,'DATA',0)
-        if count%read_progress ==0:
-            print('No:of MS sets read -',count)
+    def read_data_from_ms(fulldayrun_path, read_progress, count):
+        # times, ntimes, freqs, nfreqs, uvw, nbls, ant1, ant2, nants = read_metadata(fulldayrun_path)
+        full_data_set = read_datacolumn(fulldayrun_path, "DATA", 0)
+        if count % read_progress == 0:
+            print("No:of MS sets read -", count)
         return full_data_set
 
     def do_aoflagging(base_list, count):
@@ -89,14 +89,15 @@ if False:
             print("No:of baselines processed by AOFlagger-", count)
         return flags_aa1.get_buffer()
 
-
     for time in range(math.ceil(ndata_chunks)):
 
         print("Reading file")
         if multithreading:
             pool = mp.Pool(processes=args.threads)
             async_res = [
-                pool.apply_async(read_data_from_ms, (fulldayrun_path[i], args.read_prog, i))
+                pool.apply_async(
+                    read_data_from_ms, (fulldayrun_path[i], args.read_prog, i)
+                )
                 for i in range(time * data_chunks, (time + 1) * data_chunks)
             ]
             dataset = np.array([file_o.get() for file_o in async_res])

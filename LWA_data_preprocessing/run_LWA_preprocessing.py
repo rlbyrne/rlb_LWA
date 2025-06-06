@@ -1195,11 +1195,11 @@ def test_ssins_Dec21():
         "LWA365",
         "LWA364",
     ]
-    #LWA_preprocessing.flag_antennas(
+    # LWA_preprocessing.flag_antennas(
     #    uvd,
     #    antenna_names=offline_ants,
     #    inplace=True,
-    #)
+    # )
 
     # Flag with SSINS
     n_unflagged_bls_start = np.size(uvd.flag_array) - np.sum(uvd.flag_array)

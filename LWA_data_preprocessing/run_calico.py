@@ -3634,8 +3634,8 @@ def plot_model_and_res_May2025(use_freq):
 
 
 if __name__ == "__main__":
-    #args = sys.argv
-    #freq_band = args[1]
+    # args = sys.argv
+    # freq_band = args[1]
     use_freq_bands = [
         "41",
         "46",
