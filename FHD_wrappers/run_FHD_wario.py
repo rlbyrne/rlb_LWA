@@ -4,21 +4,21 @@ import os
 
 obsids_list = [
     "density1.5_gleam",
-    "density1.5_gsm08",
-    "density1.75_gleam",
-    "density1.75_gsm08",
-    "density2.0_gleam",
-    "density2.0_gsm08",
-    "density3.0_gleam",
-    "density3.0_gsm08",
-    "hexa_gleam",
-    "hexa_gsm08",
-    "pos_error1e-3_gleam",
-    "pos_error1e-3_gsm08",
-    "random_gleam",
-    "random_gsm08",
+    #"density1.5_gsm08",
+    #"density1.75_gleam",
+    #"density1.75_gsm08",
+    #"density2.0_gleam",
+    #"density2.0_gsm08",
+    #"density3.0_gleam",
+    #"density3.0_gsm08",
+    #"hexa_gleam",
+    #"hexa_gsm08",
+    #"pos_error1e-3_gleam",
+    #"pos_error1e-3_gsm08",
+    #"random_gleam",
+    #"random_gsm08",
 ]
-versions_list = ["rlb_vincent_sims_Mar2025"]
+versions_list = ["rlb_vincent_sims_Mar2025_2"]
 uvfits_path = "/safepool/rbyrne/vincent_sims"
 outdir = "/safepool/rbyrne/vincent_sims"
 run_fhd = True
@@ -32,7 +32,7 @@ eppsilon_script = "ps_single_obs_wrapper"
 refresh_ps = 1
 uvf_input = 1
 no_evenodd = 1  # Use this option if only one time step is present
-xx_only = 0
+xx_only = 1
 
 for version in versions_list:
     # Create directories

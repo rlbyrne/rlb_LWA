@@ -1037,10 +1037,10 @@ pro fhd_versions_wario
       save_uvf = 1
     end
 
-    'rlb_vincent_sims_Mar2025': begin
+    'rlb_vincent_sims_Mar2025_2': begin
       recalculate_all = 1
       instrument = 'lwa'
-      import_pyuvdata_beam_filepath = '/safepool/rbyrne/vincent_sims/beam_airy10_wideband.fits'
+      import_pyuvdata_beam_filepath = '/safepool/rbyrne/vincent_sims/airy_efield_10m.fits'
       calibrate_visibilities = 0
       return_cal_visibilities = 0
       model_visibilities = 0
