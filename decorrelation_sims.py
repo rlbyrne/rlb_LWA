@@ -3,9 +3,18 @@ import pyuvdata
 import pyradiosky
 import astropy
 import numpy as np
+import os
+from astropy.units import Quantity
 
 uv = pyuvdata.UVData()
-uv.read("/lustre/rbyrne/2025-06-13/20250613_070132_55MHz.ms")  # Choose an arbitrary data file for reference
+uv.read("/lustre/cosmopipe/2025-06-13/20250613_070132_55MHz.ms")  # Choose an arbitrary data file for reference
+
+# Set antenna positions
+antpos = np.zeros_like(uv.telescope.antenna_positions)
+antpos[1, 0] = 3000  # Baseline length
+antpos_ecef = pyuvdata.utils.ECEF_from_ENU(antpos, center_loc=uv.telescope.location)
+telescope_ecef_xyz = Quantity(uv.telescope.location.geocentric).to_value("m")
+uv.telescope.antenna_positions  = antpos_ecef - telescope_ecef_xyz
 
 freq_hz = 50e6
 channel_width = 2e3
@@ -41,8 +50,9 @@ uv.scan_number_array = None
 uv.uvw_array = np.zeros((uv.Nblts, 3), dtype=float)
 uv.phase_to_time(np.mean(uv.time_array))
 # Redefine uvws after phasing
-uv.uvw_array = np.zeros((uv.Nblts, 3), dtype=float)
-uv.uvw_array[:, 0] = 3e3
+uv.set_uvws_from_antenna_positions()
+#uv.uvw_array = np.zeros((uv.Nblts, 3), dtype=float)
+#uv.uvw_array[:, 0] = 3e3
 
 beam = pyuvdata.UVBeam()
 beam.read("/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits")
@@ -67,6 +77,9 @@ for ind in range(len(ra_offset_vals_flattened)):
     source_coords.append(new_coords)
 
 for ind in range(len(ra_offset_vals_flattened)):
+    output_filename = f"/lustre/rbyrne/decorr_sims/source{ind+1:03d}.uvfits"
+    if os.path.isfile(output_filename):
+        continue
     cat = pyradiosky.SkyModel(
         skycoord = source_coords[ind],
         name = ["source1"],
