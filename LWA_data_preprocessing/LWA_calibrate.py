@@ -4,13 +4,27 @@ import ast
 import sys
 import numpy as np
 import pyuvdata
+import datetime
+import LWA_preprocessing
 from generate_model_vis_fftvis import run_fftvis_sim
 
 
-def concatenate_and_flag_files(use_files_full_paths, output_filename):
-    os.system(
-        f"python concatenate_ms_files.py {use_files_full_paths} {output_filename}"
-    )
+def concatenate_and_flag_files(
+    use_files_full_paths,
+    output_filename,
+    script_path="/opt/devel/rbyrne/rlb_LWA/LWA_data_preprocessing/concatenate_ms_files.py",
+):
+    
+    if isinstance(use_files_full_paths, str):  # Flag only
+        output_filename = use_files_full_paths
+        os.system(f"aoflagger {output_filename}")
+    elif len(use_files_full_paths) == 1:  # Flag only
+        output_filename = use_files_full_paths[0]
+        os.system(f"aoflagger {output_filename}")
+    else:
+        os.system(
+            f"python {script_path} {use_files_full_paths} {output_filename}"
+        )
 
 
 def get_bad_antenna_list(
@@ -39,10 +53,9 @@ def get_bad_antenna_list(
 
 def get_model_visibilities(
     model_visilibility_mode=None,
-    model_file=None,
-    output_model_filepath=None,
+    model_vis_file=None,
     include_diffuse=False,
-    lst_lookup_table="/lustre/rbyrne/simulation_outputs/lst_lookup_table.csv",
+    lst_lookup_table="/lustre/21cmpipe/simulation_outputs/lst_lookup_table.csv",
     freq_band=None,
     data_file=None,
     lst_array=None,
@@ -54,11 +67,10 @@ def get_model_visibilities(
     """
     model_visilibility_mode : str
         Options: "read file", "LST interpolate", or "run simulation".
-    model_file : str
-        Required and used only if model_visilibility_mode is "read file".
-    output_model_filepath : str
-        Required and used only if model_visilibility_mode is "LST interpolate"
-        or "run simulation". Path to an output ms file. Model visibilities will
+    model_vis_file : str
+        If model_visilibility_mode is "read file", path to the saved model visibility
+        file in a pyuvdata-readable format. If model_visilibility_mode is "LST interpolate"
+        or "run simulation", path to an output ms file. Model visibilities will
         be written to this file.
     include_diffuse : bool
         Used only if model_visilibility_mode is "LST interpolate" or "run simulation".
@@ -87,16 +99,19 @@ def get_model_visibilities(
     """
 
     if model_visilibility_mode == "read file":
-        model = pyuvdata.UVData()
-        model.read(model_file)
+        if not os.path.isdir(model_vis_file) and not os.path.isfile(model_vis_file):
+            print(
+                f"ERROR: File {model_vis_file} not found. Exiting."
+            )
+            sys.exit(1)
 
     elif model_visilibility_mode == "LST interpolate":
-        if os.path.isdir(output_model_filepath):
-            print(f"ERROR: File {output_model_filepath} exits. Exiting.")
+        if os.path.isdir(model_vis_file):
+            print(f"ERROR: File {model_vis_file} exits. Exiting.")
             sys.exit(1)
-        if not os.path.isdir(os.path.dirname(output_model_filepath)):
+        if not os.path.isdir(os.path.dirname(model_vis_file)):
             print(
-                f"ERROR: Directory {os.path.dirname(output_model_filepath)} not found. Exiting."
+                f"ERROR: Directory {os.path.dirname(model_vis_file)} not found. Exiting."
             )
             sys.exit(1)
 
@@ -216,19 +231,19 @@ def get_model_visibilities(
             for model_uv_use in model_uv_list[1:]:
                 combined_model_uv.fast_concat(model_uv_use, "blt", inplace=True)
 
-        print(f"Saving model file to {output_model_filepath}.")
-        combined_model_uv.write_ms(output_model_filepath, force_phase=True)
+        print(f"Saving model file to {model_vis_file}.")
+        combined_model_uv.write_ms(model_vis_file, force_phase=True)
 
     elif model_visilibility_mode == "run simulation":
         if include_diffuse:
             compact_source_output_filepath = (
-                f"{output_model_filepath.removesuffix('.ms')}compact.ms"
+                f"{model_vis_file.removesuffix('.ms')}compact.ms"
             )
             diffuse_output_filepath = (
-                f"{output_model_filepath.removesuffix('.ms')}diffuse.ms"
+                f"{model_vis_file.removesuffix('.ms')}diffuse.ms"
             )
         else:
-            compact_source_output_filepath = output_model_filepath
+            compact_source_output_filepath = model_vis_file
         run_fftvis_sim(
             map_path=skymodel_path,
             beam_path=beam_path,
@@ -250,8 +265,8 @@ def get_model_visibilities(
             compact_sim.read(compact_source_output_filepath)
             diffuse_sim.read(diffuse_output_filepath)
             compact_sim.sum_vis(diffuse_sim, inplace=True)
-            compact_sim.write_ms(output_model_filepath, clobber=True, fix_autos=True)
-            if os.path.isdir(output_model_filepath):  # Confirm write was successful
+            compact_sim.write_ms(model_vis_file, clobber=True, fix_autos=True)
+            if os.path.isdir(model_vis_file):  # Confirm write was successful
                 # Delete intermediate data products
                 os.system(f"rm {compact_source_output_filepath}")
                 os.system(f"rm {diffuse_output_filepath}")
@@ -264,3 +279,211 @@ def get_model_visibilities(
             f'Options are "read file", "LST interpolate", or "run simulation". Exiting.'
         )
         sys.exit(1)
+
+def calibration_pipeline(
+    freq_band = "41",
+    start_time = datetime.datetime(2025, 5, 5, 12, 56, 9),
+    beam_path="/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits",
+    skymodel_path=skymodel,
+):
+
+    # Used to offset start time in 2 minute increments
+    delta_time = datetime.timedelta(minutes=2)
+    time_step = 0
+
+    use_start_time = start_time + time_step * delta_time
+    end_time = start_time + (time_step + 1) * delta_time
+    min_time_str = use_start_time.strftime("%H%M%S")
+    max_time_str = end_time.strftime("%H%M%S")
+    year = use_start_time.strftime("%Y")
+    month = use_start_time.strftime("%m")
+    day = use_start_time.strftime("%d")
+    hour = use_start_time.strftime("%H")
+
+    bad_ant_list = get_bad_antenna_list(year, month, day)
+
+    datadir = (
+        f"/lustre/pipeline/calibration/{freq_band}MHz/{year}-{month}-{day}/{hour}"
+    )
+    output_dir = f"/lustre/21cmpipe/{year}-{month}-{day}"
+
+    if not os.path.isdir(
+        output_dir
+    ):  # Make target directory if it does not exist
+        os.mkdir(output_dir)
+
+    all_files = os.listdir(datadir)
+    use_files = [
+        filename
+        for filename in all_files
+        if filename.startswith(f"{year}{month}{day}")
+        and filename.endswith(".ms")
+    ]
+    use_files = [
+        filename
+        for filename in use_files
+        if (int(filename.split("_")[1]) >= int(min_time_str))
+        and int(filename.split("_")[1]) < int(max_time_str)
+    ]
+    if len(use_files) != 12:
+        print("ERROR: Number of files found is not 12.")
+        sys.exit(1)
+    use_files.sort()
+
+    # Define output filenames
+    output_file_prefix = f"{year}{month}{day}_{use_files[0].split('_')[1]}-{use_files[-1].split('_')[1]}_{freq_band}MHz"
+    concatenated_filename = f"{output_file_prefix}.ms"
+    model_filename = f"{output_file_prefix}_source_sim.uvfits"
+    calfits_filename = f"{output_file_prefix}.calfits"
+    calibration_log = f"{output_file_prefix}_cal_log.txt"
+    calibrated_data_ms = f"{output_file_prefix}_calibrated.ms"
+    model_ms = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_model.ms"
+    res_ms = (
+        f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_res.ms"
+    )
+    calibrated_data_image = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_calibrated"
+    model_image = (
+        f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_model"
+    )
+    res_image = (
+        f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_res"
+    )
+
+    if not os.path.isdir(f"{output_dir}/{concatenated_filename}"):
+        # Copy files
+        for filename in use_files:
+            if not os.path.isfile(f"{output_dir}/{filename}"):
+                print(f"Copying file {filename}")
+                os.system(
+                    f"cp -r {datadir}/{filename} {output_dir}/{filename}"
+                )
+        use_files_full_paths = [
+            f"{output_dir}/{filename}" for filename in use_files
+        ]
+
+    print("Concatenating files.")
+    concatenate_and_flag_files(use_files_full_paths, f"{output_dir}/{concatenated_filename}")
+
+    get_model_visibilities(
+        model_visilibility_mode="run simulation",
+        model_vis_file=f"{output_dir}/{model_filename}",
+        include_diffuse=False,
+        data_file=f"{output_dir}/{concatenated_filename}",
+        skymodel_path=skymodel_path,
+        beam_path=beam_path,
+    )
+
+    # Read data
+    uv = pyuvdata.UVData()
+    print(f"Reading file {output_dir}/{concatenated_filename}.")
+    uv.read(f"{output_dir}/{concatenated_filename}", data_column="DATA")
+    uv.set_uvws_from_antenna_positions(update_vis=False)
+    uv.data_array = np.conj(uv.data_array)  # Required to match pyuvdata conventions
+    uv.phase_to_time(np.mean(uv.time_array))
+
+    # Read model
+    model_uv = pyuvdata.UVData()
+    print(f"Reading file {output_dir}/{model_filename}.")
+    model_uv.read(f"{output_dir}/{model_filename}", data_column="DATA")
+    model_uv.set_uvws_from_antenna_positions(update_vis=False)
+    model_uv.phase_to_time(np.mean(uv.time_array))
+
+    # Flag antennas
+    LWA_preprocessing.flag_antennas(
+        uv,
+        antenna_names=bad_ant_list,
+        flag_pol="all",  # Options are "all", "X", "Y", "XX", "YY", "XY", or "YX"
+        inplace=True,
+    )
+
+    # Input filepaths
+    data_file = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz.ms"
+    model_file = f"/lustre/rbyrne/simulation_outputs/20250505_123014-123204_{use_freq}MHz_source_sim.uvfits"
+
+    # Output filepaths
+    output_calfits = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact.calfits"
+    calibration_log = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_cal_log.txt"
+    calibrated_data_ms = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_calibrated.ms"
+    model_ms = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_model.ms"
+    res_ms = (
+        f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_res.ms"
+    )
+    calibrated_data_image = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_calibrated"
+    model_image = (
+        f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_model"
+    )
+    res_image = (
+        f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_res"
+    )
+
+    
+
+    # Calibrate
+    uvcal = calibration_wrappers.sky_based_calibration_wrapper(
+        uv,
+        model_uv,
+        min_cal_baseline_lambda=10,
+        max_cal_baseline_lambda=125,
+        gains_multiply_model=True,
+        verbose=True,
+        get_crosspol_phase=False,
+        log_file_path=calibration_log,
+        xtol=1e-6,
+        maxiter=200,
+        antenna_flagging_iterations=0,
+        parallel=False,
+        lambda_val=1,
+    )
+    uvcal.write_calfits(
+        output_calfits,
+        clobber=True,
+    )
+
+    # Apply calibration
+    pyuvdata.utils.uvcalibrate(uv, uvcal, inplace=True, time_check=False)
+    if not os.path.isdir(calibrated_data_ms):
+        uv.write_ms(calibrated_data_ms, fix_autos=True)
+    # Image calibrated data
+    os.system(
+        f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {calibrated_data_image} {calibrated_data_ms}"
+    )
+    os.system(
+        f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {model_image} {model_ms}"
+    )
+
+    # Subtract model from data
+    uv.filename = [""]
+    model_uv.filename = [""]
+    uv.sum_vis(
+        model_uv,
+        difference=True,
+        inplace=True,
+        run_check=False,
+        check_extra=False,
+        override_params=[
+            "scan_number_array",
+            "phase_center_id_array",
+            "telescope",
+            "phase_center_catalog",
+            "filename",
+            "phase_center_app_dec",
+            "nsample_array",
+            "integration_time",
+            "phase_center_frame_pa",
+            "flag_array",
+            "uvw_array",
+            "lst_array",
+            "phase_center_app_ra",
+            "dut1",
+            "earth_omega",
+            "gst0",
+            "rdate",
+            "time_array",
+            "timesys",
+        ],
+    )
+    if not os.path.isdir(res_ms):
+        uv.write_ms(res_ms, fix_autos=True)
+    os.system(
+        f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {res_image} {res_ms}"
+    )
