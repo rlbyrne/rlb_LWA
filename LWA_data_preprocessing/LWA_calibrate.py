@@ -7,6 +7,7 @@ import pyuvdata
 import datetime
 import LWA_preprocessing
 from generate_model_vis_fftvis import run_fftvis_sim
+from calico import calibration_wrappers
 
 
 def concatenate_and_flag_files(
@@ -337,17 +338,10 @@ def calibration_pipeline(
     calfits_filename = f"{output_file_prefix}.calfits"
     calibration_log = f"{output_file_prefix}_cal_log.txt"
     calibrated_data_ms = f"{output_file_prefix}_calibrated.ms"
-    model_ms = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_model.ms"
-    res_ms = (
-        f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_res.ms"
-    )
-    calibrated_data_image = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_calibrated"
-    model_image = (
-        f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_model"
-    )
-    res_image = (
-        f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_res"
-    )
+    res_ms = f"{output_file_prefix}_res.ms"
+    calibrated_data_image = f"{output_file_prefix}_calibrated"
+    model_image = f"{output_file_prefix}_model"
+    res_image = f"{output_file_prefix}_res"
 
     if not os.path.isdir(f"{output_dir}/{concatenated_filename}"):
         # Copy files
@@ -395,28 +389,6 @@ def calibration_pipeline(
         flag_pol="all",  # Options are "all", "X", "Y", "XX", "YY", "XY", or "YX"
         inplace=True,
     )
-
-    # Input filepaths
-    data_file = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz.ms"
-    model_file = f"/lustre/rbyrne/simulation_outputs/20250505_123014-123204_{use_freq}MHz_source_sim.uvfits"
-
-    # Output filepaths
-    output_calfits = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact.calfits"
-    calibration_log = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_cal_log.txt"
-    calibrated_data_ms = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_calibrated.ms"
-    model_ms = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_model.ms"
-    res_ms = (
-        f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_res.ms"
-    )
-    calibrated_data_image = f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_calibrated"
-    model_image = (
-        f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_model"
-    )
-    res_image = (
-        f"/lustre/rbyrne/2025-05-05/20250505_123014-123204_{use_freq}MHz_compact_res"
-    )
-
-    
 
     # Calibrate
     uvcal = calibration_wrappers.sky_based_calibration_wrapper(
