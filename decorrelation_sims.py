@@ -7,7 +7,8 @@ import os
 from astropy.units import Quantity
 
 uv = pyuvdata.UVData()
-uv.read("/lustre/cosmopipe/2025-06-13/20250613_070132_55MHz.ms")  # Choose an arbitrary data file for reference
+#uv.read("/lustre/cosmopipe/2025-06-13/20250613_070132_55MHz.ms")  # Choose an arbitrary data file for reference
+uv.read("/lustre/pipeline/slow/73MHz/2025-07-14/19/20250714_192958_73MHz.ms")
 
 # Set antenna positions
 antpos = np.zeros_like(uv.telescope.antenna_positions)
@@ -63,21 +64,30 @@ use_freq_ind = np.where(beam.freq_array == beam_use_freq)[0]
 beam.data_array[:, :, :, :, :] = beam.data_array[:, :, use_freq_ind, :, :]  # Make the beam frequency-invariant
 beam_list = pyuvsim.BeamList(beam_list=[beam])
 
-ra_offset_vals_deg = np.linspace(-60, 60, num=11)
-dec_offset_vals_deg = np.linspace(-52, 52, num=11)
-ra_vals_expanded, dec_vals_expanded = np.meshgrid(ra_offset_vals_deg, dec_offset_vals_deg)
-ra_offset_vals_flattened = ra_vals_expanded.flatten()
-dec_offset_vals_flattened = dec_vals_expanded.flatten()
+use_azimuths = np.arange(0, 180, 45)
+use_zas = np.arange(0, 90, 15)
+azimuths, zenith_angles = np.meshgrid(use_azimuths, use_zas)
+azimuths = azimuths.flatten()
+zenith_angles = zenith_angles.flatten()
+ras = np.mean(uv.lst_array) - np.arctan2(
+    np.sin(uv.telescope.location.lat.rad) * np.sin(np.deg2rad(zenith_angles)) * np.sin(np.deg2rad(azimuths))
+    - np.cos(uv.telescope.location.lat.rad) * np.cos(np.deg2rad(zenith_angles)),
+    np.sin(np.deg2rad(zenith_angles)) * np.cos(np.deg2rad(azimuths))
+) - np.pi/2
+decs = np.pi/2 - np.arccos(
+    np.cos(uv.telescope.location.lat.rad) * np.sin(np.deg2rad(zenith_angles)) * np.sin(np.deg2rad(azimuths))
+    + np.sin(uv.telescope.location.lat.rad) * np.cos(np.deg2rad(zenith_angles))
+)
 source_coords = []
-for ind in range(len(ra_offset_vals_flattened)):
+for ind in range(len(ras)):
     new_coords = astropy.coordinates.SkyCoord([astropy.coordinates.ICRS(
-        ra=np.mean(uv.lst_array)*astropy.units.rad + ra_offset_vals_flattened[ind]*astropy.units.deg, 
-        dec=uv.telescope.location.lat + dec_offset_vals_flattened[ind]*astropy.units.deg
+        ra=ras[ind]*astropy.units.rad, 
+        dec=decs[ind]*astropy.units.rad
     )])
     source_coords.append(new_coords)
 
-for ind in range(len(ra_offset_vals_flattened)):
-    output_filename = f"/lustre/rbyrne/decorr_sims/source{ind+1:03d}.uvfits"
+for ind in range(len(ras)):
+    output_filename = f"/lustre/rbyrne/decorr_sims/source_sim_za{int(zenith_angles[ind])}_az{int(azimuths[ind])}.uvfits"
     if os.path.isfile(output_filename):
         continue
     cat = pyradiosky.SkyModel(
@@ -96,4 +106,4 @@ for ind in range(len(ra_offset_vals_flattened)):
         quiet=False,
     )
     output_uv.phase_to_time(np.mean(output_uv.time_array))
-    output_uv.write_uvfits(f"/lustre/rbyrne/decorr_sims/source{ind+1:03d}.uvfits")
+    output_uv.write_uvfits(output_filename)
