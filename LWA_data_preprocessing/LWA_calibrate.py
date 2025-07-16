@@ -233,9 +233,21 @@ def get_model_visibilities(
                 combined_model_uv.fast_concat(model_uv_use, "blt", inplace=True)
 
         print(f"Saving model file to {model_vis_file}.")
-        combined_model_uv.write_ms(model_vis_file, force_phase=True)
+        if model_vis_file.endswith(".ms"):
+            combined_model_uv.write_ms(model_vis_file, force_phase=True, fix_autos=True)
+        else:
+            combined_model_uv.write_uvfits(model_vis_file, force_phase=True, fix_autos=True)
 
     elif model_visilibility_mode == "run simulation":
+        if os.path.isdir(model_vis_file):
+            print(f"ERROR: File {model_vis_file} exits. Exiting.")
+            sys.exit(1)
+        if not os.path.isdir(os.path.dirname(model_vis_file)):
+            print(
+                f"ERROR: Directory {os.path.dirname(model_vis_file)} not found. Exiting."
+            )
+            sys.exit(1)
+
         if include_diffuse:
             compact_source_output_filepath = (
                 f"{model_vis_file.removesuffix('.ms')}compact.ms"
@@ -267,6 +279,10 @@ def get_model_visibilities(
             diffuse_sim.read(diffuse_output_filepath)
             compact_sim.sum_vis(diffuse_sim, inplace=True)
             compact_sim.write_ms(model_vis_file, clobber=True, fix_autos=True)
+            if model_vis_file.endswith(".ms"):
+                compact_sim.write_ms(model_vis_file, force_phase=True, fix_autos=True)
+            else:
+                compact_sim.write_uvfits(model_vis_file, force_phase=True, fix_autos=True)
             if os.path.isdir(model_vis_file):  # Confirm write was successful
                 # Delete intermediate data products
                 os.system(f"rm {compact_source_output_filepath}")
@@ -285,7 +301,7 @@ def calibration_pipeline(
     freq_band = "41",
     start_time = datetime.datetime(2025, 5, 5, 12, 56, 9),
     beam_path="/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits",
-    skymodel_path=skymodel,
+    skymodel_path="/lustre/rbyrne/skymodels/Gregg_20250519_source_models.skyh5",
 ):
 
     # Used to offset start time in 2 minute increments
@@ -334,7 +350,7 @@ def calibration_pipeline(
     # Define output filenames
     output_file_prefix = f"{year}{month}{day}_{use_files[0].split('_')[1]}-{use_files[-1].split('_')[1]}_{freq_band}MHz"
     concatenated_filename = f"{output_file_prefix}.ms"
-    model_filename = f"{output_file_prefix}_source_sim.uvfits"
+    model_filename = f"{output_file_prefix}_source_sim.ms"
     calfits_filename = f"{output_file_prefix}.calfits"
     calibration_log = f"{output_file_prefix}_cal_log.txt"
     calibrated_data_ms = f"{output_file_prefix}_calibrated.ms"
@@ -406,10 +422,7 @@ def calibration_pipeline(
         parallel=False,
         lambda_val=1,
     )
-    uvcal.write_calfits(
-        output_calfits,
-        clobber=True,
-    )
+    uvcal.write_calfits(calfits_filename, clobber=True)
 
     # Apply calibration
     pyuvdata.utils.uvcalibrate(uv, uvcal, inplace=True, time_check=False)
@@ -420,7 +433,7 @@ def calibration_pipeline(
         f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {calibrated_data_image} {calibrated_data_ms}"
     )
     os.system(
-        f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {model_image} {model_ms}"
+        f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {model_image} {model_filename}"
     )
 
     # Subtract model from data
@@ -459,3 +472,6 @@ def calibration_pipeline(
     os.system(
         f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {res_image} {res_ms}"
     )
+
+if __name__=="__main__":
+    calibration_pipeline()
