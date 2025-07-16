@@ -2,6 +2,7 @@ import numpy as np
 import healpy as hp
 import pyuvdata
 import pyradiosky
+import pandas as pd
 import sys
 import astropy.units as units
 from astropy.units import Quantity
@@ -414,36 +415,84 @@ def create_point_source_catalog(
     return output_catalog
 
 
+def create_catalog_from_Gregg_source_fluxes(
+    freq_array,
+    flux_csv="/lustre/rbyrne/20250519_LST_232293p96_model_summary_intrinsic_only.csv",
+):
+
+    deGasperin_sources = create_deGasperin_catalog(np.mean(freq_array))
+    point_source_catalog = create_point_source_catalog(deGasperin_sources)
+    keep_comp_inds = [
+        ind
+        for ind in range(point_source_catalog.Ncomponents)
+        if point_source_catalog.name[ind] in ["Cas", "Cyg", "Vir"]
+    ]
+    point_source_catalog.select(component_inds=keep_comp_inds)
+    point_source_catalog.spectral_type = "full"
+    point_source_catalog.Nfreqs = len(freq_array)
+    point_source_catalog.freq_array = freq_array
+    point_source_catalog.stokes = np.zeros(
+        (4, point_source_catalog.Nfreqs, point_source_catalog.Ncomponents), dtype=float
+    )
+
+    csv_data = pd.read_csv(
+        "/Users/ruby/Astro/20250519_LST_232293p96_model_summary_intrinsic_only.csv"
+    )
+    frequencies_orig = csv_data["# Frequency_Hz"]
+    for source_ind in range(point_source_catalog.Ncomponents):
+        use_key = [
+            key
+            for key in csv_data.keys()
+            if key.startswith(point_source_catalog.name[source_ind])
+        ][0]
+        flux_vals = csv_data[use_key]
+        polyfit_vals = np.polyfit(frequencies_orig, flux_vals, 20)
+        smoothed_vals = np.polyval(
+            polyfit_vals,
+            freq_array,
+        )
+        point_source_catalog.stokes[0, :, source_ind] = smoothed_vals
+    point_source_catalog.check()
+    return point_source_catalog
+
+
 if __name__ == "__main__":
 
-    for file_name in [
-        "18",
-        "23",
-        "27",
-        "36",
-        "41",
-        "46",
-        "50",
-        "55",
-        "59",
-        "64",
-        "73",
-        "78",
-        "82",
-    ]:
+    if False:
+        for file_name in [
+            "18",
+            "23",
+            "27",
+            "36",
+            "41",
+            "46",
+            "50",
+            "55",
+            "59",
+            "64",
+            "73",
+            "78",
+            "82",
+        ]:
 
-        input_file = f"/lustre/gh/2024-03-02/calibration/ruby/{file_name}.ms"
-        uv = pyuvdata.UVData()
-        uv.read(input_file)
-        use_freq = np.mean(uv.freq_array)
-        print(use_freq / 1e6)
-        catalog = create_combined_catalog(use_freq)
-        catalog.write_skyh5(
-            f"/fast/rbyrne/skymodels/Gasperin2020_sources_plus_{file_name}.skyh5",
-            clobber=True,
-        )
-        point_source_catalog = create_point_source_catalog(catalog)
-        point_source_catalog.write_skyh5(
-            f"/fast/rbyrne/skymodels/Gasperin2020_point_sources_plus_{file_name}.skyh5",
-            clobber=True,
-        )
+            input_file = f"/lustre/gh/2024-03-02/calibration/ruby/{file_name}.ms"
+            uv = pyuvdata.UVData()
+            uv.read(input_file)
+            use_freq = np.mean(uv.freq_array)
+            print(use_freq / 1e6)
+            catalog = create_combined_catalog(use_freq)
+            catalog.write_skyh5(
+                f"/fast/rbyrne/skymodels/Gasperin2020_sources_plus_{file_name}.skyh5",
+                clobber=True,
+            )
+            point_source_catalog = create_point_source_catalog(catalog)
+            point_source_catalog.write_skyh5(
+                f"/fast/rbyrne/skymodels/Gasperin2020_point_sources_plus_{file_name}.skyh5",
+                clobber=True,
+            )
+    freq_array = np.arange(87e6, 23925.78125)
+    freq_array = freq_array[np.where(freq_array > 13e6)]
+    cat = create_catalog_from_Gregg_source_fluxes(
+        freq_array,
+    )
+    cat.write_skyh5("/lustre/rbyrne/skymodels/Gregg_20250519_source_models.skyh5")
