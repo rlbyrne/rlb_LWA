@@ -65,7 +65,7 @@ beam.data_array[:, :, :, :, :] = beam.data_array[:, :, use_freq_ind, :, :]  # Ma
 beam_list = pyuvsim.BeamList(beam_list=[beam])
 
 use_azimuths = np.arange(0, 180, 45)
-use_zas = np.arange(0, 90, 15)
+use_zas = np.arange(15, 90, 15)
 azimuths, zenith_angles = np.meshgrid(use_azimuths, use_zas)
 azimuths = azimuths.flatten()
 zenith_angles = zenith_angles.flatten()
