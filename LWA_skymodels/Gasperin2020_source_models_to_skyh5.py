@@ -235,7 +235,7 @@ def concatenate_catalogs(catalog_list):
     return catalog
 
 
-def create_deGasperin_catalog(use_freq, source_file_dir="/fast/rbyrne/skymodels"):
+def create_deGasperin_catalog(use_freq, source_file_dir="/lustre/rbyrne/skymodels"):
 
     cas_cat = convert_wsclean_txt_models_to_pyradiosky(
         f"{source_file_dir}/Cas-sources.txt",
@@ -425,25 +425,35 @@ def create_catalog_from_Gregg_source_fluxes(
     keep_comp_inds = [
         ind
         for ind in range(point_source_catalog.Ncomponents)
-        if point_source_catalog.name[ind] in ["Cas", "Cyg", "Vir"]
+        if point_source_catalog.name[ind][:3] in ["Cas", "Cyg", "Vir"]
     ]
     point_source_catalog.select(component_inds=keep_comp_inds)
     point_source_catalog.spectral_type = "full"
     point_source_catalog.Nfreqs = len(freq_array)
     point_source_catalog.freq_array = freq_array
+    point_source_catalog.reference_frequency = None
     point_source_catalog.stokes = np.zeros(
         (4, point_source_catalog.Nfreqs, point_source_catalog.Ncomponents), dtype=float
     )
-
-    csv_data = pd.read_csv(
-        "/Users/ruby/Astro/20250519_LST_232293p96_model_summary_intrinsic_only.csv"
+    point_source_catalog = pyradiosky.SkyModel(
+        name=point_source_catalog.name,
+        ra=point_source_catalog.ra,
+        dec=point_source_catalog.dec,
+        stokes=Quantity(np.zeros(
+            (4, len(freq_array), point_source_catalog.Ncomponents), dtype=float), "Jy"
+        ),
+        spectral_type="full",
+        freq_array=Quantity(freq_array, "hertz"),
+        frame="icrs",
     )
+
+    csv_data = pd.read_csv(flux_csv)
     frequencies_orig = csv_data["# Frequency_Hz"]
     for source_ind in range(point_source_catalog.Ncomponents):
         use_key = [
             key
             for key in csv_data.keys()
-            if key.startswith(point_source_catalog.name[source_ind])
+            if key.startswith(point_source_catalog.name[source_ind][:3])
         ][0]
         flux_vals = csv_data[use_key]
         polyfit_vals = np.polyfit(frequencies_orig, flux_vals, 20)
@@ -451,7 +461,7 @@ def create_catalog_from_Gregg_source_fluxes(
             polyfit_vals,
             freq_array,
         )
-        point_source_catalog.stokes[0, :, source_ind] = smoothed_vals
+        point_source_catalog.stokes[0, :, source_ind] = Quantity(smoothed_vals, "Jy")
     point_source_catalog.check()
     return point_source_catalog
 
@@ -495,4 +505,4 @@ if __name__ == "__main__":
     cat = create_catalog_from_Gregg_source_fluxes(
         freq_array,
     )
-    cat.write_skyh5("/lustre/rbyrne/skymodels/Gregg_20250519_source_models.skyh5")
+    cat.write_skyh5("/lustre/rbyrne/skymodels/Gregg_20250519_source_models.skyh5", clobber=True)
