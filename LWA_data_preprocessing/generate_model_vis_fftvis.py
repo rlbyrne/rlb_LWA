@@ -53,7 +53,6 @@ def run_fftvis_sim(
     uvd = pyuvdata.UVData.from_file(
         input_data_path,
         read_data=False,
-        use_future_array_shapes=True,
         file_type=file_type,
         ignore_single_chan=False,
     )

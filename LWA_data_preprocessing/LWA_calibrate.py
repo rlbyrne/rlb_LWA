@@ -23,8 +23,11 @@ def concatenate_and_flag_files(
         output_filename = use_files_full_paths[0]
         os.system(f"aoflagger {output_filename}")
     else:
+        file_list_str = ""
+        for filename in use_files_full_paths:
+            file_list_str += f"{filename} "
         os.system(
-            f"python {script_path} {use_files_full_paths} {output_filename}"
+            f"python {script_path} --path_in {file_list_str} --path_out {output_filename}"
         )
 
 
@@ -32,13 +35,12 @@ def get_bad_antenna_list(
     year,
     month,
     day,
-    conda_env="deployment",
+    conda_env="/opt/devel/pipeline/envs/deployment",
     script_path="/opt/devel/rbyrne/rlb_LWA/LWA_data_preprocessing/get_bad_ants.py",
 ):
 
-    result = subprocess.getoutput(
-        f"conda run -n {conda_env} python {script_path} {year} {month} {day}"
-    )
+    call_str = f"conda run --prefix {conda_env} python {script_path} {year} {month} {day}"
+    result = subprocess.getoutput(call_str)
     result = result.split("\n")
     result = [line for line in result if line.startswith("get_bandants output:")][0]
     result = result.split("get_bandants output:")[1].strip()
@@ -299,12 +301,12 @@ def get_model_visibilities(
 
 def calibration_pipeline(
     freq_band = "41",
-    start_time = datetime.datetime(2025, 5, 5, 12, 56, 9),
+    start_time = datetime.datetime(2025, 5, 8, 16, 7, 36),
     beam_path="/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits",
     skymodel_path="/lustre/rbyrne/skymodels/Gregg_20250519_source_models.skyh5",
 ):
 
-    # Used to offset start time in 2 minute increments
+    # Use to offset start time in 2 minute increments
     delta_time = datetime.timedelta(minutes=2)
     time_step = 0
 
@@ -362,7 +364,7 @@ def calibration_pipeline(
     if not os.path.isdir(f"{output_dir}/{concatenated_filename}"):
         # Copy files
         for filename in use_files:
-            if not os.path.isfile(f"{output_dir}/{filename}"):
+            if not os.path.isdir(f"{output_dir}/{filename}"):
                 print(f"Copying file {filename}")
                 os.system(
                     f"cp -r {datadir}/{filename} {output_dir}/{filename}"
@@ -373,6 +375,9 @@ def calibration_pipeline(
 
     print("Concatenating files.")
     concatenate_and_flag_files(use_files_full_paths, f"{output_dir}/{concatenated_filename}")
+    if not os.path.isdir(f"{output_dir}/{concatenated_filename}"):
+        print("ERROR: Concatenation failed. Exiting.")
+        sys.exit()
 
     get_model_visibilities(
         model_visilibility_mode="run simulation",

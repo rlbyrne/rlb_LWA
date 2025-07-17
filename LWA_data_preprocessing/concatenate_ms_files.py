@@ -2,6 +2,8 @@ import casatasks
 import os
 import sys
 import datetime
+import ast
+import argparse
 
 
 def find_and_concat_files():
@@ -94,6 +96,10 @@ def concatenate_files(
 ):
 
     # Concatenate files
+    print(use_files_full_paths)
+    print(isinstance(use_files_full_paths, str))
+    use_files_full_paths = ast.literal_eval(use_files_full_paths)
+    print(use_files_full_paths)
     casatasks.virtualconcat(vis=use_files_full_paths, concatvis=output_filename)
 
     if run_aoflagger:
@@ -102,11 +108,22 @@ def concatenate_files(
 
 if __name__ == "__main__":
 
-    args = sys.argv
-    use_files_full_paths = args[1]
-    output_filename = args[2]
+    CLI=argparse.ArgumentParser()
+    CLI.add_argument(
+        "--path_in",  # name on the CLI - drop the `--` for positional/required parameters
+        nargs="*",  # 0 or more values expected => creates a list
+        type=str,
+    )
+    CLI.add_argument(
+        "--path_out",
+        nargs=1,
+        type=str,  # any type/callable can be used here
+    )
+
+    # parse the command line
+    args = CLI.parse_args()
 
     concatenate_files(
-        use_files_full_paths,
-        output_filename,
+        args.path_in,
+        args.path_out,
     )
