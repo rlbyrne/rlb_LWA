@@ -446,6 +446,7 @@ def create_catalog_from_Gregg_source_fluxes(
         freq_array=Quantity(freq_array, "hertz"),
         frame="icrs",
     )
+    print(point_source_catalog.freq_array)
 
     csv_data = pd.read_csv(flux_csv)
     frequencies_orig = csv_data["# Frequency_Hz"]
@@ -500,8 +501,9 @@ if __name__ == "__main__":
                 f"/fast/rbyrne/skymodels/Gasperin2020_point_sources_plus_{file_name}.skyh5",
                 clobber=True,
             )
-    freq_array = np.arange(87e6, 23925.78125)
+    freq_array = np.arange(0, 87e6, 23925.78125)
     freq_array = freq_array[np.where(freq_array > 13e6)]
+    print(freq_array)
     cat = create_catalog_from_Gregg_source_fluxes(
         freq_array,
     )
