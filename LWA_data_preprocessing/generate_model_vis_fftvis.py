@@ -2,7 +2,6 @@
 
 import sys
 import numpy as np
-from astropy import units
 from astropy.coordinates import EarthLocation
 from astropy.time import Time
 from astropy.units import Quantity
@@ -21,6 +20,7 @@ def run_fftvis_sim(
     output_path=None,
     log_path=None,
     offset_timesteps=0,
+    use_matvis=True,  # Simulate with matvis, not fftvis
 ):
 
     if log_path is None:
@@ -78,9 +78,11 @@ def run_fftvis_sim(
     antpos = uvd.telescope.get_enu_antpos()
     antpos = {a: pos for (a, pos) in zip(uvd.telescope.antenna_numbers, antpos)}
     uvdata_antpos = {
-        int(a): tuple(pos) for (a, pos) in zip(uvd.telescope.antenna_numbers, uvd.telescope.antenna_positions)
+        int(a): tuple(pos)
+        for (a, pos) in zip(
+            uvd.telescope.antenna_numbers, uvd.telescope.antenna_positions
+        )
     }
-    antpairs = [(a1, a2) for ant1_ind, a1 in enumerate(uvd.telescope.antenna_numbers) for a2 in uvd.telescope.antenna_numbers[ant1_ind:]]
 
     # Get observation time
     lat, lon, alt = uvd.telescope.location_lat_lon_alt_degrees
@@ -88,7 +90,7 @@ def run_fftvis_sim(
     obstimes = Time(
         sorted(list(set(uvd.time_array))), format="jd", scale="utc", location=location
     )
-    lsts = obstimes.sidereal_time("apparent")
+    # lsts = obstimes.sidereal_time("apparent")
 
     # Get beam
     with open(log_path, "a") as f:
@@ -194,12 +196,43 @@ def run_fftvis_sim(
         f.write("Starting the simulation...\n")
     sim_start_time = time.time()
 
-    if False:
-        vis_full = np.zeros((uvd.Nfreqs, uvd.Ntimes, 2, 2, len(antpairs)), dtype=complex)
+    if use_matvis:
+        antpairs = np.array(
+            [(a1, a2) for a1 in antpos.keys() for a2 in antpos.keys()]
+        )  # matvis by default simulates all antenna pairs
+        vis_full = np.zeros(
+            (uvd.Nfreqs, uvd.Ntimes, len(antpairs), 2, 2), dtype=complex
+        )
         for freq_ind in range(uvd.Nfreqs):
             with open(log_path, "a") as f:
                 f.write(f"Simulating frequency {freq_ind + 1}/{uvd.Nfreqs}.\n")
-            print(uvb.freq_array)
+            vis_full[[freq_ind], :, :, :, :] = matvis.simulate_vis(
+                telescope_loc=location,
+                ants=antpos,
+                fluxes=model.stokes[0, [freq_ind], :].T.to_value("Jy"),
+                ra=ra_new,
+                dec=dec_new,
+                freqs=uvd.freq_array[[freq_ind]],
+                times=obstimes,
+                beams=[uvb],
+                polarized=True,
+                precision=1,  # Worse precision
+            )
+        vis_full = vis_full.reshape(
+            (uvd.Nfreqs, 4, len(antpos) * len(antpos) * uvd.Ntimes)
+        ).transpose([2, 0, 1])
+    else:
+        antpairs = [
+            (a1, a2)
+            for ant1_ind, a1 in enumerate(uvd.telescope.antenna_numbers)
+            for a2 in uvd.telescope.antenna_numbers[ant1_ind:]
+        ]
+        vis_full = np.zeros(
+            (uvd.Nfreqs, uvd.Ntimes, 2, 2, len(antpairs)), dtype=complex
+        )
+        for freq_ind in range(uvd.Nfreqs):
+            with open(log_path, "a") as f:
+                f.write(f"Simulating frequency {freq_ind + 1}/{uvd.Nfreqs}.\n")
             vis_full[freq_ind, :, :, :, :] = fftvis.simulate_vis(
                 telescope_loc=location,
                 ants=antpos,
@@ -208,29 +241,15 @@ def run_fftvis_sim(
                 ra=ra_new,
                 dec=dec_new,
                 freqs=uvd.freq_array[[freq_ind]],
-                #lsts=np.array(lsts.to_value("rad")),
                 times=obstimes,
                 beam=uvb,
                 polarized=True,
                 precision=1,  # Worse precision
-                #latitude=location.lat.rad,
             )
+        vis_full = vis_full.transpose([4, 1, 0, 2, 3]).reshape(
+            (len(antpairs) * uvd.Ntimes, uvd.Nfreqs, 4)
+        )
 
-    vis_full = fftvis.simulate_vis(
-        telescope_loc=location,
-        ants=antpos,
-        baselines=antpairs,
-        fluxes=model.stokes[0].T.to_value("Jy"),
-        ra=ra_new,
-        dec=dec_new,
-        freqs=uvd.freq_array,
-        #lsts=np.array(lsts.to_value("rad")),
-        times=obstimes,
-        beam=uvb,
-        polarized=True,
-        precision=1,  # Worse precision
-        #latitude=location.lat.rad,
-    )
     sim_duration = time.time() - sim_start_time
     with open(log_path, "a") as f:
         f.write(f"Simulation completed. Timing {sim_duration/60.0} minutes.\n")
@@ -246,9 +265,7 @@ def run_fftvis_sim(
         times=np.array(obstimes.jd),
         antpairs=np.array(antpairs),
         time_axis_faster_than_bls=True,
-        data_array=vis_full.transpose([4, 1, 0, 2, 3]).reshape(
-            (len(antpairs) * uvd.Ntimes, uvd.Nfreqs, 4)
-        ),
+        data_array=vis_full,
     )
     uvd_out.telescope_location = np.array(uvd_out.telescope_location)
 

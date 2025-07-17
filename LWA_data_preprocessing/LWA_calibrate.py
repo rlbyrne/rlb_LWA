@@ -10,25 +10,18 @@ from generate_model_vis_fftvis import run_fftvis_sim
 from calico import calibration_wrappers
 
 
-def concatenate_and_flag_files(
+def concatenate_ms_files(
     use_files_full_paths,
     output_filename,
     script_path="/opt/devel/rbyrne/rlb_LWA/LWA_data_preprocessing/concatenate_ms_files.py",
 ):
 
-    if isinstance(use_files_full_paths, str):  # Flag only
-        output_filename = use_files_full_paths
-        os.system(f"aoflagger {output_filename}")
-    elif len(use_files_full_paths) == 1:  # Flag only
-        output_filename = use_files_full_paths[0]
-        os.system(f"aoflagger {output_filename}")
-    else:
-        file_list_str = ""
-        for filename in use_files_full_paths:
-            file_list_str += f"{filename} "
-        os.system(
-            f"python {script_path} --path_in {file_list_str} --path_out {output_filename}"
-        )
+    file_list_str = ""
+    for filename in use_files_full_paths:
+        file_list_str += f"{filename} "
+    os.system(
+        f"python {script_path} --path_in {file_list_str} --path_out {output_filename}"
+    )
 
 
 def get_bad_antenna_list(
@@ -360,20 +353,27 @@ def calibration_pipeline(
     res_image = f"{output_file_prefix}_res"
 
     if not os.path.isdir(f"{output_dir}/{concatenated_filename}"):
+
         # Copy files
         for filename in use_files:
             if not os.path.isdir(f"{output_dir}/{filename}"):
                 print(f"Copying file {filename}")
                 os.system(f"cp -r {datadir}/{filename} {output_dir}/{filename}")
-        use_files_full_paths = [f"{output_dir}/{filename}" for filename in use_files]
+        
+        if len(use_files) > 1:  # Concatenate files
+            use_files_full_paths = [f"{output_dir}/{filename}" for filename in use_files]
+            print("Concatenating files.")
+            concatenate_ms_files(
+                use_files_full_paths, f"{output_dir}/{concatenated_filename}"
+            )
+            if not os.path.isdir(f"{output_dir}/{concatenated_filename}"):
+                print("ERROR: Concatenation failed. Exiting.")
+                sys.exit()
+        else:  # Only one file used
+            concatenated_filename = use_files[0]
 
-    print("Concatenating files.")
-    concatenate_and_flag_files(
-        use_files_full_paths, f"{output_dir}/{concatenated_filename}"
-    )
-    if not os.path.isdir(f"{output_dir}/{concatenated_filename}"):
-        print("ERROR: Concatenation failed. Exiting.")
-        sys.exit()
+    # Run AOFlagger
+    #os.system(f"aoflagger {output_dir}/{concatenated_filename}")
 
     get_model_visibilities(
         model_visilibility_mode="run simulation",

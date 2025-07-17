@@ -2,7 +2,6 @@ import casatasks
 import os
 import sys
 import datetime
-import ast
 import argparse
 
 
