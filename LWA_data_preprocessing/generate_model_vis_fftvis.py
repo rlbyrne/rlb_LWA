@@ -36,10 +36,6 @@ def run_fftvis_sim(
         f.write(f"Simulation beam model: {beam_path}\n")
         f.write(f"Simulation input datafile: {input_data_path}\n")
 
-    # stdout_orig = sys.stdout
-    # stderr_orig = sys.stderr
-    # sys.stdout = sys.stderr = log_file_new = open(log_path, "a")
-
     # Read metadata from file
     with open(log_path, "a") as f:
         f.write("Reading data...\n")
@@ -56,10 +52,10 @@ def run_fftvis_sim(
         file_type=file_type,
         ignore_single_chan=False,
     )
-    if uvd.telescope_name == "OVRO_MMA":  # Correct telescope location
-        uvd.telescope_name = "OVRO-LWA"
+    if uvd.telescope.name == "OVRO_MMA":  # Correct telescope location
+        uvd.telescope.name = "OVRO-LWA"
         uvd.set_telescope_params(overwrite=True, warn=True)
-    if uvd.telescope_name == "HERA":
+    if uvd.telescope.name == "HERA":
         uvd.compress_by_redundancy()
 
     if offset_timesteps:
@@ -79,15 +75,15 @@ def run_fftvis_sim(
     )  # Unflag all
 
     # Define antenna locations
-    antpos, ants = uvd.get_ENU_antpos()
-    antpos = {a: pos for (a, pos) in zip(ants, antpos)}
+    antpos = uvd.telescope.get_enu_antpos()
+    antpos = {a: pos for (a, pos) in zip(uvd.telescope.antenna_numbers, antpos)}
     uvdata_antpos = {
-        int(a): tuple(pos) for (a, pos) in zip(ants, uvd.antenna_positions)
+        int(a): tuple(pos) for (a, pos) in zip(uvd.telescope.antenna_numbers, uvd.telescope.antenna_positions)
     }
-    antpairs = [(a1, a2) for ant1_ind, a1 in enumerate(ants) for a2 in ants[ant1_ind:]]
+    antpairs = [(a1, a2) for ant1_ind, a1 in enumerate(uvd.telescope.antenna_numbers) for a2 in uvd.telescope.antenna_numbers[ant1_ind:]]
 
     # Get observation time
-    lat, lon, alt = uvd.telescope_location_lat_lon_alt_degrees
+    lat, lon, alt = uvd.telescope.location_lat_lon_alt_degrees
     location = EarthLocation.from_geodetic(lat=lat, lon=lon, height=alt)
     obstimes = Time(
         sorted(list(set(uvd.time_array))), format="jd", scale="utc", location=location
@@ -136,6 +132,7 @@ def run_fftvis_sim(
         )
         uvb.bandpass_array = np.append(uvb_min_freq.bandpass_array, uvb.bandpass_array)
     uvb.freq_interp_kind = "linear"  # Added for simulation speedup
+    uvb.interp(freq_array=uvd.freq_array)
 
     # Get model
     with open(log_path, "a") as f:
@@ -183,7 +180,7 @@ def run_fftvis_sim(
         print("Removing nan flux values from input catalog.")
         model.select(component_inds=use_comp_inds)
     # Perform a coordinate transformation to account for time-dependent precession and nutation
-    ra_new, dec_new = matvis.conversions.equatorial_to_eci_coords(
+    ra_new, dec_new = matvis.coordinates.equatorial_to_eci_coords(
         model.ra.rad,
         model.dec.rad,
         np.mean(obstimes),
@@ -197,23 +194,43 @@ def run_fftvis_sim(
         f.write("Starting the simulation...\n")
     sim_start_time = time.time()
 
-    vis_full = np.zeros((uvd.Nfreqs, uvd.Ntimes, 2, 2, len(antpairs)), dtype=complex)
-    for freq_ind in range(uvd.Nfreqs):
-        with open(log_path, "a") as f:
-            f.write(f"Simulating frequency {freq_ind + 1}/{uvd.Nfreqs}.\n")
-        vis_full[freq_ind, :, :, :, :] = fftvis.simulate.simulate_vis(
-            ants=antpos,
-            baselines=antpairs,
-            fluxes=model.stokes[0].T.to_value("Jy"),
-            ra=ra_new,
-            dec=dec_new,
-            freqs=uvd.freq_array[[freq_ind]],
-            lsts=np.array(lsts.to_value("rad")),
-            beam=uvb,
-            polarized=True,
-            precision=1,  # Worse precision
-            latitude=location.lat.rad,
-        )
+    if False:
+        vis_full = np.zeros((uvd.Nfreqs, uvd.Ntimes, 2, 2, len(antpairs)), dtype=complex)
+        for freq_ind in range(uvd.Nfreqs):
+            with open(log_path, "a") as f:
+                f.write(f"Simulating frequency {freq_ind + 1}/{uvd.Nfreqs}.\n")
+            print(uvb.freq_array)
+            vis_full[freq_ind, :, :, :, :] = fftvis.simulate_vis(
+                telescope_loc=location,
+                ants=antpos,
+                baselines=antpairs,
+                fluxes=model.stokes[0].T.to_value("Jy"),
+                ra=ra_new,
+                dec=dec_new,
+                freqs=uvd.freq_array[[freq_ind]],
+                #lsts=np.array(lsts.to_value("rad")),
+                times=obstimes,
+                beam=uvb,
+                polarized=True,
+                precision=1,  # Worse precision
+                #latitude=location.lat.rad,
+            )
+
+    vis_full = fftvis.simulate_vis(
+        telescope_loc=location,
+        ants=antpos,
+        baselines=antpairs,
+        fluxes=model.stokes[0].T.to_value("Jy"),
+        ra=ra_new,
+        dec=dec_new,
+        freqs=uvd.freq_array,
+        #lsts=np.array(lsts.to_value("rad")),
+        times=obstimes,
+        beam=uvb,
+        polarized=True,
+        precision=1,  # Worse precision
+        #latitude=location.lat.rad,
+    )
     sim_duration = time.time() - sim_start_time
     with open(log_path, "a") as f:
         f.write(f"Simulation completed. Timing {sim_duration/60.0} minutes.\n")
@@ -278,10 +295,6 @@ def run_fftvis_sim(
                     f"ms saving failed. Saving simulation output to {uvfits_output_path}\n"
                 )
             uvd_out.write_uvfits(uvfits_output_path, fix_autos=True)
-
-    # sys.stdout = stdout_orig
-    # sys.stderr = stderr_orig
-    # log_file_new.close()
 
 
 if __name__ == "__main__":
