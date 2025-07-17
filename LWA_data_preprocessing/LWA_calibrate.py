@@ -15,7 +15,7 @@ def concatenate_and_flag_files(
     output_filename,
     script_path="/opt/devel/rbyrne/rlb_LWA/LWA_data_preprocessing/concatenate_ms_files.py",
 ):
-    
+
     if isinstance(use_files_full_paths, str):  # Flag only
         output_filename = use_files_full_paths
         os.system(f"aoflagger {output_filename}")
@@ -39,7 +39,9 @@ def get_bad_antenna_list(
     script_path="/opt/devel/rbyrne/rlb_LWA/LWA_data_preprocessing/get_bad_ants.py",
 ):
 
-    call_str = f"conda run --prefix {conda_env} python {script_path} {year} {month} {day}"
+    call_str = (
+        f"conda run --prefix {conda_env} python {script_path} {year} {month} {day}"
+    )
     result = subprocess.getoutput(call_str)
     result = result.split("\n")
     result = [line for line in result if line.startswith("get_bandants output:")][0]
@@ -103,9 +105,7 @@ def get_model_visibilities(
 
     if model_visilibility_mode == "read file":
         if not os.path.isdir(model_vis_file) and not os.path.isfile(model_vis_file):
-            print(
-                f"ERROR: File {model_vis_file} not found. Exiting."
-            )
+            print(f"ERROR: File {model_vis_file} not found. Exiting.")
             sys.exit(1)
 
     elif model_visilibility_mode == "LST interpolate":
@@ -238,7 +238,9 @@ def get_model_visibilities(
         if model_vis_file.endswith(".ms"):
             combined_model_uv.write_ms(model_vis_file, force_phase=True, fix_autos=True)
         else:
-            combined_model_uv.write_uvfits(model_vis_file, force_phase=True, fix_autos=True)
+            combined_model_uv.write_uvfits(
+                model_vis_file, force_phase=True, fix_autos=True
+            )
 
     elif model_visilibility_mode == "run simulation":
         if os.path.isdir(model_vis_file):
@@ -254,9 +256,7 @@ def get_model_visibilities(
             compact_source_output_filepath = (
                 f"{model_vis_file.removesuffix('.ms')}compact.ms"
             )
-            diffuse_output_filepath = (
-                f"{model_vis_file.removesuffix('.ms')}diffuse.ms"
-            )
+            diffuse_output_filepath = f"{model_vis_file.removesuffix('.ms')}diffuse.ms"
         else:
             compact_source_output_filepath = model_vis_file
         run_fftvis_sim(
@@ -284,7 +284,9 @@ def get_model_visibilities(
             if model_vis_file.endswith(".ms"):
                 compact_sim.write_ms(model_vis_file, force_phase=True, fix_autos=True)
             else:
-                compact_sim.write_uvfits(model_vis_file, force_phase=True, fix_autos=True)
+                compact_sim.write_uvfits(
+                    model_vis_file, force_phase=True, fix_autos=True
+                )
             if os.path.isdir(model_vis_file):  # Confirm write was successful
                 # Delete intermediate data products
                 os.system(f"rm {compact_source_output_filepath}")
@@ -299,9 +301,10 @@ def get_model_visibilities(
         )
         sys.exit(1)
 
+
 def calibration_pipeline(
-    freq_band = "41",
-    start_time = datetime.datetime(2025, 5, 8, 16, 7, 36),
+    freq_band="41",
+    start_time=datetime.datetime(2025, 5, 8, 16, 7, 36),
     beam_path="/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits",
     skymodel_path="/lustre/rbyrne/skymodels/Gregg_20250519_source_models.skyh5",
 ):
@@ -321,22 +324,17 @@ def calibration_pipeline(
 
     bad_ant_list = get_bad_antenna_list(year, month, day)
 
-    datadir = (
-        f"/lustre/pipeline/calibration/{freq_band}MHz/{year}-{month}-{day}/{hour}"
-    )
+    datadir = f"/lustre/pipeline/calibration/{freq_band}MHz/{year}-{month}-{day}/{hour}"
     output_dir = f"/lustre/21cmpipe/{year}-{month}-{day}"
 
-    if not os.path.isdir(
-        output_dir
-    ):  # Make target directory if it does not exist
+    if not os.path.isdir(output_dir):  # Make target directory if it does not exist
         os.mkdir(output_dir)
 
     all_files = os.listdir(datadir)
     use_files = [
         filename
         for filename in all_files
-        if filename.startswith(f"{year}{month}{day}")
-        and filename.endswith(".ms")
+        if filename.startswith(f"{year}{month}{day}") and filename.endswith(".ms")
     ]
     use_files = [
         filename
@@ -366,15 +364,13 @@ def calibration_pipeline(
         for filename in use_files:
             if not os.path.isdir(f"{output_dir}/{filename}"):
                 print(f"Copying file {filename}")
-                os.system(
-                    f"cp -r {datadir}/{filename} {output_dir}/{filename}"
-                )
-        use_files_full_paths = [
-            f"{output_dir}/{filename}" for filename in use_files
-        ]
+                os.system(f"cp -r {datadir}/{filename} {output_dir}/{filename}")
+        use_files_full_paths = [f"{output_dir}/{filename}" for filename in use_files]
 
     print("Concatenating files.")
-    concatenate_and_flag_files(use_files_full_paths, f"{output_dir}/{concatenated_filename}")
+    concatenate_and_flag_files(
+        use_files_full_paths, f"{output_dir}/{concatenated_filename}"
+    )
     if not os.path.isdir(f"{output_dir}/{concatenated_filename}"):
         print("ERROR: Concatenation failed. Exiting.")
         sys.exit()
@@ -478,5 +474,6 @@ def calibration_pipeline(
         f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {res_image} {res_ms}"
     )
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     calibration_pipeline()

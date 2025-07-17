@@ -96,11 +96,9 @@ def concatenate_files(
 ):
 
     # Concatenate files
-    print(use_files_full_paths)
-    print(isinstance(use_files_full_paths, str))
-    use_files_full_paths = ast.literal_eval(use_files_full_paths)
-    print(use_files_full_paths)
-    casatasks.virtualconcat(vis=use_files_full_paths, concatvis=output_filename)
+    casatasks.virtualconcat(
+        vis=[filename for filename in use_files_full_paths], concatvis=output_filename
+    )
 
     if run_aoflagger:
         os.system(f"aoflagger {output_filename}")
@@ -108,7 +106,7 @@ def concatenate_files(
 
 if __name__ == "__main__":
 
-    CLI=argparse.ArgumentParser()
+    CLI = argparse.ArgumentParser()
     CLI.add_argument(
         "--path_in",  # name on the CLI - drop the `--` for positional/required parameters
         nargs="*",  # 0 or more values expected => creates a list
@@ -125,5 +123,5 @@ if __name__ == "__main__":
 
     concatenate_files(
         args.path_in,
-        args.path_out,
+        args.path_out[0],
     )
