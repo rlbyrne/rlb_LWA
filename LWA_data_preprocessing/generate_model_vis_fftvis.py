@@ -259,21 +259,12 @@ def run_fftvis_sim(
     uvd_out = pyuvdata.UVData.new(
         freq_array=uvd.freq_array,
         polarization_array=[-5, -7, -8, -6],
-        antenna_positions=uvdata_antpos,
-        telescope_location=location,
-        telescope_name=uvd.telescope_name,
+        telescope=uvd.telescope,
         times=np.array(obstimes.jd),
         antpairs=np.array(antpairs),
         time_axis_faster_than_bls=True,
         data_array=vis_full,
     )
-    uvd_out.telescope_location = np.array(uvd_out.telescope_location)
-
-    # Assign antenna names
-    for ant_ind in range(len(uvd_out.antenna_names)):
-        uvd_out.antenna_names[ant_ind] = uvd.antenna_names[
-            np.where(uvd.antenna_numbers == uvd_out.antenna_numbers[ant_ind])[0][0]
-        ]
 
     uvd_out.reorder_blts()
     uvd_out.reorder_pols(order="AIPS")

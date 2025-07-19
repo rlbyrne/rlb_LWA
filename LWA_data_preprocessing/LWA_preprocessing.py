@@ -136,7 +136,7 @@ def plot_autocorrelations(
         n_time_plots = 1
     else:
         n_time_plots = uvd.Ntimes
-        times = np.unique(uv.time_array)
+        times = np.unique(uvd.time_array)
 
     for time_plot_ind in range(n_time_plots):
 

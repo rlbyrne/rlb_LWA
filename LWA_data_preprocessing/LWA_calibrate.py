@@ -5,7 +5,6 @@ import sys
 import numpy as np
 import pyuvdata
 import datetime
-import LWA_preprocessing
 from generate_model_vis_fftvis import run_fftvis_sim
 from calico import calibration_wrappers
 
@@ -44,9 +43,62 @@ def get_bad_antenna_list(
         return result[1]
     else:
         print(
-            "ERROR: No information on bad antennas found for {year}/{month}/{day}. Exiting."
+            f"ERROR: No information on bad antennas found for {year}/{month}/{day}. Exiting."
         )
         sys.exit(1)
+
+
+def flag_antennas(
+    uvd,
+    antenna_names=[],
+    inplace=False,
+):
+
+    if inplace:
+        flag_arr = uvd.flag_array
+    else:
+        flag_arr = np.copy(uvd.flag_array)
+
+    for ant_name in antenna_names:
+        ant_name_number_comp = ant_name.strip("LWA").strip("-").strip("A").strip("B")
+        ant_ind = np.where(
+            np.array(uvd.telescope.antenna_names) == f"LWA{ant_name_number_comp}"
+        )[
+            0
+        ]  # uvd.telescope.antenna_names format is "LWA###"
+        if np.size(ant_ind) == 0:
+            print(f"WARNING: Antenna {ant_name} not found in antenna_names.")
+            continue
+        flag_bls_1 = np.where(uvd.ant_1_array == ant_ind)[0]
+        flag_bls_2 = np.where(uvd.ant_2_array == ant_ind)[0]
+        if ant_name.endswith("A"):
+            for pol in [-5, -7]:  # XX, XY
+                flag_pol_ind = np.where(uvd.polarization_array == pol)[0]
+                if len(flag_pol_ind) > 0:
+                    flag_arr[flag_bls_1, :, flag_pol_ind] = True
+            for pol in [-5, -8]:  # XX, YX
+                flag_pol_ind = np.where(uvd.polarization_array == pol)[0]
+                if len(flag_pol_ind) > 0:
+                    flag_arr[flag_bls_2, :, flag_pol_ind] = True
+        elif ant_name.endswith("B"):
+            for pol in [-6, -8]:  # YY, YX
+                flag_pol_ind = np.where(uvd.polarization_array == pol)[0]
+                if len(flag_pol_ind) > 0:
+                    flag_arr[flag_bls_1, :, flag_pol_ind] = True
+            for pol in [-6, -7]:  # YY, XY
+                flag_pol_ind = np.where(uvd.polarization_array == pol)[0]
+                if len(flag_pol_ind) > 0:
+                    flag_arr[flag_bls_2, :, flag_pol_ind] = True
+        else:  # Flag all polarizations
+            flag_bls = np.unique(np.concatenate((flag_bls_1, flag_bls_2)))
+            flag_arr[flag_bls, :, :] = True
+
+    if inplace:
+        uvd.flag_array = flag_arr
+    else:
+        uvd_new = uvd.copy()
+        uvd_new.flag_array = flag_arr
+        return uvd_new
 
 
 def get_model_visibilities(
@@ -295,16 +347,14 @@ def get_model_visibilities(
         sys.exit(1)
 
 
-def calibration_pipeline(
+def get_datafiles(
     freq_band="41",
     start_time=datetime.datetime(2025, 5, 8, 16, 7, 36),
-    beam_path="/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits",
-    skymodel_path="/lustre/rbyrne/skymodels/Gregg_20250519_source_models.skyh5",
+    delta_time=datetime.timedelta(minutes=2),  # Total time interval
+    time_step=0,  # Offset start time to step through time intervals
+    raw_data_dir="/lustre/pipeline/calibration",
+    save_dir="/lustre/21cmpipe",
 ):
-
-    # Use to offset start time in 2 minute increments
-    delta_time = datetime.timedelta(minutes=2)
-    time_step = 0
 
     use_start_time = start_time + time_step * delta_time
     end_time = start_time + (time_step + 1) * delta_time
@@ -315,10 +365,9 @@ def calibration_pipeline(
     day = use_start_time.strftime("%d")
     hour = use_start_time.strftime("%H")
 
-    bad_ant_list = get_bad_antenna_list(year, month, day)
-
-    datadir = f"/lustre/pipeline/calibration/{freq_band}MHz/{year}-{month}-{day}/{hour}"
-    output_dir = f"/lustre/21cmpipe/{year}-{month}-{day}"
+    datadir = f"{raw_data_dir}/{freq_band}MHz/{year}-{month}-{day}/{hour}"
+    output_dir = f"{save_dir}/{year}-{month}-{day}"
+    concatenated_filename = f"{year}{month}{day}_{use_files[0].split('_')[1]}-{use_files[-1].split('_')[1]}_{freq_band}MHz.ms"
 
     if not os.path.isdir(output_dir):  # Make target directory if it does not exist
         os.mkdir(output_dir)
@@ -340,18 +389,6 @@ def calibration_pipeline(
         sys.exit(1)
     use_files.sort()
 
-    # Define output filenames
-    output_file_prefix = f"{year}{month}{day}_{use_files[0].split('_')[1]}-{use_files[-1].split('_')[1]}_{freq_band}MHz"
-    concatenated_filename = f"{output_file_prefix}.ms"
-    model_filename = f"{output_file_prefix}_source_sim.ms"
-    calfits_filename = f"{output_file_prefix}.calfits"
-    calibration_log = f"{output_file_prefix}_cal_log.txt"
-    calibrated_data_ms = f"{output_file_prefix}_calibrated.ms"
-    res_ms = f"{output_file_prefix}_res.ms"
-    calibrated_data_image = f"{output_file_prefix}_calibrated"
-    model_image = f"{output_file_prefix}_model"
-    res_image = f"{output_file_prefix}_res"
-
     if not os.path.isdir(f"{output_dir}/{concatenated_filename}"):
 
         # Copy files
@@ -359,9 +396,11 @@ def calibration_pipeline(
             if not os.path.isdir(f"{output_dir}/{filename}"):
                 print(f"Copying file {filename}")
                 os.system(f"cp -r {datadir}/{filename} {output_dir}/{filename}")
-        
+
         if len(use_files) > 1:  # Concatenate files
-            use_files_full_paths = [f"{output_dir}/{filename}" for filename in use_files]
+            use_files_full_paths = [
+                f"{output_dir}/{filename}" for filename in use_files
+            ]
             print("Concatenating files.")
             concatenate_ms_files(
                 use_files_full_paths, f"{output_dir}/{concatenated_filename}"
@@ -372,22 +411,65 @@ def calibration_pipeline(
         else:  # Only one file used
             concatenated_filename = use_files[0]
 
-    # Run AOFlagger
-    #os.system(f"aoflagger {output_dir}/{concatenated_filename}")
+    return concatenated_filename
 
-    get_model_visibilities(
-        model_visilibility_mode="run simulation",
-        model_vis_file=f"{output_dir}/{model_filename}",
-        include_diffuse=False,
-        data_file=f"{output_dir}/{concatenated_filename}",
-        skymodel_path=skymodel_path,
-        beam_path=beam_path,
-    )
+
+def calibration_pipeline(
+    datafile_path,
+    output_dir=None,  # If None, datafile_path directory will be used.
+    beam_path="/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits",
+    skymodel_path="/lustre/rbyrne/skymodels/Gregg_20250519_source_models.skyh5",
+    date=None,  # datetime object. Used to get antenna flags and define output directory. If None, filename will be parsed assuming the filename begins with format YYYYMMDD
+    run_aoflagger=True,  # Will modify datafile
+):
+
+    # Define output filenames
+    output_file_prefix = os.path.splitext(os.path.basename(datafile_path))[0]
+    model_filename = f"{output_file_prefix}_source_sim.ms"
+    calfits_filename = f"{output_file_prefix}.calfits"
+    calibration_log = f"{output_file_prefix}_cal_log.txt"
+    calibrated_data_ms = f"{output_file_prefix}_calibrated.ms"
+    res_ms = f"{output_file_prefix}_res.ms"
+    calibrated_data_image = f"{output_file_prefix}_calibrated"
+    model_image = f"{output_file_prefix}_model"
+    res_image = f"{output_file_prefix}_res"
+
+    # Get antennas to flag based on Andrea's autocorrelation metrics
+    if date is None:  # Attempt to parse the filename to get date
+        date = datetime.datetime(
+            int(output_file_prefix[:4]),
+            int(output_file_prefix[4:6]),
+            int(output_file_prefix[6:8]),
+        )
+    year = date.strftime("%Y")
+    month = date.strftime("%m")
+    day = date.strftime("%d")
+    bad_ant_list = get_bad_antenna_list(year, month, day)
+
+    if run_aoflagger:
+        os.system(f"aoflagger {datafile_path}")
+
+    if output_dir is None:  # Use same directory as the data
+        output_dir = os.path.dirname(datafile_path)
+    if not os.path.isdir(output_dir):  # Make directory if it doesn't already exist
+        os.mkdir(output_dir)
+
+    if os.path.isdir(f"{output_dir}/{model_filename}"):
+        print(f"Model file exists. Using {output_dir}/{model_filename}.")
+    else:
+        get_model_visibilities(
+            model_visilibility_mode="run simulation",
+            model_vis_file=f"{output_dir}/{model_filename}",
+            include_diffuse=False,
+            data_file=datafile_path,
+            skymodel_path=skymodel_path,
+            beam_path=beam_path,
+        )
 
     # Read data
     uv = pyuvdata.UVData()
-    print(f"Reading file {output_dir}/{concatenated_filename}.")
-    uv.read(f"{output_dir}/{concatenated_filename}", data_column="DATA")
+    print(f"Reading file {datafile_path}.")
+    uv.read(f"{datafile_path}", data_column="DATA")
     uv.set_uvws_from_antenna_positions(update_vis=False)
     uv.data_array = np.conj(uv.data_array)  # Required to match pyuvdata conventions
     uv.phase_to_time(np.mean(uv.time_array))
@@ -400,10 +482,9 @@ def calibration_pipeline(
     model_uv.phase_to_time(np.mean(uv.time_array))
 
     # Flag antennas
-    LWA_preprocessing.flag_antennas(
+    flag_antennas(
         uv,
         antenna_names=bad_ant_list,
-        flag_pol="all",  # Options are "all", "X", "Y", "XX", "YY", "XY", or "YX"
         inplace=True,
     )
 
@@ -416,7 +497,7 @@ def calibration_pipeline(
         gains_multiply_model=True,
         verbose=True,
         get_crosspol_phase=False,
-        log_file_path=calibration_log,
+        log_file_path=f"{output_dir}/{calibration_log}",
         xtol=1e-6,
         maxiter=200,
         antenna_flagging_iterations=0,
@@ -476,4 +557,7 @@ def calibration_pipeline(
 
 
 if __name__ == "__main__":
-    calibration_pipeline()
+    calibration_pipeline(
+        "/lustre/21cmpipe/2025-05-08/20250508_160736-160926_41MHz.ms",
+        run_aoflagger=False,
+    )
