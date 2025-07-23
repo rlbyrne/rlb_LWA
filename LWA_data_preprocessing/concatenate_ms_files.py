@@ -91,7 +91,7 @@ def find_and_concat_files():
 def concatenate_files(
     use_files_full_paths,
     output_filename,
-    run_aoflagger=True,
+    run_aoflagger=False,
 ):
 
     # Concatenate files

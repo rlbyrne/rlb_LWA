@@ -367,7 +367,6 @@ def get_datafiles(
 
     datadir = f"{raw_data_dir}/{freq_band}MHz/{year}-{month}-{day}/{hour}"
     output_dir = f"{save_dir}/{year}-{month}-{day}"
-    concatenated_filename = f"{year}{month}{day}_{use_files[0].split('_')[1]}-{use_files[-1].split('_')[1]}_{freq_band}MHz.ms"
 
     if not os.path.isdir(output_dir):  # Make target directory if it does not exist
         os.mkdir(output_dir)
@@ -388,6 +387,8 @@ def get_datafiles(
         print("ERROR: Number of files found is not 12.")
         sys.exit(1)
     use_files.sort()
+
+    concatenated_filename = f"{year}{month}{day}_{use_files[0].split('_')[1]}-{use_files[-1].split('_')[1]}_{freq_band}MHz.ms"
 
     if not os.path.isdir(f"{output_dir}/{concatenated_filename}"):
 
