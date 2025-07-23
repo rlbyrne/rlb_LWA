@@ -14,9 +14,6 @@ def get_bad_ants(year, month, day, time_interval_tolerance_days=1):
             year,
             month,
             day,
-            0,  # hour
-            0,  # minute
-            0,  # second
         )
     )
     badants = anthealth.get_badants(

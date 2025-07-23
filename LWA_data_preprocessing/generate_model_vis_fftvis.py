@@ -20,7 +20,7 @@ def run_fftvis_sim(
     output_path=None,
     log_path=None,
     offset_timesteps=0,
-    use_matvis=True,  # Simulate with matvis, not fftvis
+    use_matvis=False,  # Simulate with matvis, not fftvis
 ):
 
     if log_path is None:
@@ -218,8 +218,13 @@ def run_fftvis_sim(
                 polarized=True,
                 precision=1,  # Worse precision
             )
+        # Remove duplicated baselines
+        keep_antpairs_inds = np.where(np.array([pair[0] >= pair[1] for pair in antpairs]))[0]
+        antpairs = antpairs[keep_antpairs_inds]
+        vis_full = vis_full[:, :, keep_antpairs_inds, :, :]
+        
         vis_full = vis_full.reshape(
-            (uvd.Nfreqs, 4, len(antpos) * len(antpos) * uvd.Ntimes)
+            (uvd.Nfreqs, 4, len(antpairs) * uvd.Ntimes)
         ).transpose([2, 0, 1])
     else:
         antpairs = [
@@ -244,7 +249,7 @@ def run_fftvis_sim(
                 times=obstimes,
                 beam=uvb,
                 polarized=True,
-                precision=1,  # Worse precision
+                precision=2,
             )
         vis_full = vis_full.transpose([4, 1, 0, 2, 3]).reshape(
             (len(antpairs) * uvd.Ntimes, uvd.Nfreqs, 4)

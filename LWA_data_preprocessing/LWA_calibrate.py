@@ -421,6 +421,7 @@ def calibration_pipeline(
     skymodel_path="/lustre/rbyrne/skymodels/Gregg_20250519_source_models.skyh5",
     date=None,  # datetime object. Used to get antenna flags and define output directory. If None, filename will be parsed assuming the filename begins with format YYYYMMDD
     run_aoflagger=True,  # Will modify datafile
+    flag_antennas_a_priori=True,
 ):
 
     # Define output filenames
@@ -435,16 +436,17 @@ def calibration_pipeline(
     res_image = f"{output_file_prefix}_res"
 
     # Get antennas to flag based on Andrea's autocorrelation metrics
-    if date is None:  # Attempt to parse the filename to get date
-        date = datetime.datetime(
-            int(output_file_prefix[:4]),
-            int(output_file_prefix[4:6]),
-            int(output_file_prefix[6:8]),
-        )
-    year = date.strftime("%Y")
-    month = date.strftime("%m")
-    day = date.strftime("%d")
-    bad_ant_list = get_bad_antenna_list(year, month, day)
+    if flag_antennas_a_priori:
+        if date is None:  # Attempt to parse the filename to get date
+            date = datetime.datetime(
+                int(output_file_prefix[:4]),
+                int(output_file_prefix[4:6]),
+                int(output_file_prefix[6:8]),
+            )
+        year = date.strftime("%Y")
+        month = date.strftime("%m")
+        day = date.strftime("%d")
+        bad_ant_list = get_bad_antenna_list(year, month, day)
 
     if run_aoflagger:
         os.system(f"aoflagger {datafile_path}")
@@ -471,7 +473,6 @@ def calibration_pipeline(
     print(f"Reading file {datafile_path}.")
     uv.read(f"{datafile_path}", data_column="DATA")
     uv.set_uvws_from_antenna_positions(update_vis=False)
-    uv.data_array = np.conj(uv.data_array)  # Required to match pyuvdata conventions
     uv.phase_to_time(np.mean(uv.time_array))
 
     # Read model
@@ -481,12 +482,12 @@ def calibration_pipeline(
     model_uv.set_uvws_from_antenna_positions(update_vis=False)
     model_uv.phase_to_time(np.mean(uv.time_array))
 
-    # Flag antennas
-    flag_antennas(
-        uv,
-        antenna_names=bad_ant_list,
-        inplace=True,
-    )
+    if flag_antennas_a_priori:
+        flag_antennas(
+            uv,
+            antenna_names=bad_ant_list,
+            inplace=True,
+        )
 
     # Calibrate
     uvcal = calibration_wrappers.sky_based_calibration_wrapper(
@@ -508,8 +509,8 @@ def calibration_pipeline(
 
     # Apply calibration
     pyuvdata.utils.uvcalibrate(uv, uvcal, inplace=True, time_check=False)
-    if not os.path.isdir(calibrated_data_ms):
-        uv.write_ms(calibrated_data_ms, fix_autos=True)
+    uv.write_ms(calibrated_data_ms, fix_autos=True, clobber=True)
+
     # Image calibrated data
     os.system(
         f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {calibrated_data_image} {calibrated_data_ms}"
@@ -549,8 +550,7 @@ def calibration_pipeline(
             "timesys",
         ],
     )
-    if not os.path.isdir(res_ms):
-        uv.write_ms(res_ms, fix_autos=True)
+    uv.write_ms(res_ms, fix_autos=True, clobber=True)
     os.system(
         f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {res_image} {res_ms}"
     )
@@ -560,4 +560,5 @@ if __name__ == "__main__":
     calibration_pipeline(
         "/lustre/21cmpipe/2025-05-08/20250508_160736-160926_41MHz.ms",
         run_aoflagger=False,
+        flag_antennas_a_priori=False,
     )
