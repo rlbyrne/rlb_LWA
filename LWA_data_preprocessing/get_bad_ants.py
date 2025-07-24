@@ -5,7 +5,7 @@ import sys
 import numpy as np
 
 # This exists as a stand-alone function so that it can be run in a separate conda environment
-# Run with, for example, subprocess.getoutput("conda run -n deployment python get_bad_ants.py 2025 1 17")
+# Run with, for example, subprocess.getoutput("conda run -n development python get_bad_ants.py 2025 1 17")
 
 
 def get_bad_ants(year, month, day, time_interval_tolerance_days=1):

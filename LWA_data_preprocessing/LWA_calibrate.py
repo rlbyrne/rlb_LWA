@@ -1,3 +1,4 @@
+from typing import Optional, List
 import os
 import subprocess
 import ast
@@ -27,7 +28,7 @@ def get_bad_antenna_list(
     year,
     month,
     day,
-    conda_env="/opt/devel/pipeline/envs/deployment",
+    conda_env="/opt/devel/pipeline/envs/development",
     script_path="/opt/devel/rbyrne/rlb_LWA/LWA_data_preprocessing/get_bad_ants.py",
 ):
 
@@ -416,14 +417,57 @@ def get_datafiles(
 
 
 def calibration_pipeline(
-    datafile_path,
-    output_dir=None,  # If None, datafile_path directory will be used.
-    beam_path="/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits",
-    skymodel_path="/lustre/rbyrne/skymodels/Gregg_20250519_source_models.skyh5",
-    date=None,  # datetime object. Used to get antenna flags and define output directory. If None, filename will be parsed assuming the filename begins with format YYYYMMDD
-    run_aoflagger=True,  # Will modify datafile
-    flag_antennas_a_priori=True,
-):
+    datafile_path: str,
+    output_dir: Optional[str] = None,
+    beam_path: str = "/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits",
+    skymodel_path: str = "/lustre/rbyrne/skymodels/Gregg_20250519_source_models.skyh5",
+    date: Optional[datetime.datetime] = None,
+    run_aoflagger: bool = True,
+    flag_antennas_from_autocorrs: bool = True,
+    flag_antenna_list: List[str] = [],
+    apply_calibration: bool = True,
+    plot_images: bool = True,
+) -> None:
+    """
+    Parameters
+    ----------
+    datafile_path : str
+        Full path to .ms file containing the data.
+    output_dir : str or None
+        Path to a directory where to calibration outputs will be saved. If None,
+        the directory containing datafile_path will be used. Default None.
+    beam_path : str
+        Path to a pyuvdata-readable beam model, in .fits format. Default
+        /lustre/rbyrne/LWA_10to100_MROsoil_efields.fits.
+    skymodel_path : str
+        Path to a pyradiosky-readable sky model, in .skyh5 format. Default
+        /lustre/rbyrne/skymodels/Gregg_20250519_source_models.skyh5.
+    date : datetime object or None
+        Date of data. Used for antenna flag lookup and defining the output
+        directory. If None, the filename will be parsed, assuming that the
+        data filename begins with format YYYYMMDD. Default None.
+    run_aoflagger : bool
+        If True, AOFlagger will be run on the data file. Note that this modifies
+        the data file! Default True.
+    flag_antennas_from_autocorrs : bool
+        Use pre-computed autocorrelation metrics to look up a table of antennas
+        to flag. Default True.
+    flag_antenna_list : list of str
+        List of antennas to flag. String format is "LWA-###A" for antenna ### and
+        polarization A. For example, to flag both polarizations of antenna 5, use
+        ["LWA-005A", "LWA-005B"]. If flag_antennas_from_autocorrs=True, these
+        antennas will be flagged in addition to those in the flagging lookup table.
+    apply_calibration : bool
+        If True, calibration will be applied to the data, and the calibrated
+        visibilities will be written to a new file with suffix *_calibrated.ms.
+        Residual (data minus model) visibilities will also be computed and written to
+        a file with suffix *_res.ms. Default True.
+    plot_images : bool
+        If True, images will be generated with WSClean. If apply_calibration=True,
+        images will be generated of the calibrated data, model, and residual (data
+        minus model). If apply_calibration=False, images will be generated of the
+        model only. Default True.
+    """
 
     # Define output filenames
     output_file_prefix = os.path.splitext(os.path.basename(datafile_path))[0]
@@ -437,7 +481,7 @@ def calibration_pipeline(
     res_image = f"{output_file_prefix}_res"
 
     # Get antennas to flag based on Andrea's autocorrelation metrics
-    if flag_antennas_a_priori:
+    if flag_antennas_from_autocorrs:
         if date is None:  # Attempt to parse the filename to get date
             date = datetime.datetime(
                 int(output_file_prefix[:4]),
@@ -447,7 +491,13 @@ def calibration_pipeline(
         year = date.strftime("%Y")
         month = date.strftime("%m")
         day = date.strftime("%d")
-        bad_ant_list = get_bad_antenna_list(year, month, day)
+        flag_antenna_list_autocorrs = get_bad_antenna_list(year, month, day)
+        print(
+            f"Using antenna autocorrelation data to flag antennas. Flagging {flag_antenna_list_autocorrs}."
+        )
+        flag_antenna_list = np.unique(
+            np.concatenate((flag_antenna_list, flag_antenna_list_autocorrs))
+        )
 
     if run_aoflagger:
         os.system(f"aoflagger {datafile_path}")
@@ -483,10 +533,10 @@ def calibration_pipeline(
     model_uv.set_uvws_from_antenna_positions(update_vis=False)
     model_uv.phase_to_time(np.mean(uv.time_array))
 
-    if flag_antennas_a_priori:
+    if flag_antennas_from_autocorrs:
         flag_antennas(
             uv,
-            antenna_names=bad_ant_list,
+            antenna_names=flag_antenna_list,
             inplace=True,
         )
 
@@ -508,58 +558,60 @@ def calibration_pipeline(
     )
     uvcal.write_calfits(calfits_filename, clobber=True)
 
-    # Apply calibration
-    pyuvdata.utils.uvcalibrate(uv, uvcal, inplace=True, time_check=False)
-    uv.write_ms(calibrated_data_ms, fix_autos=True, clobber=True)
+    if apply_calibration:
 
-    # Image calibrated data
-    os.system(
-        f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {calibrated_data_image} {calibrated_data_ms}"
-    )
-    os.system(
-        f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {model_image} {model_filename}"
-    )
+        pyuvdata.utils.uvcalibrate(uv, uvcal, inplace=True, time_check=False)
+        uv.write_ms(calibrated_data_ms, fix_autos=True, clobber=True)
 
-    # Subtract model from data
-    uv.filename = [""]
-    model_uv.filename = [""]
-    uv.sum_vis(
-        model_uv,
-        difference=True,
-        inplace=True,
-        run_check=False,
-        check_extra=False,
-        override_params=[
-            "scan_number_array",
-            "phase_center_id_array",
-            "telescope",
-            "phase_center_catalog",
-            "filename",
-            "phase_center_app_dec",
-            "nsample_array",
-            "integration_time",
-            "phase_center_frame_pa",
-            "flag_array",
-            "uvw_array",
-            "lst_array",
-            "phase_center_app_ra",
-            "dut1",
-            "earth_omega",
-            "gst0",
-            "rdate",
-            "time_array",
-            "timesys",
-        ],
-    )
-    uv.write_ms(res_ms, fix_autos=True, clobber=True)
-    os.system(
-        f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {res_image} {res_ms}"
-    )
+        # Subtract model from data
+        uv.filename = [""]
+        model_uv.filename = [""]
+        uv.sum_vis(
+            model_uv,
+            difference=True,
+            inplace=True,
+            run_check=False,
+            check_extra=False,
+            override_params=[
+                "scan_number_array",
+                "phase_center_id_array",
+                "telescope",
+                "phase_center_catalog",
+                "filename",
+                "phase_center_app_dec",
+                "nsample_array",
+                "integration_time",
+                "phase_center_frame_pa",
+                "flag_array",
+                "uvw_array",
+                "lst_array",
+                "phase_center_app_ra",
+                "dut1",
+                "earth_omega",
+                "gst0",
+                "rdate",
+                "time_array",
+                "timesys",
+            ],
+        )
+        uv.write_ms(res_ms, fix_autos=True, clobber=True)
+
+    if plot_images:
+        os.system(
+            f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {model_image} {model_filename}"
+        )
+        if apply_calibration:
+            os.system(
+                f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {calibrated_data_image} {calibrated_data_ms}"
+            )
+            os.system(
+                f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {res_image} {res_ms}"
+            )
 
 
 if __name__ == "__main__":
     calibration_pipeline(
         "/lustre/21cmpipe/2025-05-08/20250508_160736-160926_41MHz.ms",
         run_aoflagger=False,
-        flag_antennas_a_priori=False,
+        flag_antennas_from_autocorrs=True,
     )

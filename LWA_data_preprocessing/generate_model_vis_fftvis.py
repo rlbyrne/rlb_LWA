@@ -20,7 +20,7 @@ def run_fftvis_sim(
     output_path=None,
     log_path=None,
     offset_timesteps=0,
-    use_matvis=False,  # Simulate with matvis, not fftvis
+    use_matvis=False,  # Simulate with matvis, THIS CURRENTLY DOESN'T WORK
 ):
 
     if log_path is None:
@@ -77,12 +77,6 @@ def run_fftvis_sim(
     # Define antenna locations
     antpos = uvd.telescope.get_enu_antpos()
     antpos = {a: pos for (a, pos) in zip(uvd.telescope.antenna_numbers, antpos)}
-    uvdata_antpos = {
-        int(a): tuple(pos)
-        for (a, pos) in zip(
-            uvd.telescope.antenna_numbers, uvd.telescope.antenna_positions
-        )
-    }
 
     # Get observation time
     lat, lon, alt = uvd.telescope.location_lat_lon_alt_degrees
@@ -219,10 +213,12 @@ def run_fftvis_sim(
                 precision=1,  # Worse precision
             )
         # Remove duplicated baselines
-        keep_antpairs_inds = np.where(np.array([pair[0] >= pair[1] for pair in antpairs]))[0]
+        keep_antpairs_inds = np.where(
+            np.array([pair[0] >= pair[1] for pair in antpairs])
+        )[0]
         antpairs = antpairs[keep_antpairs_inds]
         vis_full = vis_full[:, :, keep_antpairs_inds, :, :]
-        
+
         vis_full = vis_full.reshape(
             (uvd.Nfreqs, 4, len(antpairs) * uvd.Ntimes)
         ).transpose([2, 0, 1])
