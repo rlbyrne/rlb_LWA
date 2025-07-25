@@ -107,14 +107,14 @@ if __name__ == "__main__":
 
     CLI = argparse.ArgumentParser()
     CLI.add_argument(
-        "--path_in",  # name on the CLI - drop the `--` for positional/required parameters
-        nargs="*",  # 0 or more values expected => creates a list
+        "--path_in",
+        nargs="*",
         type=str,
     )
     CLI.add_argument(
         "--path_out",
         nargs=1,
-        type=str,  # any type/callable can be used here
+        type=str,
     )
 
     # parse the command line
