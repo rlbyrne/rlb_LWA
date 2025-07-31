@@ -7,7 +7,7 @@ import numpy as np
 import pyuvdata
 import datetime
 from generate_model_vis_fftvis import run_fftvis_sim
-from calico import calibration_wrappers
+from calico import calibration_wrappers, calibration_qa
 
 
 def concatenate_ms_files(
@@ -425,6 +425,11 @@ def calibration_pipeline(
     run_aoflagger: bool = True,
     flag_antennas_from_autocorrs: bool = True,
     flag_antenna_list: List[str] = [],
+    calibrate_with_casa: bool = False,
+    casa_calibrate_script_path: str = "/opt/devel/rbyrne/rlb_LWA/LWA_data_preprocessing/casa_calibrate.py",
+    min_cal_baseline_lambda: Optional[int] = 10,
+    max_cal_baseline_lambda: Optional[int] = 125,
+    plot_gains: bool = False,
     apply_calibration: bool = True,
     plot_images: bool = True,
 ) -> None:
@@ -448,7 +453,7 @@ def calibration_pipeline(
         data filename begins with format YYYYMMDD. Default None.
     run_aoflagger : bool
         If True, AOFlagger will be run on the data file. Note that this modifies
-        the data file! Default True.
+        the data file. Default True.
     flag_antennas_from_autocorrs : bool
         Use pre-computed autocorrelation metrics to look up a table of antennas
         to flag. Default True.
@@ -457,6 +462,22 @@ def calibration_pipeline(
         polarization A. For example, to flag both polarizations of antenna 5, use
         ["LWA-005A", "LWA-005B"]. If flag_antennas_from_autocorrs=True, these
         antennas will be flagged in addition to those in the flagging lookup table.
+    calibrate_with_casa : bool
+        If True, use CASA bandpass calibration. If False, use Calico. Default False.
+        If CASA bandpass calibration is used, the data file will be modified by applying
+        flags and adding the model visibilities to the MODEL column of the .ms file.
+    casa_calibrate_script_path : str
+        Used only if calibrate_with_casa is True. Path to the script to perform calibration
+        with CASA. Default /opt/devel/rbyrne/rlb_LWA/LWA_data_preprocessing/casa_calibrate.py.
+    min_cal_baseline_lambda : int
+        Minimum baseline length, in units of wavelengths, to use in calibration. Default
+        10.
+    max_cal_baseline_lambda : int
+        Maximum baseline length, in units of wavelengths, to use in calibration. Default
+        125.
+    plot_gains : bool
+        If True, generate plot of the gains. Plots will be written to a directory gain_plots.
+        Default False.
     apply_calibration : bool
         If True, calibration will be applied to the data, and the calibrated
         visibilities will be written to a new file with suffix *_calibrated.ms.
@@ -474,6 +495,8 @@ def calibration_pipeline(
     model_filename = f"{output_file_prefix}_source_sim.ms"
     calfits_filename = f"{output_file_prefix}.calfits"
     calibration_log = f"{output_file_prefix}_cal_log.txt"
+    gain_plot_dir = "gain_plots/"
+    gain_plot_prefix = output_file_prefix
     calibrated_data_ms = f"{output_file_prefix}_calibrated.ms"
     res_ms = f"{output_file_prefix}_res.ms"
     calibrated_data_image = f"{output_file_prefix}_calibrated"
@@ -519,44 +542,85 @@ def calibration_pipeline(
             beam_path=beam_path,
         )
 
-    # Read data
-    uv = pyuvdata.UVData()
-    print(f"Reading file {datafile_path}.")
-    uv.read(f"{datafile_path}", data_column="DATA")
-    uv.set_uvws_from_antenna_positions(update_vis=False)
-    uv.phase_to_time(np.mean(uv.time_array))
+    if calibrate_with_casa:
 
-    # Read model
-    model_uv = pyuvdata.UVData()
-    print(f"Reading file {output_dir}/{model_filename}.")
-    model_uv.read(f"{output_dir}/{model_filename}", data_column="DATA")
-    model_uv.set_uvws_from_antenna_positions(update_vis=False)
-    model_uv.phase_to_time(np.mean(uv.time_array))
+        # Flag antennas
+        # This would be faster with CASA flagging tools but would require converting antenna
+        # names to correlator numbers
+        if len(flag_antenna_list) > 0:
+            uv = pyuvdata.UVData()
+            uv.read(datafile_path, data_column="DATA")
+            uv.set_uvws_from_antenna_positions(update_vis=False)
+            uv.phase_to_time(np.mean(uv.time_array))
+            flag_antennas(
+                uv,
+                antenna_names=flag_antenna_list,
+                inplace=True,
+            )
+            uv.write_ms(datafile_path, fix_autos=True, clobber=True)
 
-    if flag_antennas_from_autocorrs:
-        flag_antennas(
-            uv,
-            antenna_names=flag_antenna_list,
-            inplace=True,
+        os.system(
+            f"python {casa_calibrate_script_path} --data_file {datafile_path} --model_file {output_dir}/{model_filename} --min_cal_baseline_lambda {min_cal_baseline_lambda} --max_cal_baseline_lambda {max_cal_baseline_lambda}"
         )
 
-    # Calibrate
-    uvcal = calibration_wrappers.sky_based_calibration_wrapper(
-        uv,
-        model_uv,
-        min_cal_baseline_lambda=10,
-        max_cal_baseline_lambda=125,
-        gains_multiply_model=True,
-        verbose=True,
-        get_crosspol_phase=False,
-        log_file_path=f"{output_dir}/{calibration_log}",
-        xtol=1e-6,
-        maxiter=200,
-        antenna_flagging_iterations=0,
-        parallel=False,
-        lambda_val=1,
-    )
-    uvcal.write_calfits(calfits_filename, clobber=True)
+        # Convert CASA calibration solutions to .calfits
+        uvcal = pyuvdata.UVCal()
+        uvcal.read_ms_cal(f"{datafile_path.removesuffix('.ms')}.bcal")
+        uvcal.write_calfits(calfits_filename, clobber=True)
+
+    else:  # Calibrate with Calico
+
+        # Read data
+        uv = pyuvdata.UVData()
+        print(f"Reading file {datafile_path}.")
+        uv.read(datafile_path, data_column="DATA")
+        uv.set_uvws_from_antenna_positions(update_vis=False)
+        uv.phase_to_time(np.mean(uv.time_array))
+
+        # Read model
+        model_uv = pyuvdata.UVData()
+        print(f"Reading file {output_dir}/{model_filename}.")
+        model_uv.read(f"{output_dir}/{model_filename}", data_column="DATA")
+        model_uv.set_uvws_from_antenna_positions(update_vis=False)
+        model_uv.phase_to_time(np.mean(uv.time_array))
+
+        if len(flag_antenna_list) > 0:
+            flag_antennas(
+                uv,
+                antenna_names=flag_antenna_list,
+                inplace=True,
+            )
+
+        # Calibrate
+        uvcal = calibration_wrappers.sky_based_calibration_wrapper(
+            uv,
+            model_uv,
+            min_cal_baseline_lambda=min_cal_baseline_lambda,
+            max_cal_baseline_lambda=max_cal_baseline_lambda,
+            gains_multiply_model=True,
+            verbose=True,
+            get_crosspol_phase=False,
+            log_file_path=f"{output_dir}/{calibration_log}",
+            xtol=1e-6,
+            maxiter=200,
+            antenna_flagging_iterations=0,
+            parallel=False,
+            lambda_val=1,
+        )
+        uvcal.write_calfits(calfits_filename, clobber=True)
+
+    if plot_gains:
+        if not os.path.isdir(f"{output_dir}/{gain_plot_dir}"):
+            os.mkdir(f"{output_dir}/{gain_plot_dir}")
+        calibration_qa.plot_gains(
+            uvcal,
+            plot_output_dir=f"{output_dir}/{gain_plot_dir}",
+            cal_name=gain_plot_prefix,
+            plot_reciprocal=False,
+            ymin=0,
+            ymax=None,
+            zero_mean_phase=False,
+        )
 
     if apply_calibration:
 
@@ -564,6 +628,12 @@ def calibration_pipeline(
         uv.write_ms(calibrated_data_ms, fix_autos=True, clobber=True)
 
         # Subtract model from data
+        if calibrate_with_casa:  # Need to read model file
+            model_uv = pyuvdata.UVData()
+            print(f"Reading file {output_dir}/{model_filename}.")
+            model_uv.read(f"{output_dir}/{model_filename}", data_column="DATA")
+            model_uv.set_uvws_from_antenna_positions(update_vis=False)
+            model_uv.phase_to_time(np.mean(uv.time_array))
         uv.filename = [""]
         model_uv.filename = [""]
         uv.sum_vis(
@@ -614,4 +684,6 @@ if __name__ == "__main__":
         "/lustre/21cmpipe/2025-05-08/20250508_160736-160926_41MHz.ms",
         run_aoflagger=False,
         flag_antennas_from_autocorrs=True,
+        calibrate_with_casa=True,
+        plot_gains=True,
     )
