@@ -419,6 +419,7 @@ def get_datafiles(
 def calibration_pipeline(
     datafile_path: str,
     output_dir: Optional[str] = None,
+    cal_trial_name: Optional[str] = None,
     beam_path: str = "/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits",
     skymodel_path: str = "/lustre/rbyrne/skymodels/Gregg_20250519_source_models.skyh5",
     date: Optional[datetime.datetime] = None,
@@ -441,6 +442,9 @@ def calibration_pipeline(
     output_dir : str or None
         Path to a directory where to calibration outputs will be saved. If None,
         the directory containing datafile_path will be used. Default None.
+    cal_trial_name : str
+        Optional string to append to script outputs. Used to distinguish different
+        calibration trials on the same dataset. Default None.
     beam_path : str
         Path to a pyuvdata-readable beam model, in .fits format. Default
         /lustre/rbyrne/LWA_10to100_MROsoil_efields.fits.
@@ -492,6 +496,8 @@ def calibration_pipeline(
 
     # Define output filenames
     output_file_prefix = os.path.splitext(os.path.basename(datafile_path))[0]
+    if cal_trial_name is not None:
+        output_file_prefix = f"{output_file_prefix}_{cal_trial_name}"
     model_filename = f"{output_file_prefix}_source_sim.ms"
     calfits_filename = f"{output_file_prefix}.calfits"
     calibration_log = f"{output_file_prefix}_cal_log.txt"
@@ -566,7 +572,7 @@ def calibration_pipeline(
         # Convert CASA calibration solutions to .calfits
         uvcal = pyuvdata.UVCal()
         uvcal.read_ms_cal(f"{datafile_path.removesuffix('.ms')}.bcal")
-        uvcal.write_calfits(calfits_filename, clobber=True)
+        uvcal.write_calfits(f"{output_dir}/{calfits_filename}", clobber=True)
 
     else:  # Calibrate with Calico
 
@@ -607,7 +613,8 @@ def calibration_pipeline(
             parallel=False,
             lambda_val=1,
         )
-        uvcal.write_calfits(calfits_filename, clobber=True)
+        print(f"Writing output to {calfits_filename}")
+        uvcal.write_calfits(f"{output_dir}/{calfits_filename}", clobber=True)
 
     if plot_gains:
         if not os.path.isdir(f"{output_dir}/{gain_plot_dir}"):
@@ -664,26 +671,34 @@ def calibration_pipeline(
                 "timesys",
             ],
         )
-        uv.write_ms(res_ms, fix_autos=True, clobber=True)
+        uv.write_ms(f"{output_dir}/{res_ms}", fix_autos=True, clobber=True)
 
     if plot_images:
         os.system(
-            f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {model_image} {model_filename}"
+            f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {output_dir}/{model_image} {output_dir}/{model_filename}"
         )
         if apply_calibration:
             os.system(
-                f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {calibrated_data_image} {calibrated_data_ms}"
+                f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {output_dir}/{calibrated_data_image} {output_dir}/{calibrated_data_ms}"
             )
             os.system(
-                f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {res_image} {res_ms}"
+                f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {output_dir}/{res_image} {output_dir}/{res_ms}"
             )
 
 
 if __name__ == "__main__":
     calibration_pipeline(
         "/lustre/21cmpipe/2025-05-08/20250508_160736-160926_41MHz.ms",
+        flag_antenna_list=['LWA-365B', 'LWA-069B', 'LWA-129B', 'LWA-131B',
+            'LWA-110B', 'LWA-187B', 'LWA-203B', 'LWA-206B', 'LWA-209B','LWA-308B',
+            'LWA-272B', 'LWA-122B', 'LWA-124B', 'LWA-208B','LWA-292B', 'LWA-005B',
+            'LWA-331B', 'LWA-365B', 'LWA-086B', 'LWA-068B', 'LWA-127B', 'LWA-185B',
+            'LWA-186B', 'LWA-190B', 'LWA-227B', 'LWA-209B', 'LWA-235B','LWA-280B',
+            'LWA-288B','LWA-282B', 'LWA-272B', 'LWA-173B', 'LWA-244B'],
+        cal_trial_name="flagtest",
         run_aoflagger=False,
-        flag_antennas_from_autocorrs=True,
-        calibrate_with_casa=True,
-        plot_gains=True,
+        flag_antennas_from_autocorrs=False,
+        calibrate_with_casa=False,
+        plot_gains=False,
+        plot_images=False,
     )
