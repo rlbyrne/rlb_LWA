@@ -632,7 +632,7 @@ def calibration_pipeline(
     if apply_calibration:
 
         pyuvdata.utils.uvcalibrate(uv, uvcal, inplace=True, time_check=False)
-        uv.write_ms(calibrated_data_ms, fix_autos=True, clobber=True)
+        uv.write_ms(f"{output_dir}/{calibrated_data_ms}", fix_autos=True, clobber=True)
 
         # Subtract model from data
         if calibrate_with_casa:  # Need to read model file
@@ -688,17 +688,17 @@ def calibration_pipeline(
 
 if __name__ == "__main__":
     calibration_pipeline(
-        "/lustre/21cmpipe/2025-05-08/20250508_160736-160926_41MHz.ms",
+        "/lustre/rbyrne/antenna_rotation_test/20250713_083119_50MHz_unflagged_casa_calibrated.ms",
         flag_antenna_list=['LWA-365B', 'LWA-069B', 'LWA-129B', 'LWA-131B',
             'LWA-110B', 'LWA-187B', 'LWA-203B', 'LWA-206B', 'LWA-209B','LWA-308B',
             'LWA-272B', 'LWA-122B', 'LWA-124B', 'LWA-208B','LWA-292B', 'LWA-005B',
             'LWA-331B', 'LWA-365B', 'LWA-086B', 'LWA-068B', 'LWA-127B', 'LWA-185B',
             'LWA-186B', 'LWA-190B', 'LWA-227B', 'LWA-209B', 'LWA-235B','LWA-280B',
             'LWA-288B','LWA-282B', 'LWA-272B', 'LWA-173B', 'LWA-244B'],
-        cal_trial_name="flagtest",
-        run_aoflagger=False,
+        run_aoflagger=True,
+        cal_trial_name="recalibrated",
         flag_antennas_from_autocorrs=False,
         calibrate_with_casa=False,
-        plot_gains=False,
-        plot_images=False,
+        plot_gains=True,
+        plot_images=True,
     )
