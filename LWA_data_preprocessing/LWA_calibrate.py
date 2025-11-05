@@ -350,7 +350,7 @@ def get_model_visibilities(
 
 def get_datafiles(
     freq_band="41",
-    start_time=datetime.datetime(2025, 5, 8, 16, 7, 36),
+    start_time=datetime.datetime(2025, 5, 8, 16, 7, 36),  # In UTC
     delta_time=datetime.timedelta(minutes=2),  # Total time interval
     time_step=0,  # Offset start time to step through time intervals
     raw_data_dir="/lustre/pipeline/calibration",
@@ -413,7 +413,7 @@ def get_datafiles(
         else:  # Only one file used
             concatenated_filename = use_files[0]
 
-    return concatenated_filename
+    return f"{output_dir}/{concatenated_filename}"
 
 
 def calibration_pipeline(
@@ -687,47 +687,22 @@ def calibration_pipeline(
 
 
 if __name__ == "__main__":
+    concatenated_filename = get_datafiles(
+        freq_band="41",
+        start_time=datetime.datetime(2025, 3, 6, 16, 51, 58),
+        delta_time=datetime.timedelta(minutes=2),  # Total time interval
+        time_step=0,  # Offset start time to step through time intervals
+        raw_data_dir="/lustre/pipeline/calibration",
+        save_dir="/lustre/rbyrne",
+    )
     calibration_pipeline(
-        "/lustre/rbyrne/antenna_rotation_test/20250713_083119_50MHz_unflagged.ms",
-        flag_antenna_list=[
-            "LWA-365B",
-            "LWA-069B",
-            "LWA-129B",
-            "LWA-131B",
-            "LWA-110B",
-            "LWA-187B",
-            "LWA-203B",
-            "LWA-206B",
-            "LWA-209B",
-            "LWA-308B",
-            "LWA-272B",
-            "LWA-122B",
-            "LWA-124B",
-            "LWA-208B",
-            "LWA-292B",
-            "LWA-005B",
-            "LWA-331B",
-            "LWA-365B",
-            "LWA-086B",
-            "LWA-068B",
-            "LWA-127B",
-            "LWA-185B",
-            "LWA-186B",
-            "LWA-190B",
-            "LWA-227B",
-            "LWA-209B",
-            "LWA-235B",
-            "LWA-280B",
-            "LWA-288B",
-            "LWA-282B",
-            "LWA-272B",
-            "LWA-173B",
-            "LWA-244B",
-        ],
+        concatenated_filename,
+        "/lustre/rbyrne/2025-03-06",
         run_aoflagger=True,
-        cal_trial_name="lambda0",
-        flag_antennas_from_autocorrs=False,
-        calibrate_with_casa=False,
+        flag_antennas_from_autocorrs=True,
+        min_cal_baseline_lambda=10,
+        max_cal_baseline_lambda=125,
         plot_gains=True,
+        apply_calibration=True,
         plot_images=True,
     )
