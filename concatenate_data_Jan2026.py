@@ -4,31 +4,8 @@ import os
 import sys
 import datetime
 
-use_freqs = [
-    "41",
-    "46",
-    "50",
-    "55",
-    "59",
-    "64",
-    "69",
-    "73",
-    "78",
-    "82",
-]
-freq_intervals = [
-    [41319824.21875, 48354003.90625],
-    [48377929.6875, 56823730.46875],
-    [56847656.25, 67398925.78125],
-    [67422851.5625, 77615234.375],
-    [77639160.15625, 82256835.9375],
-    [82280761.71875, 84649414.0625],
-]
-# dates = np.sort(os.listdir(f"/lustre/pipeline/cosmology/{use_freqs[0]}MHz"))
-dates = ["2026-01-07"]
 
-
-def chunk_in_frequency(uv, filenames):
+def chunk_in_frequency(uv, filenames, freq_intervals):
 
     out_filepaths = []
     for interval in np.array(freq_intervals):
@@ -50,8 +27,8 @@ def chunk_in_frequency(uv, filenames):
         outdir = f"/lustre/pipeline/cosmology/concatenated_data/{mean_freq}MHz/{year}-{month}-{day}/{hour}"
         out_filename = f"{year}{month}{day}_{hour}{start_minute}{start_second}-{hour}{end_minute}{end_second}_{mean_freq}MHz.ms"
         if not os.path.isdir(outdir):
-            os.system(f"sudo mkdir -p {outdir}")
-        uv.write_ms(f"{outdir}/{out_filename}")
+            os.system(f"mkdir -p {outdir}")
+        uv.write_ms(f"{outdir}/{out_filename}", clobber=True)
         out_filepaths.append(f"{outdir}/{out_filename}")
 
     return out_filepaths
@@ -71,7 +48,7 @@ def delete_original_data(filenames):
             os.system(f"rm -r {path}")
 
 
-def concatenate(filenames):
+def concatenate(filenames, use_freqs, freq_intervals, delete_orig_data=True):
 
     # Check if all paths exist
     for file_ind, filename in enumerate(filenames):
@@ -110,43 +87,85 @@ def concatenate(filenames):
         else:
             uv.fast_concat(uv_freq_new, "blt", inplace=True, run_check=False)
 
-    out_filepaths = chunk_in_frequency(uv, filenames)
-    delete_data = True
-    for filepath in out_filepaths:
-        if not os.path.isdir(filepath):
-            delete_data = False
-            break
-    if delete_data:
-        delete_original_data(filenames)
+    out_filepaths = chunk_in_frequency(uv, filenames, freq_intervals)
+    if delete_orig_data:
+        delete_data = True
+        for filepath in out_filepaths:
+            if not os.path.isdir(filepath):
+                delete_data = False
+                break
+        if delete_data:
+            delete_original_data(filenames)
 
 
-for date in dates:
-    hours = np.sort(os.listdir(f"/lustre/pipeline/cosmology/{use_freqs[0]}MHz/{date}"))
-    for hour in hours:
-        filenames = np.sort(
-            os.listdir(f"/lustre/pipeline/cosmology/{use_freqs[0]}MHz/{date}/{hour}")
+def find_and_concatenate_data(dates, use_freqs, freq_intervals, delete_orig_data=True):
+
+    for date in dates:
+        hours = np.sort(
+            os.listdir(f"/lustre/pipeline/cosmology/{use_freqs[0]}MHz/{date}")
         )
-        use_timestamps = []
-        use_filenames = []
-        for filename in filenames:
-            new_time = datetime.datetime(
-                int(filename[:4]),  # year
-                int(filename[4:6]),  # month
-                int(filename[6:8]),  # day
-                int(filename[9:11]),  # hour
-                int(filename[11:13]),  # minute
-                int(filename[13:15]),  # second
+        for hour in hours:
+            filenames = np.sort(
+                os.listdir(
+                    f"/lustre/pipeline/cosmology/{use_freqs[0]}MHz/{date}/{hour}"
+                )
             )
-            if len(use_timestamps) == 0:
-                use_timestamps.append(new_time)
-                use_filenames.append(filename)
-            else:
-                if np.abs(new_time - np.min(use_timestamps)) < datetime.timedelta(
-                    minutes=2
-                ):
+            use_timestamps = []
+            use_filenames = []
+            for filename in filenames:
+                new_time = datetime.datetime(
+                    int(filename[:4]),  # year
+                    int(filename[4:6]),  # month
+                    int(filename[6:8]),  # day
+                    int(filename[9:11]),  # hour
+                    int(filename[11:13]),  # minute
+                    int(filename[13:15]),  # second
+                )
+                if len(use_timestamps) == 0:
                     use_timestamps.append(new_time)
                     use_filenames.append(filename)
-            if len(use_timestamps) == 12:
-                concatenate(use_filenames)
-                use_timestamps = []
-                use_filenames = []
+                else:
+                    if np.abs(new_time - np.min(use_timestamps)) < datetime.timedelta(
+                        minutes=2
+                    ):
+                        use_timestamps.append(new_time)
+                        use_filenames.append(filename)
+                if len(use_timestamps) == 12:
+                    concatenate(
+                        use_filenames,
+                        use_freqs,
+                        freq_intervals,
+                        delete_orig_data=delete_orig_data,
+                    )
+                    use_timestamps = []
+                    use_filenames = []
+
+
+if __name__ == "__main__":
+    use_freqs = [
+        # "27",
+        # "32",
+        # "36",
+        "41",
+        "46",
+        "50",
+        "55",
+        "59",
+        "64",
+        "69",
+        "73",
+        "78",
+        "82",
+    ]
+    freq_intervals = [
+        # [28352050.78125, 41295898.4375],
+        [41319824.21875, 48354003.90625],
+        [48377929.6875, 56823730.46875],
+        [56847656.25, 67398925.78125],
+        [67422851.5625, 77615234.375],
+        [77639160.15625, 82256835.9375],
+        [82280761.71875, 84649414.0625],
+    ]
+    # dates = np.sort(os.listdir(f"/lustre/pipeline/cosmology/{use_freqs[0]}MHz"))
+    dates = ["2026-01-07"]
+    find_and_concatenate_data(dates, use_freqs, freq_intervals, delete_orig_data=False)

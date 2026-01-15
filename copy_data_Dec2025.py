@@ -6,6 +6,9 @@ target_dir = "/lustre/pipeline/cosmology"
 source_dir = "/lustre/pipeline/slow"
 
 copy_freqs = [
+    "27",
+    "32",
+    "36",
     "41",
     "46",
     "50",
@@ -43,7 +46,8 @@ for date in dates:
                     if os.path.isdir(
                         f"{source_dir}/{freq}MHz/{date}/{hour}/{filename}"
                     ):
-                        copy_command = f"sudo mkdir -p {target_dir}/{freq}MHz/{date}/{hour} && sudo cp -r {source_dir}/{freq}MHz/{date}/{hour}/{filename} {target_dir}/{freq}MHz/{date}/{hour}"
+                        # copy_command = f"sudo mkdir -p {target_dir}/{freq}MHz/{date}/{hour} && sudo cp -r {source_dir}/{freq}MHz/{date}/{hour}/{filename} {target_dir}/{freq}MHz/{date}/{hour}"
+                        copy_command = f"mkdir -p {target_dir}/{freq}MHz/{date}/{hour} && cp -r {source_dir}/{freq}MHz/{date}/{hour}/{filename} {target_dir}/{freq}MHz/{date}/{hour}"
                         print(f"Copying {filename}")
                         os.system(copy_command)
                     else:

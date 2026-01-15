@@ -687,22 +687,27 @@ def calibration_pipeline(
 
 
 if __name__ == "__main__":
-    concatenated_filename = get_datafiles(
-        freq_band="41",
-        start_time=datetime.datetime(2025, 3, 6, 16, 51, 58),
-        delta_time=datetime.timedelta(minutes=2),  # Total time interval
-        time_step=0,  # Offset start time to step through time intervals
-        raw_data_dir="/lustre/pipeline/calibration",
-        save_dir="/lustre/rbyrne",
-    )
-    calibration_pipeline(
-        concatenated_filename,
-        "/lustre/rbyrne/2025-03-06",
-        run_aoflagger=True,
-        flag_antennas_from_autocorrs=True,
-        min_cal_baseline_lambda=10,
-        max_cal_baseline_lambda=125,
-        plot_gains=True,
-        apply_calibration=True,
-        plot_images=True,
-    )
+    use_freqs = [
+        "44",
+        "52",
+        "62",
+        "72",
+        "79",
+        "83",
+    ]
+    filenames = [
+        f"/lustre/pipeline/cosmology/concatenated_data/{freq}MHz/2026-01-07/01/20260107_013008-013158_{freq}MHz.ms"
+        for freq in use_freqs
+    ]
+    for filename in filenames:
+        calibration_pipeline(
+            filename,
+            "/lustre/rbyrne/2026-01-07",
+            run_aoflagger=True,
+            flag_antennas_from_autocorrs=True,
+            min_cal_baseline_lambda=10,
+            max_cal_baseline_lambda=125,
+            plot_gains=True,
+            apply_calibration=True,
+            plot_images=True,
+        )
