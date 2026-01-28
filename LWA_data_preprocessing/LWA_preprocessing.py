@@ -17,6 +17,51 @@ except:
 matplotlib.use("Agg")
 
 
+def read_ms_caltable(path):
+    """
+    This function replaces pyuvdata's UVCal.read() function due to a bug in that function.
+    See https://github.com/RadioAstronomySoftwareGroup/pyuvdata/issues/1648
+    """
+
+    cal = pyuvdata.UVCal()
+    cal.read(path)
+
+    if cal.Nspws > 1:
+        # Fix spws that are not read the first time
+        t = tbl.table(path, readonly=True)
+
+        # Get frequencies
+        t_spec_win = tbl.table(
+            t.getkeyword("SPECTRAL_WINDOW"), readonly=True, ack=False
+        )
+        freqs = t_spec_win.getcol("CHAN_FREQ").squeeze()
+        bw = t_spec_win.getcol("CHAN_WIDTH").squeeze()
+        t_spec_win.close()
+
+        gains = t.getcol("CPARAM")
+        times = t.getcol("TIME")
+        ants = t.getcol("ANTENNA1")
+        flags = t.getcol("FLAG")
+        spw_id = t.getcol("SPECTRAL_WINDOW_ID")
+
+        for ant_ind in range(cal.Nants_data):
+            for freq_ind in range(cal.Nfreqs):
+                use_ant_inds = np.where(ants == cal.ant_array[ant_ind])
+                use_freq_inds = np.where(freqs == cal.freq_array[freq_ind])
+                fine_channel_ind = use_freq_inds[1]
+                spw = use_freq_inds[0]
+                spw_ind = np.where(spw_id == spw)
+                ant_spw_ind = np.intersect1d(use_ant_inds, spw_ind)
+                cal.gain_array[ant_ind, freq_ind, 0, :] = gains[
+                    ant_spw_ind, fine_channel_ind, :
+                ]
+                cal.flag_array[ant_ind, freq_ind, 0, :] = flags[
+                    ant_spw_ind, fine_channel_ind, :
+                ]
+
+    return cal
+
+
 def convert_raw_ms_to_uvdata(
     ms_filenames,  # String or list of strings
     untar_dir=None,  # Used if files are tar-ed. None defaults to original data dir.
