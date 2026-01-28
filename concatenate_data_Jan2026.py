@@ -80,7 +80,7 @@ def concatenate(filenames, use_freqs, freq_intervals, delete_orig_data=True):
             uv_new = pyuvdata.UVData()
             uv_new.read(path)
             uv_new.select(polarizations=[-5, -6])
-            uv_new.scan_number_array = None
+            # uv_new.scan_number_array = None  # Added as a workaround for a pyuvdata bug (https://github.com/RadioAstronomySoftwareGroup/pyuvdata/issues/1595)
             if freq_ind == 0:
                 uv_new.phase_to_time(np.min(uv_new.time_array))
                 uv_freq_new = uv_new
