@@ -8,6 +8,7 @@ import pyuvdata
 import datetime
 from generate_model_vis_fftvis import run_fftvis_sim
 from calico import calibration_wrappers, calibration_qa
+import casacore.tables as tbl
 
 
 def concatenate_ms_files(
@@ -100,6 +101,69 @@ def flag_antennas(
         uvd_new = uvd.copy()
         uvd_new.flag_array = flag_arr
         return uvd_new
+
+
+def read_caltable_safely(path):
+    """
+    This function replaces pyuvdata's UVCal.read() function due to a bug in that function.
+    See https://github.com/RadioAstronomySoftwareGroup/pyuvdata/issues/1648.
+    """
+
+    cal = pyuvdata.UVCal()
+    cal.read(path)
+
+    if (
+        os.path.isdir(path) and cal.Nspws > 1
+    ):  # Path is an ms caltable and contains more than one spectral window
+
+        t = tbl.table(path, readonly=True)
+
+        # Get frequencies
+        t_spec_win = tbl.table(
+            t.getkeyword("SPECTRAL_WINDOW"), readonly=True, ack=False
+        )
+        freqs = t_spec_win.getcol("CHAN_FREQ").squeeze()
+        bw = t_spec_win.getcol("CHAN_WIDTH").squeeze()
+        t_spec_win.close()
+
+        gains = t.getcol("CPARAM")
+        times = t.getcol("TIME")
+        ants = t.getcol("ANTENNA1")
+        flags = t.getcol("FLAG")
+        spw_id = t.getcol("SPECTRAL_WINDOW_ID")
+
+        cal.gain_array = np.zeros(
+            (cal.Nants_data, cal.Nfreqs, 1, cal.Njones), dtype=complex
+        )
+        cal.flag_array = np.zeros(
+            (cal.Nants_data, cal.Nfreqs, 1, cal.Njones), dtype=bool
+        )
+
+        # Assume one time
+        cal.Ntimes = 1
+        cal.time_array = np.array([np.mean(cal.time_array)])
+        cal.integration_time = np.array([np.mean(cal.integration_time)])
+        cal.lst_array = np.array([np.mean(cal.lst_array)])
+        cal.phase_center_id_array = np.array([int(np.mean(cal.phase_center_id_array))])
+        cal.quality_array = np.mean(cal.quality_array, axis=2)[:, :, np.newaxis, :]
+        cal.scan_number_array = np.array([int(np.mean(cal.scan_number_array))])
+
+        for ant_ind in range(cal.Nants_data):
+            for freq_ind in range(cal.Nfreqs):
+                use_ant_inds = np.where(ants == cal.ant_array[ant_ind])
+                use_freq_inds = np.where(freqs == cal.freq_array[freq_ind])
+                fine_channel_ind = use_freq_inds[1]
+                spw = use_freq_inds[0]
+                spw_ind = np.where(spw_id == spw)
+                ant_spw_ind = np.intersect1d(use_ant_inds, spw_ind)
+                cal.gain_array[ant_ind, freq_ind, 0, :] = gains[
+                    ant_spw_ind, fine_channel_ind, :
+                ]
+                cal.flag_array[ant_ind, freq_ind, 0, :] = flags[
+                    ant_spw_ind, fine_channel_ind, :
+                ]
+
+    return cal
 
 
 def get_model_visibilities(
@@ -420,8 +484,11 @@ def calibration_pipeline(
     datafile_path: str,
     output_dir: Optional[str] = None,
     cal_trial_name: Optional[str] = None,
-    beam_path: str = "/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits",
-    skymodel_path: str = "/lustre/rbyrne/skymodels/Gregg_20250519_source_models.skyh5",
+    beam_path: Optional[str] = "/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits",
+    skymodel_path: Optional[
+        str
+    ] = "/lustre/rbyrne/skymodels/Gregg_20250519_source_models.skyh5",
+    apply_cal_path: Optional[str] = None,
     date: Optional[datetime.datetime] = None,
     run_aoflagger: bool = True,
     flag_antennas_from_autocorrs: bool = True,
@@ -445,12 +512,17 @@ def calibration_pipeline(
     cal_trial_name : str
         Optional string to append to script outputs. Used to distinguish different
         calibration trials on the same dataset. Default None.
-    beam_path : str
+    beam_path : str or None
         Path to a pyuvdata-readable beam model, in .fits format. Default
-        /lustre/rbyrne/LWA_10to100_MROsoil_efields.fits.
-    skymodel_path : str
+        /lustre/rbyrne/LWA_10to100_MROsoil_efields.fits. Not used if apply_cal_path
+        is not None.
+    skymodel_path : str or None
         Path to a pyradiosky-readable sky model, in .skyh5 format. Default
-        /lustre/rbyrne/skymodels/Gregg_20250519_source_models.skyh5.
+        /lustre/rbyrne/skymodels/Gregg_20250519_source_models.skyh5. Not used if
+        apply_cal_path is not None.
+    apply_cal_path : str or None
+        If not None, do not perform calibration and instead restore and apply a
+        saved calibration solution. Path to a pyuvdata-readable calibration file.
     date : datetime object or None
         Date of data. Used for antenna flag lookup and defining the output
         directory. If None, the filename will be parsed, assuming that the
@@ -475,10 +547,10 @@ def calibration_pipeline(
         with CASA. Default /opt/devel/rbyrne/rlb_LWA/LWA_data_preprocessing/casa_calibrate.py.
     min_cal_baseline_lambda : int
         Minimum baseline length, in units of wavelengths, to use in calibration. Default
-        10.
+        10. Not used if apply_cal_path is not None.
     max_cal_baseline_lambda : int
         Maximum baseline length, in units of wavelengths, to use in calibration. Default
-        125.
+        125. Not used if apply_cal_path is not None.
     plot_gains : bool
         If True, generate plot of the gains. Plots will be written to a directory gain_plots.
         Default False.
@@ -536,85 +608,92 @@ def calibration_pipeline(
     if not os.path.isdir(output_dir):  # Make directory if it doesn't already exist
         os.mkdir(output_dir)
 
-    if os.path.isdir(f"{output_dir}/{model_filename}"):
-        print(f"Model file exists. Using {output_dir}/{model_filename}.")
-    else:
-        get_model_visibilities(
-            model_visilibility_mode="run simulation",
-            model_vis_file=f"{output_dir}/{model_filename}",
-            include_diffuse=False,
-            data_file=datafile_path,
-            skymodel_path=skymodel_path,
-            beam_path=beam_path,
-        )
+    if apply_cal_path is not None:  # Restore calibration solution
+        uvcal = read_caltable_safely(apply_cal_path)
+        uv = None  # Define variable
 
-    if calibrate_with_casa:
+    else:  # Run calibration
 
-        # Flag antennas
-        # This would be faster with CASA flagging tools but would require converting antenna
-        # names to correlator numbers
-        if len(flag_antenna_list) > 0:
+        if os.path.isdir(f"{output_dir}/{model_filename}"):
+            print(f"Model file exists. Using {output_dir}/{model_filename}.")
+        else:
+            get_model_visibilities(
+                model_visilibility_mode="run simulation",
+                model_vis_file=f"{output_dir}/{model_filename}",
+                include_diffuse=False,
+                data_file=datafile_path,
+                skymodel_path=skymodel_path,
+                beam_path=beam_path,
+            )
+
+        if calibrate_with_casa:
+
+            # Flag antennas
+            # This would be faster with CASA flagging tools but would require converting antenna
+            # names to correlator numbers
+            if len(flag_antenna_list) > 0:
+                uv = pyuvdata.UVData()
+                uv.read(datafile_path, data_column="DATA")
+                uv.set_uvws_from_antenna_positions(update_vis=False)
+                uv.phase_to_time(np.mean(uv.time_array))
+                flag_antennas(
+                    uv,
+                    antenna_names=flag_antenna_list,
+                    inplace=True,
+                )
+                uv.write_ms(datafile_path, fix_autos=True, clobber=True)
+                uv = None  # Clear memory
+
+            os.system(
+                f"python {casa_calibrate_script_path} --data_file {datafile_path} --model_file {output_dir}/{model_filename} --min_cal_baseline_lambda {min_cal_baseline_lambda} --max_cal_baseline_lambda {max_cal_baseline_lambda}"
+            )
+
+            # Convert CASA calibration solutions to .calfits
+            uvcal = pyuvdata.UVCal()
+            uvcal.read_ms_cal(f"{datafile_path.removesuffix('.ms')}.bcal")
+            uvcal.write_calfits(f"{output_dir}/{calfits_filename}", clobber=True)
+
+        else:  # Calibrate with Calico
+
+            # Read data
             uv = pyuvdata.UVData()
+            print(f"Reading file {datafile_path}.")
             uv.read(datafile_path, data_column="DATA")
             uv.set_uvws_from_antenna_positions(update_vis=False)
             uv.phase_to_time(np.mean(uv.time_array))
-            flag_antennas(
+
+            # Read model
+            model_uv = pyuvdata.UVData()
+            print(f"Reading file {output_dir}/{model_filename}.")
+            model_uv.read(f"{output_dir}/{model_filename}", data_column="DATA")
+            model_uv.set_uvws_from_antenna_positions(update_vis=False)
+            model_uv.phase_to_time(np.mean(uv.time_array))
+
+            if len(flag_antenna_list) > 0:
+                flag_antennas(
+                    uv,
+                    antenna_names=flag_antenna_list,
+                    inplace=True,
+                )
+
+            # Calibrate
+            uvcal = calibration_wrappers.sky_based_calibration_wrapper(
                 uv,
-                antenna_names=flag_antenna_list,
-                inplace=True,
+                model_uv,
+                min_cal_baseline_lambda=min_cal_baseline_lambda,
+                max_cal_baseline_lambda=max_cal_baseline_lambda,
+                gains_multiply_model=True,
+                verbose=True,
+                get_crosspol_phase=False,
+                log_file_path=f"{output_dir}/{calibration_log}",
+                xtol=1e-6,
+                maxiter=200,
+                antenna_flagging_iterations=0,
+                parallel=False,
+                lambda_val=0,
             )
-            uv.write_ms(datafile_path, fix_autos=True, clobber=True)
-
-        os.system(
-            f"python {casa_calibrate_script_path} --data_file {datafile_path} --model_file {output_dir}/{model_filename} --min_cal_baseline_lambda {min_cal_baseline_lambda} --max_cal_baseline_lambda {max_cal_baseline_lambda}"
-        )
-
-        # Convert CASA calibration solutions to .calfits
-        uvcal = pyuvdata.UVCal()
-        uvcal.read_ms_cal(f"{datafile_path.removesuffix('.ms')}.bcal")
-        uvcal.write_calfits(f"{output_dir}/{calfits_filename}", clobber=True)
-
-    else:  # Calibrate with Calico
-
-        # Read data
-        uv = pyuvdata.UVData()
-        print(f"Reading file {datafile_path}.")
-        uv.read(datafile_path, data_column="DATA")
-        uv.set_uvws_from_antenna_positions(update_vis=False)
-        uv.phase_to_time(np.mean(uv.time_array))
-
-        # Read model
-        model_uv = pyuvdata.UVData()
-        print(f"Reading file {output_dir}/{model_filename}.")
-        model_uv.read(f"{output_dir}/{model_filename}", data_column="DATA")
-        model_uv.set_uvws_from_antenna_positions(update_vis=False)
-        model_uv.phase_to_time(np.mean(uv.time_array))
-
-        if len(flag_antenna_list) > 0:
-            flag_antennas(
-                uv,
-                antenna_names=flag_antenna_list,
-                inplace=True,
-            )
-
-        # Calibrate
-        uvcal = calibration_wrappers.sky_based_calibration_wrapper(
-            uv,
-            model_uv,
-            min_cal_baseline_lambda=min_cal_baseline_lambda,
-            max_cal_baseline_lambda=max_cal_baseline_lambda,
-            gains_multiply_model=True,
-            verbose=True,
-            get_crosspol_phase=False,
-            log_file_path=f"{output_dir}/{calibration_log}",
-            xtol=1e-6,
-            maxiter=200,
-            antenna_flagging_iterations=0,
-            parallel=False,
-            lambda_val=0,
-        )
-        print(f"Writing output to {calfits_filename}")
-        uvcal.write_calfits(f"{output_dir}/{calfits_filename}", clobber=True)
+            print(f"Writing output to {calfits_filename}")
+            uvcal.write_calfits(f"{output_dir}/{calfits_filename}", clobber=True)
 
     if plot_gains:
         if not os.path.isdir(f"{output_dir}/{gain_plot_dir}"):
@@ -631,62 +710,71 @@ def calibration_pipeline(
 
     if apply_calibration:
 
+        if uv is None:  # Read data
+            uv = pyuvdata.UVData()
+            uv.read(datafile_path, data_column="DATA")
+            uv.set_uvws_from_antenna_positions(update_vis=False)
+            uv.phase_to_time(np.mean(uv.time_array))
+
         pyuvdata.utils.uvcalibrate(uv, uvcal, inplace=True, time_check=False)
         uv.write_ms(f"{output_dir}/{calibrated_data_ms}", fix_autos=True, clobber=True)
 
-        # Subtract model from data
-        if calibrate_with_casa:  # Need to read model file
-            model_uv = pyuvdata.UVData()
-            print(f"Reading file {output_dir}/{model_filename}.")
-            model_uv.read(f"{output_dir}/{model_filename}", data_column="DATA")
-            model_uv.set_uvws_from_antenna_positions(update_vis=False)
-            model_uv.phase_to_time(np.mean(uv.time_array))
-        uv.filename = [""]
-        model_uv.filename = [""]
-        uv.sum_vis(
-            model_uv,
-            difference=True,
-            inplace=True,
-            run_check=False,
-            check_extra=False,
-            override_params=[
-                "scan_number_array",
-                "phase_center_id_array",
-                "telescope",
-                "phase_center_catalog",
-                "filename",
-                "phase_center_app_dec",
-                "nsample_array",
-                "integration_time",
-                "phase_center_frame_pa",
-                "flag_array",
-                "uvw_array",
-                "lst_array",
-                "phase_center_app_ra",
-                "dut1",
-                "earth_omega",
-                "gst0",
-                "rdate",
-                "time_array",
-                "timesys",
-            ],
-        )
-        uv.write_ms(f"{output_dir}/{res_ms}", fix_autos=True, clobber=True)
+        if apply_cal_path is None:  # Subtract model from data
+            if calibrate_with_casa:  # Need to read model file
+                model_uv = pyuvdata.UVData()
+                print(f"Reading file {output_dir}/{model_filename}.")
+                model_uv.read(f"{output_dir}/{model_filename}", data_column="DATA")
+                model_uv.set_uvws_from_antenna_positions(update_vis=False)
+                model_uv.phase_to_time(np.mean(uv.time_array))
+            uv.filename = [""]
+            model_uv.filename = [""]
+            uv.sum_vis(
+                model_uv,
+                difference=True,
+                inplace=True,
+                run_check=False,
+                check_extra=False,
+                override_params=[
+                    "scan_number_array",
+                    "phase_center_id_array",
+                    "telescope",
+                    "phase_center_catalog",
+                    "filename",
+                    "phase_center_app_dec",
+                    "nsample_array",
+                    "integration_time",
+                    "phase_center_frame_pa",
+                    "flag_array",
+                    "uvw_array",
+                    "lst_array",
+                    "phase_center_app_ra",
+                    "dut1",
+                    "earth_omega",
+                    "gst0",
+                    "rdate",
+                    "time_array",
+                    "timesys",
+                ],
+            )
+            uv.write_ms(f"{output_dir}/{res_ms}", fix_autos=True, clobber=True)
 
     if plot_images:
-        os.system(
-            f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {output_dir}/{model_image} {output_dir}/{model_filename}"
-        )
-        if apply_calibration:
+        if apply_cal_path is None:  # Plot model
+            os.system(
+                f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {output_dir}/{model_image} {output_dir}/{model_filename}"
+            )
+        if apply_calibration:  # Plot calibrated data
             os.system(
                 f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {output_dir}/{calibrated_data_image} {output_dir}/{calibrated_data_ms}"
             )
+        if apply_calibration and apply_cal_path is None:  # Plot residual
             os.system(
                 f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {output_dir}/{res_image} {output_dir}/{res_ms}"
             )
 
 
 if __name__ == "__main__":
+    """
     use_freqs = [
         "44",
         "52",
@@ -711,3 +799,19 @@ if __name__ == "__main__":
             apply_calibration=True,
             plot_images=True,
         )
+    """
+
+    filename = "/fast/rbyrne/20260112_120008-120158_34MHz.ms"
+    caltable = "/lustre/pipeline/calibration/results/2026-01-12/05h/successful/20260115_130732/tables/calibration_2026-01-12_05h.B.flagged"
+    calibration_pipeline(
+        filename,
+        output_dir="/fast/rbyrne",
+        cal_trial_name="05h_cal",
+        apply_cal_path=caltable,
+        run_aoflagger=True,
+        flag_antennas_from_autocorrs=True,
+        flag_antenna_list=[],
+        plot_gains=True,
+        apply_calibration=True,
+        plot_images=True,
+    )
