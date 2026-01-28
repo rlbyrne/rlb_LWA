@@ -2,8 +2,7 @@ import numpy as np
 import os
 
 dates_to_delete = [
-    "2026-01-06",
-    "2026-01-08",
+    "2026-01-07",
 ]
 """
 [

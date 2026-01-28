@@ -24,7 +24,10 @@ def chunk_in_frequency(uv, filenames, freq_intervals):
         end_minute = filenames[-1][11:13]
         end_second = filenames[-1][13:15]
 
-        outdir = f"/lustre/pipeline/cosmology/concatenated_data/{mean_freq}MHz/{year}-{month}-{day}/{hour}"
+        # outdir = f"/lustre/pipeline/cosmology/concatenated_data/{mean_freq}MHz/{year}-{month}-{day}/{hour}"
+        outdir = (
+            f"/fast/rbyrne/concatenated_data/{mean_freq}MHz/{year}-{month}-{day}/{hour}"
+        )
         out_filename = f"{year}{month}{day}_{hour}{start_minute}{start_second}-{hour}{end_minute}{end_second}_{mean_freq}MHz.ms"
         if not os.path.isdir(outdir):
             os.system(f"mkdir -p {outdir}")
@@ -79,12 +82,15 @@ def concatenate(filenames, use_freqs, freq_intervals, delete_orig_data=True):
             uv_new.select(polarizations=[-5, -6])
             uv_new.scan_number_array = None
             if freq_ind == 0:
+                uv_new.phase_to_time(np.min(uv_new.time_array))
                 uv_freq_new = uv_new
             else:
+                uv_new.phase_to_time(np.min(uv_freq_new.time_array))
                 uv_freq_new.fast_concat(uv_new, "freq", inplace=True)
         if file_ind == 0:
             uv = uv_freq_new
         else:
+            uv_freq_new.phase_to_time(np.min(uv.time_array))
             uv.fast_concat(uv_freq_new, "blt", inplace=True, run_check=False)
 
     out_filepaths = chunk_in_frequency(uv, filenames, freq_intervals)
@@ -103,7 +109,9 @@ def find_and_concatenate_data(dates, use_freqs, freq_intervals, delete_orig_data
     for date in dates:
         hours = np.sort(
             os.listdir(f"/lustre/pipeline/cosmology/{use_freqs[0]}MHz/{date}")
-        )
+        )[
+            1:
+        ]  # Start from hour 12
         for hour in hours:
             filenames = np.sort(
                 os.listdir(
@@ -143,9 +151,9 @@ def find_and_concatenate_data(dates, use_freqs, freq_intervals, delete_orig_data
 
 if __name__ == "__main__":
     use_freqs = [
-        # "27",
-        # "32",
-        # "36",
+        "27",
+        "32",
+        "36",
         "41",
         "46",
         "50",
@@ -158,7 +166,7 @@ if __name__ == "__main__":
         "82",
     ]
     freq_intervals = [
-        # [28352050.78125, 41295898.4375],
+        [28352050.78125, 41295898.4375],
         [41319824.21875, 48354003.90625],
         [48377929.6875, 56823730.46875],
         [56847656.25, 67398925.78125],
@@ -167,5 +175,5 @@ if __name__ == "__main__":
         [82280761.71875, 84649414.0625],
     ]
     # dates = np.sort(os.listdir(f"/lustre/pipeline/cosmology/{use_freqs[0]}MHz"))
-    dates = ["2026-01-07"]
+    dates = ["2026-01-12"]
     find_and_concatenate_data(dates, use_freqs, freq_intervals, delete_orig_data=False)
