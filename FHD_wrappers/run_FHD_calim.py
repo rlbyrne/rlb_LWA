@@ -3,24 +3,11 @@ import shlex
 import os
 
 obsids_list = [
-    #"density1.5_gleam",
-    "density1.5_gsm08",
-    "density1.75_gleam",
-    "density1.75_gsm08",
-    "density2.0_gleam",
-    "density2.0_gsm08",
-    "density3.0_gleam",
-    "density3.0_gsm08",
-    "hexa_gleam",
-    "hexa_gsm08",
-    "pos_error1e-3_gleam",
-    "pos_error1e-3_gsm08",
-    "random_gleam",
-    "random_gsm08",
+    "20260112_120008-120158_34MHz_casa_05h_calibrated",
 ]
-versions_list = ["rlb_vincent_sims_Apr2025"]
-uvfits_path = "/lustre/rbyrne/vincent_sims"
-outdir = "/lustre/rbyrne/vincent_sims"
+versions_list = ["rlb_process_LWA_Jan2026"]
+uvfits_path = "/fast/rbyrne"
+outdir = "/fast/rbyrne/fhd_outputs"
 run_fhd = True
 run_eppsilon = True
 
@@ -29,7 +16,7 @@ fhd_versions_script = "fhd_versions_calim"
 eppsilon_script = "ps_single_obs_wrapper"
 
 # Set eppsilon options
-refresh_ps = 1
+refresh_ps = 0
 uvf_input = 1
 no_evenodd = 1  # Use this option if only one time step is present
 xx_only = 1

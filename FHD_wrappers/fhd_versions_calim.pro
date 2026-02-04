@@ -8,9 +8,9 @@ pro fhd_versions_calim
   version = args[1]
   vis_file_list = args[2]
 
-  ;output_directory = '/lustre/rbyrne/fhd_outputs'
-  ;version = 'rlb_process_LWA_Sept2024'
-  ;vis_file_list = '/lustre/rbyrne/2024-03-03/20240303_093000-093151_41-82MHz_calibrated_core_small.uvfits'
+  ;output_directory = '/fast/rbyrne/fhd_outputs'
+  ;version = 'rlb_process_LWA_Jan2026'
+  ;vis_file_list = '/fast/rbyrne/20260127_120020_32MHz.uvfits'
 
   case version of
 
@@ -150,6 +150,20 @@ pro fhd_versions_calim
       save_uvf = 1
       ps_nfreq_avg = 1  ;do not average in frequency
       n_avg = 1  ;do not average in frequency
+    end
+
+    'rlb_process_LWA_Jan2026': begin
+        recalculate_all = 0
+        instrument = 'lwa'
+        import_pyuvdata_beam_filepath = '/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits'
+        restrict_hpx_inds = 0
+        snapshot_healpix_export = 1
+        calibrate_visibilities = 0
+        return_cal_visibilities = 0
+        model_visibilities = 0
+        n_pol = 2
+        save_uvf = 1
+        beam_nfreq_avg = 1728  ;average beam
     end
 
   endcase
