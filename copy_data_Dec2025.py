@@ -23,10 +23,12 @@ copy_freqs = [
 
 time_ranges = [
     ["013000", "020000"],  # half an hour of calibration data
-    ["120000", "150000"],  # three hours of cosmology data
+    ["110000", "140000"],  # three hours of cosmology data
 ]
+use_dates = ["2026-02-01", "2026-02-02"]
 
 dates = np.sort(os.listdir(f"{source_dir}/{copy_freqs[0]}MHz"))
+dates = [date for date in dates if date in use_dates]
 for date in dates:
     hours = np.sort(os.listdir(f"{source_dir}/{copy_freqs[0]}MHz/{date}"))
     for hour in hours:
