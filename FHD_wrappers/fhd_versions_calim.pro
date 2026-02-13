@@ -166,6 +166,64 @@ pro fhd_versions_calim
         beam_nfreq_avg = 1728  ;average beam
     end
 
+    'rlb_process_LWA_uvbeam_support_branch_Feb2026': begin
+        recalculate_all = 0
+        instrument = 'lwa'
+        import_pyuvdata_beam_filepath = '/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits'
+        restrict_hpx_inds = 0
+        snapshot_healpix_export = 1
+        calibrate_visibilities = 0
+        return_cal_visibilities = 0
+        model_visibilities = 0
+        n_pol = 2
+        save_uvf = 1
+        beam_nfreq_avg = 1728  ;average beam
+    end
+
+    'rlb_process_LWA_real_beam_Feb2026': begin
+        recalculate_all = 0
+        instrument = 'lwa'
+        import_pyuvdata_beam_filepath = '/lustre/rbyrne/LWA_10to100_MROsoil_efields_abs_value.fits'
+        restrict_hpx_inds = 0
+        snapshot_healpix_export = 1
+        calibrate_visibilities = 0
+        return_cal_visibilities = 0
+        model_visibilities = 0
+        n_pol = 2
+        save_uvf = 1
+        beam_nfreq_avg = 1728  ;average beam
+    end
+
+    'rlb_process_LWA_all_ones_Feb2026': begin
+        recalculate_all = 0
+        instrument = 'lwa'
+        import_pyuvdata_beam_filepath = '/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits'
+        restrict_hpx_inds = 0
+        snapshot_healpix_export = 1
+        calibrate_visibilities = 0
+        return_cal_visibilities = 0
+        model_visibilities = 0
+        n_pol = 2
+        save_uvf = 1
+        beam_nfreq_avg = 1728  ;average beam
+        image_filter_fn = "filter_uv_natural"
+    end
+
+    'rlb_process_LWA_natural_weighting_Feb2026': begin
+        recalculate_all = 0
+        instrument = 'lwa'
+        import_pyuvdata_beam_filepath = '/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits'
+        restrict_hpx_inds = 0
+        snapshot_healpix_export = 1
+        calibrate_visibilities = 0
+        return_cal_visibilities = 0
+        model_visibilities = 0
+        n_pol = 2
+        save_uvf = 1
+        beam_nfreq_avg = 1728  ;average beam
+        image_filter_fn = "filter_uv_natural"
+    end
+
   endcase
 
   undefine, uvfits_subversion, uvfits_version

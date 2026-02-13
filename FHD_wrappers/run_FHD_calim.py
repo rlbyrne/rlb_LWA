@@ -8,7 +8,7 @@ obsids_list = [
 versions_list = ["rlb_process_LWA_Jan2026"]
 uvfits_path = "/fast/rbyrne"
 outdir = "/fast/rbyrne/fhd_outputs"
-run_fhd = True
+run_fhd = False
 run_eppsilon = True
 
 # Define wrappers
@@ -16,7 +16,7 @@ fhd_versions_script = "fhd_versions_calim"
 eppsilon_script = "ps_single_obs_wrapper"
 
 # Set eppsilon options
-refresh_ps = 0
+refresh_ps = 1
 uvf_input = 1
 no_evenodd = 1  # Use this option if only one time step is present
 xx_only = 1

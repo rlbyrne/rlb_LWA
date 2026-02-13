@@ -176,4 +176,5 @@ if __name__ == "__main__":
     ]
     # dates = np.sort(os.listdir(f"/lustre/pipeline/cosmology/{use_freqs[0]}MHz"))
     dates = ["2026-01-12"]
+    # There seems to be a bug where the full frequency range is written out for each file
     find_and_concatenate_data(dates, use_freqs, freq_intervals, delete_orig_data=False)

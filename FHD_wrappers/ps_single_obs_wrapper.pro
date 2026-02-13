@@ -41,7 +41,7 @@ pro ps_single_obs_wrapper
   endif else begin
     ps_wrapper, outdir+'/fhd_'+fhd_version, obs_id, /png, /plot_kpar_power, $
     refresh_ps=refresh_ps, uvf_input=uvf_input,$
-    no_evenodd=no_evenodd, refresh_info=refresh_ps
+    no_evenodd=no_evenodd, refresh_info=refresh_ps, data_range=[10e3, 10e20]
   endelse
 
 
