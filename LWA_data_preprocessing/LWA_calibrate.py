@@ -103,67 +103,59 @@ def flag_antennas(
         return uvd_new
 
 
-def read_caltable_safely(path):
+def read_caltable_safely(path, tmp_directory="/fast/rbyrne/caltable_temp_dir"):
     """
     This function replaces pyuvdata's UVCal.read() function due to a bug in that function.
     See https://github.com/RadioAstronomySoftwareGroup/pyuvdata/issues/1648.
     """
 
-    cal = pyuvdata.UVCal()
-    cal.read(path)
+    if os.path.isfile(path):  # Path is not an ms caltable
+        cal = pyuvdata.UVCal()
+        cal.read(path)
+        return cal
 
-    if (
-        os.path.isdir(path) and cal.Nspws > 1
-    ):  # Path is an ms caltable and contains more than one spectral window
+    tb = tbl.table(path, readonly=True)
+    if "SPECTRAL_WINDOW_ID" in tb.colnames():
+        spw_col = tb.getcol("SPECTRAL_WINDOW_ID")
+        unique_spws = np.unique(spw_col)
+        unique_spws.sort()
+    else:  # Only one spw
+        tb.close()
+        cal = pyuvdata.UVCal()
+        cal.read(path)
+        return cal
 
-        t = tbl.table(path, readonly=True)
+    for spw in unique_spws:
+        tb = tbl.table(path, readonly=True)
+        subtable = tb.query(f"SPECTRAL_WINDOW_ID == {spw}")
+        subtable.copy(f"{tmp_directory}/temp_spw{spw}.B", deep=True)
+        subtable.close()
 
-        # Get frequencies
-        t_spec_win = tbl.table(
-            t.getkeyword("SPECTRAL_WINDOW"), readonly=True, ack=False
-        )
-        freqs = t_spec_win.getcol("CHAN_FREQ").squeeze()
-        bw = t_spec_win.getcol("CHAN_WIDTH").squeeze()
-        t_spec_win.close()
+    tb.close()
 
-        gains = t.getcol("CPARAM")
-        times = t.getcol("TIME")
-        ants = t.getcol("ANTENNA1")
-        flags = t.getcol("FLAG")
-        spw_id = t.getcol("SPECTRAL_WINDOW_ID")
+    cal_objs = []
+    time_array = []
+    lst_array = []
+    for spw_ind, spw in enumerate(unique_spws):
+        cal = pyuvdata.UVCal()
+        cal.read(f"{tmp_directory}/temp_spw{spw}.B")
+        cal_objs.append(cal)
+        time_array.append(np.mean(cal.time_array))
+        lst_array.append(np.mean(cal.lst_array))
 
-        cal.gain_array = np.zeros(
-            (cal.Nants_data, cal.Nfreqs, 1, cal.Njones), dtype=complex
-        )
-        cal.flag_array = np.zeros(
-            (cal.Nants_data, cal.Nfreqs, 1, cal.Njones), dtype=bool
-        )
+    for cal_ind, cal in enumerate(cal_objs):
+        cal.time_array = np.array([np.mean(time_array)])
+        cal.lst_array = np.array([np.mean(lst_array)])
+        if cal_ind == 0:
+            cal_concat = cal
+        else:
+            cal_concat.fast_concat(cal, "freq")
 
-        # Assume one time
-        cal.Ntimes = 1
-        cal.time_array = np.array([np.mean(cal.time_array)])
-        cal.integration_time = np.array([np.mean(cal.integration_time)])
-        cal.lst_array = np.array([np.mean(cal.lst_array)])
-        cal.phase_center_id_array = np.array([int(np.mean(cal.phase_center_id_array))])
-        cal.quality_array = np.mean(cal.quality_array, axis=2)[:, :, np.newaxis, :]
-        cal.scan_number_array = np.array([int(np.mean(cal.scan_number_array))])
+    # Delete temporary files
+    for spw in unique_spws:
+        shutil.rmtree(f"{tmp_directory}/temp_spw{spw}.B")
 
-        for ant_ind in range(cal.Nants_data):
-            for freq_ind in range(cal.Nfreqs):
-                use_ant_inds = np.where(ants == cal.ant_array[ant_ind])
-                use_freq_inds = np.where(freqs == cal.freq_array[freq_ind])
-                fine_channel_ind = use_freq_inds[1]
-                spw = use_freq_inds[0]
-                spw_ind = np.where(spw_id == spw)
-                ant_spw_ind = np.intersect1d(use_ant_inds, spw_ind)
-                cal.gain_array[ant_ind, freq_ind, 0, :] = gains[
-                    ant_spw_ind, fine_channel_ind, :
-                ]
-                cal.flag_array[ant_ind, freq_ind, 0, :] = flags[
-                    ant_spw_ind, fine_channel_ind, :
-                ]
-
-    return cal
+    return cal_concat
 
 
 def get_model_visibilities(
@@ -349,7 +341,7 @@ def get_model_visibilities(
             combined_model_uv.write_ms(model_vis_file, force_phase=True, fix_autos=True)
         else:
             combined_model_uv.write_uvfits(
-                model_vis_file, force_phase=True, fix_autos=True
+                model_vis_file, force_phase=True, fix_autos=True, uvw_double=False
             )
 
     elif model_visilibility_mode == "run simulation":
@@ -395,7 +387,7 @@ def get_model_visibilities(
                 compact_sim.write_ms(model_vis_file, force_phase=True, fix_autos=True)
             else:
                 compact_sim.write_uvfits(
-                    model_vis_file, force_phase=True, fix_autos=True
+                    model_vis_file, force_phase=True, fix_autos=True, uvw_double=False
                 )
             if os.path.isdir(model_vis_file):  # Confirm write was successful
                 # Delete intermediate data products
@@ -799,7 +791,6 @@ if __name__ == "__main__":
             apply_calibration=True,
             plot_images=True,
         )
-    """
 
     filename = "/fast/rbyrne/20260112_120008-120158_34MHz.ms"
     caltable = "/lustre/pipeline/calibration/results/2026-01-12/05h/successful/20260115_130732/tables/calibration_2026-01-12_05h.B.flagged"
@@ -814,4 +805,15 @@ if __name__ == "__main__":
         plot_gains=True,
         apply_calibration=True,
         plot_images=True,
+    )
+    """
+
+    get_model_visibilities(
+        model_visilibility_mode="run simulation",
+        model_vis_file="/fast/rbyrne/20260112_120008-120018_34MHz_model.uvfits",
+        include_diffuse=False,
+        lst_lookup_table="/lustre/21cmpipe/simulation_outputs/lst_lookup_table.csv",
+        data_file="/fast/rbyrne/20260112_120008-120018_34MHz_casa_05h_calibrated.uvfits",
+        skymodel_path="/lustre/rbyrne/skymodels/Gregg_20250519_source_models.skyh5",
+        beam_path="/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits",
     )
