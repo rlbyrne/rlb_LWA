@@ -3,6 +3,7 @@ import os
 import subprocess
 import ast
 import sys
+import shutil
 import numpy as np
 import pyuvdata
 import datetime
@@ -119,6 +120,10 @@ def read_caltable_safely(path, tmp_directory="/fast/rbyrne/caltable_temp_dir"):
         spw_col = tb.getcol("SPECTRAL_WINDOW_ID")
         unique_spws = np.unique(spw_col)
         unique_spws.sort()
+
+        tb_spw = tbl.table(f"{path}/SPECTRAL_WINDOW", readonly=True)
+        chan_freq = tb_spw.getcol("CHAN_FREQ")
+        tb_spw.close()
     else:  # Only one spw
         tb.close()
         cal = pyuvdata.UVCal()
@@ -126,7 +131,6 @@ def read_caltable_safely(path, tmp_directory="/fast/rbyrne/caltable_temp_dir"):
         return cal
 
     for spw in unique_spws:
-        tb = tbl.table(path, readonly=True)
         subtable = tb.query(f"SPECTRAL_WINDOW_ID == {spw}")
         subtable.copy(f"{tmp_directory}/temp_spw{spw}.B", deep=True)
         subtable.close()
@@ -139,6 +143,7 @@ def read_caltable_safely(path, tmp_directory="/fast/rbyrne/caltable_temp_dir"):
     for spw_ind, spw in enumerate(unique_spws):
         cal = pyuvdata.UVCal()
         cal.read(f"{tmp_directory}/temp_spw{spw}.B")
+        cal.select(frequencies=chan_freq[spw_ind, :])
         cal_objs.append(cal)
         time_array.append(np.mean(cal.time_array))
         lst_array.append(np.mean(cal.lst_array))
@@ -149,7 +154,7 @@ def read_caltable_safely(path, tmp_directory="/fast/rbyrne/caltable_temp_dir"):
         if cal_ind == 0:
             cal_concat = cal
         else:
-            cal_concat.fast_concat(cal, "freq")
+            cal_concat += cal  # Do not use fast_concat method here
 
     # Delete temporary files
     for spw in unique_spws:
