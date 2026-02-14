@@ -8,6 +8,7 @@ pro ps_single_obs_wrapper
   uvf_input=args[4]
   no_evenodd=args[5]
   xx_only=args[6]
+  float_colorbar=args[7]
 
   refresh_ps = fix(refresh_ps)
   if (refresh_ps ne 0) and (refresh_ps ne 1) then begin
@@ -29,19 +30,24 @@ pro ps_single_obs_wrapper
     print, 'Parameter xx_only must be 0 or 1. Returning.'
     return
   endif
+  if (float_colorbar ne 0) and (float_colorbar ne 1) then begin
+    print, 'Parameter float_colorbar must be 0 or 1. Returning.'
+    return
+  endif
 
   if refresh_ps eq 0 then undefine, refresh_ps
   if uvf_input eq 0 then undefine, uvf_input
   if no_evenodd eq 0 then undefine, no_evenodd
+  if float_colorbar eq 1 then set_data_ranges=1 else set_data_ranges=0
 
   if xx_only eq 1 then begin
     ps_wrapper, outdir+'/fhd_'+fhd_version, obs_id, /png, /plot_kpar_power, $
     refresh_ps=refresh_ps, uvf_input=uvf_input, pol_inc=["xx"], $
-    no_evenodd=no_evenodd, refresh_info=refresh_ps
+    no_evenodd=no_evenodd, refresh_info=refresh_ps, set_data_ranges=set_data_ranges
   endif else begin
     ps_wrapper, outdir+'/fhd_'+fhd_version, obs_id, /png, /plot_kpar_power, $
     refresh_ps=refresh_ps, uvf_input=uvf_input,$
-    no_evenodd=no_evenodd, refresh_info=refresh_ps, data_range=[10e3, 10e20]
+    no_evenodd=no_evenodd, refresh_info=refresh_ps, set_data_ranges=set_data_ranges
   endelse
 
 
