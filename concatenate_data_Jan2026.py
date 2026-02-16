@@ -14,7 +14,7 @@ def chunk_in_frequency(uv, filenames, freq_intervals):
         )[0]
         uv_freq_band = uv.select(frequencies=uv.freq_array[keep_freqs], inplace=False)
 
-        mean_freq = int(np.mean(uv.freq_array[keep_freqs] / 1e6))
+        mean_freq = int(np.mean(uv_freq_band.freq_array[keep_freqs] / 1e6))
         year = filenames[0][:4]
         month = filenames[0][4:6]
         day = filenames[0][6:8]
@@ -31,7 +31,7 @@ def chunk_in_frequency(uv, filenames, freq_intervals):
         out_filename = f"{year}{month}{day}_{hour}{start_minute}{start_second}-{hour}{end_minute}{end_second}_{mean_freq}MHz.ms"
         if not os.path.isdir(outdir):
             os.system(f"mkdir -p {outdir}")
-        uv.write_ms(f"{outdir}/{out_filename}", clobber=True)
+        uv_freq_band.write_ms(f"{outdir}/{out_filename}", clobber=True)
         out_filepaths.append(f"{outdir}/{out_filename}")
 
     return out_filepaths
