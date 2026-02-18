@@ -62,6 +62,7 @@ def concatenate(
     delete_orig_data=True,
     orig_directory="/lustre/pipeline/cosmology",
     output_directory="/lustre/pipeline/cosmology/concatenated_data",
+    refresh=False,
 ):
 
     # Check if all paths exist
@@ -80,6 +81,22 @@ def concatenate(
 
     out_filepaths = []
     for freq_interval in freq_intervals:
+
+        if not refresh:
+            year = filenames[0][:4]
+            month = filenames[0][4:6]
+            day = filenames[0][6:8]
+            hour = filenames[0][9:11]
+            start_minute = filenames[0][11:13]
+            start_second = filenames[0][13:15]
+            end_minute = filenames[-1][11:13]
+            end_second = filenames[-1][13:15]
+            mean_freq = int(np.mean(freq_interval) / 1e6)
+            outdir = f"{output_directory}/{mean_freq}MHz/{year}-{month}-{day}/{hour}"
+            out_filename = f"{year}{month}{day}_{hour}{start_minute}{start_second}-{hour}{end_minute}{end_second}_{mean_freq}MHz.ms"
+            if os.path.isdir(f"{outdir}/{out_filename}"):
+                print(f"Concatenated file {out_filename} exists. Skipping.")
+                continue
 
         # Figure out which original frequency files to use
         orig_freqs_int = np.array([int(freq) for freq in orig_freqs])
@@ -133,7 +150,7 @@ def concatenate(
             uv,
             filenames,
             [freq_interval],
-            output_directory="/lustre/pipeline/cosmology/concatenated_data",
+            output_directory=output_directory,
         )
         uv = None
         out_filepaths.append(out_filepaths_new)
@@ -155,6 +172,7 @@ def find_and_concatenate_data(
     delete_orig_data=True,
     orig_directory="/lustre/pipeline/cosmology",
     output_directory="/lustre/pipeline/cosmology/concatenated_data",
+    refresh=False,
 ):
 
     for date in dates:
@@ -193,6 +211,7 @@ def find_and_concatenate_data(
                         delete_orig_data=delete_orig_data,
                         orig_directory=orig_directory,
                         output_directory=output_directory,
+                        refresh=refresh,
                     )
                     use_timestamps = []
                     use_filenames = []
@@ -227,4 +246,6 @@ if __name__ == "__main__":
     ]
     # dates = np.sort(os.listdir(f"/lustre/pipeline/cosmology/{orig_freqs[0]}MHz"))
     dates = ["2026-01-12"]
-    find_and_concatenate_data(dates, orig_freqs, freq_intervals, delete_orig_data=False)
+    find_and_concatenate_data(
+        dates, orig_freqs, freq_intervals, delete_orig_data=False, refresh=False
+    )
