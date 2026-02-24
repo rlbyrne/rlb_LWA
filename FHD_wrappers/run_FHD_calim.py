@@ -3,7 +3,7 @@ import shlex
 import os
 
 obsids_list = [
-    "20260112_120008-120158_34MHz_casa_05h_calibrated",
+    "20260112_120008-120018_34MHz_casa_05h_calibrated",
 ]
 versions_list = ["rlb_process_LWA_Jan2026"]
 uvfits_path = "/fast/rbyrne"

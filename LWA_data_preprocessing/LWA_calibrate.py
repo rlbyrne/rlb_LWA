@@ -8,6 +8,7 @@ import numpy as np
 import pyuvdata
 import datetime
 from generate_model_vis_fftvis import run_fftvis_sim
+import smooth_cal_solutions
 from calico import calibration_wrappers, calibration_qa
 import casacore.tables as tbl
 
@@ -64,10 +65,10 @@ def flag_antennas(
 
     for ant_name in antenna_names:
         ant_name_number_comp = ant_name.strip("LWA").strip("-").strip("A").strip("B")
-        ant_ind = np.where(
-            np.array(uvd.telescope.antenna_names) == f"LWA{ant_name_number_comp}"
-        )[
-            0
+        ant_ind = np.array(uvd.telescope.antenna_numbers)[
+            np.where(
+                np.array(uvd.telescope.antenna_names) == f"LWA{ant_name_number_comp}"
+            )[0][0]
         ]  # uvd.telescope.antenna_names format is "LWA###"
         if np.size(ant_ind) == 0:
             print(f"WARNING: Antenna {ant_name} not found in antenna_names.")
@@ -156,9 +157,13 @@ def read_caltable_safely(path, tmp_directory="/fast/rbyrne/caltable_temp_dir"):
         else:
             cal_concat += cal  # Do not use fast_concat method here
 
+    cal_concat.spw_array = np.array([0])
+    cal_concat.flex_spw_id_array = np.zeros_like(cal_concat.flex_spw_id_array)
+    cal_concat.Nspws = 1
+
     # Delete temporary files
-    for spw in unique_spws:
-        shutil.rmtree(f"{tmp_directory}/temp_spw{spw}.B")
+    # for spw in unique_spws:
+    #    shutil.rmtree(f"{tmp_directory}/temp_spw{spw}.B")
 
     return cal_concat
 
@@ -496,6 +501,7 @@ def calibration_pipeline(
     max_cal_baseline_lambda: Optional[int] = 125,
     plot_gains: bool = False,
     apply_calibration: bool = True,
+    smooth_cal: bool = False,
     plot_images: bool = True,
 ) -> None:
     """
@@ -554,8 +560,13 @@ def calibration_pipeline(
     apply_calibration : bool
         If True, calibration will be applied to the data, and the calibrated
         visibilities will be written to a new file with suffix *_calibrated.ms.
-        Residual (data minus model) visibilities will also be computed and written to
-        a file with suffix *_res.ms. Default True.
+        If model visibilities have been created, residual (calibrated data minus model)
+        visibilities will also be computed and written to a file with suffix *_res.ms.
+        Default True.
+    smooth_cal : bool
+        If True, calibration solutions will be smoothed before application. The gain amplitudes
+        will be fit with a second order polynomial and the gain phases will be fit with a linear
+        function. Default False.
     plot_images : bool
         If True, images will be generated with WSClean. If apply_calibration=True,
         images will be generated of the calibrated data, model, and residual (data
@@ -631,7 +642,7 @@ def calibration_pipeline(
             if len(flag_antenna_list) > 0:
                 uv = pyuvdata.UVData()
                 uv.read(datafile_path, data_column="DATA")
-                uv.set_uvws_from_antenna_positions(update_vis=False)
+                # uv.set_uvws_from_antenna_positions(update_vis=False)
                 uv.phase_to_time(np.mean(uv.time_array))
                 flag_antennas(
                     uv,
@@ -656,14 +667,14 @@ def calibration_pipeline(
             uv = pyuvdata.UVData()
             print(f"Reading file {datafile_path}.")
             uv.read(datafile_path, data_column="DATA")
-            uv.set_uvws_from_antenna_positions(update_vis=False)
+            # uv.set_uvws_from_antenna_positions(update_vis=False)
             uv.phase_to_time(np.mean(uv.time_array))
 
             # Read model
             model_uv = pyuvdata.UVData()
             print(f"Reading file {output_dir}/{model_filename}.")
             model_uv.read(f"{output_dir}/{model_filename}", data_column="DATA")
-            model_uv.set_uvws_from_antenna_positions(update_vis=False)
+            # model_uv.set_uvws_from_antenna_positions(update_vis=False)
             model_uv.phase_to_time(np.mean(uv.time_array))
 
             if len(flag_antenna_list) > 0:
@@ -710,8 +721,13 @@ def calibration_pipeline(
         if uv is None:  # Read data
             uv = pyuvdata.UVData()
             uv.read(datafile_path, data_column="DATA")
-            uv.set_uvws_from_antenna_positions(update_vis=False)
+            # uv.set_uvws_from_antenna_positions(update_vis=False)
             uv.phase_to_time(np.mean(uv.time_array))
+
+        if smooth_cal:
+            uvcal = smooth_cal_solutions.smooth_cal(
+                uvcal, amp_deg=2, phase_deg=1, freq_array_hz=uv.freq_array
+            )
 
         pyuvdata.utils.uvcalibrate(uv, uvcal, inplace=True, time_check=False)
         uv.write_ms(f"{output_dir}/{calibrated_data_ms}", fix_autos=True, clobber=True)
@@ -721,7 +737,7 @@ def calibration_pipeline(
                 model_uv = pyuvdata.UVData()
                 print(f"Reading file {output_dir}/{model_filename}.")
                 model_uv.read(f"{output_dir}/{model_filename}", data_column="DATA")
-                model_uv.set_uvws_from_antenna_positions(update_vis=False)
+                # model_uv.set_uvws_from_antenna_positions(update_vis=False)
                 model_uv.phase_to_time(np.mean(uv.time_array))
             uv.filename = [""]
             model_uv.filename = [""]
@@ -796,23 +812,44 @@ if __name__ == "__main__":
             apply_calibration=True,
             plot_images=True,
         )
-
-    filename = "/fast/rbyrne/20260112_120008-120158_34MHz.ms"
-    caltable = "/lustre/pipeline/calibration/results/2026-01-12/05h/successful/20260115_130732/tables/calibration_2026-01-12_05h.B.flagged"
-    calibration_pipeline(
-        filename,
-        output_dir="/fast/rbyrne",
-        cal_trial_name="05h_cal",
-        apply_cal_path=caltable,
-        run_aoflagger=True,
-        flag_antennas_from_autocorrs=True,
-        flag_antenna_list=[],
-        plot_gains=True,
-        apply_calibration=True,
-        plot_images=True,
-    )
     """
 
+    # use_freqs = ["34", "44", "52", "62", "72", "79", "83"]
+    use_freqs = ["34"]
+    caltable = "/lustre/pipeline/calibration/results/2026-01-12/05h/successful/20260115_130732/tables/calibration_2026-01-12_05h.B.flagged"
+    for freq in use_freqs:
+        os.system(
+            f"cp -r /lustre/pipeline/cosmology/concatenated_data/{freq}MHz/2026-01-12/12/20260112_120008-120158_{freq}MHz.ms /fast/rbyrne/20260112_120008-120158_{freq}MHz.ms"
+        )
+        calibration_pipeline(
+            f"/fast/rbyrne/20260112_120008-120158_{freq}MHz.ms",
+            output_dir="/fast/rbyrne",
+            cal_trial_name="05h_cal",
+            apply_cal_path=caltable,
+            run_aoflagger=True,
+            flag_antennas_from_autocorrs=False,
+            flag_antenna_list=[],
+            plot_gains=False,
+            apply_calibration=True,
+            plot_images=True,
+        )
+        """
+        calibration_pipeline(
+            f"/fast/rbyrne/20260112_120008-120158_{freq}MHz.ms",
+            output_dir="/fast/rbyrne",
+            cal_trial_name="05h_smoothed_cal",
+            apply_cal_path=caltable,
+            run_aoflagger=True,
+            flag_antennas_from_autocorrs=True,
+            flag_antenna_list=[],
+            plot_gains=False,
+            apply_calibration=True,
+            smooth_cal=True,
+            plot_images=True,
+        )
+        """
+
+    """
     get_model_visibilities(
         model_visilibility_mode="run simulation",
         model_vis_file="/fast/rbyrne/20260112_120008-120018_34MHz_model.uvfits",
@@ -822,3 +859,4 @@ if __name__ == "__main__":
         skymodel_path="/lustre/rbyrne/skymodels/Gregg_20250519_source_models.skyh5",
         beam_path="/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits",
     )
+    """
