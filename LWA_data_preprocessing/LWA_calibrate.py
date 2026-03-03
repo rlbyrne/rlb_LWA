@@ -105,6 +105,128 @@ def flag_antennas(
         return uvd_new
 
 
+def read_caltable_safely2(
+    table_path, example_data  # UVData or str containing data file path
+):
+    """
+    This function replaces pyuvdata's UVCal.read() function due to a bug in that function.
+    See https://github.com/RadioAstronomySoftwareGroup/pyuvdata/issues/1648.
+    """
+
+    # Get antenna names
+    tb = table()
+    tb.open(table_path + "/ANTENNA")
+    ant_names = tb.getcol("NAME")
+    tb.close()
+
+    # Get time
+    tb = table()
+    tb.open(table_path + "/OBSERVATION")
+    time_range = tb.getcol("TIME_RANGE")
+    tb.close()
+    mjd_seconds = np.mean(time_range[:, 0])
+    jd = (mjd_seconds / 86400.0) + 2400000.5
+
+    frequencies = []
+    data = []
+    flags = []
+
+    for antenna_name in ant_names:
+        ant_id = np.where(ant_names == antenna_name)[0][0]
+        tb.open(table_path)
+        # Filter for the specific antenna first
+        ant_table = tb.query(f"ANTENNA1 == {ant_id}")
+        all_spws = np.unique(ant_table.getcol("SPECTRAL_WINDOW_ID"))
+        ant_table.close()
+        tb.close()
+
+        for i, spw in enumerate(all_spws):
+            # Get Frequencies for this SPW
+            tb.open(table_path + "/SPECTRAL_WINDOW")
+            chan_freqs = tb.getcell("CHAN_FREQ", spw)
+            tb.close()
+
+            # Extract Data and Flags for this specific SPW and Antenna
+            tb.open(table_path)
+            sub_tb = tb.query(f"ANTENNA1 == {ant_id} AND SPECTRAL_WINDOW_ID == {spw}")
+
+            data_new = sub_tb.getcol("CPARAM").astype(complex)
+            flags_ant = sub_tb.getcol("FLAG")
+            sub_tb.close()
+            tb.close()
+
+            # Apply flags as NaN
+            # data_new[flags] = np.nan + 1j * np.nan
+            flag_array_new = np.full_like(data_new, False, dtype=bool)
+            flag_array_new[flags_ant] = True
+
+            if i == 0:
+                ant_frequencies = np.copy(chan_freqs)
+                ant_data = np.copy(data_new)
+                flag_array = np.copy(flag_array_new)
+            else:
+                ant_frequencies = np.concatenate((ant_frequencies, chan_freqs))
+                ant_data = np.concatenate((ant_data, data_new), axis=1)
+                flag_array = np.concatenate((flag_array, flag_array_new), axis=1)
+        frequencies.append(ant_frequencies)
+        data.append(ant_data)
+        flags.append(flag_array)
+
+    frequencies = np.array(frequencies)
+    data = np.array(data)  # Shape Nants, Npols, Nfreqs, Ntimes
+    flags = np.array(flags)
+
+    if (frequencies == frequencies[0, :]).all():
+        frequencies = frequencies[0, :]
+    else:
+        print("ERROR: Not all antennas have the same frequencies. Exiting.")
+        sys.exit()
+
+    if isinstance(example_data, str):
+        uv = pyuvdata.UVData()
+        uv.read(example_data)
+    else:
+        uv = example_data
+
+    uvcal = pyuvdata.UVCal()
+    uvcal.Nants_data = len(ant_names)
+    uvcal.Nfreqs = len(frequencies)
+    uvcal.Njones = 2
+    uvcal.Nspws = 1
+    uvcal.Ntimes = 1
+    uvcal.ant_array = [
+        uv.telescope.antenna_numbers[
+            np.where(np.array(uv.telescope.antenna_names) == name)[0][0]
+        ]
+        for name in ant_names
+    ]
+    uvcal.cal_style = "sky"
+    uvcal.cal_type = "gain"
+    uvcal.channel_width = np.full(uvcal.Nfreqs, frequencies[1] - frequencies[0])
+    uvcal.flag_array = np.transpose(flags, (0, 2, 3, 1))
+    uvcal.flex_spw_id_array = np.full(uvcal.Nfreqs, 0, dtype=int)
+    uvcal.freq_array = frequencies
+    uvcal.gain_convention = "multiply"
+    uvcal.history = table_path
+    uvcal.integration_time = [10.0]
+    uvcal.jones_array = [-5, -6]
+    uvcal.spw_array = [0]
+    uvcal.telescope = uv.telescope
+    uvcal.wide_band = False
+    uvcal.gain_array = np.transpose(data, (0, 2, 3, 1))
+    uvcal.ref_antenna_name = ant_names[0]  # Dummy reference antenna
+    uvcal.sky_catalog = "pipeline"
+    uvcal.time_array = np.array([jd])
+    uvcal.lst_array = pyuvdata.utils.get_lst_for_time(
+        jd_array=uvcal.time_array, telescope_loc=uv.telescope.location
+    )
+
+    if not uvcal.check():
+        print("WARNING: Check failed.")
+
+    return uvcal
+
+
 def read_caltable_safely(path, tmp_directory="/fast/rbyrne/caltable_temp_dir"):
     """
     This function replaces pyuvdata's UVCal.read() function due to a bug in that function.
