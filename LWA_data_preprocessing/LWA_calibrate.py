@@ -113,74 +113,72 @@ def read_caltable_safely2(
     See https://github.com/RadioAstronomySoftwareGroup/pyuvdata/issues/1648.
     """
 
-    # Get antenna names
-    tb = table()
-    tb.open(table_path + "/ANTENNA")
-    ant_names = tb.getcol("NAME")
-    tb.close()
+    with tbl.table(table_path, readonly=True, ack=False) as tb:
+        if "SPECTRAL_WINDOW_ID" not in tb.colnames():
+            cal = pyuvdata.UVCal()
+            cal.read(table_path)
+            return cal
 
-    # Get time
-    tb = table()
-    tb.open(table_path + "/OBSERVATION")
-    time_range = tb.getcol("TIME_RANGE")
-    tb.close()
-    mjd_seconds = np.mean(time_range[:, 0])
-    jd = (mjd_seconds / 86400.0) + 2400000.5
+        main_data = tb.getcol("CPARAM")
+        main_flags = tb.getcol("FLAG")
+        ant_ids = tb.getcol("ANTENNA1")
+        spw_ids = tb.getcol("SPECTRAL_WINDOW_ID")
 
-    frequencies = []
-    data = []
-    flags = []
+    # 2. Get Metadata from sub-tables (one read each)
+    with tbl.table(table_path + "/ANTENNA", readonly=True, ack=False) as tb:
+        ant_names = tb.getcol("NAME")
+        n_ants = len(ant_names)
 
-    for antenna_name in ant_names:
-        ant_id = np.where(ant_names == antenna_name)[0][0]
-        tb.open(table_path)
-        # Filter for the specific antenna first
-        ant_table = tb.query(f"ANTENNA1 == {ant_id}")
-        all_spws = np.unique(ant_table.getcol("SPECTRAL_WINDOW_ID"))
-        ant_table.close()
-        tb.close()
+    with tbl.table(table_path + "/OBSERVATION", readonly=True, ack=False) as tb:
+        # Assuming the first row's time range is representative
+        mjd_seconds = np.mean(tb.getcol("TIME_RANGE")[0])
+        jd = (mjd_seconds / 86400.0) + 2400000.5
 
-        for i, spw in enumerate(all_spws):
-            # Get Frequencies for this SPW
-            tb.open(table_path + "/SPECTRAL_WINDOW")
-            chan_freqs = tb.getcell("CHAN_FREQ", spw)
-            tb.close()
+    with tbl.table(table_path + "/SPECTRAL_WINDOW", readonly=True, ack=False) as tb:
+        all_freqs_list = tb.getcol("CHAN_FREQ")  # Usually a list of arrays
+        # Flatten all frequencies into one master frequency axis
+        frequencies = np.concatenate(all_freqs_list)
+        n_chan_total = len(frequencies)
 
-            # Extract Data and Flags for this specific SPW and Antenna
-            tb.open(table_path)
-            sub_tb = tb.query(f"ANTENNA1 == {ant_id} AND SPECTRAL_WINDOW_ID == {spw}")
+    # 3. Organize the data using NumPy indexing
+    # We assume N_times = 1 for Bandpass, or consistent across SPWs
+    unique_ants = np.unique(ant_ids)
+    unique_spws = np.unique(spw_ids)
 
-            data_new = sub_tb.getcol("CPARAM").astype(complex)
-            flags_ant = sub_tb.getcol("FLAG")
-            sub_tb.close()
-            tb.close()
+    # Identify dimensions (Pol, Chan, Time)
+    # CPARAM shape is usually [Rows, Channels, Polarizations]
+    n_pols = main_data.shape[2]
+    # We need to determine n_times based on rows per antenna
+    n_rows_per_ant = np.sum(ant_ids == unique_ants[0])
+    n_times = n_rows_per_ant // len(unique_spws)
 
-            # Apply flags as NaN
-            # data_new[flags] = np.nan + 1j * np.nan
-            flag_array_new = np.full_like(data_new, False, dtype=bool)
-            flag_array_new[flags_ant] = True
+    # Pre-allocate arrays: [Ant, Time, Total_Freq, Pol]
+    final_data = np.zeros((n_ants, n_times, n_chan_total, n_pols), dtype=complex)
+    final_flags = np.ones((n_ants, n_times, n_chan_total, n_pols), dtype=bool)
 
-            if i == 0:
-                ant_frequencies = np.copy(chan_freqs)
-                ant_data = np.copy(data_new)
-                flag_array = np.copy(flag_array_new)
-            else:
-                ant_frequencies = np.concatenate((ant_frequencies, chan_freqs))
-                ant_data = np.concatenate((ant_data, data_new), axis=1)
-                flag_array = np.concatenate((flag_array, flag_array_new), axis=1)
-        frequencies.append(ant_frequencies)
-        data.append(ant_data)
-        flags.append(flag_array)
+    # 4. Fill the arrays by iterating through SPWs (much faster than querying)
+    curr_chan = 0
+    for spw in unique_spws:
+        n_chan_spw = len(all_freqs_list[spw])
 
-    frequencies = np.array(frequencies)
-    data = np.array(data)  # Shape Nants, Npols, Nfreqs, Ntimes
-    flags = np.array(flags)
+        # Mask for this SPW
+        spw_mask = spw_ids == spw
 
-    if (frequencies == frequencies[0, :]).all():
-        frequencies = frequencies[0, :]
-    else:
-        print("ERROR: Not all antennas have the same frequencies. Exiting.")
-        sys.exit()
+        for ant in unique_ants:
+            # Mask for this Antenna within this SPW
+            idx = np.where(spw_mask & (ant_ids == ant))[0]
+
+            if len(idx) > 0:
+                # Map the slice into our pre-allocated array
+                # Note: This handles time integrations if present
+                final_data[ant, : len(idx), curr_chan : curr_chan + n_chan_spw, :] = (
+                    main_data[idx]
+                )
+                final_flags[ant, : len(idx), curr_chan : curr_chan + n_chan_spw, :] = (
+                    main_flags[idx]
+                )
+
+        curr_chan += n_chan_spw
 
     if isinstance(example_data, str):
         uv = pyuvdata.UVData()
@@ -203,17 +201,17 @@ def read_caltable_safely2(
     uvcal.cal_style = "sky"
     uvcal.cal_type = "gain"
     uvcal.channel_width = np.full(uvcal.Nfreqs, frequencies[1] - frequencies[0])
-    uvcal.flag_array = np.transpose(flags, (0, 2, 3, 1))
+    uvcal.flag_array = np.transpose(final_flags, (0, 2, 1, 3))
     uvcal.flex_spw_id_array = np.full(uvcal.Nfreqs, 0, dtype=int)
     uvcal.freq_array = frequencies
     uvcal.gain_convention = "multiply"
     uvcal.history = table_path
-    uvcal.integration_time = [10.0]
-    uvcal.jones_array = [-5, -6]
-    uvcal.spw_array = [0]
+    uvcal.integration_time = np.array([10.0])
+    uvcal.jones_array = np.array([-5, -6])
+    uvcal.spw_array = np.array([0])
     uvcal.telescope = uv.telescope
     uvcal.wide_band = False
-    uvcal.gain_array = np.transpose(data, (0, 2, 3, 1))
+    uvcal.gain_array = np.transpose(final_data, (0, 2, 1, 3))
     uvcal.ref_antenna_name = ant_names[0]  # Dummy reference antenna
     uvcal.sky_catalog = "pipeline"
     uvcal.time_array = np.array([jd])
