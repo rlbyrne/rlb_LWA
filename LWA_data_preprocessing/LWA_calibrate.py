@@ -151,6 +151,7 @@ def read_caltable_safely2(
     # We need to determine n_times based on rows per antenna
     n_rows_per_ant = np.sum(ant_ids == unique_ants[0])
     n_times = n_rows_per_ant // len(unique_spws)
+    print(n_times)
 
     # Pre-allocate arrays: [Ant, Time, Total_Freq, Pol]
     final_data = np.zeros((n_ants, n_times, n_chan_total, n_pols), dtype=complex)
@@ -907,36 +908,8 @@ def calibration_pipeline(
 
 
 if __name__ == "__main__":
-    """
-    use_freqs = [
-        "44",
-        "52",
-        "62",
-        "72",
-        "79",
-        "83",
-    ]
-    filenames = [
-        f"/lustre/pipeline/cosmology/concatenated_data/{freq}MHz/2026-01-07/01/20260107_013008-013158_{freq}MHz.ms"
-        for freq in use_freqs
-    ]
-    for filename in filenames:
-        calibration_pipeline(
-            filename,
-            "/lustre/rbyrne/2026-01-07",
-            run_aoflagger=True,
-            flag_antennas_from_autocorrs=True,
-            min_cal_baseline_lambda=10,
-            max_cal_baseline_lambda=125,
-            plot_gains=True,
-            apply_calibration=True,
-            plot_images=True,
-        )
-    """
 
-    # use_freqs = ["34", "44", "52", "62", "72", "79", "83"]
-    use_freqs = ["34"]
-    caltable = "/lustre/pipeline/calibration/results/2026-01-12/05h/successful/20260115_130732/tables/calibration_2026-01-12_05h.B.flagged"
+    use_freqs = ["34", "44", "52", "62", "72", "79", "83"]
     for freq in use_freqs:
         os.system(
             f"cp -r /lustre/pipeline/cosmology/concatenated_data/{freq}MHz/2026-01-12/12/20260112_120008-120158_{freq}MHz.ms /fast/rbyrne/20260112_120008-120158_{freq}MHz.ms"
@@ -944,39 +917,11 @@ if __name__ == "__main__":
         calibration_pipeline(
             f"/fast/rbyrne/20260112_120008-120158_{freq}MHz.ms",
             output_dir="/fast/rbyrne",
-            cal_trial_name="05h_cal",
-            apply_cal_path=caltable,
-            run_aoflagger=True,
-            flag_antennas_from_autocorrs=False,
-            flag_antenna_list=[],
-            plot_gains=False,
-            apply_calibration=True,
-            plot_images=True,
-        )
-        """
-        calibration_pipeline(
-            f"/fast/rbyrne/20260112_120008-120158_{freq}MHz.ms",
-            output_dir="/fast/rbyrne",
-            cal_trial_name="05h_smoothed_cal",
-            apply_cal_path=caltable,
             run_aoflagger=True,
             flag_antennas_from_autocorrs=True,
             flag_antenna_list=[],
-            plot_gains=False,
+            plot_gains=True,
             apply_calibration=True,
-            smooth_cal=True,
+            smooth_cal=False,
             plot_images=True,
         )
-        """
-
-    """
-    get_model_visibilities(
-        model_visilibility_mode="run simulation",
-        model_vis_file="/fast/rbyrne/20260112_120008-120018_34MHz_model.uvfits",
-        include_diffuse=False,
-        lst_lookup_table="/lustre/21cmpipe/simulation_outputs/lst_lookup_table.csv",
-        data_file="/fast/rbyrne/20260112_120008-120018_34MHz_casa_05h_calibrated.uvfits",
-        skymodel_path="/lustre/rbyrne/skymodels/Gregg_20250519_source_models.skyh5",
-        beam_path="/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits",
-    )
-    """

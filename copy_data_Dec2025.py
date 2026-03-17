@@ -22,8 +22,8 @@ copy_freqs = [
 ]
 
 time_ranges = [
-    ["013000", "020000"],  # half an hour of calibration data
-    ["110000", "140000"],  # three hours of cosmology data
+    #["013000", "020000"],  # half an hour of calibration data
+    ["110000", "143000"],  # three hours of cosmology data
 ]
 use_dates = ["2026-02-18", "2026-02-19"]
 

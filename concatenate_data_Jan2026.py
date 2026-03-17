@@ -247,5 +247,5 @@ if __name__ == "__main__":
     # dates = np.sort(os.listdir(f"/lustre/pipeline/cosmology/{orig_freqs[0]}MHz"))
     dates = ["2026-01-12"]
     find_and_concatenate_data(
-        dates, orig_freqs, freq_intervals, delete_orig_data=False, refresh=False
+        dates, orig_freqs, freq_intervals, delete_orig_data=True, refresh=False
     )

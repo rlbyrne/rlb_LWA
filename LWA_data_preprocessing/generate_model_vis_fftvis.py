@@ -68,7 +68,7 @@ def run_fftvis_sim(
         )
         uvd.set_lsts_from_time_array()
 
-    uvd.set_uvws_from_antenna_positions(update_vis=False)
+    #uvd.set_uvws_from_antenna_positions(update_vis=False)
     uvd.phase_to_time(np.mean(uvd.time_array))  # Phase data
     uvd.flag_array = np.zeros(
         (uvd.Nblts, uvd.Nfreqs, uvd.Npols), dtype=bool
