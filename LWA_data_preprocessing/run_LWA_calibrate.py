@@ -1,6 +1,7 @@
 from LWA_calibrate import calibration_pipeline
 import pyuvdata
 import os
+import numpy as np
 
 def calibrate_Mar16():
 
@@ -32,16 +33,17 @@ def calibrate_Mar16():
 
         # Concatenate files
         filenames = np.sort(os.listdir(f"/fast/rbyrne/{hour}/"))
-        concatenated_filepath = f"/fast/rbyrne/{filenames[0][:15]}-{filenames[-1][15:]}"
+        concatenated_filepath = f"/fast/rbyrne/{filenames[0][:15]}-{filenames[-1][9:]}"
         for file_ind, filename in enumerate(filenames):
             uv_new = pyuvdata.UVData()
             uv_new.read(f"/fast/rbyrne/{hour}/{filename}")
             uv_new.select(polarizations=[-5, -6])
+            uv_new.scan_number_array = None
             if file_ind == 0:
                 uv_new.phase_to_time(np.min(uv_new.time_array))
                 uv = uv_new
             else:
-                uv_freq_new.phase_to_time(np.min(uv.time_array))
+                uv_new.phase_to_time(np.min(uv.time_array))
                 uv.fast_concat(uv_new, "blt", inplace=True, run_check=False)
         uv.write_ms(concatenated_filepath)
         if os.path.isdir(concatenated_filepath):
@@ -60,10 +62,10 @@ def calibrate_Mar16():
             plot_images=True,
         )
 
-        calfits_filenames.append(f"/fast/rbyrne/{os.path.splitext(os.path.basename(concatenated_filepath))[0]}.calfits")
+        calfits_filenames.append(f"{os.path.splitext(os.path.basename(concatenated_filepath))[0]}.calfits")
 
     # Concatenate calfits
-    concatenated_calfits_filename = f"/fast/rbyrne/{calfits_filenames[0][:20]}_{np.min(use_freqs)}-{np.max(use_freqs)}MHz.calfits"
+    concatenated_calfits_filename = f"/fast/rbyrne/{calfits_filenames[0][:22]}_{use_freqs[0]}-{use_freqs[-1]}MHz.calfits"
     for file_ind, filename in enumerate(calfits_filenames):
         cal_new = pyuvdata.UVCal()
         cal_new.read(filename)
@@ -76,5 +78,80 @@ def calibrate_Mar16():
         for filename in enumerate(calfits_filenames):
             os.system(f"rm {filename}")
 
+def calibrate_Mar30():
+
+    cal_freqs = np.array(
+        [
+            "27",
+            "32",
+            "36",
+            "41",
+            "46",
+            "50",
+            "55",
+            "59",
+            "64",
+            "69",
+            "73",
+            "78",
+            "82",
+        ]
+    )
+    data_freqs = ["34", "44", "52", "62", "72", "79", "83"]
+    for freq_ind, freq in enumerate(cal_freqs):
+        cal_new = pyuvdata.UVCal()
+        cal_new.read(f"/fast/rbyrne/20250112_055752-055952_{freq}MHz.calfits")
+        if freq_ind == 0:
+            cal = cal_new
+        else:
+            cal = cal + cal_new
+
+    # Average in time
+    cal.flag_array[np.where(cal.flag_array)] = True
+    cal.gain_array[np.where(cal.flag_array)] = np.nan + 1j * np.nan
+    cal.Ntimes = 1
+    cal.gain_array = np.nanmean(cal.gain_array, axis=2)[
+        :, :, np.newaxis, :
+    ]
+    cal.flag_array = np.min(cal.flag_array, axis=2)[:, :, np.newaxis, :]
+    cal.integration_time = np.array([np.mean(cal.integration_time)])
+    cal.lst_array = np.array([np.mean(cal.lst_array)])
+    cal.time_array = np.array([np.mean(cal.time_array)])
+    cal.check()
+
+    cal.write_calfits("/fast/rbyrne/20250112_055752-055952_27MHz-82MHz.calfits", clobber=True)
+
+    if False:
+        for freq in data_freqs:
+            calibration_pipeline(
+                f"/fast/rbyrne/20260112_120008-120158_{freq}MHz.ms",
+                output_dir="/fast/rbyrne",
+                cal_trial_name="05h",
+                apply_cal_path="/fast/rbyrne/20250112_055752-055952_27MHz-82MHz.calfits",
+                run_aoflagger=True,
+                flag_antennas_from_autocorrs=True,
+                flag_antenna_list=[],
+                plot_gains=False,
+                apply_calibration=True,
+                smooth_cal=False,
+                plot_images=True,
+            )
+
+    for freq in data_freqs:
+        calibration_pipeline(
+            f"/fast/rbyrne/20260112_120008-120158_{freq}MHz.ms",
+            output_dir="/fast/rbyrne",
+            cal_trial_name="05h_smoothed",
+            apply_cal_path="/fast/rbyrne/20250112_055752-055952_27MHz-82MHz.calfits",
+            run_aoflagger=True,
+            flag_antennas_from_autocorrs=True,
+            flag_antenna_list=[],
+            plot_gains=False,
+            apply_calibration=True,
+            smooth_cal=True,
+            plot_images=True,
+        )
+
+
 if __name__=="__main__":
-    calibrate_Mar16()
+    calibrate_Mar30()
