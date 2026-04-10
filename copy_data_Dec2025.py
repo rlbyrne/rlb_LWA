@@ -9,10 +9,14 @@ from astropy.coordinates import EarthLocation
 
 # Needs to be run as pipeline user
 
-def get_utc_from_lst(target_lst_hrs, date_str, longitude_deg=-118.3):
+def get_utc_from_lst(
+    target_lst_hrs,
+    date_str,  # Format "YYYY-MM-DD"
+    longitude_deg=-118.3
+):
 
     loc = EarthLocation.from_geodetic(lon=longitude_deg * u.deg, lat=0 * u.deg)
-    reference_time = astropy.time.Time(f"{date_str[:4]}-{date_str[4:6]}-{date_str[6:8]} 12:00:00", scale='utc', location=loc)
+    reference_time = astropy.time.Time(f"{date_str[:4]}-{date_str[5:7]}-{date_str[8:10]} 12:00:00", scale='utc', location=loc)
     reference_lst = reference_time.sidereal_time('mean').hour
     lst_diff = (target_lst_hrs - reference_lst + 12) % 24 - 12
     utc = reference_time + (lst_diff * 0.99726958) * u.hour
@@ -82,7 +86,7 @@ def copy_data(
                         ):
                             # copy_command = f"sudo mkdir -p {target_dir}/{freq}MHz/{date}/{hour} && sudo cp -r {source_dir}/{freq}MHz/{date}/{hour}/{filename} {target_dir}/{freq}MHz/{date}/{hour}"
                             copy_command = f"mkdir -p {target_dir}/{freq}MHz/{date}/{hour} && mv {source_dir}/{freq}MHz/{date}/{hour}/{filename} {target_dir}/{freq}MHz/{date}/{hour}"
-                            print(f"Copying {filename}")
+                            print(f"Moving {filename}")
                             os.system(copy_command)
                         else:
                             continue
