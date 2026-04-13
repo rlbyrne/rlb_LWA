@@ -1,14 +1,20 @@
 import subprocess
 import shlex
 import os
+import numpy as np
 
-obsids_list = [
-    "20260112_120008-120018_34MHz_casa_05h_calibrated",
-]
-versions_list = ["rlb_process_LWA_Jan2026"]
+#use_freqs = ["34", "44", "52", "62", "72", "79", "83"]
+use_freqs = ["62"]
+obsids_list = np.array([[
+    #f"20260112_120008-120158_{freq}MHz_calibrated", 
+    #f"20260112_120008-120158_{freq}MHz_05h_calibrated", 
+    f"20260112_120008-120158_{freq}MHz_05h_smoothed_calibrated"
+] for freq in use_freqs]).flatten()
+versions_list = ["rlb_process_LWA_freq_avg_Apr2026", "rlb_process_LWA_per_freq_beam_Apr2026"]
 uvfits_path = "/fast/rbyrne"
 outdir = "/fast/rbyrne/fhd_outputs"
-run_fhd = False
+tmp_dir = None
+run_fhd = True
 run_eppsilon = True
 
 # Define wrappers
@@ -22,42 +28,62 @@ no_evenodd = 1  # Use this option if only one time step is present
 xx_only = 0
 float_colorbar = 1
 
-for version in versions_list:
-    # Create directories
-    if not os.path.isdir(f"{outdir}/fhd_{version}"):
-        os.mkdir(f"{outdir}/fhd_{version}")
-    if not os.path.isdir(f"{outdir}/fhd_{version}/logs"):
-        os.mkdir(f"{outdir}/fhd_{version}/logs")
+for obsid in obsids_list:
 
-    for obsid in obsids_list:
-        # Run FHD
-        if run_fhd:
-            with open(
-                f"{outdir}/fhd_{version}/logs/{obsid}_fhd_stdout.txt", "wb"
-            ) as out, open(
-                f"{outdir}/fhd_{version}/logs/{obsid}_fhd_stderr.txt", "wb"
-            ) as err:
-                process = subprocess.Popen(
-                    shlex.split(
-                        f"/opt/devel/rbyrne/harris/idl88/bin/idl -e {fhd_versions_script} -args {outdir} {version} {uvfits_path}/{obsid}.uvfits"
-                    ),
-                    stdout=out,
-                    stderr=err,
-                )
-            stdout, stderr = process.communicate()
+    if tmp_dir is not None:
+        os.system(f"cp {uvfits_path}/{obsid}.uvfits {tmp_dir}")
+        use_uvfits_path = tmp_dir
+        use_outdir = tmp_dir
+    else:
+        use_uvfits_path = uvfits_path
+        use_outdir = outdir
 
-        # Run eppsilon
-        if run_eppsilon:
-            with open(
-                f"{outdir}/fhd_{version}/logs/{obsid}_eppsilon_stdout.txt", "wb"
-            ) as out, open(
-                f"{outdir}/fhd_{version}/logs/{obsid}_eppsilon_stderr.txt", "wb"
-            ) as err:
-                process = subprocess.Popen(
-                    shlex.split(
-                        f"/opt/devel/rbyrne/harris/idl88/bin/idl -e {eppsilon_script} -args {obsid} {outdir} {version} {refresh_ps} {uvf_input} {no_evenodd} {xx_only} {float_colorbar}"
-                    ),
-                    stdout=out,
-                    stderr=err,
-                )
-            stdout, stderr = process.communicate()
+    for version in versions_list:
+        # Create directories
+        if not os.path.isdir(f"{outdir}/fhd_{version}"):
+            os.mkdir(f"{outdir}/fhd_{version}")
+        if not os.path.isdir(f"{outdir}/fhd_{version}/logs"):
+            os.mkdir(f"{outdir}/fhd_{version}/logs")
+
+        try:
+            # Run FHD
+            if run_fhd:
+                with open(
+                    f"{outdir}/fhd_{version}/logs/{obsid}_fhd_stdout.txt", "wb"
+                ) as out, open(
+                    f"{outdir}/fhd_{version}/logs/{obsid}_fhd_stderr.txt", "wb"
+                ) as err:
+                    process = subprocess.Popen(
+                        shlex.split(
+                            f"/opt/devel/rbyrne/harris/idl88/bin/idl -e {fhd_versions_script} -args {use_outdir} {version} {use_uvfits_path}/{obsid}.uvfits"
+                        ),
+                        stdout=out,
+                        stderr=err,
+                    )
+                stdout, stderr = process.communicate()
+
+            # Run eppsilon
+            if run_eppsilon:
+                with open(
+                    f"{outdir}/fhd_{version}/logs/{obsid}_eppsilon_stdout.txt", "wb"
+                ) as out, open(
+                    f"{outdir}/fhd_{version}/logs/{obsid}_eppsilon_stderr.txt", "wb"
+                ) as err:
+                    process = subprocess.Popen(
+                        shlex.split(
+                            f"/opt/devel/rbyrne/harris/idl88/bin/idl -e {eppsilon_script} -args {obsid} {use_outdir} {version} {refresh_ps} {uvf_input} {no_evenodd} {xx_only} {float_colorbar}"
+                        ),
+                        stdout=out,
+                        stderr=err,
+                    )
+                stdout, stderr = process.communicate()
+        except:
+            pass
+
+        if tmp_dir is not None:
+            os.system(f"cp -R {tmp_dir}/fhd_{version}/* {outdir}/fhd_{version}/")
+            os.system(f"rm -R {tmp_dir}/fhd_{version}")
+
+    if tmp_dir is not None:
+        os.system(f"rm {tmp_dir}/{obsid}.uvfits")
+

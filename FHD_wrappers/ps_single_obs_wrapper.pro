@@ -38,17 +38,11 @@ pro ps_single_obs_wrapper
   if refresh_ps eq 0 then undefine, refresh_ps
   if uvf_input eq 0 then undefine, uvf_input
   if no_evenodd eq 0 then undefine, no_evenodd
-  if float_colorbar eq 1 then set_data_ranges=1 else set_data_ranges=0
+  if float_colorbar eq 1 then set_data_ranges=0 else set_data_ranges=1
+  if xx_only eq 1 then pol_inc=["xx"] else pol_inc=["xx", "yy"]
 
-  if xx_only eq 1 then begin
-    ps_wrapper, outdir+'/fhd_'+fhd_version, obs_id, /png, /plot_kpar_power, $
-    refresh_ps=refresh_ps, uvf_input=uvf_input, pol_inc=["xx"], $
-    no_evenodd=no_evenodd, refresh_info=refresh_ps, set_data_ranges=set_data_ranges
-  endif else begin
-    ps_wrapper, outdir+'/fhd_'+fhd_version, obs_id, /png, /plot_kpar_power, $
-    refresh_ps=refresh_ps, uvf_input=uvf_input,$
-    no_evenodd=no_evenodd, refresh_info=refresh_ps, set_data_ranges=set_data_ranges
-  endelse
-
+  ps_wrapper, outdir+'/fhd_'+fhd_version, obs_id, /png, /plot_kpar_power, $
+  refresh_ps=refresh_ps, uvf_input=uvf_input, pol_inc=pol_inc, $
+  no_evenodd=no_evenodd, refresh_info=refresh_ps, data_range=[1e3,1e20]
 
 end

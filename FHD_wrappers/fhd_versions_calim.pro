@@ -224,6 +224,75 @@ pro fhd_versions_calim
         image_filter_fn = "filter_uv_natural"
     end
 
+    'rlb_process_LWA_Apr2026': begin
+        recalculate_all = 0
+        instrument = 'lwa'
+        import_pyuvdata_beam_filepath = '/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits'
+        restrict_hpx_inds = 0
+        snapshot_healpix_export = 1
+        calibrate_visibilities = 0
+        return_cal_visibilities = 0
+        model_visibilities = 0
+        n_pol = 2
+        save_uvf = 1
+        beam_nfreq_avg = 1728  ;average beam
+        image_filter_fn = "filter_uv_natural"
+        ps_nfreq_avg = 1  ;do not average in frequency (Healpix cubes)
+        n_avg = 1  ;do not average in frequency (uvf cubes)
+    end
+
+    'rlb_process_LWA_modified_kernel_Apr2026': begin
+        recalculate_all = 0
+        instrument = 'lwa'
+        import_pyuvdata_beam_filepath = '/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits'
+        restrict_hpx_inds = 0
+        snapshot_healpix_export = 1
+        calibrate_visibilities = 0
+        return_cal_visibilities = 0
+        model_visibilities = 0
+        n_pol = 2
+        save_uvf = 1
+        beam_nfreq_avg = 1728  ;average beam
+        image_filter_fn = "filter_uv_natural"
+        ps_nfreq_avg = 1  ;do not average in frequency (Healpix cubes)
+        n_avg = 1  ;do not average in frequency (uvf cubes)
+        kernel_window = "Blackman-Harris^2"
+    end
+
+    'rlb_process_LWA_freq_avg_Apr2026': begin
+        recalculate_all = 0
+        instrument = 'lwa'
+        import_pyuvdata_beam_filepath = '/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits'
+        restrict_hpx_inds = 0
+        snapshot_healpix_export = 1
+        calibrate_visibilities = 0
+        return_cal_visibilities = 0
+        model_visibilities = 0
+        n_pol = 2
+        save_uvf = 1
+        beam_nfreq_avg = 1728  ;average beam
+        image_filter_fn = "filter_uv_natural"
+        ps_nfreq_avg = 2
+        n_avg = 2
+    end
+
+    'rlb_process_LWA_per_freq_beam_Apr2026': begin
+        recalculate_all = 0
+        instrument = 'lwa'
+        import_pyuvdata_beam_filepath = '/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits'
+        restrict_hpx_inds = 0
+        snapshot_healpix_export = 1
+        calibrate_visibilities = 0
+        return_cal_visibilities = 0
+        model_visibilities = 0
+        n_pol = 2
+        save_uvf = 1
+        beam_nfreq_avg = 1  ;average beam
+        image_filter_fn = "filter_uv_natural"
+        ps_nfreq_avg = 1  ;do not average in frequency (Healpix cubes)
+        n_avg = 1  ;do not average in frequency (uvf cubes)
+    end
+
   endcase
 
   undefine, uvfits_subversion, uvfits_version
