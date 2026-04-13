@@ -32,7 +32,7 @@ def chunk_in_frequency(
         outdir = f"{output_directory}/{mean_freq}MHz/{year}-{month}-{day}/{hour}"
         out_filename = f"{year}{month}{day}_{hour}{start_minute}{start_second}-{hour}{end_minute}{end_second}_{mean_freq}MHz.ms"
         if not os.path.isdir(outdir):
-            os.system(f"mkdir -p {outdir}")
+            os.system(f"sudo mkdir -p {outdir}; sudo chmod a+w {outdir}")
         uv_freq_band.write_ms(f"{outdir}/{out_filename}", clobber=True)
         out_filepaths.append(f"{outdir}/{out_filename}")
 
@@ -132,8 +132,8 @@ def concatenate(
 
                 uv_new = pyuvdata.UVData()
                 uv_new.read(path)
-                uv_new.select(polarizations=[-5, -6])
-                # uv_new.scan_number_array = None  # Added as a workaround for a pyuvdata bug (https://github.com/RadioAstronomySoftwareGroup/pyuvdata/issues/1595)
+                # uv_new.select(polarizations=[-5, -6])
+                uv_new.scan_number_array = None  # Added as a workaround for a pyuvdata bug (https://github.com/RadioAstronomySoftwareGroup/pyuvdata/issues/1595)
                 if freq_ind == 0:
                     uv_new.phase_to_time(np.min(uv_new.time_array))
                     uv_freq_new = uv_new
@@ -153,7 +153,7 @@ def concatenate(
             output_directory=output_directory,
         )
         uv = None
-        out_filepaths.append(out_filepaths_new)
+        out_filepaths.extend(out_filepaths_new)
 
     if delete_orig_data:
         delete_data = True
@@ -176,9 +176,7 @@ def find_and_concatenate_data(
 ):
 
     for date in dates:
-        hours = np.sort(os.listdir(f"{orig_directory}/{orig_freqs[0]}MHz/{date}"))[
-            1:
-        ]  # Start from hour 12
+        hours = np.sort(os.listdir(f"{orig_directory}/{orig_freqs[0]}MHz/{date}"))[::-1]  # Start with hour 12
         for hour in hours:
             filenames = np.sort(
                 os.listdir(f"{orig_directory}/{orig_freqs[0]}MHz/{date}/{hour}")
@@ -245,7 +243,7 @@ if __name__ == "__main__":
         [82280761.71875, 84649414.0625],
     ]
     # dates = np.sort(os.listdir(f"/lustre/pipeline/cosmology/{orig_freqs[0]}MHz"))
-    dates = ["2026-01-12"]
+    dates = ["2026-04-07"]
     find_and_concatenate_data(
         dates, orig_freqs, freq_intervals, delete_orig_data=True, refresh=False
     )
