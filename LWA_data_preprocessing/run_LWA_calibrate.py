@@ -152,6 +152,19 @@ def calibrate_Mar30():
             plot_images=True,
         )
 
+def convert_to_uvfits_Mar30():
+
+    data_freqs = ["34", "44", "52", "62", "72", "79", "83"]
+    for freq in data_freqs:
+        for filename in [
+            f"20260112_120008-120158_{freq}MHz_calibrated", 
+            f"20260112_120008-120158_{freq}MHz_05h_calibrated", 
+            f"20260112_120008-120158_{freq}MHz_05h_smoothed_calibrated"
+        ]:
+            uv = pyuvdata.UVData()
+            uv.read(f"/fast/rbyrne/{filename}.ms")
+            uv.write_uvfits(f"/fast/rbyrne/{filename}.uvfits", uvw_double=False)
+
 
 if __name__=="__main__":
-    calibrate_Mar30()
+    convert_to_uvfits_Mar30()
