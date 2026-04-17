@@ -3,6 +3,90 @@ import pyuvdata
 import os
 import numpy as np
 
+
+def calibrate_Apr17():
+
+    use_freqs = np.array(
+        [
+            "34",
+            "44",
+            "52",
+            "62",
+            "72",
+            "79",
+            "83",
+        ]
+    )
+    date = "2026-04-07"
+    hour = "12"
+    filenames = []
+
+    for freq in use_freqs:
+        filenames = [
+            f"/lustre/pipeline/cosmology/concatenated_data/{freq}MHz/2026-04-07/07/20260407_070009-070159_{freq}MHz.ms",
+            f"/lustre/pipeline/cosmology/concatenated_data/{freq}MHz/2026-04-07/12/20260407_123010-123201_{freq}MHz.ms",
+        ]
+        for filename in filenames:
+            calibration_pipeline(
+                filename,
+                output_dir="/fast/rbyrne",
+                cal_trial_name="10h_cal",
+                run_aoflagger=True,
+                flag_antennas_from_autocorrs=True,
+                apply_cal_path="/fast/rbyrne/calibration_2026-04-07_10h_spwcorrected.B.flagged",
+                apply_calibration=True,
+                smooth_cal=False,
+                plot_images=True,
+            )
+            calibration_pipeline(
+                filename,
+                output_dir="/fast/rbyrne",
+                cal_trial_name="10h_cal_smoothed",
+                run_aoflagger=True,
+                flag_antennas_from_autocorrs=True,
+                apply_cal_path="/fast/rbyrne/calibration_2026-04-07_10h_spwcorrected.B.flagged",
+                apply_calibration=True,
+                smooth_cal=True,
+                plot_images=True,
+            )
+
+
+def calibrate_Apr13():
+
+    use_freqs = np.array(
+        [
+            "34",
+            "44",
+            "52",
+            "62",
+            "72",
+            "79",
+            "83",
+        ]
+    )
+    date = "2026-04-07"
+    hour = "12"
+
+    for freq in use_freqs:
+        filename = f"20260407_123010-123201_{freq}MHz.ms"
+        os.system(
+            f"cp -r /lustre/pipeline/cosmology/concatenated_data/{freq}MHz/{date}/{hour}/{filename} /fast/rbyrne/"
+        )
+
+        # Calibrate
+        calibration_pipeline(
+            f"/fast/rbyrne/{filename}",
+            output_dir="/fast/rbyrne",
+            run_aoflagger=True,
+            flag_antennas_from_autocorrs=True,
+            flag_antenna_list=[],
+            plot_gains=True,
+            apply_calibration=True,
+            smooth_cal=False,
+            plot_images=True,
+        )
+
+
 def calibrate_Mar16():
 
     use_freqs = np.array(
@@ -62,7 +146,9 @@ def calibrate_Mar16():
             plot_images=True,
         )
 
-        calfits_filenames.append(f"{os.path.splitext(os.path.basename(concatenated_filepath))[0]}.calfits")
+        calfits_filenames.append(
+            f"{os.path.splitext(os.path.basename(concatenated_filepath))[0]}.calfits"
+        )
 
     # Concatenate calfits
     concatenated_calfits_filename = f"/fast/rbyrne/{calfits_filenames[0][:22]}_{use_freqs[0]}-{use_freqs[-1]}MHz.calfits"
@@ -77,6 +163,7 @@ def calibrate_Mar16():
     if os.path.isfile(concatenated_calfits_filename):  # Delete calfits
         for filename in enumerate(calfits_filenames):
             os.system(f"rm {filename}")
+
 
 def calibrate_Mar30():
 
@@ -110,16 +197,16 @@ def calibrate_Mar30():
     cal.flag_array[np.where(cal.flag_array)] = True
     cal.gain_array[np.where(cal.flag_array)] = np.nan + 1j * np.nan
     cal.Ntimes = 1
-    cal.gain_array = np.nanmean(cal.gain_array, axis=2)[
-        :, :, np.newaxis, :
-    ]
+    cal.gain_array = np.nanmean(cal.gain_array, axis=2)[:, :, np.newaxis, :]
     cal.flag_array = np.min(cal.flag_array, axis=2)[:, :, np.newaxis, :]
     cal.integration_time = np.array([np.mean(cal.integration_time)])
     cal.lst_array = np.array([np.mean(cal.lst_array)])
     cal.time_array = np.array([np.mean(cal.time_array)])
     cal.check()
 
-    cal.write_calfits("/fast/rbyrne/20250112_055752-055952_27MHz-82MHz.calfits", clobber=True)
+    cal.write_calfits(
+        "/fast/rbyrne/20250112_055752-055952_27MHz-82MHz.calfits", clobber=True
+    )
 
     if False:
         for freq in data_freqs:
@@ -152,19 +239,20 @@ def calibrate_Mar30():
             plot_images=True,
         )
 
+
 def convert_to_uvfits_Mar30():
 
     data_freqs = ["34", "44", "52", "62", "72", "79", "83"]
     for freq in data_freqs:
         for filename in [
-            f"20260112_120008-120158_{freq}MHz_calibrated", 
-            f"20260112_120008-120158_{freq}MHz_05h_calibrated", 
-            f"20260112_120008-120158_{freq}MHz_05h_smoothed_calibrated"
+            f"20260112_120008-120158_{freq}MHz_calibrated",
+            f"20260112_120008-120158_{freq}MHz_05h_calibrated",
+            f"20260112_120008-120158_{freq}MHz_05h_smoothed_calibrated",
         ]:
             uv = pyuvdata.UVData()
             uv.read(f"/fast/rbyrne/{filename}.ms")
             uv.write_uvfits(f"/fast/rbyrne/{filename}.uvfits", uvw_double=False)
 
 
-if __name__=="__main__":
-    convert_to_uvfits_Mar30()
+if __name__ == "__main__":
+    calibrate_Apr17()
