@@ -58,6 +58,7 @@ def copy_data(
     use_dates=None,
 ):
 
+    copy_paths = []
     for freq in copy_freqs:
         dates = np.sort(os.listdir(f"{source_dir}/{freq}MHz"))
         if use_dates is not None:
@@ -81,15 +82,21 @@ def copy_data(
                             break
                     if copy_file:
                         filename = f"{filename[:16]}{freq}{filename[18:]}"
-                        if os.path.isdir(
-                            f"{source_dir}/{freq}MHz/{date}/{hour}/{filename}"
-                        ):
-                            # copy_command = f"sudo mkdir -p {target_dir}/{freq}MHz/{date}/{hour} && sudo cp -r {source_dir}/{freq}MHz/{date}/{hour}/{filename} {target_dir}/{freq}MHz/{date}/{hour}"
-                            copy_command = f"mkdir -p {target_dir}/{freq}MHz/{date}/{hour} && mv {source_dir}/{freq}MHz/{date}/{hour}/{filename} {target_dir}/{freq}MHz/{date}/{hour}"
-                            print(f"Moving {filename}")
-                            os.system(copy_command)
-                        else:
-                            continue
+                        copy_paths.append(f"{source_dir}/{freq}MHz/{date}/{hour}/{filename}")
+
+    time.sleep(120) # wait 2 minutes to prevent moving files mid-write
+    for path in copy_paths:
+        if os.path.isdir(path):
+            path_split = path.split("/")
+            source_dir = "/".join(path_split[:-4])
+            intermediate_dirs = "/".join(path_split[-4:-1])
+            filename = path_split[-1]
+            # copy_command = f"sudo mkdir -p {target_dir}/{freq}MHz/{date}/{hour} && sudo cp -r {source_dir}/{freq}MHz/{date}/{hour}/{filename} {target_dir}/{freq}MHz/{date}/{hour}"
+            copy_command = f"mkdir -p {target_dir}/{intermediate_dirs} && mv {source_dir}/{intermediate_dirs}/{filename} {target_dir}/{intermediate_dirs}"
+            print(f"Moving {filename}")
+            os.system(copy_command)
+        else:
+            continue
 
 
 schedule.every().hour.do(copy_data)
