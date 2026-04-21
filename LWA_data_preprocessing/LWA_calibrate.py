@@ -1,7 +1,6 @@
 from typing import Optional, List
 import os
 import subprocess
-import ast
 import sys
 import shutil
 import numpy as np
@@ -42,7 +41,7 @@ def get_bad_antenna_list(
     result = result.split("\n")
     result = [line for line in result if line.startswith("get_bandants output:")][0]
     result = result.split("get_bandants output:")[1].strip()
-    result = ast.literal_eval(result)
+    result = eval(result)
     if np.isfinite(result[0]):
         return result[1]
     else:
@@ -111,6 +110,7 @@ def read_caltable_safely2(
     """
     This function replaces pyuvdata's UVCal.read() function due to a bug in that function.
     See https://github.com/RadioAstronomySoftwareGroup/pyuvdata/issues/1648.
+    Deprecated function with resolution of that issue!
     """
 
     with tbl.table(table_path, readonly=True, ack=False) as tb:
@@ -230,6 +230,7 @@ def read_caltable_safely(path, tmp_directory="/fast/rbyrne/caltable_temp_dir"):
     """
     This function replaces pyuvdata's UVCal.read() function due to a bug in that function.
     See https://github.com/RadioAstronomySoftwareGroup/pyuvdata/issues/1648.
+    Deprecated function with resolution of that issue!
     """
 
     if os.path.isfile(path):  # Path is not an ms caltable
@@ -603,6 +604,48 @@ def get_datafiles(
     return f"{output_dir}/{concatenated_filename}"
 
 
+def flag_data(
+    datafile_path: str,
+    run_aoflagger: bool = True,
+    flag_antennas_from_autocorrs: bool = True,
+    flag_antenna_list: List[str] = [],
+):
+
+    # Get antennas to flag based on Andrea's autocorrelation metrics
+    if flag_antennas_from_autocorrs:
+        output_file_prefix = os.path.splitext(os.path.basename(datafile_path))[0]
+        date = datetime.datetime(
+            int(output_file_prefix[:4]),
+            int(output_file_prefix[4:6]),
+            int(output_file_prefix[6:8]),
+        )
+        year = date.strftime("%Y")
+        month = date.strftime("%m")
+        day = date.strftime("%d")
+        flag_antenna_list_autocorrs = get_bad_antenna_list(year, month, day)
+        print(
+            f"Using antenna autocorrelation data to flag antennas. Flagging {flag_antenna_list_autocorrs}."
+        )
+        flag_antenna_list = np.unique(
+            np.concatenate((flag_antenna_list, flag_antenna_list_autocorrs))
+        )
+
+    if len(flag_antenna_list) > 0:
+        uv = pyuvdata.UVData()
+        uv.read(datafile_path, data_column="DATA")
+        uv.phase_to_time(np.mean(uv.time_array))
+        flag_antennas(
+            uv,
+            antenna_names=flag_antenna_list,
+            inplace=True,
+        )
+        uv.write_ms(datafile_path, fix_autos=True, clobber=True)
+        uv = None  # Clear memory
+
+    if run_aoflagger:
+        os.system(f"aoflagger {datafile_path}")
+
+
 def calibration_pipeline(
     datafile_path: str,
     output_dir: Optional[str] = None,
@@ -738,7 +781,8 @@ def calibration_pipeline(
         os.mkdir(output_dir)
 
     if apply_cal_path is not None:  # Restore calibration solution
-        uvcal = read_caltable_safely(apply_cal_path)
+        uvcal = pyuvdata.UVCal()
+        uvcal.read(apply_cal_path)
         uv = None  # Define variable
 
     else:  # Run calibration
@@ -909,18 +953,21 @@ def calibration_pipeline(
 
 if __name__ == "__main__":
 
-    use_freqs = ["34", "44", "52", "62", "72", "79", "83"]
+    #use_freqs = ["34", "44", "52", "62", "72", "79", "83"]
+    use_freqs = ["83"]
     for freq in use_freqs:
-        os.system(
-            f"cp -r /lustre/pipeline/cosmology/concatenated_data/{freq}MHz/2026-01-12/12/20260112_120008-120158_{freq}MHz.ms /fast/rbyrne/20260112_120008-120158_{freq}MHz.ms"
-        )
+        #os.system(
+        #    f"cp -r /lustre/pipeline/cosmology/concatenated_data/{freq}MHz/2026-01-12/12/20260112_120008-120158_{freq}MHz.ms /fast/rbyrne/20260112_120008-120158_{freq}MHz.ms"
+        #)
         calibration_pipeline(
-            f"/fast/rbyrne/20260112_120008-120158_{freq}MHz.ms",
+            f"/fast/rbyrne/20260407_123010-123201_{freq}MHz.ms",
             output_dir="/fast/rbyrne",
+            cal_trial_name="10h_cal_2",
             run_aoflagger=True,
             flag_antennas_from_autocorrs=True,
             flag_antenna_list=[],
             plot_gains=True,
+            apply_cal_path="/fast/rbyrne/calibration_2026-04-07_10h_spwcorrected_83MHz.B.flagged",
             apply_calibration=True,
             smooth_cal=False,
             plot_images=True,

@@ -131,7 +131,11 @@ def concatenate(
                 path = f"{orig_directory}/{freq}MHz/{year}-{month}-{day}/{hour}/{year}{month}{day}_{hour}{minute}{second}_{freq}MHz.ms"
 
                 uv_new = pyuvdata.UVData()
-                uv_new.read(path)
+                try:
+                    uv_new.read(path)
+                except:
+                    print(f"WARNING: Error reading file {path}. Skipping.")
+                    return None
                 # uv_new.select(polarizations=[-5, -6])
                 uv_new.scan_number_array = None  # Added as a workaround for a pyuvdata bug (https://github.com/RadioAstronomySoftwareGroup/pyuvdata/issues/1595)
                 if freq_ind == 0:
@@ -243,7 +247,7 @@ if __name__ == "__main__":
         [82280761.71875, 84649414.0625],
     ]
     # dates = np.sort(os.listdir(f"/lustre/pipeline/cosmology/{orig_freqs[0]}MHz"))
-    dates = ["2026-04-07"]
+    dates = ["2026-04-10"]
     find_and_concatenate_data(
         dates, orig_freqs, freq_intervals, delete_orig_data=True, refresh=False
     )

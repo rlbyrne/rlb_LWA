@@ -27,6 +27,7 @@ def calibrate_Apr17():
             f"/lustre/pipeline/cosmology/concatenated_data/{freq}MHz/2026-04-07/12/20260407_123010-123201_{freq}MHz.ms",
         ]
         for filename in filenames:
+            os.system(f"sudo chmod -R a+r {filename}")
             calibration_pipeline(
                 filename,
                 output_dir="/fast/rbyrne",
