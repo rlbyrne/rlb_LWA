@@ -92,7 +92,7 @@ def copy_data(
             intermediate_dirs = "/".join(path_split[-4:-1])
             filename = path_split[-1]
             # copy_command = f"sudo mkdir -p {target_dir}/{freq}MHz/{date}/{hour} && sudo cp -r {source_dir}/{freq}MHz/{date}/{hour}/{filename} {target_dir}/{freq}MHz/{date}/{hour}"
-            copy_command = f"mkdir -p {target_dir}/{intermediate_dirs} && mv {source_dir}/{intermediate_dirs}/{filename} {target_dir}/{intermediate_dirs}"
+            copy_command = f"tar -czf {source_dir}/{intermediate_dirs}/{filename}.tar.gz {source_dir}/{intermediate_dirs}/{filename} && mkdir -p {target_dir}/{intermediate_dirs} && mv {source_dir}/{intermediate_dirs}/{filename}.tar.gz {target_dir}/{intermediate_dirs} && tar -xzvf {target_dir}/{intermediate_dirs}/{filename}.tar.gz"
             print(f"Moving {filename}")
             os.system(copy_command)
         else:
