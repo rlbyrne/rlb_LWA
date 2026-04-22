@@ -30,6 +30,50 @@ def get_utc_from_lst(
     return utc_str
 
 
+def copy_data_with_tar(
+    copy_paths,
+    target_dir="/lustre/pipeline/cosmology",
+    source_dir="/lustre/pipeline/slow",
+):
+    for path in copy_paths:
+        if os.path.isdir(path):
+            path_split = path.split("/")
+            source_dir = "/".join(path_split[:-4])
+            intermediate_dirs = "/".join(path_split[-4:-1])
+            filename = path_split[-1]
+            # copy_command = f"sudo mkdir -p {target_dir}/{freq}MHz/{date}/{hour} && sudo cp -r {source_dir}/{freq}MHz/{date}/{hour}/{filename} {target_dir}/{freq}MHz/{date}/{hour}"
+            #copy_command = f"tar -czf {source_dir}/{intermediate_dirs}/{filename}.tar.gz {source_dir}/{intermediate_dirs}/{filename} && mkdir -p {target_dir}/{intermediate_dirs} && mv {source_dir}/{intermediate_dirs}/{filename}.tar.gz {target_dir}/{intermediate_dirs} && tar -xzvf {target_dir}/{intermediate_dirs}/{filename}.tar.gz"
+            print(f"Moving {filename}")
+            tar_command = f"tar -czf {source_dir}/{intermediate_dirs}/{filename}.tar.gz -C {source_dir}/{intermediate_dirs} {filename} --strip-components=6"
+            makedir_command = f"mkdir -p {target_dir}/{intermediate_dirs}"
+            move_command = f"mv {source_dir}/{intermediate_dirs}/{filename}.tar.gz {target_dir}/{intermediate_dirs}"
+            untar_command = f"sudo tar -xzvf {target_dir}/{intermediate_dirs}/{filename}.tar.gz -C {target_dir}/{intermediate_dirs}"
+            os.system(tar_command)
+            os.system(makedir_command)
+            os.system(move_command)
+            os.system(untar_command)
+        else:
+            continue
+
+
+def copy_data_no_tar(
+    copy_paths,
+    target_dir="/lustre/pipeline/cosmology",
+    source_dir="/lustre/pipeline/slow",
+):
+    for path in copy_paths:
+        if os.path.isdir(path):
+            path_split = path.split("/")
+            source_dir = "/".join(path_split[:-4])
+            intermediate_dirs = "/".join(path_split[-4:-1])
+            filename = path_split[-1]
+            copy_command = f"mkdir -p {target_dir}/{intermediate_dirs} && mv {source_dir}/{intermediate_dirs}/{filename} {target_dir}/{intermediate_dirs}"
+            print(f"Moving {filename}")
+            os.system(copy_command)
+        else:
+            continue
+
+
 def copy_data(
     target_dir="/lustre/pipeline/cosmology",
     source_dir="/lustre/pipeline/slow",
@@ -85,18 +129,11 @@ def copy_data(
                         copy_paths.append(f"{source_dir}/{freq}MHz/{date}/{hour}/{filename}")
 
     time.sleep(120) # wait 2 minutes to prevent moving files mid-write
-    for path in copy_paths:
-        if os.path.isdir(path):
-            path_split = path.split("/")
-            source_dir = "/".join(path_split[:-4])
-            intermediate_dirs = "/".join(path_split[-4:-1])
-            filename = path_split[-1]
-            # copy_command = f"sudo mkdir -p {target_dir}/{freq}MHz/{date}/{hour} && sudo cp -r {source_dir}/{freq}MHz/{date}/{hour}/{filename} {target_dir}/{freq}MHz/{date}/{hour}"
-            copy_command = f"tar -czf {source_dir}/{intermediate_dirs}/{filename}.tar.gz {source_dir}/{intermediate_dirs}/{filename} && mkdir -p {target_dir}/{intermediate_dirs} && mv {source_dir}/{intermediate_dirs}/{filename}.tar.gz {target_dir}/{intermediate_dirs} && tar -xzvf {target_dir}/{intermediate_dirs}/{filename}.tar.gz"
-            print(f"Moving {filename}")
-            os.system(copy_command)
-        else:
-            continue
+    copy_data_no_tar(
+        copy_paths,
+        target_dir="/lustre/pipeline/cosmology",
+        source_dir="/lustre/pipeline/slow",
+    )
 
 
 schedule.every().hour.do(copy_data)
@@ -104,3 +141,6 @@ schedule.every().hour.do(copy_data)
 while True:
     schedule.run_pending()
     time.sleep(60) # wait one minute
+
+#if __name__=="__main__":
+#    copy_data()
