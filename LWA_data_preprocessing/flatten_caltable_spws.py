@@ -15,7 +15,7 @@ def flatten_caltable_spws(input_path, output_path, use_freqs=None):
         freq_inds = np.arange(cal.Nfreqs)
         use_freqs = cal.freq_array
     else:
-        freq_inds = np.digitize(use_freqs, cal.freq_array)
+        freq_inds = np.digitize(use_freqs, cal.freq_array, right=True)
     gain = gain[:, freq_inds, :]
     gain.shape = (cal.Nants_data, len(freq_inds), 1, cal.Njones)
 
@@ -40,3 +40,5 @@ if __name__ == "__main__":
     input_path = "/lustre/pipeline/calibration/results/2026-04-07/10h/successful/20260407_191722/tables/calibration_2026-04-07_10h.B.flagged"
     output_path = "/fast/rbyrne/calibration_2026-04-07_10h_spwcorrected_83MHz.B.flagged"
     flatten_caltable_spws(input_path, output_path, use_freqs=uv.freq_array)
+    output_path = "/fast/rbyrne/calibration_2026-04-07_10h_spwcorrected.B.flagged"
+    flatten_caltable_spws(input_path, output_path)
