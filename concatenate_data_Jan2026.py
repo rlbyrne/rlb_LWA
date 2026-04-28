@@ -10,6 +10,7 @@ def chunk_in_frequency(
     filenames,
     freq_intervals,
     output_directory="/lustre/pipeline/cosmology/concatenated_data",
+    tmp_directory=None,
 ):
 
     out_filepaths = []
@@ -30,10 +31,19 @@ def chunk_in_frequency(
         end_second = filenames[-1][13:15]
 
         outdir = f"{output_directory}/{mean_freq}MHz/{year}-{month}-{day}/{hour}"
+        if tmp_directory is None:
+            outdir_use = outdir
+        else:
+            outdir_use = tmp_directory
+
         out_filename = f"{year}{month}{day}_{hour}{start_minute}{start_second}-{hour}{end_minute}{end_second}_{mean_freq}MHz.ms"
         if not os.path.isdir(outdir):
             os.system(f"sudo mkdir -p {outdir}; sudo chmod a+w {outdir}")
-        uv_freq_band.write_ms(f"{outdir}/{out_filename}", clobber=True)
+        uv_freq_band.write_ms(f"{outdir_use}/{out_filename}", clobber=True)
+
+        if tmp_directory is not None:
+            os.system(f"mv -r {outdir_use}/{out_filename} {outdir}/{out_filename}")
+
         out_filepaths.append(f"{outdir}/{out_filename}")
 
     return out_filepaths
@@ -62,6 +72,7 @@ def concatenate(
     delete_orig_data=True,
     orig_directory="/lustre/pipeline/cosmology",
     output_directory="/lustre/pipeline/cosmology/concatenated_data",
+    tmp_directory=None,
     refresh=False,
 ):
 
@@ -129,13 +140,23 @@ def concatenate(
                 minute = filename[11:13]
                 second = filename[13:15]
                 path = f"{orig_directory}/{freq}MHz/{year}-{month}-{day}/{hour}/{year}{month}{day}_{hour}{minute}{second}_{freq}MHz.ms"
+                if tmp_directory is not None:
+                    path_use = f"{tmp_directory}/{year}{month}{day}_{hour}{minute}{second}_{freq}MHz.ms"
+                    if path_use == path:
+                        tmp_directory = None
+                    else:
+                        os.system(f"cp -r {path} {tmp_directory}/")
 
                 uv_new = pyuvdata.UVData()
                 try:
-                    uv_new.read(path)
+                    uv_new.read(path_use)
                 except:
                     print(f"WARNING: Error reading file {path}. Skipping.")
                     return None
+
+                if tmp_directory is not None:
+                    os.system(f"rm -r {path_use}")
+
                 # uv_new.select(polarizations=[-5, -6])
                 uv_new.scan_number_array = None  # Added as a workaround for a pyuvdata bug (https://github.com/RadioAstronomySoftwareGroup/pyuvdata/issues/1595)
                 if freq_ind == 0:
@@ -155,6 +176,7 @@ def concatenate(
             filenames,
             [freq_interval],
             output_directory=output_directory,
+            tmp_directory=tmp_directory,
         )
         uv = None
         out_filepaths.extend(out_filepaths_new)
@@ -168,6 +190,8 @@ def concatenate(
         if delete_data:
             delete_original_data(filenames, orig_freqs, orig_directory=orig_directory)
 
+    sys.exit()
+
 
 def find_and_concatenate_data(
     dates,
@@ -176,11 +200,16 @@ def find_and_concatenate_data(
     delete_orig_data=True,
     orig_directory="/lustre/pipeline/cosmology",
     output_directory="/lustre/pipeline/cosmology/concatenated_data",
+    tmp_directory=None,
     refresh=False,
 ):
 
     for date in dates:
-        hours = np.sort(os.listdir(f"{orig_directory}/{orig_freqs[0]}MHz/{date}"))[::-1]  # Start with hour 12
+        if os.path.isdir(f"{orig_directory}/{orig_freqs[0]}MHz/{date}"):
+            hours = np.sort(os.listdir(f"{orig_directory}/{orig_freqs[0]}MHz/{date}"))[::-1]  # Start with hour 12
+        else:
+            print(f"ERROR: Directory {orig_directory}/{orig_freqs[0]}MHz/{date} does not exist.")
+            return None
         for hour in hours:
             filenames = np.sort(
                 os.listdir(f"{orig_directory}/{orig_freqs[0]}MHz/{date}/{hour}")
@@ -247,7 +276,7 @@ if __name__ == "__main__":
         [82280761.71875, 84649414.0625],
     ]
     # dates = np.sort(os.listdir(f"/lustre/pipeline/cosmology/{orig_freqs[0]}MHz"))
-    dates = ["2026-04-10"]
+    dates = ["2026-04-21"]
     find_and_concatenate_data(
-        dates, orig_freqs, freq_intervals, delete_orig_data=True, refresh=False
+        dates, orig_freqs, freq_intervals, delete_orig_data=True, refresh=False, tmp_directory=None,
     )
