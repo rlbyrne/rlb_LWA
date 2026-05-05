@@ -62,7 +62,7 @@ def copy_data_no_tar(
     source_dir="/lustre/pipeline/slow",
 ):
     for path in copy_paths:
-        if os.path.isdir(path):
+        if os.path.isdir(path) or os.path.isfile(path):
             path_split = path.split("/")
             source_dir = "/".join(path_split[:-4])
             intermediate_dirs = "/".join(path_split[-4:-1])
@@ -124,6 +124,8 @@ def copy_data(
                         if int(time_range[0]) < int(timestamp) < int(time_range[1]):
                             copy_file = True
                             break
+                    if not filename.endswith(".ms.tar") and not filename.endswith(".ms"):
+                        copy_file = False
                     if copy_file:
                         filename = f"{filename[:16]}{freq}{filename[18:]}"
                         copy_paths.append(f"{source_dir}/{freq}MHz/{date}/{hour}/{filename}")
