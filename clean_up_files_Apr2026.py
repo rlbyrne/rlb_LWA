@@ -2,7 +2,7 @@ import subprocess
 from pathlib import Path
 
 # --- Configuration ---
-DIRECTORY_TO_SEARCH = "/lustre/pipeline/cosmology/32MHz/2026-04-22/05"  # Change this to your target directory path
+DIRECTORY_TO_SEARCH = "/lustre/pipeline/cosmology/82MHz/2026-04-22/05"  # Change this to your target directory path
 TARGET_SIZE_MB = 339
 TOLERANCE_MB = 1  # Allows size to be between 338M and 340M
 DRY_RUN = False    # Set to False to actually delete the files

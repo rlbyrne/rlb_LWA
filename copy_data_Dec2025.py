@@ -133,8 +133,8 @@ def copy_data(
     time.sleep(120) # wait 2 minutes to prevent moving files mid-write
     copy_data_no_tar(
         copy_paths,
-        target_dir="/lustre/pipeline/cosmology",
-        source_dir="/lustre/pipeline/slow",
+        target_dir=target_dir,
+        source_dir=source_dir,
     )
 
 
