@@ -5,6 +5,8 @@
 #input1: ms data file where a subband has been selected
 #input2: cal file from which to extract a subband
 
+# This function is deprecated. Use LWA_calibrate.read_caltable
+
 
 import numpy as np
 import sys,os 

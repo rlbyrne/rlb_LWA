@@ -2,7 +2,7 @@ import numpy as np
 import pyuvdata
 
 # Adapted from Danny Jacobs
-
+# This function is deprecated. Use LWA_calibrate.read_caltable
 
 def flatten_caltable_spws(input_path, output_path, use_freqs=None):
 

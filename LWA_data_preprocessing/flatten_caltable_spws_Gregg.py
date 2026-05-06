@@ -19,6 +19,8 @@ Usage:
 Author: OVRO-LWA Pipeline
 """
 
+# This function is deprecated. Use LWA_calibrate.read_caltable
+
 import os
 import sys
 import argparse
