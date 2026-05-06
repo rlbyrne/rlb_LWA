@@ -5,12 +5,13 @@ import numpy as np
 
 #use_freqs = ["34", "44", "52", "62", "72", "79", "83"]
 use_freqs = ["62"]
-obsids_list = np.array([[
-    #f"20260112_120008-120158_{freq}MHz_calibrated", 
-    #f"20260112_120008-120158_{freq}MHz_05h_calibrated", 
-    f"20260112_120008-120158_{freq}MHz_05h_smoothed_calibrated"
-] for freq in use_freqs]).flatten()
-versions_list = ["rlb_process_LWA_freq_avg_Apr2026", "rlb_process_LWA_per_freq_beam_Apr2026"]
+#obsids_list = np.array([[
+#    f"20260112_120008-120158_{freq}MHz_calibrated", 
+#    f"20260112_120008-120158_{freq}MHz_05h_calibrated", 
+#    f"20260112_120008-120158_{freq}MHz_05h_smoothed_calibrated"
+#] for freq in use_freqs]).flatten()
+obsids_list = ["20260112_120008-120158_62MHz_source_sim"]
+versions_list = ["rlb_process_LWA_Apr2026"]
 uvfits_path = "/fast/rbyrne"
 outdir = "/fast/rbyrne/fhd_outputs"
 tmp_dir = None
@@ -41,9 +42,9 @@ for obsid in obsids_list:
     for version in versions_list:
         # Create directories
         if not os.path.isdir(f"{outdir}/fhd_{version}"):
-            os.mkdir(f"{outdir}/fhd_{version}")
+            os.mkdirs(f"{outdir}/fhd_{version}", exist_ok=True)
         if not os.path.isdir(f"{outdir}/fhd_{version}/logs"):
-            os.mkdir(f"{outdir}/fhd_{version}/logs")
+            os.mkdirs(f"{outdir}/fhd_{version}/logs", exist_ok=True)
 
         try:
             # Run FHD
