@@ -491,9 +491,63 @@ def read_caltable(input_path, use_freqs=None):
     return cal
 
 
+def peel_sources(
+    out_ms_path,
+    orig_ms_path,
+    julia_path="/opt/devel/pipeline/envs/julia060/bin/julia",
+    ttcal_path="/opt/devel/pipeline/envs/julia060/bin/ttcal.jl",
+    peel_sources_path="/home/pipeline/sources.json",
+    Ntimes=None,
+) -> None:
+
+    if Ntimes != 1:
+        uv = pyuvdata.UVData()
+        uv.read(orig_ms_path)
+        Ntimes = uv.Ntimes
+
+    if Ntimes != 1:  # Need to split file into individual times
+        time_array = list(set(uv.time_array))
+        ms_file_list = []
+        for time_ind, time in enumerate(time_array):
+            filepath = f"{out_ms_path.strip('.ms')}_time{time_ind}.ms"
+            uv_single_time = uv.select(times=time, inplace=False)
+            uv_single_time.phase_to_time(time)
+            uv_single_time.write_ms(filepath)
+            ms_file_list.append(filepath)
+    else:
+        if out_ms_path != orig_ms_path:
+            os.system(f"cp -r {orig_ms_path} {out_ms_path}")
+        ms_file_list.append(out_ms_path)
+
+    for filepath in ms_file_list:
+        os.system(
+            f"{julia_path} {ttcal_path} peel {filepath} {peel_sources_path} --beam sine --maxiter 50 --tolerance 1e-4 --minuvw 10"
+        )
+
+    if Ntimes != 1:
+        print(ms_file_list)
+        for file_ind, filepath in enumerate(ms_file_list):
+            uv_new = pyuvdata.UVData()
+            uv_new.read(filepath)
+            if file_ind == 0:
+                uv = uv_new
+            else:
+                uv.fast_concat(uv_new, "blt")
+        uv.phase_to_time(np.mean(uv.time_array))
+        uv.write_ms(out_ms_path)
+
+        # Delete temporary files
+        if os.path.isdir(out_ms_path):
+            for filepath in ms_file_list:
+                os.system(f"rm -r {filepath}")
+        else:
+            print(f"ERROR: File {out_ms_path} not written.")
+
+
 def calibration_pipeline(
     datafile_path: str,
     output_dir: Optional[str] = None,
+    tmp_dir: Optional[str] = None,
     cal_trial_name: Optional[str] = None,
     beam_path: Optional[str] = "/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits",
     skymodel_path: Optional[
@@ -513,6 +567,10 @@ def calibration_pipeline(
     apply_calibration: bool = True,
     smooth_cal: bool = False,
     plot_images: bool = True,
+    peel: bool = False,
+    julia_path: str = "/opt/devel/pipeline/envs/julia060/bin/julia",
+    ttcal_path: str = "/opt/devel/pipeline/envs/julia060/bin/ttcal.jl",
+    peel_sources_path: str = "/home/pipeline/sources.json",
 ) -> None:
     """
     Parameters
@@ -522,6 +580,8 @@ def calibration_pipeline(
     output_dir : str or None
         Path to a directory where to calibration outputs will be saved. If None,
         the directory containing datafile_path will be used. Default None.
+    tmp_dir : str or None
+        Path to a temporary directory for data processing.
     cal_trial_name : str
         Optional string to append to script outputs. Used to distinguish different
         calibration trials on the same dataset. Default None.
@@ -585,7 +645,21 @@ def calibration_pipeline(
         images will be generated of the calibrated data, model, and residual (data
         minus model). If apply_calibration=False, images will be generated of the
         model only. Default True.
+    peel : bool
+        If True, images will be peeled with TTCal. Requires that apply_calibration=True.
+    julia_path: str
+        Path to julia installation. Used only if peel=True. Default
+        "/opt/devel/pipeline/envs/julia060/bin/julia".
+    ttcal_path : str
+        Path to TTCal. Used only if peel=True. Default
+        "/opt/devel/pipeline/envs/julia060/bin/ttcal.jl".
+    peel_sources_path : str
+        Path to sources for peeling. Used only if peel=True. Default "/home/pipeline/sources.json".
     """
+
+    if peel and not apply_calibration:
+        print("WARNING: Peeling requires apply_calibration=True. Setting peel=False.")
+        peel = False
 
     # Define output filenames
     output_file_prefix = os.path.splitext(os.path.basename(datafile_path))[0]
@@ -597,10 +671,31 @@ def calibration_pipeline(
     gain_plot_dir = "gain_plots/"
     gain_plot_prefix = output_file_prefix
     calibrated_data_ms = f"{output_file_prefix}_calibrated.ms"
+    peeled_ms = f"{output_file_prefix}_peeled.ms"
     res_ms = f"{output_file_prefix}_res.ms"
     calibrated_data_image = f"{output_file_prefix}_calibrated"
     model_image = f"{output_file_prefix}_model"
+    peeled_image = f"{output_file_prefix}_peeled"
     res_image = f"{output_file_prefix}_res"
+
+    if output_dir is None:  # Use same directory as the data
+        output_dir = os.path.dirname(datafile_path)
+    if not os.path.isdir(output_dir):  # Make directory if it doesn't already exist
+        os.mkdir(output_dir)
+    if tmp_dir is not None:
+        if tmp_dir == output_dir:
+            tmp_dir = None
+    if tmp_dir is None:
+        use_output_dir = output_dir
+        use_datafile_path = datafile_path
+    else:
+        use_output_dir = f"{tmp_dir}/{output_file_prefix}_tmp_dir"
+        if not os.path.isdir(
+            use_output_dir
+        ):  # Make directory if it doesn't already exist
+            os.mkdir(use_output_dir)
+        use_datafile_path = f"{use_output_dir}/{os.path.basename(datafile_path)}"
+        os.system(f"cp -r {datafile_path} {os.path.dirname(use_datafile_path)}")
 
     # Get antennas to flag based on Andrea's autocorrelation metrics
     if flag_antennas_from_autocorrs:
@@ -622,12 +717,7 @@ def calibration_pipeline(
         )
 
     if run_aoflagger:
-        os.system(f"aoflagger {datafile_path}")
-
-    if output_dir is None:  # Use same directory as the data
-        output_dir = os.path.dirname(datafile_path)
-    if not os.path.isdir(output_dir):  # Make directory if it doesn't already exist
-        os.mkdir(output_dir)
+        os.system(f"aoflagger {use_datafile_path}")
 
     if apply_cal_path is not None:  # Restore calibration solution
         uvcal = read_caltable(apply_cal_path)
@@ -637,12 +727,14 @@ def calibration_pipeline(
 
         if os.path.isdir(f"{output_dir}/{model_filename}"):
             print(f"Model file exists. Using {output_dir}/{model_filename}.")
+            if tmp_dir is not None:
+                os.system(f"cp -r {output_dir}/{model_filename} {use_output_dir}")
         else:
             get_model_visibilities(
                 model_visilibility_mode="run simulation",
-                model_vis_file=f"{output_dir}/{model_filename}",
+                model_vis_file=f"{use_output_dir}/{model_filename}",
                 include_diffuse=False,
-                data_file=datafile_path,
+                data_file=use_datafile_path,
                 skymodel_path=skymodel_path,
                 beam_path=beam_path,
             )
@@ -654,7 +746,7 @@ def calibration_pipeline(
             # names to correlator numbers
             if len(flag_antenna_list) > 0:
                 uv = pyuvdata.UVData()
-                uv.read(datafile_path, data_column="DATA")
+                uv.read(use_datafile_path, data_column="DATA")
                 # uv.set_uvws_from_antenna_positions(update_vis=False)
                 uv.phase_to_time(np.mean(uv.time_array))
                 flag_antennas(
@@ -662,31 +754,31 @@ def calibration_pipeline(
                     antenna_names=flag_antenna_list,
                     inplace=True,
                 )
-                uv.write_ms(datafile_path, fix_autos=True, clobber=True)
+                uv.write_ms(use_datafile_path, fix_autos=True, clobber=True)
                 uv = None  # Clear memory
 
             os.system(
-                f"python {casa_calibrate_script_path} --data_file {datafile_path} --model_file {output_dir}/{model_filename} --min_cal_baseline_lambda {min_cal_baseline_lambda} --max_cal_baseline_lambda {max_cal_baseline_lambda}"
+                f"python {casa_calibrate_script_path} --data_file {use_datafile_path} --model_file {use_output_dir}/{model_filename} --min_cal_baseline_lambda {min_cal_baseline_lambda} --max_cal_baseline_lambda {max_cal_baseline_lambda}"
             )
 
             # Convert CASA calibration solutions to .calfits
             uvcal = pyuvdata.UVCal()
-            uvcal.read_ms_cal(f"{datafile_path.removesuffix('.ms')}.bcal")
-            uvcal.write_calfits(f"{output_dir}/{calfits_filename}", clobber=True)
+            uvcal.read_ms_cal(f"{use_datafile_path.removesuffix('.ms')}.bcal")
+            uvcal.write_calfits(f"{use_output_dir}/{calfits_filename}", clobber=True)
 
         else:  # Calibrate with Calico
 
             # Read data
             uv = pyuvdata.UVData()
-            print(f"Reading file {datafile_path}.")
-            uv.read(datafile_path, data_column="DATA")
+            print(f"Reading file {use_datafile_path}.")
+            uv.read(use_datafile_path, data_column="DATA")
             # uv.set_uvws_from_antenna_positions(update_vis=False)
             uv.phase_to_time(np.mean(uv.time_array))
 
             # Read model
             model_uv = pyuvdata.UVData()
-            print(f"Reading file {output_dir}/{model_filename}.")
-            model_uv.read(f"{output_dir}/{model_filename}", data_column="DATA")
+            print(f"Reading file {use_output_dir}/{model_filename}.")
+            model_uv.read(f"{use_output_dir}/{model_filename}", data_column="DATA")
             # model_uv.set_uvws_from_antenna_positions(update_vis=False)
             model_uv.phase_to_time(np.mean(uv.time_array))
 
@@ -706,7 +798,7 @@ def calibration_pipeline(
                 gains_multiply_model=True,
                 verbose=True,
                 get_crosspol_phase=False,
-                log_file_path=f"{output_dir}/{calibration_log}",
+                log_file_path=f"{use_output_dir}/{calibration_log}",
                 xtol=1e-6,
                 maxiter=200,
                 antenna_flagging_iterations=0,
@@ -714,14 +806,14 @@ def calibration_pipeline(
                 lambda_val=0,
             )
             print(f"Writing output to {calfits_filename}")
-            uvcal.write_calfits(f"{output_dir}/{calfits_filename}", clobber=True)
+            uvcal.write_calfits(f"{use_output_dir}/{calfits_filename}", clobber=True)
 
     if plot_gains:
-        if not os.path.isdir(f"{output_dir}/{gain_plot_dir}"):
-            os.mkdir(f"{output_dir}/{gain_plot_dir}")
+        if not os.path.isdir(f"{use_output_dir}/{gain_plot_dir}"):
+            os.mkdir(f"{use_output_dir}/{gain_plot_dir}")
         calibration_qa.plot_gains(
             uvcal,
-            plot_output_dir=f"{output_dir}/{gain_plot_dir}",
+            plot_output_dir=f"{use_output_dir}/{gain_plot_dir}",
             cal_name=gain_plot_prefix,
             plot_reciprocal=False,
             ymin=0,
@@ -733,7 +825,7 @@ def calibration_pipeline(
 
         if uv is None:  # Read data
             uv = pyuvdata.UVData()
-            uv.read(datafile_path, data_column="DATA")
+            uv.read(use_datafile_path, data_column="DATA")
             # uv.set_uvws_from_antenna_positions(update_vis=False)
             uv.phase_to_time(np.mean(uv.time_array))
 
@@ -742,14 +834,28 @@ def calibration_pipeline(
                 uvcal, amp_deg=2, phase_deg=1, freq_array_hz=uv.freq_array
             )
 
-        pyuvdata.utils.uvcalibrate(uv, uvcal, inplace=True, time_check=False, flip_gain_conj=flip_gain_conj)
-        uv.write_ms(f"{output_dir}/{calibrated_data_ms}", fix_autos=True, clobber=True)
+        pyuvdata.utils.uvcalibrate(
+            uv, uvcal, inplace=True, time_check=False, flip_gain_conj=flip_gain_conj
+        )
+        uv.write_ms(
+            f"{use_output_dir}/{calibrated_data_ms}", fix_autos=True, clobber=True
+        )
+
+        if peel:
+            peel_sources(
+                f"{use_output_dir}/{peeled_ms}",
+                f"{use_output_dir}/{calibrated_data_ms}",
+                julia_path=julia_path,
+                ttcal_path=ttcal_path,
+                peel_sources_path=peel_sources_path,
+                Ntimes=uv.Ntimes,
+            )
 
         if apply_cal_path is None:  # Subtract model from data
             if calibrate_with_casa:  # Need to read model file
                 model_uv = pyuvdata.UVData()
-                print(f"Reading file {output_dir}/{model_filename}.")
-                model_uv.read(f"{output_dir}/{model_filename}", data_column="DATA")
+                print(f"Reading file {use_output_dir}/{model_filename}.")
+                model_uv.read(f"{use_output_dir}/{model_filename}", data_column="DATA")
                 # model_uv.set_uvws_from_antenna_positions(update_vis=False)
                 model_uv.phase_to_time(np.mean(uv.time_array))
             uv.filename = [""]
@@ -782,21 +888,28 @@ def calibration_pipeline(
                     "timesys",
                 ],
             )
-            uv.write_ms(f"{output_dir}/{res_ms}", fix_autos=True, clobber=True)
+            uv.write_ms(f"{use_output_dir}/{res_ms}", fix_autos=True, clobber=True)
 
     if plot_images:
         if apply_cal_path is None:  # Plot model
             os.system(
-                f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {output_dir}/{model_image} {output_dir}/{model_filename}"
+                f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {use_output_dir}/{model_image} {use_output_dir}/{model_filename}"
             )
         if apply_calibration:  # Plot calibrated data
             os.system(
-                f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {output_dir}/{calibrated_data_image} {output_dir}/{calibrated_data_ms}"
+                f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {use_output_dir}/{calibrated_data_image} {use_output_dir}/{calibrated_data_ms}"
+            )
+        if peel:  # Plot peeled data
+            os.system(
+                f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {use_output_dir}/{peeled_image} {use_output_dir}/{peeled_ms}"
             )
         if apply_calibration and apply_cal_path is None:  # Plot residual
             os.system(
-                f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {output_dir}/{res_image} {output_dir}/{res_ms}"
+                f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {use_output_dir}/{res_image} {use_output_dir}/{res_ms}"
             )
+
+    if tmp_dir is not None:  # Move outputs
+        os.sytem(f"mv {use_output_dir}/* {output_dir}")
 
 
 if __name__ == "__main__":
@@ -805,7 +918,7 @@ if __name__ == "__main__":
     use_freqs = ["52"]
     for freq in use_freqs:
         os.system(
-           f"cp -r /lustre/pipeline/cosmology/concatenated_data/{freq}MHz/2026-04-07/12/20260407_123010-123201_{freq}MHz.ms /fast/rbyrne/20260407_123010-123201_{freq}MHz.ms"
+            f"cp -r /lustre/pipeline/cosmology/concatenated_data/{freq}MHz/2026-04-07/12/20260407_123010-123201_{freq}MHz.ms /fast/rbyrne/20260407_123010-123201_{freq}MHz.ms"
         )
         calibration_pipeline(
             f"/fast/rbyrne/20260407_123010-123201_{freq}MHz.ms",

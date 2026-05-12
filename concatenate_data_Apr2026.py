@@ -185,7 +185,7 @@ def concatenate_files(
                 return 2
 
             # uv_new.select(polarizations=[-5, -6])
-            uv_new.scan_number_array = None  # Added as a workaround for a pyuvdata bug (https://github.com/RadioAstronomySoftwareGroup/pyuvdata/issues/1595)
+            # uv_new.scan_number_array = None  # Added as a workaround for a (now resolved) pyuvdata bug (https://github.com/RadioAstronomySoftwareGroup/pyuvdata/issues/1595)
             if freq_ind == 0:
                 uv_new.phase_to_time(np.min(uv_new.time_array))
                 uv_single_freq = uv_new
@@ -249,6 +249,7 @@ def run_concatenate_data(
     date,
     orig_dir="/lustre/pipeline/cosmology",
     output_dir="/lustre/pipeline/cosmology/concatenated_data",
+    tmp_dir="/fast/rbyrne/data_concatenation_tmp",
     delete_files=True,
 ):
 
@@ -308,7 +309,7 @@ def run_concatenate_data(
                     output_freq,
                     new_freq_interval_dict,
                     output_dir,
-                    tmp_dir="/fast/rbyrne/data_concatenation_tmp",
+                    tmp_dir=tmp_dir,
                 )
                 status.append(new_status)
         if delete_files:
@@ -318,6 +319,10 @@ def run_concatenate_data(
                     print(f"Deleting {filename}")
                     os.system(f"sudo rm -r {filename}")
 
+    # Delete empty directories
+    for freq in orig_freq_interval_dict.keys():
+        os.system(f"sudo find {orig_dir}/{freq}MHz/{date}/* -type d -empty -delete")
+
 
 if __name__ == "__main__":
-    run_concatenate_data("2026-04-19", delete_files=False)
+    run_concatenate_data("2026-04-08", delete_files=True)
