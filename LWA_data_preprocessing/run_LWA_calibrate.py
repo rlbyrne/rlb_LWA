@@ -260,15 +260,15 @@ def calibrate_May11():
 
     use_freqs = ["34", "44", "52", "62", "72", "79", "83"]
     for freq in use_freqs:
-        os.system(
-            f"cp -r /lustre/pipeline/cosmology/concatenated_data/{freq}MHz/2026-04-19/11/20260419_112643-112833_{freq}MHz.ms /fast/rbyrne/20260407_123010-123201_{freq}MHz.ms"
-        )
+        #os.system(
+        #    f"cp -r /lustre/pipeline/cosmology/concatenated_data/{freq}MHz/2026-04-19/11/20260419_112643-112833_{freq}MHz.ms /fast/rbyrne/20260407_123010-123201_{freq}MHz.ms"
+        #)
         calibration_pipeline(
-            f"/lustre/pipeline/cosmology/concatenated_data/{freq}MHz/2026-04-19/11/20260419_112643-112833_{freq}MHz.ms",
+            f"/lustre/rbyrne/2026-04-19/20260419_112643-112833_{freq}MHz.ms",
             output_dir="/lustre/rbyrne/2026-04-19",
             tmp_dir="/fast/rbyrne",
             cal_trial_name="17h_cal",
-            run_aoflagger=True,
+            run_aoflagger=False,  # Changed because aoflagger was already run
             flag_antennas_from_autocorrs=True,
             flag_antenna_list=[],
             plot_gains=False,
