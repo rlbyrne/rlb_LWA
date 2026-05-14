@@ -512,7 +512,7 @@ def peel_sources(
             filepath = f"{out_ms_path.strip('.ms')}_time{time_ind}.ms"
             uv_single_time = uv.select(times=time, inplace=False)
             uv_single_time.phase_to_time(time)
-            uv_single_time.write_ms(filepath)
+            uv_single_time.write_ms(filepath, clobber=True)
             ms_file_list.append(filepath)
     else:
         if out_ms_path != orig_ms_path:
@@ -525,16 +525,15 @@ def peel_sources(
         )
 
     if Ntimes != 1:
-        print(ms_file_list)
         for file_ind, filepath in enumerate(ms_file_list):
             uv_new = pyuvdata.UVData()
             uv_new.read(filepath)
             if file_ind == 0:
                 uv = uv_new
             else:
-                uv.fast_concat(uv_new, "blt")
+                uv.fast_concat(uv_new, "blt", inplace=True)
         uv.phase_to_time(np.mean(uv.time_array))
-        uv.write_ms(out_ms_path)
+        uv.write_ms(out_ms_path, clobber=True)
 
         # Delete temporary files
         if os.path.isdir(out_ms_path):
@@ -823,11 +822,17 @@ def calibration_pipeline(
 
     if apply_calibration:
 
-        if uv is None:  # Read data
+        if (apply_cal_path is not None) or calibrate_with_casa:  # Read data
             uv = pyuvdata.UVData()
             uv.read(use_datafile_path, data_column="DATA")
-            # uv.set_uvws_from_antenna_positions(update_vis=False)
             uv.phase_to_time(np.mean(uv.time_array))
+
+        if (apply_cal_path is not None) and len(flag_antenna_list) > 0:  # Need to flag antennas
+            flag_antennas(
+                uv,
+                antenna_names=flag_antenna_list,
+                inplace=True,
+            )            
 
         if smooth_cal:
             uvcal = smooth_cal_solutions.smooth_cal(
@@ -909,7 +914,8 @@ def calibration_pipeline(
             )
 
     if tmp_dir is not None:  # Move outputs
-        os.sytem(f"mv {use_output_dir}/* {output_dir}")
+        os.system(f"mv {use_output_dir}/* {output_dir}")
+        os.system(f"rmdir {use_output_dir}")
 
 
 if __name__ == "__main__":
