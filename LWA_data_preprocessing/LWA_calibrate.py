@@ -914,8 +914,9 @@ def calibration_pipeline(
             )
 
     if tmp_dir is not None:  # Move outputs
-        os.system(f"mv {use_output_dir}/* {output_dir}")
-        os.system(f"rmdir {use_output_dir}")
+
+        os.system(f"rsync -a --remove-source-files {use_output_dir}/* {output_dir}")
+        os.system(f"find {use_output_dir} -type d -empty -delete")
 
 
 if __name__ == "__main__":
