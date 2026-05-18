@@ -1,4 +1,4 @@
-from LWA_calibrate import calibration_pipeline
+from LWA_calibrate import calibration_pipeline, peel_sources
 from LWA_calibrate import peel_sources
 import pyuvdata
 import os
@@ -313,6 +313,42 @@ def rerun_calibration_May15():
             peel=True,
         )
 
+def peel_horizon_sources_May15():
+
+    # Run in environment ttcal_dev
+    peel_sources(
+        "/fast/rbyrne/20260419_112643-112833_34MHz_17h_cal_peeled_horizon.ms",
+        "/fast/rbyrne/20260419_112643-112833_34MHz_17h_cal_peeled.ms",
+        julia_path="/opt/devel/pipeline/envs/ttcal_dev/bin/julia",
+        ttcal_path="/opt/devel/pipeline/envs/ttcal_dev/bin/ttcal.jl",
+        peel_sources_path="/lustre/gh/calibration/pipeline/reference/sources/rfi_43.2_ver20251101.json",
+        peel_mode="zest",
+        beam="constant",
+        maxiter=5,
+        tolerance=1e-4,
+        minuvw=5,
+        Ntimes=12,
+    )
+
+def test_aoflagger_strategy_May18():
+
+    calibration_pipeline(
+        f"/lustre/rbyrne/2026-04-19/20260419_112643-112833_34MHz.ms",
+        output_dir="/lustre/rbyrne/2026-04-19",
+        tmp_dir="/fast/rbyrne",
+        cal_trial_name="17h_cal_new_aoflagger_strategy",
+        run_aoflagger=True,
+        flag_antennas_from_autocorrs=True,
+        flag_antenna_list=[],
+        refresh_flags=True,
+        plot_gains=False,
+        apply_cal_path="/lustre/pipeline/calibration/results/2026-04-19/17h/successful/20260430_233320/tables/calibration_2026-04-19_17h.B.flagged",
+        flip_gain_conj=True,
+        apply_calibration=True,
+        smooth_cal=True,
+        plot_images=True,
+        peel=True,
+    )
 
 if __name__ == "__main__":
-    calibrate_May11()
+    test_aoflagger_strategy_May18()

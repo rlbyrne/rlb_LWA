@@ -485,8 +485,8 @@ def read_caltable(input_path, use_freqs=None):
         cal.flex_spw_id_array = np.zeros_like(use_freqs, dtype=int)
         cal.spw_array = np.array([0])
         cal.Nspws = 1
-        cal.gain_array = gain
-        cal.flag_array = flags
+        cal.gain_array = np.array(gain)
+        cal.flag_array = np.array(flags)
 
     return cal
 
@@ -497,31 +497,42 @@ def peel_sources(
     julia_path="/opt/devel/pipeline/envs/julia060/bin/julia",
     ttcal_path="/opt/devel/pipeline/envs/julia060/bin/ttcal.jl",
     peel_sources_path="/home/pipeline/sources.json",
+    peel_mode="peel",  # Options include "peel", "zest"
+    beam="sine",  # Options include "sine", "constant"
+    maxiter=50,
+    tolerance=1e-4,
+    minuvw=10,
     Ntimes=None,
 ) -> None:
 
-    if Ntimes != 1:
-        uv = pyuvdata.UVData()
-        uv.read(orig_ms_path)
-        Ntimes = uv.Ntimes
+    if False:
+        if Ntimes != 1:
+            uv = pyuvdata.UVData()
+            uv.read(orig_ms_path)
+            Ntimes = uv.Ntimes
 
-    if Ntimes != 1:  # Need to split file into individual times
-        time_array = list(set(uv.time_array))
-        ms_file_list = []
-        for time_ind, time in enumerate(time_array):
-            filepath = f"{out_ms_path.strip('.ms')}_time{time_ind}.ms"
-            uv_single_time = uv.select(times=time, inplace=False)
-            uv_single_time.phase_to_time(time)
-            uv_single_time.write_ms(filepath, clobber=True)
-            ms_file_list.append(filepath)
-    else:
-        if out_ms_path != orig_ms_path:
-            os.system(f"cp -r {orig_ms_path} {out_ms_path}")
-        ms_file_list.append(out_ms_path)
+        if Ntimes != 1:  # Need to split file into individual times
+            time_array = list(set(uv.time_array))
+            ms_file_list = []
+            for time_ind, time in enumerate(time_array):
+                filepath = f"{out_ms_path.strip('.ms')}_time{time_ind}.ms"
+                uv_single_time = uv.select(times=time, inplace=False)
+                uv_single_time.phase_to_time(time)
+                uv_single_time.write_ms(filepath, clobber=True)
+                ms_file_list.append(filepath)
+        else:
+            if out_ms_path != orig_ms_path:
+                os.system(f"cp -r {orig_ms_path} {out_ms_path}")
+            ms_file_list.append(out_ms_path)
+
+    ms_file_list = [
+        f"20260419_112643-112833_34MHz_17h_cal_peeled_horizon_time{ind}.ms"
+        for ind in range(12)
+    ]
 
     for filepath in ms_file_list:
         os.system(
-            f"{julia_path} {ttcal_path} peel {filepath} {peel_sources_path} --beam sine --maxiter 50 --tolerance 1e-4 --minuvw 10"
+            f"sudo {julia_path} {ttcal_path} {peel_mode} {filepath} {peel_sources_path} --beam {beam} --maxiter {maxiter} --tolerance {tolerance} --minuvw {minuvw}"
         )
 
     if Ntimes != 1:
@@ -538,9 +549,32 @@ def peel_sources(
         # Delete temporary files
         if os.path.isdir(out_ms_path):
             for filepath in ms_file_list:
-                os.system(f"rm -r {filepath}")
+                os.system(f"rm -rf {filepath}")
         else:
             print(f"ERROR: File {out_ms_path} not written.")
+
+
+def image_data(
+    name,
+    ms_filepath,
+    wsclean_script="/opt/bin/wsclean",
+    pol="I",
+    niter=0,
+    weight="briggs 0",
+    multiscale_scale_bias=0.8,
+    size=4096,
+    scale=0.03125,
+    mgain=0.95,
+    horizon_mask="10deg",
+    auto_threshold=0.5,
+    auto_mask=3,
+    taper_inner_tukey=30,
+    mem=50,
+):
+
+    os.system(
+        f"{wsclean_script} -pol {pol} -multiscale -multiscale-scale-bias {multiscale_scale_bias} -size {size} {size} -scale {scale} -niter {niter} -mgain {mgain} -weight {weight} -no-update-model-required -mem {mem} -horizon-mask {horizon_mask} -auto-threshold {auto_threshold} -auto-mask {auto_mask} -taper-inner-tukey {taper_inner_tukey} -local-rms -no-reorder -name {name} {ms_filepath}"
+    )
 
 
 def calibration_pipeline(
@@ -555,8 +589,12 @@ def calibration_pipeline(
     apply_cal_path: Optional[str] = None,
     date: Optional[datetime.datetime] = None,
     run_aoflagger: bool = True,
+    aoflagger_strategy_file: Optional[
+        str
+    ] = "/lustre/ghellbourg/AOFlagger_strat_opt/LWA_opt_GH1.lua",
     flag_antennas_from_autocorrs: bool = True,
     flag_antenna_list: List[str] = [],
+    refresh_flags: bool = False,
     calibrate_with_casa: bool = False,
     casa_calibrate_script_path: str = "/opt/devel/rbyrne/rlb_LWA/LWA_data_preprocessing/casa_calibrate.py",
     min_cal_baseline_lambda: Optional[int] = 10,
@@ -602,6 +640,10 @@ def calibration_pipeline(
     run_aoflagger : bool
         If True, AOFlagger will be run on the data file. Note that this modifies
         the data file. Default True.
+    aoflagger_strategy_file : str or None
+        Path to aoflagger strategy file. Default
+        /lustre/ghellbourg/AOFlagger_strat_opt/LWA_opt_GH1.lua. If None, default strategy will
+        be used. Used only if run_aoflagger=True.
     flag_antennas_from_autocorrs : bool
         Use pre-computed autocorrelation metrics to look up a table of antennas
         to flag. Default True.
@@ -610,6 +652,8 @@ def calibration_pipeline(
         polarization A. For example, to flag both polarizations of antenna 5, use
         ["LWA-005A", "LWA-005B"]. If flag_antennas_from_autocorrs=True, these
         antennas will be flagged in addition to those in the flagging lookup table.
+    refresh_flags : bool
+        If True, pre-existing flags in the data file are cleared.
     calibrate_with_casa : bool
         If True, use CASA bandpass calibration. If False, use Calico. Default False.
         If CASA bandpass calibration is used, the data file will be modified by applying
@@ -716,7 +760,14 @@ def calibration_pipeline(
         )
 
     if run_aoflagger:
-        os.system(f"aoflagger {use_datafile_path}")
+        if aoflagger_strategy_file is None:
+            os.system(f"aoflagger {use_datafile_path}")
+        else:
+            os.system(f"aoquality remove {use_datafile_path}")
+            os.system(f"aoquality collect {use_datafile_path}")
+            os.system(
+                f"aoflagger --strategy {aoflagger_strategy_file} {use_datafile_path}"
+            )
 
     if apply_cal_path is not None:  # Restore calibration solution
         uvcal = read_caltable(apply_cal_path)
@@ -827,12 +878,14 @@ def calibration_pipeline(
             uv.read(use_datafile_path, data_column="DATA")
             uv.phase_to_time(np.mean(uv.time_array))
 
-        if (apply_cal_path is not None) and len(flag_antenna_list) > 0:  # Need to flag antennas
+        if (apply_cal_path is not None) and len(
+            flag_antenna_list
+        ) > 0:  # Need to flag antennas
             flag_antennas(
                 uv,
                 antenna_names=flag_antenna_list,
                 inplace=True,
-            )            
+            )
 
         if smooth_cal:
             uvcal = smooth_cal_solutions.smooth_cal(
@@ -897,20 +950,28 @@ def calibration_pipeline(
 
     if plot_images:
         if apply_cal_path is None:  # Plot model
-            os.system(
-                f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {use_output_dir}/{model_image} {use_output_dir}/{model_filename}"
+            image_data(
+                f"{use_output_dir}/{model_image}",
+                f"{use_output_dir}/{model_filename}",
+                niter=50000,
             )
         if apply_calibration:  # Plot calibrated data
-            os.system(
-                f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {use_output_dir}/{calibrated_data_image} {use_output_dir}/{calibrated_data_ms}"
+            image_data(
+                f"{use_output_dir}/{calibrated_data_image}",
+                f"{use_output_dir}/{calibrated_data_ms}",
+                niter=50000,
             )
         if peel:  # Plot peeled data
-            os.system(
-                f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {use_output_dir}/{peeled_image} {use_output_dir}/{peeled_ms}"
+            image_data(
+                f"{use_output_dir}/{peeled_image}",
+                f"{use_output_dir}/{peeled_ms}",
+                niter=50000,
             )
         if apply_calibration and apply_cal_path is None:  # Plot residual
-            os.system(
-                f"/opt/bin/wsclean -pol I -multiscale -multiscale-scale-bias 0.8 -size 4096 4096 -scale 0.03125 -niter 0 -mgain 0.85 -weight briggs 0 -no-update-model-required -mem 10 -no-reorder -name {use_output_dir}/{res_image} {use_output_dir}/{res_ms}"
+            image_data(
+                f"{use_output_dir}/{res_image}",
+                f"{use_output_dir}/{res_ms}",
+                niter=50000,
             )
 
     if tmp_dir is not None:  # Move outputs
