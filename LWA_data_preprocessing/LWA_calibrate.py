@@ -505,30 +505,24 @@ def peel_sources(
     Ntimes=None,
 ) -> None:
 
-    if False:
-        if Ntimes != 1:
-            uv = pyuvdata.UVData()
-            uv.read(orig_ms_path)
-            Ntimes = uv.Ntimes
+    if Ntimes != 1:
+        uv = pyuvdata.UVData()
+        uv.read(orig_ms_path)
+        Ntimes = uv.Ntimes
 
-        if Ntimes != 1:  # Need to split file into individual times
-            time_array = list(set(uv.time_array))
-            ms_file_list = []
-            for time_ind, time in enumerate(time_array):
-                filepath = f"{out_ms_path.strip('.ms')}_time{time_ind}.ms"
-                uv_single_time = uv.select(times=time, inplace=False)
-                uv_single_time.phase_to_time(time)
-                uv_single_time.write_ms(filepath, clobber=True)
-                ms_file_list.append(filepath)
-        else:
-            if out_ms_path != orig_ms_path:
-                os.system(f"cp -r {orig_ms_path} {out_ms_path}")
-            ms_file_list.append(out_ms_path)
-
-    ms_file_list = [
-        f"20260419_112643-112833_34MHz_17h_cal_peeled_horizon_time{ind}.ms"
-        for ind in range(12)
-    ]
+    if Ntimes != 1:  # Need to split file into individual times
+        time_array = list(set(uv.time_array))
+        ms_file_list = []
+        for time_ind, time in enumerate(time_array):
+            filepath = f"{out_ms_path.strip('.ms')}_time{time_ind}.ms"
+            uv_single_time = uv.select(times=time, inplace=False)
+            uv_single_time.phase_to_time(time)
+            uv_single_time.write_ms(filepath, clobber=True)
+            ms_file_list.append(filepath)
+    else:
+        if out_ms_path != orig_ms_path:
+            os.system(f"cp -r {orig_ms_path} {out_ms_path}")
+        ms_file_list.append(out_ms_path)
 
     for filepath in ms_file_list:
         os.system(
@@ -759,6 +753,13 @@ def calibration_pipeline(
             np.concatenate((flag_antenna_list, flag_antenna_list_autocorrs))
         )
 
+    if refresh_flags:
+        uv = pyuvdata.UVData()
+        uv.read(use_datafile_path)
+        uv.flag_array[:, :, :] = False
+        uv.write_ms(use_datafile_path, clobber=True)
+        uv = None
+
     if run_aoflagger:
         if aoflagger_strategy_file is None:
             os.system(f"aoflagger {use_datafile_path}")
@@ -978,26 +979,3 @@ def calibration_pipeline(
 
         os.system(f"rsync -a --remove-source-files {use_output_dir}/* {output_dir}")
         os.system(f"find {use_output_dir} -type d -empty -delete")
-
-
-if __name__ == "__main__":
-
-    # use_freqs = ["34", "44", "52", "62", "72", "79", "83"]
-    use_freqs = ["52"]
-    for freq in use_freqs:
-        os.system(
-            f"cp -r /lustre/pipeline/cosmology/concatenated_data/{freq}MHz/2026-04-07/12/20260407_123010-123201_{freq}MHz.ms /fast/rbyrne/20260407_123010-123201_{freq}MHz.ms"
-        )
-        calibration_pipeline(
-            f"/fast/rbyrne/20260407_123010-123201_{freq}MHz.ms",
-            output_dir="/fast/rbyrne",
-            run_aoflagger=True,
-            flag_antennas_from_autocorrs=True,
-            flag_antenna_list=[],
-            plot_gains=False,
-            apply_cal_path="/lustre/pipeline/calibration/results/2026-04-07/10h/successful/20260407_191722/tables/calibration_2026-04-07_10h.B.flagged",
-            flip_gain_conj=True,
-            apply_calibration=True,
-            smooth_cal=True,
-            plot_images=True,
-        )

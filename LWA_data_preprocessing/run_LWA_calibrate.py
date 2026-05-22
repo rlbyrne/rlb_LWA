@@ -258,12 +258,12 @@ def convert_to_uvfits_Mar30():
 
 def calibrate_May11():
 
-    #use_freqs = ["34", "44", "52", "62", "72", "79", "83"]
+    # use_freqs = ["34", "44", "52", "62", "72", "79", "83"]
     use_freqs = ["52", "62", "72", "79", "83"]
     for freq in use_freqs:
-        #os.system(
+        # os.system(
         #    f"cp -r /lustre/pipeline/cosmology/concatenated_data/{freq}MHz/2026-04-19/11/20260419_112643-112833_{freq}MHz.ms /fast/rbyrne/20260407_123010-123201_{freq}MHz.ms"
-        #)
+        # )
         calibration_pipeline(
             f"/lustre/rbyrne/2026-04-19/20260419_112643-112833_{freq}MHz.ms",
             output_dir="/lustre/rbyrne/2026-04-19",
@@ -293,9 +293,9 @@ def rerun_calibration_May15():
 
     use_freqs = ["34", "44"]
     for freq in use_freqs:
-        #os.system(
+        # os.system(
         #    f"cp -r /lustre/pipeline/cosmology/concatenated_data/{freq}MHz/2026-04-19/11/20260419_112643-112833_{freq}MHz.ms /fast/rbyrne/20260407_123010-123201_{freq}MHz.ms"
-        #)
+        # )
         calibration_pipeline(
             f"/fast/rbyrne/20260419_112643-112833_{freq}MHz_17h_cal_tmp_dir/20260419_112643-112833_{freq}MHz.ms",
             output_dir="/lustre/rbyrne/2026-04-19",
@@ -313,6 +313,7 @@ def rerun_calibration_May15():
             peel=True,
         )
 
+
 def peel_horizon_sources_May15():
 
     # Run in environment ttcal_dev
@@ -329,6 +330,7 @@ def peel_horizon_sources_May15():
         minuvw=5,
         Ntimes=12,
     )
+
 
 def test_aoflagger_strategy_May18():
 
@@ -350,5 +352,57 @@ def test_aoflagger_strategy_May18():
         peel=True,
     )
 
+
+def calibrate_May19():
+
+    use_freqs = ["34", "44", "52", "62", "72", "79", "83"]
+    times = [
+        "112643-112833",
+        "112843-113033",
+        "113043-113234",
+        "113244-113434",
+        "113444-113635",
+    ]
+    for freq in use_freqs:
+        for time in times:
+            calibration_pipeline(
+                f"/lustre/pipeline/cosmology/concatenated_data/{freq}MHz/2026-04-19/11/20260419_{time}_{freq}MHz.ms",
+                output_dir="/lustre/rbyrne/2026-04-19",
+                tmp_dir="/fast/rbyrne",
+                cal_trial_name="17h_cal",
+                run_aoflagger=True,
+                flag_antennas_from_autocorrs=True,
+                flag_antenna_list=[],
+                refresh_flags=True,
+                plot_gains=False,
+                apply_cal_path="/lustre/pipeline/calibration/results/2026-04-19/17h/successful/20260430_233320/tables/calibration_2026-04-19_17h.B.flagged",
+                flip_gain_conj=True,
+                apply_calibration=True,
+                smooth_cal=True,
+                plot_images=True,
+                peel=True,
+            )
+
+def calibrate_with_calico_May22():
+
+    use_freqs = [13, 18, 23, 27, 32, 36, 41, 46, 50, 55, 59, 64, 69, 73, 78, 82]
+    for freq in use_freqs:
+        calibration_pipeline(
+            f"/fast/rbyrne/20260419_112543-112633_{freq}MHz.ms",
+            output_dir="/lustre/rbyrne/2026-04-19",
+            tmp_dir="/fast/rbyrne",
+            cal_trial_name="calico",
+            run_aoflagger=True,
+            flag_antennas_from_autocorrs=True,
+            flag_antenna_list=[],
+            refresh_flags=True,
+            plot_gains=False,
+            flip_gain_conj=False,
+            apply_calibration=False,
+            plot_images=False,
+            peel=False,
+        )
+
+
 if __name__ == "__main__":
-    test_aoflagger_strategy_May18()
+    calibrate_with_calico_May22()
