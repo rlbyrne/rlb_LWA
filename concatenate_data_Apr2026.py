@@ -142,6 +142,12 @@ def get_output_filename(data_dict, use_inds, output_freq, output_dir, is_tmp_dir
     return out_filename
 
 
+def clean_up_tmp_files(orig_filepaths, tmp_filepaths):
+    for filename in tmp_filepaths:
+        if not np.isin(filename, orig_filepaths):  # Confirm that the file is a copy
+            os.system(f"rm -r {filename}")  # Delete temporary files
+
+
 def concatenate_files(
     data_dict,
     use_inds,
@@ -182,6 +188,8 @@ def concatenate_files(
                 uv_new.read(path_use)
             except:
                 print(f"WARNING: Error reading file {path_use}. Skipping.")
+                if tmp_dir is not None:
+                    clean_up_tmp_files(filepaths, use_filepaths)
                 return 2
 
             # uv_new.select(polarizations=[-5, -6])
@@ -221,6 +229,8 @@ def concatenate_files(
     uv.write_ms(use_output_filename, clobber=True)
     if not os.path.isdir(use_output_filename):
         print(f"Error writing file {use_output_filename}.")
+        if tmp_dir is not None:
+            clean_up_tmp_files(filepaths, use_filepaths)
         return 4
 
     if tmp_dir is not None:
@@ -233,12 +243,12 @@ def concatenate_files(
         os.system(f"mv {use_output_filename} {outdir}")
         if not os.path.isdir(output_filename):
             print(f"Error moving file to {output_filename}.")
+            if tmp_dir is not None:
+                clean_up_tmp_files(filepaths, use_filepaths)
             return 4
 
         # Delete copied data
-        for filename in use_filepaths:
-            if filename not in filepaths:  # Confirm that the file is a copy
-                os.system(f"rm -r {filename}")  # Delete temporary files
+        clean_up_tmp_files(filepaths, use_filepaths)
 
     print(f"New file written to {output_filename}")
 
@@ -261,12 +271,17 @@ def run_concatenate_data(
 
     data_paths = []
     for freq in orig_freq_interval_dict.keys():
+        # Get files in a nested file structure
         data_paths.extend(
             [
                 str(p)
                 for p in pathlib.Path(f"{orig_dir}/{freq}MHz/{date}").rglob("*.ms")
                 if p.is_dir()
             ]
+        )
+        # Get files outside nested structure
+        data_paths.extend(
+            [d for d in os.listdir(orig_dir) if os.path.isdir(os.path.join(orig_dir, d)) and d.endswith(".ms")]
         )
 
     data_dict = populate_data_dict(data_paths)
