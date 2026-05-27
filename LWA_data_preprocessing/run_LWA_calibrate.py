@@ -355,7 +355,8 @@ def test_aoflagger_strategy_May18():
 
 def calibrate_May19():
 
-    use_freqs = ["34", "44", "52", "62", "72", "79", "83"]
+    #use_freqs = ["34", "44", "52", "62", "72", "79", "83"]
+    use_freqs = ["62", "72", "79", "83"]
     times = [
         "112643-112833",
         "112843-113033",
@@ -405,4 +406,4 @@ def calibrate_with_calico_May22():
 
 
 if __name__ == "__main__":
-    calibrate_with_calico_May22()
+    calibrate_May19()

@@ -340,4 +340,4 @@ def run_concatenate_data(
 
 
 if __name__ == "__main__":
-    run_concatenate_data("2026-04-08", delete_files=True)
+    run_concatenate_data("2026-04-09", delete_files=True)
