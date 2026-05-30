@@ -3,6 +3,7 @@ from LWA_calibrate import peel_sources
 import pyuvdata
 import os
 import numpy as np
+import sys
 
 
 def calibrate_Apr17():
@@ -355,7 +356,7 @@ def test_aoflagger_strategy_May18():
 
 def calibrate_May19():
 
-    #use_freqs = ["34", "44", "52", "62", "72", "79", "83"]
+    # use_freqs = ["34", "44", "52", "62", "72", "79", "83"]
     use_freqs = ["62", "72", "79", "83"]
     times = [
         "112643-112833",
@@ -384,6 +385,7 @@ def calibrate_May19():
                 peel=True,
             )
 
+
 def calibrate_with_calico_May22():
 
     use_freqs = [13, 18, 23, 27, 32, 36, 41, 46, 50, 55, 59, 64, 69, 73, 78, 82]
@@ -405,5 +407,70 @@ def calibrate_with_calico_May22():
         )
 
 
+def apply_calibration_May28():
+
+    use_freqs = [13, 18, 23, 27, 32, 36, 41, 46, 50, 55, 59, 64, 69, 73, 78, 82]
+    for freq in use_freqs:
+        calibration_pipeline(
+            f"/lustre/rbyrne/2026-04-19/20260419_112543-112633_{freq}MHz.ms",
+            output_dir="/lustre/rbyrne/2026-04-19",
+            tmp_dir="/fast/rbyrne",
+            cal_trial_name="calico",
+            apply_cal_path=f"/lustre/rbyrne/2026-04-19/20260419_112543-112633_{freq}MHz_calico.calfits",
+            run_aoflagger=False,  # Already run
+            flag_antennas_from_autocorrs=False,  # Already run
+            flag_antenna_list=[],
+            refresh_flags=True,
+            plot_gains=False,
+            flip_gain_conj=False,
+            apply_calibration=True,
+            plot_images=True,
+            peel=False,
+        )
+        calibration_pipeline(
+            f"/lustre/rbyrne/2026-04-19/20260419_112543-112633_{freq}MHz.ms",
+            output_dir="/lustre/rbyrne/2026-04-19",
+            tmp_dir="/fast/rbyrne",
+            cal_trial_name="17h_cal",
+            apply_cal_path=f"/fast/rbyrne/calibration_2026-04-19_17h.B.flagged",
+            run_aoflagger=False,  # Already run
+            flag_antennas_from_autocorrs=False,  # Already run
+            flag_antenna_list=[],
+            refresh_flags=True,
+            plot_gains=False,
+            flip_gain_conj=True,
+            apply_calibration=True,
+            plot_images=True,
+            peel=False,
+        )
+
+
+def calibrate_with_calico_new_beam_May28():
+
+    use_freqs = [13, 18, 23, 27, 32, 36, 41, 46, 50, 55, 59, 64, 69, 73, 78, 82]
+    for freq in use_freqs:
+        calibration_pipeline(
+            f"/lustre/rbyrne/2026-04-19/20260419_112543-112633_{freq}MHz.ms",
+            output_dir="/lustre/rbyrne/2026-04-19",
+            tmp_dir="/fast/rbyrne",
+            cal_trial_name="calico_updated_beam",
+            beam_path="/fast/rbyrne/OVRO_LWA_MROsoil_updatedheight.fits",
+            run_aoflagger=False,  # Already run
+            flag_antennas_from_autocorrs=False,  # Already run
+            flag_antenna_list=[],
+            refresh_flags=True,
+            plot_gains=False,
+            flip_gain_conj=False,
+            apply_calibration=False,
+            plot_images=False,
+            peel=False,
+        )
+
+
 if __name__ == "__main__":
-    calibrate_May19()
+    fn_name = sys.argv[1]
+    fn = globals().get(fn_name)
+    if callable(fn):
+        fn()
+    else:
+        print(f"No function named '{fn_name}'")
