@@ -611,7 +611,7 @@ def image_data(
             "-mgain",
             str(mgain),
             "-weight",
-            weight,
+            *weight.split(),
             "-no-update-model-required",
             "-mem",
             str(mem),
