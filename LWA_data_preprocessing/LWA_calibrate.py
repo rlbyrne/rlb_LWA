@@ -20,8 +20,16 @@ def concatenate_ms_files(
     file_list_str = ""
     for filename in use_files_full_paths:
         file_list_str += f"{filename} "
-    os.system(
-        f"python {script_path} --path_in {file_list_str} --path_out {output_filename}"
+    subprocess.run(
+        [
+            "python",
+            script_path,
+            "--path_in",
+            file_list_str,
+            "--path_out",
+            output_filename,
+        ],
+        check=True,
     )
 
 
@@ -336,8 +344,8 @@ def get_model_visibilities(
                 )
             if os.path.isdir(model_vis_file):  # Confirm write was successful
                 # Delete intermediate data products
-                os.system(f"rm {compact_source_output_filepath}")
-                os.system(f"rm {diffuse_output_filepath}")
+                subprocess.run(["rm", compact_source_output_filepath], check=True)
+                subprocess.run(["rm", diffuse_output_filepath], check=True)
 
     else:
         print(
@@ -398,7 +406,10 @@ def get_datafiles(
         for filename in use_files:
             if not os.path.isdir(f"{output_dir}/{filename}"):
                 print(f"Copying file {filename}")
-                os.system(f"cp -r {datadir}/{filename} {output_dir}/{filename}")
+                subprocess.run(
+                    ["cp", "-r" f"{datadir}/{filename}", f"{output_dir}/{filename}"],
+                    check=True,
+                )
 
         if len(use_files) > 1:  # Concatenate files
             use_files_full_paths = [
@@ -456,7 +467,7 @@ def flag_data(
         uv = None  # Clear memory
 
     if run_aoflagger:
-        os.system(f"aoflagger {datafile_path}")
+        subprocess.run(["aoflagger", datafile_path], check=True)
 
 
 def read_caltable(input_path, use_freqs=None):
@@ -521,12 +532,28 @@ def peel_sources(
             ms_file_list.append(filepath)
     else:
         if out_ms_path != orig_ms_path:
-            os.system(f"cp -r {orig_ms_path} {out_ms_path}")
+            subprocess.run(["cp", "-r", orig_ms_path, out_ms_path], check=True)
         ms_file_list.append(out_ms_path)
 
     for filepath in ms_file_list:
-        os.system(
-            f"sudo {julia_path} {ttcal_path} {peel_mode} {filepath} {peel_sources_path} --beam {beam} --maxiter {maxiter} --tolerance {tolerance} --minuvw {minuvw}"
+        subprocess.run(
+            [
+                "sudo",
+                julia_path,
+                ttcal_path,
+                peel_mode,
+                filepath,
+                peel_sources_path,
+                "--beam",
+                beam,
+                "--maxiter",
+                str(maxiter),
+                "--tolerance",
+                str(tolerance),
+                "--minuvw",
+                str(minuvw),
+            ],
+            check=True,
         )
 
     if Ntimes != 1:
@@ -543,7 +570,7 @@ def peel_sources(
         # Delete temporary files
         if os.path.isdir(out_ms_path):
             for filepath in ms_file_list:
-                os.system(f"rm -rf {filepath}")
+                subprocess.Popen(f"rm -rf {filepath}").wait()
         else:
             print(f"ERROR: File {out_ms_path} not written.")
 
@@ -566,8 +593,43 @@ def image_data(
     mem=50,
 ):
 
-    os.system(
-        f"{wsclean_script} -pol {pol} -multiscale -multiscale-scale-bias {multiscale_scale_bias} -size {size} {size} -scale {scale} -niter {niter} -mgain {mgain} -weight {weight} -no-update-model-required -mem {mem} -horizon-mask {horizon_mask} -auto-threshold {auto_threshold} -auto-mask {auto_mask} -taper-inner-tukey {taper_inner_tukey} -local-rms -no-reorder -name {name} {ms_filepath}"
+    subprocess.run(
+        [
+            wsclean_script,
+            "-pol",
+            pol,
+            "-multiscale",
+            "-multiscale-scale-bias",
+            str(multiscale_scale_bias),
+            "-size",
+            str(size),
+            str(size),
+            "-scale",
+            str(scale),
+            "-niter",
+            str(niter),
+            "-mgain",
+            str(mgain),
+            "-weight",
+            weight,
+            "-no-update-model-required",
+            "-mem",
+            str(mem),
+            "-horizon-mask",
+            horizon_mask,
+            "-auto-threshold",
+            str(auto_threshold),
+            "-auto-mask",
+            str(auto_mask),
+            "-taper-inner-tukey",
+            str(taper_inner_tukey),
+            "-local-rms",
+            "-no-reorder",
+            "-name",
+            name,
+            ms_filepath,
+        ],
+        check=True,
     )
 
 
@@ -732,7 +794,9 @@ def calibration_pipeline(
         ):  # Make directory if it doesn't already exist
             os.mkdir(use_output_dir)
         use_datafile_path = f"{use_output_dir}/{os.path.basename(datafile_path)}"
-        os.system(f"cp -r {datafile_path} {os.path.dirname(use_datafile_path)}")
+        subprocess.run(
+            ["cp", "-r", datafile_path, os.path.dirname(use_datafile_path)], check=True
+        )
 
     # Get antennas to flag based on Andrea's autocorrelation metrics
     if flag_antennas_from_autocorrs:
@@ -762,12 +826,13 @@ def calibration_pipeline(
 
     if run_aoflagger:
         if aoflagger_strategy_file is None:
-            os.system(f"aoflagger {use_datafile_path}")
+            subprocess.run(["aoflagger", "use_datafile_path"])
         else:
-            os.system(f"aoquality remove {use_datafile_path}")
-            os.system(f"aoquality collect {use_datafile_path}")
-            os.system(
-                f"aoflagger --strategy {aoflagger_strategy_file} {use_datafile_path}"
+            subprocess.run(["aoquality", "remove", use_datafile_path], check=True)
+            subprocess.run(["aoquality", "collect", use_datafile_path], check=True)
+            subprocess.run(
+                ["aoflagger", "--strategy", aoflagger_strategy_file, use_datafile_path],
+                check=True,
             )
 
     if apply_cal_path is not None:  # Restore calibration solution
@@ -779,7 +844,10 @@ def calibration_pipeline(
         if os.path.isdir(f"{output_dir}/{model_filename}"):
             print(f"Model file exists. Using {output_dir}/{model_filename}.")
             if tmp_dir is not None:
-                os.system(f"cp -r {output_dir}/{model_filename} {use_output_dir}")
+                subprocess.run(
+                    ["cp", "-r", f"{output_dir}/{model_filename}", use_output_dir],
+                    check=True,
+                )
         else:
             get_model_visibilities(
                 model_visilibility_mode="run simulation",
@@ -808,8 +876,20 @@ def calibration_pipeline(
                 uv.write_ms(use_datafile_path, fix_autos=True, clobber=True)
                 uv = None  # Clear memory
 
-            os.system(
-                f"python {casa_calibrate_script_path} --data_file {use_datafile_path} --model_file {use_output_dir}/{model_filename} --min_cal_baseline_lambda {min_cal_baseline_lambda} --max_cal_baseline_lambda {max_cal_baseline_lambda}"
+            subprocess.run(
+                [
+                    "python",
+                    casa_calibrate_script_path,
+                    "--data_file",
+                    use_datafile_path,
+                    "--model_file",
+                    f"{use_output_dir}/{model_filename}",
+                    "--min_cal_baseline_lambda",
+                    str(min_cal_baseline_lambda),
+                    "--max_cal_baseline_lambda",
+                    str(max_cal_baseline_lambda),
+                ],
+                check=True,
             )
 
             # Convert CASA calibration solutions to .calfits
@@ -977,5 +1057,10 @@ def calibration_pipeline(
 
     if tmp_dir is not None:  # Move outputs
 
-        os.system(f"rsync -a --remove-source-files {use_output_dir}/* {output_dir}")
-        os.system(f"find {use_output_dir} -type d -empty -delete")
+        subprocess.run(
+            ["rsync", "-a", "--remove-source-files", f"{use_output_dir}/*", output_dir],
+            check=True,
+        )
+        subprocess.run(
+            ["find", use_output_dir, "-type", "d", "-empty", "-delete"], check=True
+        )
