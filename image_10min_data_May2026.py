@@ -46,7 +46,7 @@ for freq in use_freqs:
     for filename in filenames:
         subprocess.run(["rm", "-r", f"/fast/rbyrne/{filename}"], check=True)
 
-    LWA_calibrate.image_data(new_filename, f"{new_filename}.ms")
+    LWA_calibrate.image_data(new_filename, f"{new_filename}.ms", niter=50000)
     subprocess.run(["cp", "-r", f"/fast/rbyrne/{new_filename}.ms", "/lustre/rbyrne/2026-04-19"], check=True)
     
 
