@@ -3,6 +3,7 @@ import numpy as np
 import datetime
 import pyuvdata
 import os
+import sys
 
 
 def populate_data_dict(data_paths):
@@ -255,6 +256,26 @@ def concatenate_files(
     return 0
 
 
+def get_dir_size(path):
+    total = 0
+    for dirpath, _, filenames in os.walk(path):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            if not os.path.islink(fp):  # skip symlinks
+                total += os.path.getsize(fp)
+    return total
+
+
+def delete_empty_directories(directory, date, freqs):
+
+    for freq in freqs:
+        if os.path.isdir(f"{directory}/{freq}MHz/{date}"):
+            os.system(
+                f"sudo find {directory}/{freq}MHz/{date}/* -type d -empty -delete"
+            )
+            os.system(f"sudo find {directory}/{freq}MHz/{date} -type d -empty -delete")
+
+
 def run_concatenate_data(
     date,
     orig_dir="/lustre/pipeline/cosmology",
@@ -281,10 +302,19 @@ def run_concatenate_data(
         )
         # Get files outside nested structure
         data_paths.extend(
-            [d for d in os.listdir(orig_dir) if os.path.isdir(os.path.join(orig_dir, d)) and d.endswith(".ms")]
+            [
+                d
+                for d in os.listdir(orig_dir)
+                if os.path.isdir(os.path.join(orig_dir, d)) and d.endswith(".ms")
+            ]
         )
 
     data_dict = populate_data_dict(data_paths)
+    if len(data_dict["times"]) == 0:
+        print("No files found.")
+        if delete_files:
+            delete_empty_directories(orig_dir, date, orig_freq_interval_dict.keys())
+        sys.exit()
     data_dict = get_time_inds(data_dict)
 
     # Status strings:
@@ -326,6 +356,15 @@ def run_concatenate_data(
                     output_dir,
                     tmp_dir=tmp_dir,
                 )
+
+                if (
+                    False
+                ):  # Check to make sure files aren't left behind in the tmp directory
+                    tmp_dir_size = get_dir_size(tmp_dir)
+                    if tmp_dir_size != 0:
+                        print("ERROR: tmp directory is not empty!")
+                        print(os.listdir(tmp_dir))
+
                 status.append(new_status)
         if delete_files:
             if np.min([use_status in delete_file_conditions for use_status in status]):
@@ -335,9 +374,8 @@ def run_concatenate_data(
                     os.system(f"sudo rm -r {filename}")
 
     # Delete empty directories
-    for freq in orig_freq_interval_dict.keys():
-        os.system(f"sudo find {orig_dir}/{freq}MHz/{date}/* -type d -empty -delete")
+    delete_empty_directories(orig_dir, date, orig_freq_interval_dict.keys())
 
 
 if __name__ == "__main__":
-    run_concatenate_data("2026-01-10", delete_files=True)
+    run_concatenate_data("2026-01-11", delete_files=True)
