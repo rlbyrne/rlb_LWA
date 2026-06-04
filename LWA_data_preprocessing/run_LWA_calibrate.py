@@ -455,8 +455,8 @@ def calibrate_with_calico_new_beam_May28():
             tmp_dir="/fast/rbyrne",
             cal_trial_name="calico_updated_beam",
             beam_path="/fast/rbyrne/OVRO_LWA_MROsoil_updatedheight.fits",
-            run_aoflagger=False,  # Already run
-            flag_antennas_from_autocorrs=False,  # Already run
+            run_aoflagger=True,
+            flag_antennas_from_autocorrs=True,
             flag_antenna_list=[],
             refresh_flags=True,
             plot_gains=False,
@@ -465,6 +465,43 @@ def calibrate_with_calico_new_beam_May28():
             plot_images=False,
             peel=False,
         )
+
+
+def image_data_Jun4():
+
+    date = "2026-04-19"
+    hours = ["05", "06", "07", "08", "11"]
+    use_freqs = [
+        "34",
+        "44",
+        "52",
+        "62",
+        "72",
+        "79",
+        "83",
+    ]
+    for hour in hours:
+        for freq in use_freqs:
+            filenames = os.listdir(
+                f"/lustre/pipeline/cosmology/concatenated_data/{freq}MHz/{date}/{hour}"
+            )
+            for filename in filenames:
+                calibration_pipeline(
+                    f"/lustre/pipeline/cosmology/concatenated_data/{freq}MHz/{date}/{hour}/{filename}",
+                    output_dir="/lustre/rbyrne/2026-04-19",
+                    tmp_dir="/fast/rbyrne",
+                    cal_trial_name="17h_cal",
+                    apply_cal_path="/fast/rbyrne/calibration_2026-04-19_17h.B.flagged",
+                    run_aoflagger=True,
+                    flag_antennas_from_autocorrs=True,
+                    flag_antenna_list=[],
+                    refresh_flags=True,
+                    plot_gains=False,
+                    flip_gain_conj=True,
+                    apply_calibration=True,
+                    plot_images=True,
+                    peel=True,
+                )
 
 
 if __name__ == "__main__":

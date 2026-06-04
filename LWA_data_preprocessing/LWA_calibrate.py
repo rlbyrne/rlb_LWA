@@ -590,7 +590,7 @@ def image_data(
     auto_threshold=0.5,
     auto_mask=3,
     taper_inner_tukey=30,
-    mem=50,
+    mem=30,
 ):
 
     subprocess.run(
@@ -1058,7 +1058,7 @@ def calibration_pipeline(
     if tmp_dir is not None:  # Move outputs
 
         subprocess.run(
-            ["rsync", "-a", "--remove-source-files", f"{use_output_dir}/*", output_dir],
+            ["rsync", "-a", "--remove-source-files", f"{use_output_dir}/", output_dir],
             check=True,
         )
         subprocess.run(
