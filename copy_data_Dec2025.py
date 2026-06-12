@@ -96,8 +96,10 @@ def copy_data(
         "82",
     ],
     lst_ranges=[
-        [11.88, 14.88],  # 3 hours of cosmology data
-        [17.38, 17.88],  # half an hour of calibration data
+        #[11.88, 14.88],  # 3 hours of cosmology data
+        #[17.38, 17.88],  # half an hour of calibration data
+        [12.88, 15.88],  # 3 hours of cosmology data
+        [20.38, 20.88],  # half an hour of calibration data
     ],
     use_dates=None,
 ):

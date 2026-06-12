@@ -570,7 +570,7 @@ def peel_sources(
         # Delete temporary files
         if os.path.isdir(out_ms_path):
             for filepath in ms_file_list:
-                subprocess.Popen(f"rm -rf {filepath}").wait()
+                subprocess.run(["rm", "-rf", filepath], check=True)
         else:
             print(f"ERROR: File {out_ms_path} not written.")
 
