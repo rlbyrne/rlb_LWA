@@ -3,13 +3,12 @@ import numpy as np
 import scipy
 
 
-def gain_phase_res_func(x, gain_phases, freq_array, branch_cut_loc):
+def gain_phase_res_func(x, gain_phases, freq_array):
     fit_value = np.zeros_like(freq_array, dtype=float)
     for x_ind, x_val in enumerate(x):
         fit_value += x_val * freq_array**x_ind
-    fit_value = branch_cut(fit_value, branch_cut_loc=branch_cut_loc)
-    gain_phase = branch_cut(gain_phases, branch_cut_loc=branch_cut_loc)
-    res = np.sum((fit_value - gain_phase) ** 2)
+    dot_prod = np.cos(fit_value) * np.cos(gain_phases) + np.sin(fit_value) * np.sin(gain_phases)
+    res = np.sum(np.abs(np.arccos(dot_prod)) ** 2)
     return res
 
 
@@ -58,9 +57,8 @@ def gain_phase_fit_search(gain_phases, freq_array, branch_cut_loc=np.pi):
             np.array([y_intercept, slope]),
             gain_phases,
             freqs_mean_subtracted,
-            branch_cut_loc,
         )
-    best_fit_slope = check_slopes[np.where(res_array == np.min(res_array))[0][0]]
+    best_fit_slope = check_slopes[np.where(res_array == np.nanmin(res_array))[0][0]]
     y_intercept -= best_fit_slope * mean_freq
     return np.array([y_intercept, best_fit_slope])
 
@@ -99,7 +97,7 @@ def calculate_smoothed_solutions(cal, freq_array_hz, amp_deg=2, phase_deg=1):
                 optimize_result = scipy.optimize.minimize(
                     gain_phase_res_func,
                     np.zeros(phase_deg + 1, dtype=float),
-                    args=(gain_phases_residual, freqs_use, branch_cut_loc),
+                    args=(gain_phases_residual, freqs_use),
                     method="Powell",
                     tol=1e-6,
                 )
