@@ -1,17 +1,11 @@
 import subprocess
 import shlex
 import os
+import pathlib
 import numpy as np
 
-#use_freqs = ["34", "44", "52", "62", "72", "79", "83"]
-use_freqs = ["62"]
-#obsids_list = np.array([[
-#    f"20260112_120008-120158_{freq}MHz_calibrated", 
-#    f"20260112_120008-120158_{freq}MHz_05h_calibrated", 
-#    f"20260112_120008-120158_{freq}MHz_05h_smoothed_calibrated"
-#] for freq in use_freqs]).flatten()
-obsids_list = ["20260112_120008-120158_62MHz_source_sim"]
-versions_list = ["rlb_process_LWA_Apr2026"]
+obsids_list = ["20260419_055641-055832_44MHz_17h_cal_peeled"]
+versions_list = ["rlb_process_LWA_modified_kernel_Jun2026"]
 uvfits_path = "/fast/rbyrne"
 outdir = "/fast/rbyrne/fhd_outputs"
 tmp_dir = None
@@ -25,7 +19,7 @@ eppsilon_script = "ps_single_obs_wrapper"
 # Set eppsilon options
 refresh_ps = 1
 uvf_input = 1
-no_evenodd = 1  # Use this option if only one time step is present
+no_evenodd = 0  # Use this option if only one time step is present
 xx_only = 0
 float_colorbar = 1
 
@@ -42,9 +36,9 @@ for obsid in obsids_list:
     for version in versions_list:
         # Create directories
         if not os.path.isdir(f"{outdir}/fhd_{version}"):
-            os.mkdirs(f"{outdir}/fhd_{version}", exist_ok=True)
+            pathlib.Path(f"{outdir}/fhd_{version}").mkdir(parents=True, exist_ok=True)
         if not os.path.isdir(f"{outdir}/fhd_{version}/logs"):
-            os.mkdirs(f"{outdir}/fhd_{version}/logs", exist_ok=True)
+            pathlib.Path(f"{outdir}/fhd_{version}/logs").mkdir(parents=True, exist_ok=True)
 
         try:
             # Run FHD
