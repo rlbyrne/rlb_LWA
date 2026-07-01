@@ -503,6 +503,45 @@ def image_data_Jun4():
                     peel=True,
                 )
 
+def recalibrate_data_Jun30():
+
+    calibration_pipeline(
+        f"/lustre/rbyrne/2026-04-19/20260419_055641-055832_44MHz_17h_cal_calibrated.ms",
+        output_dir="/lustre/rbyrne/2026-04-19",
+        tmp_dir="/fast/rbyrne",
+        cal_trial_name="recalib",
+        beam_path="/fast/rbyrne/OVRO_LWA_MROsoil_updatedheight.fits",
+        run_aoflagger=True,
+        flag_antennas_from_autocorrs=True,
+        flag_antenna_list=[],
+        refresh_flags=True,
+        plot_gains=True,
+        flip_gain_conj=False,
+        apply_calibration=True,
+        plot_images=True,
+        peel=True,
+    )
+
+def recalibrate_data_with_diffuse_Jun30():
+
+    calibration_pipeline(
+        f"/lustre/rbyrne/2026-04-19/20260419_055641-055832_44MHz_17h_cal_calibrated.ms",
+        output_dir="/lustre/rbyrne/2026-04-19",
+        tmp_dir="/fast/rbyrne",
+        cal_trial_name="recalib_diffuse",
+        beam_path="/fast/rbyrne/OVRO_LWA_MROsoil_updatedheight.fits",
+        include_diffuse=True,
+        diffuse_skymodel_path="/lustre/rbyrne/skymodels/ovro_lwa_sky_map_46.992MHz_nside512.skyh5",
+        run_aoflagger=True,
+        flag_antennas_from_autocorrs=True,
+        flag_antenna_list=[],
+        refresh_flags=True,
+        plot_gains=True,
+        flip_gain_conj=False,
+        apply_calibration=True,
+        plot_images=True,
+        peel=True,
+    )
 
 if __name__ == "__main__":
     fn_name = sys.argv[1]

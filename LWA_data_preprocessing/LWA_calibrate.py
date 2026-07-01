@@ -510,7 +510,7 @@ def peel_sources(
     peel_sources_path="/home/pipeline/sources.json",
     peel_mode="peel",  # Options include "peel", "zest"
     beam="sine",  # Options include "sine", "constant"
-    maxiter=50,
+    maxiter=5,
     tolerance=1e-4,
     minuvw=10,
     Ntimes=None,
@@ -642,6 +642,10 @@ def calibration_pipeline(
     skymodel_path: Optional[
         str
     ] = "/lustre/rbyrne/skymodels/Gregg_20250519_source_models.skyh5",
+    include_diffuse: bool = False,
+    diffuse_skymodel_path: Optional[
+        str
+    ] = None,
     apply_cal_path: Optional[str] = None,
     date: Optional[datetime.datetime] = None,
     run_aoflagger: bool = True,
@@ -686,6 +690,12 @@ def calibration_pipeline(
         Path to a pyradiosky-readable sky model, in .skyh5 format. Default
         /lustre/rbyrne/skymodels/Gregg_20250519_source_models.skyh5. Not used if
         apply_cal_path is not None.
+    include_diffuse : bool
+        If True, a Healpix map will be used to model diffuse emission. Default False.
+        Not used if apply_cal_path is not None.
+    diffuse_skymodel_path : str or None
+        Path to a pyradiosky-readable diffuse sky model, in .skyh5 format. Not used if
+        apply_cal_path is not None or include_diffuse is False.
     apply_cal_path : str or None
         If not None, do not perform calibration and instead restore and apply a
         saved calibration solution. Path to a pyuvdata-readable calibration file.
@@ -852,9 +862,10 @@ def calibration_pipeline(
             get_model_visibilities(
                 model_visilibility_mode="run simulation",
                 model_vis_file=f"{use_output_dir}/{model_filename}",
-                include_diffuse=False,
+                include_diffuse=include_diffuse,
                 data_file=use_datafile_path,
                 skymodel_path=skymodel_path,
+                diffuse_skymodel_path=diffuse_skymodel_path,
                 beam_path=beam_path,
             )
 
