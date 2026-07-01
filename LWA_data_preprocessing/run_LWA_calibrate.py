@@ -503,6 +503,7 @@ def image_data_Jun4():
                     peel=True,
                 )
 
+
 def recalibrate_data_Jun30():
 
     calibration_pipeline(
@@ -515,12 +516,14 @@ def recalibrate_data_Jun30():
         flag_antennas_from_autocorrs=True,
         flag_antenna_list=[],
         refresh_flags=True,
+        refresh_calibration=False,
         plot_gains=True,
         flip_gain_conj=False,
         apply_calibration=True,
         plot_images=True,
         peel=True,
     )
+
 
 def recalibrate_data_with_diffuse_Jun30():
 
@@ -542,6 +545,7 @@ def recalibrate_data_with_diffuse_Jun30():
         plot_images=True,
         peel=True,
     )
+
 
 if __name__ == "__main__":
     fn_name = sys.argv[1]

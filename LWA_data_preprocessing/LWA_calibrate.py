@@ -643,9 +643,7 @@ def calibration_pipeline(
         str
     ] = "/lustre/rbyrne/skymodels/Gregg_20250519_source_models.skyh5",
     include_diffuse: bool = False,
-    diffuse_skymodel_path: Optional[
-        str
-    ] = None,
+    diffuse_skymodel_path: Optional[str] = None,
     apply_cal_path: Optional[str] = None,
     date: Optional[datetime.datetime] = None,
     run_aoflagger: bool = True,
@@ -655,6 +653,7 @@ def calibration_pipeline(
     flag_antennas_from_autocorrs: bool = True,
     flag_antenna_list: List[str] = [],
     refresh_flags: bool = False,
+    refresh_calibration: bool = False,
     calibrate_with_casa: bool = False,
     casa_calibrate_script_path: str = "/opt/devel/rbyrne/rlb_LWA/LWA_data_preprocessing/casa_calibrate.py",
     min_cal_baseline_lambda: Optional[int] = 10,
@@ -719,7 +718,10 @@ def calibration_pipeline(
         ["LWA-005A", "LWA-005B"]. If flag_antennas_from_autocorrs=True, these
         antennas will be flagged in addition to those in the flagging lookup table.
     refresh_flags : bool
-        If True, pre-existing flags in the data file are cleared.
+        If True, pre-existing flags in the data file are cleared. Default False.
+    refresh_calibration : bool
+        If False, an existing .calfits file will be read and applied. If True, the calibration
+        will be re-generated. Used only if apply_cal_path is None. Default False.
     calibrate_with_casa : bool
         If True, use CASA bandpass calibration. If False, use Calico. Default False.
         If CASA bandpass calibration is used, the data file will be modified by applying
@@ -808,6 +810,18 @@ def calibration_pipeline(
             ["cp", "-r", datafile_path, os.path.dirname(use_datafile_path)], check=True
         )
 
+    if not refresh_calibration and apply_cal_path is None:
+        # Check if a .calfits file already exists and restore it if it does
+        if os.path.isfile(f"{use_output_dir}/{calfits_filename}"):
+            apply_cal_path = f"{use_output_dir}/{calfits_filename}"
+        elif tmp_dir is not None:
+            if os.path.isfile(f"{output_dir}/{calfits_filename}"):
+                subprocess.run(
+                    ["cp", f"{output_dir}/{calfits_filename}", use_output_dir],
+                    check=True,
+                )
+                apply_cal_path = f"{use_output_dir}/{calfits_filename}"
+
     # Get antennas to flag based on Andrea's autocorrelation metrics
     if flag_antennas_from_autocorrs:
         if date is None:  # Attempt to parse the filename to get date
@@ -846,6 +860,7 @@ def calibration_pipeline(
             )
 
     if apply_cal_path is not None:  # Restore calibration solution
+        print(f"Restoring calibration table {apply_cal_path}")
         uvcal = read_caltable(apply_cal_path)
         uv = None  # Define variable
 
@@ -965,10 +980,10 @@ def calibration_pipeline(
 
     if apply_calibration:
 
-        if (apply_cal_path is not None) or calibrate_with_casa:  # Read data
-            uv = pyuvdata.UVData()
-            uv.read(use_datafile_path, data_column="DATA")
-            uv.phase_to_time(np.mean(uv.time_array))
+        # Read data
+        uv = pyuvdata.UVData()
+        uv.read(use_datafile_path, data_column="DATA")
+        uv.phase_to_time(np.mean(uv.time_array))
 
         if (apply_cal_path is not None) and len(
             flag_antenna_list
