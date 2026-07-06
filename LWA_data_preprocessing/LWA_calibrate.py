@@ -112,7 +112,7 @@ def flag_antennas(
 
 
 def get_model_visibilities(
-    model_visilibility_mode=None,
+    model_visibility_mode=None,
     refresh_model=False,
     model_vis_file=None,
     include_diffuse=False,
@@ -126,18 +126,18 @@ def get_model_visibilities(
     beam_path="/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits",
 ):
     """
-    model_visilibility_mode : str
+    model_visibility_mode : str
         Options: "read file", "LST interpolate", or "run simulation".
     refresh_model : bool
         If True, model visibilities will be recalculated even if model_vis_file exists.
         Default False.
     model_vis_file : str
-        If model_visilibility_mode is "read file", path to the saved model visibility
-        file in a pyuvdata-readable format. If model_visilibility_mode is "LST interpolate"
+        If model_visibility_mode is "read file", path to the saved model visibility
+        file in a pyuvdata-readable format. If model_visibility_mode is "LST interpolate"
         or "run simulation", path to an output ms file. Model visibilities will
         be written to this file.
     include_diffuse : bool
-        Used only if model_visilibility_mode is "LST interpolate" or "run simulation".
+        Used only if model_visibility_mode is "LST interpolate" or "run simulation".
         Default False.
     lst_lookup_table : str
         Required and used only if model_visibility_mode is "LST interpolate".
@@ -167,14 +167,14 @@ def get_model_visibilities(
             print(
                 f"File {model_vis_file} already exists. Skipping visibility simulation."
             )
-            model_visilibility_mode = "read file"
+            model_visibility_mode = "read file"
 
-    if model_visilibility_mode == "read file":
+    if model_visibility_mode == "read file":
         if not os.path.isdir(model_vis_file) and not os.path.isfile(model_vis_file):
             print(f"ERROR: File {model_vis_file} not found. Exiting.")
             sys.exit(1)
 
-    elif model_visilibility_mode == "LST interpolate":
+    elif model_visibility_mode == "LST interpolate":
         if os.path.isdir(model_vis_file):
             print(f"ERROR: File {model_vis_file} exits. Exiting.")
             sys.exit(1)
@@ -308,7 +308,7 @@ def get_model_visibilities(
                 model_vis_file, force_phase=True, fix_autos=True, uvw_double=False
             )
 
-    elif model_visilibility_mode == "run simulation":
+    elif model_visibility_mode == "run simulation":
         if os.path.isdir(model_vis_file):
             print(f"ERROR: File {model_vis_file} exits. Exiting.")
             sys.exit(1)
@@ -375,7 +375,7 @@ def get_model_visibilities(
 
     else:
         print(
-            f"ERROR: Unknown option for model_visilibility_mode {model_visilibility_mode}."
+            f"ERROR: Unknown option for model_visibility_mode {model_visibility_mode}."
         )
         print(
             f'Options are "read file", "LST interpolate", or "run simulation". Exiting.'
@@ -619,45 +619,85 @@ def image_data(
     mem=30,
 ):
 
-    subprocess.run(
-        [
-            wsclean_script,
-            "-pol",
-            pol,
-            "-multiscale",
-            "-multiscale-scale-bias",
-            str(multiscale_scale_bias),
-            "-size",
-            str(size),
-            str(size),
-            "-scale",
-            str(scale),
-            "-niter",
-            str(niter),
-            "-mgain",
-            str(mgain),
-            "-weight",
-            *weight.split(),
-            "-no-update-model-required",
-            "-mem",
-            str(mem),
-            "-horizon-mask",
-            horizon_mask,
-            "-auto-threshold",
-            str(auto_threshold),
-            "-auto-mask",
-            str(auto_mask),
-            "-taper-inner-tukey",
-            str(taper_inner_tukey),
-            "-local-rms",
-            "-no-reorder",
-            "-save-source-list",
-            "-name",
-            name,
-            ms_filepath,
-        ],
-        check=True,
-    )
+    if niter > 0:  # Save source list
+        subprocess.run(
+            [
+                wsclean_script,
+                "-pol",
+                pol,
+                "-multiscale",
+                "-multiscale-scale-bias",
+                str(multiscale_scale_bias),
+                "-size",
+                str(size),
+                str(size),
+                "-scale",
+                str(scale),
+                "-niter",
+                str(niter),
+                "-mgain",
+                str(mgain),
+                "-weight",
+                *weight.split(),
+                "-no-update-model-required",
+                "-mem",
+                str(mem),
+                "-horizon-mask",
+                horizon_mask,
+                "-auto-threshold",
+                str(auto_threshold),
+                "-auto-mask",
+                str(auto_mask),
+                "-taper-inner-tukey",
+                str(taper_inner_tukey),
+                "-local-rms",
+                "-no-reorder",
+                "-save-source-list",
+                "-name",
+                name,
+                ms_filepath,
+            ],
+            check=True,
+        )
+    else:
+        subprocess.run(
+            [
+                wsclean_script,
+                "-pol",
+                pol,
+                "-multiscale",
+                "-multiscale-scale-bias",
+                str(multiscale_scale_bias),
+                "-size",
+                str(size),
+                str(size),
+                "-scale",
+                str(scale),
+                "-niter",
+                str(niter),
+                "-mgain",
+                str(mgain),
+                "-weight",
+                *weight.split(),
+                "-no-update-model-required",
+                "-mem",
+                str(mem),
+                "-horizon-mask",
+                horizon_mask,
+                "-auto-threshold",
+                str(auto_threshold),
+                "-auto-mask",
+                str(auto_mask),
+                "-taper-inner-tukey",
+                str(taper_inner_tukey),
+                "-local-rms",
+                "-no-reorder",
+                "-name",
+                name,
+                ms_filepath,
+            ],
+            check=True,
+        )
 
 
 def calibration_pipeline(
@@ -906,7 +946,7 @@ def calibration_pipeline(
                 )
         else:
             get_model_visibilities(
-                model_visilibility_mode="run simulation",
+                model_visibility_mode="run simulation",
                 refresh_model=refresh_model,
                 model_vis_file=f"{use_output_dir}/{model_filename}",
                 include_diffuse=include_diffuse,
