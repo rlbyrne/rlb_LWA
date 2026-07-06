@@ -113,6 +113,7 @@ def flag_antennas(
 
 def get_model_visibilities(
     model_visilibility_mode=None,
+    refresh_model=False,
     model_vis_file=None,
     include_diffuse=False,
     lst_lookup_table="/lustre/21cmpipe/simulation_outputs/lst_lookup_table.csv",
@@ -127,6 +128,9 @@ def get_model_visibilities(
     """
     model_visilibility_mode : str
         Options: "read file", "LST interpolate", or "run simulation".
+    refresh_model : bool
+        If True, model visibilities will be recalculated even if model_vis_file exists.
+        Default False.
     model_vis_file : str
         If model_visilibility_mode is "read file", path to the saved model visibility
         file in a pyuvdata-readable format. If model_visilibility_mode is "LST interpolate"
@@ -157,6 +161,13 @@ def get_model_visibilities(
         Required and used only if model_visibility_mode is "run simulation". Path
         to a pyuvdata-formatted beam fits file.
     """
+
+    if model_visibility_mode != "read file" and not refresh_model:
+        if os.path.isdir(model_vis_file) or os.path.isfile(model_vis_file):
+            print(
+                f"File {model_vis_file} already exists. Skipping visibility simulation."
+            )
+            model_visilibility_mode = "read file"
 
     if model_visilibility_mode == "read file":
         if not os.path.isdir(model_vis_file) and not os.path.isfile(model_vis_file):
@@ -314,33 +325,48 @@ def get_model_visibilities(
             diffuse_output_filepath = f"{model_vis_file.removesuffix('.ms')}diffuse.ms"
         else:
             compact_source_output_filepath = model_vis_file
-        run_fftvis_sim(
-            map_path=skymodel_path,
-            beam_path=beam_path,
-            input_data_path=data_file,
-            output_path=compact_source_output_filepath,
-            log_path=None,
-        )
-        if include_diffuse:
+        if not refresh_model and os.path.isdir(compact_source_output_filepath):
+            print(
+                f"File {compact_source_output_filepath} already exists. Skipping visibility simulation."
+            )
+        else:
             run_fftvis_sim(
-                map_path=diffuse_skymodel_path,
+                map_path=skymodel_path,
                 beam_path=beam_path,
                 input_data_path=data_file,
-                output_path=diffuse_output_filepath,
+                output_path=compact_source_output_filepath,
                 log_path=None,
             )
+        if include_diffuse:
+            if not refresh_model and os.path.isdir(diffuse_output_filepath):
+                print(
+                    f"File {diffuse_output_filepath} already exists. Skipping visibility simulation."
+                )
+            else:
+                run_fftvis_sim(
+                    map_path=diffuse_skymodel_path,
+                    beam_path=beam_path,
+                    input_data_path=data_file,
+                    output_path=diffuse_output_filepath,
+                    log_path=None,
+                )
             # Combine compact and diffuse models
             compact_sim = pyuvdata.UVData()
             diffuse_sim = pyuvdata.UVData()
             compact_sim.read(compact_source_output_filepath)
             diffuse_sim.read(diffuse_output_filepath)
             compact_sim.sum_vis(diffuse_sim, inplace=True)
-            compact_sim.write_ms(model_vis_file, clobber=True, fix_autos=True)
             if model_vis_file.endswith(".ms"):
-                compact_sim.write_ms(model_vis_file, force_phase=True, fix_autos=True)
+                compact_sim.write_ms(
+                    model_vis_file, force_phase=True, fix_autos=True, clobber=True
+                )
             else:
                 compact_sim.write_uvfits(
-                    model_vis_file, force_phase=True, fix_autos=True, uvw_double=False
+                    model_vis_file,
+                    force_phase=True,
+                    fix_autos=True,
+                    uvw_double=False,
+                    clobber=True,
                 )
             if os.path.isdir(model_vis_file):  # Confirm write was successful
                 # Delete intermediate data products
@@ -625,6 +651,7 @@ def image_data(
             str(taper_inner_tukey),
             "-local-rms",
             "-no-reorder",
+            "-save-source-list",
             "-name",
             name,
             ms_filepath,
@@ -653,6 +680,7 @@ def calibration_pipeline(
     flag_antennas_from_autocorrs: bool = True,
     flag_antenna_list: List[str] = [],
     refresh_flags: bool = False,
+    refresh_model: bool = False,
     refresh_calibration: bool = False,
     calibrate_with_casa: bool = False,
     casa_calibrate_script_path: str = "/opt/devel/rbyrne/rlb_LWA/LWA_data_preprocessing/casa_calibrate.py",
@@ -719,6 +747,9 @@ def calibration_pipeline(
         antennas will be flagged in addition to those in the flagging lookup table.
     refresh_flags : bool
         If True, pre-existing flags in the data file are cleared. Default False.
+    refresh_model : bool
+        If True, the model visibilities will be re-generated. Used only if apply_cal_path is
+        None. Default False.
     refresh_calibration : bool
         If False, an existing .calfits file will be read and applied. If True, the calibration
         will be re-generated. Used only if apply_cal_path is None. Default False.
@@ -866,7 +897,7 @@ def calibration_pipeline(
 
     else:  # Run calibration
 
-        if os.path.isdir(f"{output_dir}/{model_filename}"):
+        if not refresh_model and os.path.isdir(f"{output_dir}/{model_filename}"):
             print(f"Model file exists. Using {output_dir}/{model_filename}.")
             if tmp_dir is not None:
                 subprocess.run(
@@ -876,6 +907,7 @@ def calibration_pipeline(
         else:
             get_model_visibilities(
                 model_visilibility_mode="run simulation",
+                refresh_model=refresh_model,
                 model_vis_file=f"{use_output_dir}/{model_filename}",
                 include_diffuse=include_diffuse,
                 data_file=use_datafile_path,

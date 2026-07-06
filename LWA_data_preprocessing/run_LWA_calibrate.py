@@ -539,6 +539,7 @@ def recalibrate_data_with_diffuse_Jun30():
         flag_antennas_from_autocorrs=True,
         flag_antenna_list=[],
         refresh_flags=True,
+        refresh_model=False,
         plot_gains=True,
         flip_gain_conj=False,
         apply_calibration=True,
