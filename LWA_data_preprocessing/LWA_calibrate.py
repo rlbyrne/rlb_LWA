@@ -7,6 +7,7 @@ import numpy as np
 import pyuvdata
 import datetime
 from generate_model_vis_fftvis import run_fftvis_sim
+from generate_model_vis import run_pyuvsim
 import smooth_cal_solutions
 from calico import calibration_wrappers, calibration_qa
 
@@ -124,6 +125,7 @@ def get_model_visibilities(
     skymodel_path=None,
     diffuse_skymodel_path=None,
     beam_path="/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits",
+    simulation_package="pyuvsim",
 ):
     """
     model_visibility_mode : str
@@ -160,6 +162,10 @@ def get_model_visibilities(
     beam_path : str
         Required and used only if model_visibility_mode is "run simulation". Path
         to a pyuvdata-formatted beam fits file.
+    simulation_package : str
+        Defines what simulation package to use. Used only if model_visibility_mode 
+        is "run simulation". Options are "pyuvsim" or "fftvis" ("matvis" may be added
+        in the future).
     """
 
     if model_visibility_mode != "read file" and not refresh_model:
@@ -318,6 +324,14 @@ def get_model_visibilities(
             )
             sys.exit(1)
 
+        if simulation_package == "pyuvdata":
+            simulation_script = run_pyuvsim
+        elif simulation_package == "pyuvdata":
+            simulation_script = run_fftvis_sim
+        else:
+            print(f"ERROR: Unknown option for simulation_package {simulation_package}. Exiting.")
+            sys.exit(1)
+
         if include_diffuse:
             compact_source_output_filepath = (
                 f"{model_vis_file.removesuffix('.ms')}compact.ms"
@@ -330,12 +344,11 @@ def get_model_visibilities(
                 f"File {compact_source_output_filepath} already exists. Skipping visibility simulation."
             )
         else:
-            run_fftvis_sim(
-                map_path=skymodel_path,
+            simulation_script(
+                catalog_path=skymodel_path,
                 beam_path=beam_path,
                 input_data_path=data_file,
                 output_path=compact_source_output_filepath,
-                log_path=None,
             )
         if include_diffuse:
             if not refresh_model and os.path.isdir(diffuse_output_filepath):
@@ -343,12 +356,11 @@ def get_model_visibilities(
                     f"File {diffuse_output_filepath} already exists. Skipping visibility simulation."
                 )
             else:
-                run_fftvis_sim(
-                    map_path=diffuse_skymodel_path,
+                simulation_script(
+                    catalog_path=diffuse_skymodel_path,
                     beam_path=beam_path,
                     input_data_path=data_file,
                     output_path=diffuse_output_filepath,
-                    log_path=None,
                 )
             # Combine compact and diffuse models
             compact_sim = pyuvdata.UVData()

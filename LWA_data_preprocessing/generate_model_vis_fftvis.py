@@ -14,7 +14,7 @@ import socket
 
 
 def run_fftvis_sim(
-    map_path=None,
+    catalog_path=None,
     beam_path=None,
     input_data_path=None,
     output_path=None,
@@ -33,7 +33,7 @@ def run_fftvis_sim(
     with open(log_path, "w") as f:
         f.write("Starting fftvis simulation.\n")
         f.write(f"Running on {socket.gethostname()}")
-        f.write(f"Simulation skymodel: {map_path}\n")
+        f.write(f"Simulation skymodel: {catalog_path}\n")
         f.write(f"Simulation beam model: {beam_path}\n")
         f.write(f"Simulation input datafile: {input_data_path}\n")
 
@@ -134,13 +134,13 @@ def run_fftvis_sim(
     # Get model
     with open(log_path, "a") as f:
         f.write("Reading the sky model...\n")
-    if map_path.endswith(".skyh5"):
-        model = pyradiosky.SkyModel.from_skyh5(map_path)
-    elif map_path.endswith(".sav"):
-        model = pyradiosky.SkyModel.from_fhd_catalog(map_path, expand_extended=True)
+    if catalog_path.endswith(".skyh5"):
+        model = pyradiosky.SkyModel.from_skyh5(catalog_path)
+    elif catalog_path.endswith(".sav"):
+        model = pyradiosky.SkyModel.from_fhd_catalog(catalog_path, expand_extended=True)
     else:
         model = pyradiosky.SkyModel()
-        model.read(map_path)
+        model.read(catalog_path)
     use_model_freq_array = np.copy(uvd.freq_array)
     if (
         model.spectral_type == "subband"
@@ -316,14 +316,14 @@ def run_fftvis_sim(
 if __name__ == "__main__":
 
     args = sys.argv
-    map_path = args[1]
+    catalog_path = args[1]
     beam_path = args[2]
     input_data_path = args[3]
     output_path = args[4]
     offset_timesteps = args[5]
 
     run_fftvis_sim(
-        map_path=map_path,
+        catalog_path=catalog_path,
         beam_path=beam_path,
         input_data_path=input_data_path,
         output_path=output_path,
