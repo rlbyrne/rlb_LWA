@@ -1089,12 +1089,14 @@ def calibration_pipeline(
             )
 
         if apply_cal_path is None:  # Subtract model from data
-            if calibrate_with_casa:  # Need to read model file
-                model_uv = pyuvdata.UVData()
-                print(f"Reading file {use_output_dir}/{model_filename}.")
-                model_uv.read(f"{use_output_dir}/{model_filename}", data_column="DATA")
-                # model_uv.set_uvws_from_antenna_positions(update_vis=False)
-                model_uv.phase_to_time(np.mean(uv.time_array))
+
+            # Read model file
+            model_uv = pyuvdata.UVData()
+            print(f"Reading file {use_output_dir}/{model_filename}.")
+            model_uv.read(f"{use_output_dir}/{model_filename}", data_column="DATA")
+            # model_uv.set_uvws_from_antenna_positions(update_vis=False)
+            model_uv.phase_to_time(np.mean(uv.time_array))
+
             uv.filename = [""]
             model_uv.filename = [""]
             uv.sum_vis(

@@ -21,6 +21,7 @@ def run_fftvis_sim(
     log_path=None,
     offset_timesteps=0,
     use_matvis=False,  # Simulate with matvis, THIS CURRENTLY DOESN'T WORK
+    precession_and_nutation_correction=False,  # Required for a previous version of fftvis
 ):
 
     if log_path is None:
@@ -68,7 +69,7 @@ def run_fftvis_sim(
         )
         uvd.set_lsts_from_time_array()
 
-    #uvd.set_uvws_from_antenna_positions(update_vis=False)
+    # uvd.set_uvws_from_antenna_positions(update_vis=False)
     uvd.phase_to_time(np.mean(uvd.time_array))  # Phase data
     uvd.flag_array = np.zeros(
         (uvd.Nblts, uvd.Nfreqs, uvd.Npols), dtype=bool
@@ -175,15 +176,21 @@ def run_fftvis_sim(
     if len(use_comp_inds) < model.Ncomponents:  # Remove nan-ed sources
         print("Removing nan flux values from input catalog.")
         model.select(component_inds=use_comp_inds)
-    # Perform a coordinate transformation to account for time-dependent precession and nutation
-    ra_new, dec_new = matvis.coordinates.equatorial_to_eci_coords(
-        model.ra.rad,
-        model.dec.rad,
-        np.mean(obstimes),
-        location,
-        unit="rad",
-        frame="icrs",
-    )
+
+    if (
+        precession_and_nutation_correction
+    ):  # Perform a coordinate transformation to account for time-dependent precession and nutation
+        ra_new, dec_new = matvis.coordinates.equatorial_to_eci_coords(
+            model.ra.rad,
+            model.dec.rad,
+            np.mean(obstimes),
+            location,
+            unit="rad",
+            frame="icrs",
+        )
+    else:
+        ra_new = model.ra.rad
+        dec_new = model.dec.rad
 
     # Run simulation
     with open(log_path, "a") as f:

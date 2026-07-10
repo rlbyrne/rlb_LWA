@@ -1,5 +1,9 @@
-from LWA_calibrate import calibration_pipeline, peel_sources
-from LWA_calibrate import peel_sources
+from LWA_calibrate import (
+    calibration_pipeline,
+    peel_sources,
+    get_model_visibilities,
+    image_data,
+)
 import pyuvdata
 import os
 import numpy as np
@@ -567,6 +571,83 @@ def selfcal_Jul6():
         apply_calibration=True,
         plot_images=True,
         peel=True,
+    )
+
+
+def debug_vis_modeling_Jul7():
+
+    get_model_visibilities(
+        model_visibility_mode="run simulation",
+        refresh_model=True,
+        include_diffuse=False,
+        model_vis_file="/fast/rbyrne/clean_comps_remodeled.ms",
+        data_file=f"/fast/rbyrne/20260419_055641-055832_44MHz_uvw_corrected.ms",
+        skymodel_path="/fast/rbyrne/20260419_055641-055832_44MHz_17h_cal_calibrated-sources.skyh5",
+        beam_path="/fast/rbyrne/OVRO_LWA_MROsoil_updatedheight.fits",
+    )
+
+
+def debug_vis_modeling_Jul8():
+
+    get_model_visibilities(
+        model_visibility_mode="run simulation",
+        refresh_model=True,
+        include_diffuse=False,
+        model_vis_file="/fast/rbyrne/clean_comps_start_phase.ms",
+        data_file=f"/fast/rbyrne/20260419_055641-055832_44MHz_start_phase.ms",
+        skymodel_path="/fast/rbyrne/bright_sources.skyh5",
+        beam_path="/fast/rbyrne/OVRO_LWA_MROsoil_updatedheight.fits",
+    )
+    image_data(
+        "/fast/rbyrne/clean_comps_start_phase",
+        "/fast/rbyrne/clean_comps_start_phase.ms",
+        niter=5000,
+    )
+    get_model_visibilities(
+        model_visibility_mode="run simulation",
+        refresh_model=True,
+        include_diffuse=False,
+        model_vis_file="/fast/rbyrne/clean_comps_center_phase.ms",
+        data_file=f"/fast/rbyrne/20260419_055641-055832_44MHz_center_phase.ms",
+        skymodel_path="/fast/rbyrne/bright_sources.skyh5",
+        beam_path="/fast/rbyrne/OVRO_LWA_MROsoil_updatedheight.fits",
+    )
+    image_data(
+        "/fast/rbyrne/clean_comps_center_phase",
+        "/fast/rbyrne/clean_comps_center_phase.ms",
+        niter=5000,
+    )
+
+
+def debug_vis_modeling_Jul8_part2():
+
+    get_model_visibilities(
+        model_visibility_mode="run simulation",
+        refresh_model=True,
+        include_diffuse=False,
+        model_vis_file="/fast/rbyrne/clean_comps_single_time.ms",
+        data_file=f"/fast/rbyrne/20260419_055641_uvw_corrected.ms",
+        skymodel_path="/fast/rbyrne/bright_sources.skyh5",
+        beam_path="/fast/rbyrne/OVRO_LWA_MROsoil_updatedheight.fits",
+    )
+    image_data(
+        "/fast/rbyrne/clean_comps_single_time",
+        "/fast/rbyrne/clean_comps_single_time.ms",
+        niter=5000,
+    )
+    get_model_visibilities(
+        model_visibility_mode="run simulation",
+        refresh_model=True,
+        include_diffuse=False,
+        model_vis_file="/fast/rbyrne/clean_comps_time_adjusted.ms",
+        data_file=f"/fast/rbyrne/20260419_055641_time_adjusted.ms",
+        skymodel_path="/fast/rbyrne/bright_sources.skyh5",
+        beam_path="/fast/rbyrne/OVRO_LWA_MROsoil_updatedheight.fits",
+    )
+    image_data(
+        "/fast/rbyrne/clean_comps_time_adjusted",
+        "/fast/rbyrne/clean_comps_time_adjusted.ms",
+        niter=5000,
     )
 
 
