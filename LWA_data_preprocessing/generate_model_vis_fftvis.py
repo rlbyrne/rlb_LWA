@@ -14,14 +14,15 @@ import socket
 
 
 def run_fftvis_sim(
-    catalog_path=None,
+    catalog=None,
     beam_path=None,
-    input_data_path=None,
+    input_data=None,
     output_path=None,
     log_path=None,
     offset_timesteps=0,
     use_matvis=False,  # Simulate with matvis, THIS CURRENTLY DOESN'T WORK
     precession_and_nutation_correction=False,  # Required for a previous version of fftvis
+    max_sources_per_chunk=1000,
 ):
 
     if log_path is None:
@@ -33,22 +34,22 @@ def run_fftvis_sim(
     with open(log_path, "w") as f:
         f.write("Starting fftvis simulation.\n")
         f.write(f"Running on {socket.gethostname()}")
-        f.write(f"Simulation skymodel: {catalog_path}\n")
+        f.write(f"Simulation skymodel: {catalog}\n")
         f.write(f"Simulation beam model: {beam_path}\n")
-        f.write(f"Simulation input datafile: {input_data_path}\n")
+        f.write(f"Simulation input datafile: {input_data}\n")
 
     # Read metadata from file
     with open(log_path, "a") as f:
         f.write("Reading data...\n")
 
-    if input_data_path.endswith(
+    if input_data.endswith(
         ".ms"
     ):  # Data reading doesn't automatically detect file type
         file_type = "ms"
     else:
         file_type = None
     uvd = pyuvdata.UVData.from_file(
-        input_data_path,
+        input_data,
         read_data=False,
         file_type=file_type,
         ignore_single_chan=False,
@@ -134,13 +135,13 @@ def run_fftvis_sim(
     # Get model
     with open(log_path, "a") as f:
         f.write("Reading the sky model...\n")
-    if catalog_path.endswith(".skyh5"):
-        model = pyradiosky.SkyModel.from_skyh5(catalog_path)
-    elif catalog_path.endswith(".sav"):
-        model = pyradiosky.SkyModel.from_fhd_catalog(catalog_path, expand_extended=True)
+    if catalog.endswith(".skyh5"):
+        model = pyradiosky.SkyModel.from_skyh5(catalog)
+    elif catalog.endswith(".sav"):
+        model = pyradiosky.SkyModel.from_fhd_catalog(catalog, expand_extended=True)
     else:
         model = pyradiosky.SkyModel()
-        model.read(catalog_path)
+        model.read(catalog)
     use_model_freq_array = np.copy(uvd.freq_array)
     if (
         model.spectral_type == "subband"
@@ -241,19 +242,34 @@ def run_fftvis_sim(
         for freq_ind in range(uvd.Nfreqs):
             with open(log_path, "a") as f:
                 f.write(f"Simulating frequency {freq_ind + 1}/{uvd.Nfreqs}.\n")
-            vis_full[freq_ind, :, :, :, :] = fftvis.simulate_vis(
-                telescope_loc=location,
-                ants=antpos,
-                baselines=antpairs,
-                fluxes=model.stokes[0].T.to_value("Jy"),
-                ra=ra_new,
-                dec=dec_new,
-                freqs=uvd.freq_array[[freq_ind]],
-                times=obstimes,
-                beam=uvb,
-                polarized=True,
-                precision=2,
-            )
+            start_source_ind = 0
+            while start_source_ind < model.Ncomponents:
+                end_source_ind = np.min(
+                    [
+                        start_source_ind + max_sources_per_chunk,
+                        len(model.Ncomponents) - 1,
+                    ]
+                )
+                vis_full_new = fftvis.simulate_vis(
+                    telescope_loc=location,
+                    ants=antpos,
+                    baselines=antpairs,
+                    fluxes=model.stokes[0].T.to_value("Jy")[
+                        start_source_ind : end_source_ind + 1
+                    ],
+                    ra=ra_new[start_source_ind : end_source_ind + 1],
+                    dec=dec_new[start_source_ind : end_source_ind + 1],
+                    freqs=uvd.freq_array[[freq_ind]],
+                    times=obstimes,
+                    beam=uvb,
+                    polarized=True,
+                    precision=2,
+                )
+                if start_source_ind == 0:
+                    vis_full[freq_ind, :, :, :, :] = vis_full_new
+                else:
+                    vis_full[freq_ind, :, :, :, :] += vis_full_new
+                start_source_ind += max_sources_per_chunk
         vis_full = vis_full.transpose([4, 1, 0, 2, 3]).reshape(
             (len(antpairs) * uvd.Ntimes, uvd.Nfreqs, 4)
         )
@@ -316,16 +332,16 @@ def run_fftvis_sim(
 if __name__ == "__main__":
 
     args = sys.argv
-    catalog_path = args[1]
+    catalog = args[1]
     beam_path = args[2]
-    input_data_path = args[3]
+    input_data = args[3]
     output_path = args[4]
     offset_timesteps = args[5]
 
     run_fftvis_sim(
-        catalog_path=catalog_path,
+        catalog=catalog,
         beam_path=beam_path,
-        input_data_path=input_data_path,
+        input_data=input_data,
         output_path=output_path,
         log_path=None,
         offset_timesteps=offset_timesteps,
