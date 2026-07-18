@@ -660,16 +660,40 @@ def selfcal_Jul10():
         cal_trial_name="selfcal",
         beam_path="/fast/rbyrne/OVRO_LWA_MROsoil_updatedheight.fits",
         skymodel_path="/lustre/rbyrne/2026-04-19/20260419_055641-055832_44MHz_17h_cal_calibrated-sources.skyh5",
-        run_aoflagger=True,
-        flag_antennas_from_autocorrs=True,
+        run_aoflagger=False,  # changed
+        flag_antennas_from_autocorrs=False,  # changed
         flag_antenna_list=[],
-        refresh_flags=True,
+        refresh_flags=False,  # changed
         refresh_calibration=True,
         plot_gains=True,
         flip_gain_conj=False,
         apply_calibration=True,
         plot_images=True,
         peel=True,
+        simulation_package="pyuvsim",
+    )
+
+
+def selfcal_Jul15():
+
+    calibration_pipeline(
+        f"/lustre/rbyrne/2026-04-19/20260419_055641-055832_44MHz_17h_cal_calibrated.ms",
+        output_dir="/lustre/rbyrne/2026-04-19",
+        tmp_dir="/fast/rbyrne",
+        cal_trial_name="selfcal_fftvis",
+        beam_path="/fast/rbyrne/OVRO_LWA_MROsoil_updatedheight.fits",
+        skymodel_path="/lustre/rbyrne/2026-04-19/20260419_055641-055832_44MHz_17h_cal_calibrated-sources.skyh5",
+        run_aoflagger=False,  # Changed
+        flag_antennas_from_autocorrs=False,  # Changed
+        flag_antenna_list=[],
+        refresh_flags=False,  # Changed
+        refresh_calibration=True,
+        plot_gains=True,
+        flip_gain_conj=False,
+        apply_calibration=True,
+        plot_images=True,
+        peel=True,
+        simulation_package="fftvis",
     )
 
 

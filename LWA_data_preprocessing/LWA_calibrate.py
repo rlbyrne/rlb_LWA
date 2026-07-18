@@ -125,7 +125,7 @@ def get_model_visibilities(
     skymodel_path=None,
     diffuse_skymodel_path=None,
     beam_path="/lustre/rbyrne/LWA_10to100_MROsoil_efields.fits",
-    simulation_package="pyuvsim",
+    simulation_package="fftvis",
 ):
     """
     model_visibility_mode : str
@@ -163,7 +163,7 @@ def get_model_visibilities(
         Required and used only if model_visibility_mode is "run simulation". Path
         to a pyuvdata-formatted beam fits file.
     simulation_package : str
-        Defines what simulation package to use. Used only if model_visibility_mode 
+        Defines what simulation package to use. Used only if model_visibility_mode
         is "run simulation". Options are "pyuvsim" or "fftvis" ("matvis" may be added
         in the future).
     """
@@ -324,12 +324,14 @@ def get_model_visibilities(
             )
             sys.exit(1)
 
-        if simulation_package == "pyuvdata":
+        if simulation_package == "pyuvsim":
             simulation_script = run_pyuvsim
-        elif simulation_package == "pyuvdata":
+        elif simulation_package == "fftvis":
             simulation_script = run_fftvis_sim
         else:
-            print(f"ERROR: Unknown option for simulation_package {simulation_package}. Exiting.")
+            print(
+                f"ERROR: Unknown option for simulation_package {simulation_package}. Exiting."
+            )
             sys.exit(1)
 
         if include_diffuse:
@@ -345,9 +347,9 @@ def get_model_visibilities(
             )
         else:
             simulation_script(
-                catalog_path=skymodel_path,
+                catalog=skymodel_path,
                 beam_path=beam_path,
-                input_data_path=data_file,
+                input_data=data_file,
                 output_path=compact_source_output_filepath,
             )
         if include_diffuse:
@@ -357,9 +359,9 @@ def get_model_visibilities(
                 )
             else:
                 simulation_script(
-                    catalog_path=diffuse_skymodel_path,
+                    catalog=diffuse_skymodel_path,
                     beam_path=beam_path,
-                    input_data_path=data_file,
+                    input_data=data_file,
                     output_path=diffuse_output_filepath,
                 )
             # Combine compact and diffuse models
@@ -734,6 +736,7 @@ def calibration_pipeline(
     refresh_flags: bool = False,
     refresh_model: bool = False,
     refresh_calibration: bool = False,
+    simulation_package: str = "fftvis",
     calibrate_with_casa: bool = False,
     casa_calibrate_script_path: str = "/opt/devel/rbyrne/rlb_LWA/LWA_data_preprocessing/casa_calibrate.py",
     min_cal_baseline_lambda: Optional[int] = 10,
@@ -805,6 +808,9 @@ def calibration_pipeline(
     refresh_calibration : bool
         If False, an existing .calfits file will be read and applied. If True, the calibration
         will be re-generated. Used only if apply_cal_path is None. Default False.
+    simulation_package : str
+        Defines what simulation package is used for visibility model. Options are "fftvis" or
+        "pyuvsim". Default "fftvis".
     calibrate_with_casa : bool
         If True, use CASA bandpass calibration. If False, use Calico. Default False.
         If CASA bandpass calibration is used, the data file will be modified by applying
@@ -966,6 +972,7 @@ def calibration_pipeline(
                 skymodel_path=skymodel_path,
                 diffuse_skymodel_path=diffuse_skymodel_path,
                 beam_path=beam_path,
+                simulation_package=simulation_package,
             )
 
         if calibrate_with_casa:
