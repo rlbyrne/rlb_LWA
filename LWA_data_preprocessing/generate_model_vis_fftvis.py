@@ -245,10 +245,7 @@ def run_fftvis_sim(
             start_source_ind = 0
             while start_source_ind < model.Ncomponents:
                 end_source_ind = np.min(
-                    [
-                        start_source_ind + max_sources_per_chunk,
-                        len(model.Ncomponents) - 1,
-                    ]
+                    [start_source_ind + max_sources_per_chunk, model.Ncomponents - 1]
                 )
                 vis_full_new = fftvis.simulate_vis(
                     telescope_loc=location,
@@ -265,10 +262,7 @@ def run_fftvis_sim(
                     polarized=True,
                     precision=2,
                 )
-                if start_source_ind == 0:
-                    vis_full[freq_ind, :, :, :, :] = vis_full_new
-                else:
-                    vis_full[freq_ind, :, :, :, :] += vis_full_new
+                vis_full[freq_ind, :, :, :, :] += vis_full_new
                 start_source_ind += max_sources_per_chunk
         vis_full = vis_full.transpose([4, 1, 0, 2, 3]).reshape(
             (len(antpairs) * uvd.Ntimes, uvd.Nfreqs, 4)
