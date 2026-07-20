@@ -262,7 +262,7 @@ def run_fftvis_sim(
                     polarized=True,
                     precision=2,
                 )
-                vis_full[freq_ind, :, :, :, :] += vis_full_new
+                vis_full[[freq_ind], :, :, :, :] += vis_full_new
                 start_source_ind += max_sources_per_chunk
         vis_full = vis_full.transpose([4, 1, 0, 2, 3]).reshape(
             (len(antpairs) * uvd.Ntimes, uvd.Nfreqs, 4)

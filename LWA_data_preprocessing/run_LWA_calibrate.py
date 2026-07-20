@@ -697,6 +697,26 @@ def selfcal_Jul15():
     )
 
 
+def test_autocorr_cal_Jul20():
+
+    calibration_pipeline(
+        f"/lustre/pipeline/cosmology/concatenated_data/44MHz/2026-04-19/05/20260419_055641-055832_44MHz.ms",
+        output_dir="/lustre/rbyrne/2026-04-19",
+        tmp_dir="/fast/rbyrne",
+        cal_trial_name="autocorr_cal",
+        apply_cal_path="/lustre/rbyrne/2026-04-19/20260419_055641-055832_44MHz_autocorr.calfits",
+        run_aoflagger=True,
+        flag_antennas_from_autocorrs=True,
+        flag_antenna_list=[],
+        refresh_flags=True,
+        plot_gains=False,
+        flip_gain_conj=True,
+        apply_calibration=True,
+        plot_images=True,
+        peel=True,
+    )
+
+
 if __name__ == "__main__":
     fn_name = sys.argv[1]
     fn = globals().get(fn_name)
