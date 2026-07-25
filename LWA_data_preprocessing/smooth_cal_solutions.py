@@ -7,7 +7,9 @@ def gain_phase_res_func(x, gain_phases, freq_array):
     fit_value = np.zeros_like(freq_array, dtype=float)
     for x_ind, x_val in enumerate(x):
         fit_value += x_val * freq_array**x_ind
-    dot_prod = np.cos(fit_value) * np.cos(gain_phases) + np.sin(fit_value) * np.sin(gain_phases)
+    dot_prod = np.cos(fit_value) * np.cos(gain_phases) + np.sin(fit_value) * np.sin(
+        gain_phases
+    )
     res = np.sum(np.abs(np.arccos(dot_prod)) ** 2)
     return res
 
@@ -67,8 +69,15 @@ def calculate_smoothed_solutions(cal, freq_array_hz, amp_deg=2, phase_deg=1):
 
     cal.select(frequencies=freq_array_hz)
 
-    amp_fit = np.zeros((amp_deg + 1, cal.Nants_data, cal.Ntimes, cal.Njones))
-    phase_fit = np.zeros((phase_deg + 1, cal.Nants_data, cal.Ntimes, cal.Njones))
+    if amp_deg is None:
+        amp_fit = None
+    else:
+        amp_fit = np.zeros((amp_deg + 1, cal.Nants_data, cal.Ntimes, cal.Njones))
+    if phase_deg is None:
+        phase_fit = None
+    else:
+        phase_fit = np.zeros((phase_deg + 1, cal.Nants_data, cal.Ntimes, cal.Njones))
+
     for ant_ind in range(cal.Nants_data):
         for time_ind in range(cal.Ntimes):
             for pol_ind in range(cal.Njones):
@@ -80,30 +89,32 @@ def calculate_smoothed_solutions(cal, freq_array_hz, amp_deg=2, phase_deg=1):
                 gains = gains[np.where(~flags)]
                 freqs_use = freq_array_hz[np.where(~flags)]
 
-                amp_fit[:, ant_ind, time_ind, pol_ind] = np.polyfit(
-                    freqs_use, np.abs(gains), amp_deg
-                )[::-1]
+                if amp_deg is not None:
+                    amp_fit[:, ant_ind, time_ind, pol_ind] = np.polyfit(
+                        freqs_use, np.abs(gains), amp_deg
+                    )[::-1]
 
-                branch_cut_loc = find_optimal_branch_cut_loc(np.angle(gains))
-                phase_fit_starting_guess = gain_phase_fit_search(
-                    np.angle(gains), freqs_use, branch_cut_loc=branch_cut_loc
-                )
-                gain_phases_residual = (
-                    np.angle(gains)
-                    - phase_fit_starting_guess[0]
-                    - phase_fit_starting_guess[1] * freqs_use
-                )
-                branch_cut_loc = find_optimal_branch_cut_loc(gain_phases_residual)
-                optimize_result = scipy.optimize.minimize(
-                    gain_phase_res_func,
-                    np.zeros(phase_deg + 1, dtype=float),
-                    args=(gain_phases_residual, freqs_use),
-                    method="Powell",
-                    tol=1e-6,
-                )
-                phase_fit_total = optimize_result.x
-                phase_fit_total[:2] += phase_fit_starting_guess
-                phase_fit[:, ant_ind, time_ind, pol_ind] = phase_fit_total
+                if phase_deg is not None:
+                    branch_cut_loc = find_optimal_branch_cut_loc(np.angle(gains))
+                    phase_fit_starting_guess = gain_phase_fit_search(
+                        np.angle(gains), freqs_use, branch_cut_loc=branch_cut_loc
+                    )
+                    gain_phases_residual = (
+                        np.angle(gains)
+                        - phase_fit_starting_guess[0]
+                        - phase_fit_starting_guess[1] * freqs_use
+                    )
+                    branch_cut_loc = find_optimal_branch_cut_loc(gain_phases_residual)
+                    optimize_result = scipy.optimize.minimize(
+                        gain_phase_res_func,
+                        np.zeros(phase_deg + 1, dtype=float),
+                        args=(gain_phases_residual, freqs_use),
+                        method="Powell",
+                        tol=1e-6,
+                    )
+                    phase_fit_total = optimize_result.x
+                    phase_fit_total[:2] += phase_fit_starting_guess
+                    phase_fit[:, ant_ind, time_ind, pol_ind] = phase_fit_total
 
     return amp_fit, phase_fit
 
@@ -114,16 +125,25 @@ def apply_smoothing(cal, amp_fit, phase_fit, inplace=False):
     for ant_ind in range(cal.Nants_data):
         for time_ind in range(cal.Ntimes):
             for pol_ind in range(cal.Njones):
-                gain_amps = np.zeros_like(cal.freq_array)
-                for deg, amp_fit_val in enumerate(
-                    amp_fit[:, ant_ind, time_ind, pol_ind]
-                ):
-                    gain_amps += amp_fit_val * cal.freq_array**deg
-                gain_phases = np.zeros_like(cal.freq_array)
-                for deg, phase_fit_val in enumerate(
-                    phase_fit[:, ant_ind, time_ind, pol_ind]
-                ):
-                    gain_phases += phase_fit_val * cal.freq_array**deg
+                if amp_fit is None:
+                    gain_amps = np.abs(cal.gain_array[ant_ind, :, time_ind, pol_ind])
+                else:
+                    gain_amps = np.zeros_like(cal.freq_array)
+                    for deg, amp_fit_val in enumerate(
+                        amp_fit[:, ant_ind, time_ind, pol_ind]
+                    ):
+                        gain_amps += amp_fit_val * cal.freq_array**deg
+
+                if phase_fit is None:
+                    gain_phases = np.angle(
+                        cal.gain_array[ant_ind, :, time_ind, pol_ind]
+                    )
+                else:
+                    gain_phases = np.zeros_like(cal.freq_array)
+                    for deg, phase_fit_val in enumerate(
+                        phase_fit[:, ant_ind, time_ind, pol_ind]
+                    ):
+                        gain_phases += phase_fit_val * cal.freq_array**deg
                 gains_smoothed[ant_ind, :, time_ind, pol_ind] = gain_amps * np.exp(
                     1j * gain_phases
                 )

@@ -1,9 +1,5 @@
-from LWA_calibrate import (
-    calibration_pipeline,
-    peel_sources,
-    get_model_visibilities,
-    image_data,
-)
+from LWA_calibrate import *
+from calico import calibration_wrappers
 import pyuvdata
 import os
 import numpy as np
@@ -683,11 +679,12 @@ def selfcal_Jul15():
         cal_trial_name="selfcal_fftvis",
         beam_path="/fast/rbyrne/OVRO_LWA_MROsoil_updatedheight.fits",
         skymodel_path="/lustre/rbyrne/2026-04-19/20260419_055641-055832_44MHz_17h_cal_calibrated-sources.skyh5",
-        run_aoflagger=False,  # Changed
-        flag_antennas_from_autocorrs=False,  # Changed
+        run_aoflagger=True,
+        flag_antennas_from_autocorrs=True,
         flag_antenna_list=[],
-        refresh_flags=False,  # Changed
+        refresh_flags=True,
         refresh_calibration=True,
+        refresh_model=False,
         plot_gains=True,
         flip_gain_conj=False,
         apply_calibration=True,
@@ -714,6 +711,102 @@ def test_autocorr_cal_Jul20():
         apply_calibration=True,
         plot_images=True,
         peel=True,
+    )
+
+
+def test_autocorr_cal_with_smoothing_Jul20():
+
+    calibration_pipeline(
+        f"/lustre/pipeline/cosmology/concatenated_data/44MHz/2026-04-19/05/20260419_055641-055832_44MHz.ms",
+        output_dir="/lustre/rbyrne/2026-04-19",
+        tmp_dir="/fast/rbyrne",
+        cal_trial_name="autocorr_cal_phase_smoothed",
+        apply_cal_path="/lustre/rbyrne/2026-04-19/20260419_055641-055832_44MHz_autocorr_phase_smoothed.calfits",
+        run_aoflagger=True,
+        flag_antennas_from_autocorrs=True,
+        flag_antenna_list=[],
+        refresh_flags=True,
+        plot_gains=False,
+        flip_gain_conj=True,
+        apply_calibration=True,
+        plot_images=True,
+        peel=True,
+    )
+
+
+def smoothed_cal_Jul24():
+
+    for width in [5, 7, 9, 21]:
+        calibration_pipeline(
+            f"/lustre/pipeline/cosmology/concatenated_data/44MHz/2026-04-19/05/20260419_055641-055832_44MHz.ms",
+            output_dir="/lustre/rbyrne/2026-04-19",
+            tmp_dir="/fast/rbyrne",
+            cal_trial_name=f"17h_smoothed_bh{width}",
+            run_aoflagger=True,
+            flag_antennas_from_autocorrs=True,
+            flag_antenna_list=[],
+            plot_gains=False,
+            apply_cal_path=f"/fast/rbyrne/calibration_2026-04-19_17h_smoothed_bh{width}.calfits",
+            flip_gain_conj=True,
+            apply_calibration=True,
+            smooth_cal=False,
+            plot_images=False,
+            peel=True,
+        )
+
+
+def selfcal_with_wsclean_Jul24():
+
+    # Run aoflagger
+    aoflagger_strategy_file = "/lustre/ghellbourg/AOFlagger_strat_opt/LWA_opt_GH1.lua"
+    use_datafile_path = "/fast/rbyrne/20260419_055641-055832_44MHz.ms"
+    subprocess.run(["aoquality", "remove", use_datafile_path], check=True)
+    subprocess.run(["aoquality", "collect", use_datafile_path], check=True)
+    subprocess.run(
+        ["aoflagger", "--strategy", aoflagger_strategy_file, use_datafile_path],
+        check=True,
+    )
+
+    # Re-image data to make sure clean components are properly created
+    image_data(
+        "/lustre/rbyrne/2026-04-19/20260419_055641-055832_44MHz_17h_cal_calibrated",
+        "/lustre/rbyrne/2026-04-19/20260419_055641-055832_44MHz_17h_cal_calibrated.ms",
+        niter=5000,
+    )
+
+    data = pyuvdata.UVData()
+    data.read(use_datafile_path, data_column="DATA")
+
+    model = pyuvdata.UVData()
+    model.read(
+        "/lustre/rbyrne/2026-04-19/20260419_055641-055832_44MHz_17h_cal_calibrated.ms",
+        data_column="MODEL_DATA",
+    )
+
+    flag_antenna_list_autocorrs = get_bad_antenna_list(2026, 4, 19)
+    flag_antennas(
+        data,
+        antenna_names=flag_antenna_list,
+        inplace=True,
+    )
+
+    uvcal = calibration_wrappers.sky_based_calibration_wrapper(
+        data,
+        model,
+        min_cal_baseline_lambda=10,
+        max_cal_baseline_lambda=125,
+        gains_multiply_model=True,
+        verbose=True,
+        get_crosspol_phase=False,
+        xtol=1e-6,
+        maxiter=200,
+        antenna_flagging_iterations=0,
+        parallel=False,
+        lambda_val=0,
+    )
+    uvcal.write_calfits(
+        f"/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal.calfits",
+        clobber=True,
     )
 
 

@@ -4,7 +4,11 @@ import os
 import pathlib
 import numpy as np
 
-obsids_list = ["20260419_055641-055832_44MHz_17h_cal_peeled"]
+obsids_list = [
+    "20260419_055641-055832_44MHz_autocorr_cal_peeled",
+    "20260419_055641-055832_44MHz_autocorr_cal_phase_smoothed_peeled",
+    "20260419_055641-055832_44MHz_17h_cal_calibrated_selfcal_fftvis_peeled",
+]
 versions_list = ["rlb_process_LWA_modified_kernel_Jun2026"]
 uvfits_path = "/fast/rbyrne"
 outdir = "/fast/rbyrne/fhd_outputs"
@@ -38,7 +42,9 @@ for obsid in obsids_list:
         if not os.path.isdir(f"{outdir}/fhd_{version}"):
             pathlib.Path(f"{outdir}/fhd_{version}").mkdir(parents=True, exist_ok=True)
         if not os.path.isdir(f"{outdir}/fhd_{version}/logs"):
-            pathlib.Path(f"{outdir}/fhd_{version}/logs").mkdir(parents=True, exist_ok=True)
+            pathlib.Path(f"{outdir}/fhd_{version}/logs").mkdir(
+                parents=True, exist_ok=True
+            )
 
         try:
             # Run FHD
@@ -81,4 +87,3 @@ for obsid in obsids_list:
 
     if tmp_dir is not None:
         os.system(f"rm {tmp_dir}/{obsid}.uvfits")
-

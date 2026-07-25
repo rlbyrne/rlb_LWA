@@ -1153,25 +1153,25 @@ def calibration_pipeline(
             image_data(
                 f"{use_output_dir}/{model_image}",
                 f"{use_output_dir}/{model_filename}",
-                niter=50000,
+                niter=5000,
             )
         if apply_calibration:  # Plot calibrated data
             image_data(
                 f"{use_output_dir}/{calibrated_data_image}",
                 f"{use_output_dir}/{calibrated_data_ms}",
-                niter=50000,
+                niter=5000,
             )
         if peel:  # Plot peeled data
             image_data(
                 f"{use_output_dir}/{peeled_image}",
                 f"{use_output_dir}/{peeled_ms}",
-                niter=50000,
+                niter=5000,
             )
         if apply_calibration and apply_cal_path is None:  # Plot residual
             image_data(
                 f"{use_output_dir}/{res_image}",
                 f"{use_output_dir}/{res_ms}",
-                niter=50000,
+                niter=5000,
             )
 
     if tmp_dir is not None:  # Move outputs
