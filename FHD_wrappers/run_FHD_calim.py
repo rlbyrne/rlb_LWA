@@ -4,12 +4,9 @@ import os
 import pathlib
 import numpy as np
 
-obsids_list = [
-    f"20260419_055641-055832_44MHz_17h_smoothed_bh{width}_peeled"
-    for width in [5, 7, 9, 21]
-]
-versions_list = ["rlb_process_LWA_modified_kernel_Jun2026"]
-uvfits_path = "/lustre/rbyrne/2026-04-19"
+obsids_list = ["20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_peeled"]
+versions_list = ["rlb_modified_kernel_freq_avg_Aug2026"]
+uvfits_path = "/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir"
 outdir = "/fast/rbyrne/fhd_outputs"
 tmp_dir = None
 run_fhd = True

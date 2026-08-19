@@ -328,6 +328,24 @@ pro fhd_versions_calim
         kernel_window = "Blackman-Harris^2"
     end
 
+    'rlb_modified_kernel_freq_avg_Aug2026': begin
+        recalculate_all = 1
+        instrument = 'lwa'
+        import_pyuvdata_beam_filepath = '/fast/rbyrne/OVRO_LWA_MROsoil_updatedheight.fits'
+        restrict_hpx_inds = 0
+        snapshot_healpix_export = 1
+        calibrate_visibilities = 0
+        return_cal_visibilities = 0
+        model_visibilities = 0
+        n_pol = 2
+        save_uvf = 1
+        beam_nfreq_avg = 1728  ;average beam
+        image_filter_fn = "filter_uv_natural"
+        ps_nfreq_avg = 2
+        n_avg = 2
+        kernel_window = "Blackman-Harris^2"
+    end
+
   endcase
 
   undefine, uvfits_subversion, uvfits_version

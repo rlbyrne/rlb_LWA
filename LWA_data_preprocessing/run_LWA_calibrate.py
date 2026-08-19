@@ -1182,6 +1182,213 @@ def selfcal_with_wsclean_and_gain_initialization_Aug3():
     )
 
 
+def explore_aoflagger_depth_Aug4():
+
+    strategy_file_list = [
+        #"/lustre/ghellbourg/AOFlagger_strat_opt/LWA_opt_GH1.lua",
+        "/fast/rbyrne/LWA_opt_trial1.lua",
+    ]
+    use_datafile_path = "/fast/rbyrne/20260419_055641-055832_44MHz.ms"
+    output_datafile_paths = [
+        #"/fast/rbyrne/20260419_055641-055832_44MHz_flagging_test4.ms",
+        "/fast/rbyrne/20260419_055641-055832_44MHz_flagging_test0p1.ms",
+    ]
+    flag_antenna_list = [
+        "LWA-266B",
+        "LWA-269B",
+        "LWA-282B",
+        "LWA-310B",
+        "LWA-341A",
+        "LWA-341B",
+        "LWA-255B",
+        "LWA-263A",
+        "LWA-263B",
+        "LWA-272A",
+        "LWA-272B",
+        "LWA-283A",
+        "LWA-280A",
+        "LWA-280B",
+        "LWA-288B",
+        "LWA-284A",
+        "LWA-292B",
+        "LWA-336A",
+        "LWA-336B",
+        "LWA-335A",
+        "LWA-004B",
+        "LWA-005B",
+        "LWA-040A",
+        "LWA-302A",
+        "LWA-302B",
+        "LWA-013B",
+        "LWA-016B",
+        "LWA-015A",
+        "LWA-015B",
+        "LWA-014A",
+        "LWA-014B",
+        "LWA-025A",
+        "LWA-348B",
+        "LWA-365A",
+        "LWA-365B",
+        "LWA-364A",
+        "LWA-364B",
+        "LWA-086A",
+        "LWA-086B",
+        "LWA-122A",
+        "LWA-334A",
+        "LWA-361A",
+        "LWA-068B",
+        "LWA-069A",
+        "LWA-252A",
+        "LWA-252B",
+        "LWA-289A",
+        "LWA-299B",
+        "LWA-107A",
+        "LWA-110A",
+        "LWA-112A",
+        "LWA-112B",
+        "LWA-111A",
+        "LWA-143B",
+        "LWA-124A",
+        "LWA-159A",
+        "LWA-224A",
+        "LWA-347A",
+        "LWA-167B",
+        "LWA-227B",
+        "LWA-329A",
+        "LWA-234A",
+        "LWA-206A",
+        "LWA-206B",
+        "LWA-210A",
+        "LWA-235B",
+        "LWA-342B",
+        "LWA-214B",
+        "LWA-221B",
+        "LWA-315A",
+    ]
+
+    for file_ind, strategy_file in enumerate(strategy_file_list):
+        output_datafile_path = output_datafile_paths[file_ind]
+        data = pyuvdata.UVData()
+        data.read(use_datafile_path)
+        data.flag_array[...] = False
+        flag_antennas(
+            data,
+            antenna_names=flag_antenna_list,
+            inplace=True,
+        )
+        data.write_ms(output_datafile_path)
+        subprocess.run(["aoquality", "remove", output_datafile_path], check=True)
+        subprocess.run(["aoquality", "collect", output_datafile_path], check=True)
+        subprocess.run(
+            ["aoflagger", "--strategy", strategy_file, output_datafile_path],
+            check=True,
+        )
+
+def apply_selfcal_with_deep_flagging_Aug6():
+
+    calibration_pipeline(
+        f"/lustre/pipeline/cosmology/concatenated_data/44MHz/2026-04-19/05/20260419_055641-055832_44MHz.ms",
+        output_dir="/lustre/rbyrne/2026-04-19",
+        tmp_dir="/fast/rbyrne",
+        cal_trial_name=f"wsclean_selfcal_deep_flagging",
+        run_aoflagger=True,
+        flag_antennas_from_autocorrs=False,
+        aoflagger_strategy_file="/fast/rbyrne/LWA_opt_trial1.lua",
+        flag_antenna_list=[
+            "LWA-266B",
+            "LWA-269B",
+            "LWA-282B",
+            "LWA-310B",
+            "LWA-341A",
+            "LWA-341B",
+            "LWA-255B",
+            "LWA-263A",
+            "LWA-263B",
+            "LWA-272A",
+            "LWA-272B",
+            "LWA-283A",
+            "LWA-280A",
+            "LWA-280B",
+            "LWA-288B",
+            "LWA-284A",
+            "LWA-292B",
+            "LWA-336A",
+            "LWA-336B",
+            "LWA-335A",
+            "LWA-004B",
+            "LWA-005B",
+            "LWA-040A",
+            "LWA-302A",
+            "LWA-302B",
+            "LWA-013B",
+            "LWA-016B",
+            "LWA-015A",
+            "LWA-015B",
+            "LWA-014A",
+            "LWA-014B",
+            "LWA-025A",
+            "LWA-348B",
+            "LWA-365A",
+            "LWA-365B",
+            "LWA-364A",
+            "LWA-364B",
+            "LWA-086A",
+            "LWA-086B",
+            "LWA-122A",
+            "LWA-334A",
+            "LWA-361A",
+            "LWA-068B",
+            "LWA-069A",
+            "LWA-252A",
+            "LWA-252B",
+            "LWA-289A",
+            "LWA-299B",
+            "LWA-107A",
+            "LWA-110A",
+            "LWA-112A",
+            "LWA-112B",
+            "LWA-111A",
+            "LWA-143B",
+            "LWA-124A",
+            "LWA-159A",
+            "LWA-224A",
+            "LWA-347A",
+            "LWA-167B",
+            "LWA-227B",
+            "LWA-329A",
+            "LWA-234A",
+            "LWA-206A",
+            "LWA-206B",
+            "LWA-210A",
+            "LWA-235B",
+            "LWA-342B",
+            "LWA-214B",
+            "LWA-221B",
+            "LWA-315A",
+        ],  # from http://obelix.rice.edu/~ai14/OVRO_LWA/
+        plot_gains=False,
+        apply_cal_path="/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal.calfits",
+        flip_gain_conj=False,
+        apply_calibration=True,
+        smooth_cal=False,
+        plot_images=False,
+        peel=True,
+    )
+
+def horizon_peeling_Aug13():
+
+    orig_uvfits = "/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_peeled.uvfits"
+    uv = pyuvdata.UVData()
+    uv.read(orig_uvfits)
+    time_array = list(set(uv.time_array))
+    ms_file_list = []
+    for time_ind, time in enumerate(time_array):
+        filepath = f"{orig_uvfits.strip('.uvfits')}_time{time_ind}.ms"
+        uv_single_time = uv.select(times=time, inplace=False)
+        uv_single_time.phase_to_time(time)
+        uv_single_time.write_ms(filepath, clobber=True)
+        ms_file_list.append(filepath)
+
 if __name__ == "__main__":
     fn_name = sys.argv[1]
     fn = globals().get(fn_name)
