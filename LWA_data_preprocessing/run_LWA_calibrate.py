@@ -1,5 +1,5 @@
 from LWA_calibrate import *
-from calico import calibration_wrappers
+from calico import calibration_wrappers, cost_function_calculations, caldata
 import pyuvdata
 import os
 import numpy as np
@@ -1185,12 +1185,12 @@ def selfcal_with_wsclean_and_gain_initialization_Aug3():
 def explore_aoflagger_depth_Aug4():
 
     strategy_file_list = [
-        #"/lustre/ghellbourg/AOFlagger_strat_opt/LWA_opt_GH1.lua",
+        # "/lustre/ghellbourg/AOFlagger_strat_opt/LWA_opt_GH1.lua",
         "/fast/rbyrne/LWA_opt_trial1.lua",
     ]
     use_datafile_path = "/fast/rbyrne/20260419_055641-055832_44MHz.ms"
     output_datafile_paths = [
-        #"/fast/rbyrne/20260419_055641-055832_44MHz_flagging_test4.ms",
+        # "/fast/rbyrne/20260419_055641-055832_44MHz_flagging_test4.ms",
         "/fast/rbyrne/20260419_055641-055832_44MHz_flagging_test0p1.ms",
     ]
     flag_antenna_list = [
@@ -1284,6 +1284,7 @@ def explore_aoflagger_depth_Aug4():
             check=True,
         )
 
+
 def apply_selfcal_with_deep_flagging_Aug6():
 
     calibration_pipeline(
@@ -1375,6 +1376,7 @@ def apply_selfcal_with_deep_flagging_Aug6():
         peel=True,
     )
 
+
 def horizon_peeling_Aug13():
 
     orig_uvfits = "/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_peeled.uvfits"
@@ -1388,6 +1390,152 @@ def horizon_peeling_Aug13():
         uv_single_time.phase_to_time(time)
         uv_single_time.write_ms(filepath, clobber=True)
         ms_file_list.append(filepath)
+
+
+def ddcal_modeling_Aug19():
+
+    get_model_visibilities(
+        model_visibility_mode="run simulation",
+        model_vis_file="/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir/20260419_055641-055832_44MHz_source_sim.ms",
+        include_diffuse=False,
+        data_file="/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_calibrated.ms",
+        skymodel_path="/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir/Gregg_20250519_VirA_model.skyh5",
+        beam_path="/fast/rbyrne/OVRO_LWA_MROsoil_updatedheight.fits",
+        simulation_package="fftvis",
+    )
+
+    get_model_visibilities(
+        model_visibility_mode="run simulation",
+        model_vis_file="/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir/20260419_055641-055832_44MHz_CasA_sim.ms",
+        include_diffuse=False,
+        data_file="/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_calibrated.ms",
+        skymodel_path="/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir/Gregg_20250519_CasA_model.skyh5",
+        beam_path="/fast/rbyrne/OVRO_LWA_MROsoil_updatedheight.fits",
+        simulation_package="fftvis",
+    )
+
+    get_model_visibilities(
+        model_visibility_mode="run simulation",
+        model_vis_file="/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir/20260419_055641-055832_44MHz_CygA_sim.ms",
+        include_diffuse=False,
+        data_file="/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_calibrated.ms",
+        skymodel_path="/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir/Gregg_20250519_CygA_model.skyh5",
+        beam_path="/fast/rbyrne/OVRO_LWA_MROsoil_updatedheight.fits",
+        simulation_package="fftvis",
+    )
+
+
+def test_ddcal_Aug19():
+
+    data_peeled, uvcal_list = calibration_wrappers.peeling_wrapper(
+        "/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir/20260419_055641-055832_44MHz_wsclean_selfcal_calibrated_1freq.ms",
+        [
+            "/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir/20260419_055641-055832_44MHz_VirA_sim_1freq.ms",
+            "/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir/20260419_055641-055832_44MHz_CasA_sim_1freq.ms",
+            # "/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir/20260419_055641-055832_44MHz_CygA_sim.ms",
+        ],
+        data_use_column="DATA",
+        model_use_column="DATA",
+        # gain_init_calfile="/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir/20260419_055641-055832_peeled_solution.calfits",
+        gain_init_to_vis_ratio=False,
+        gain_init_stddev=0,
+        # min_cal_baseline_lambda=10,
+        # max_cal_baseline_lambda=125,
+        min_cal_baseline_lambda=None,
+        max_cal_baseline_lambda=None,
+        verbose=True,
+        max_source_offset_deg=None,
+        source_offset_taper_deg=0.25,
+        parallel=True,
+        n_workers=5,
+        lambda_val=0,
+    )
+    uvcal_list[0].write_calfits(
+        "/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir/20260419_055641-055832_peeled_regularized_solution.calfits",
+        clobber=True,
+    )
+    data_peeled.write_ms(
+        "/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir/20260419_055641-055832_calico_peeled.ms",
+        fix_autos=True,
+        clobber=True,
+    )
+
+
+def test_skycal_Aug20():
+
+    cal = calibration_wrappers.sky_based_calibration_wrapper(
+        "/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir/20260419_055641-055832_44MHz_wsclean_selfcal_calibrated_1freq.ms",
+        "/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir/20260419_055641-055832_44MHz_VirA_sim_1freq.ms",
+        data_use_column="DATA",
+        model_use_column="DATA",
+        gain_init_to_vis_ratio=False,
+        min_cal_baseline_lambda=10,
+        max_cal_baseline_lambda=125,
+        verbose=True,
+        parallel=True,
+        n_workers=5,
+        antenna_flagging_iterations=0,
+        lambda_val=0,
+    )
+
+
+def compare_ddcal_and_skycal_Aug20():
+
+    data = pyuvdata.UVData()
+    data.read(
+        "/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir/20260419_055641-055832_44MHz_wsclean_selfcal_calibrated_1freq.ms",
+        ignore_single_chan=False,
+    )
+    model = pyuvdata.UVData()
+    model.read(
+        "/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir/20260419_055641-055832_44MHz_VirA_sim_1freq.ms",
+        ignore_single_chan=False,
+    )
+    caldata_obj = caldata.CalData()
+    caldata_obj.load_data(
+        data=data,
+        model=model,
+        gain_init_to_vis_ratio=False,
+        gains_multiply_model=True,
+        gain_init_stddev=0,
+        check_vis_ordering=True,
+        min_cal_baseline_lambda=10,
+        max_cal_baseline_lambda=125,
+        xtol=1e-5,
+        maxiter=200,
+        get_crosspol_phase=False,
+        lambda_val=0,
+        verbose=True,
+        parallel=False,
+    )
+    cost_skycal = cost_function_calculations.cost_skycal(
+        caldata_obj.gains,
+        caldata_obj.model_visibilities[:, :, :, :2],
+        caldata_obj.data_visibilities[:, :, :, :2],
+        caldata_obj.visibility_weights[:, :, :, :2],
+        caldata_obj.ant1_inds,
+        caldata_obj.ant2_inds,
+        caldata_obj.lambda_val,
+    )
+    cost_ddcal = cost_function_calculations.cost_ddcal(
+        caldata_obj.gains[:, :, :, np.newaxis],
+        caldata_obj.model_visibilities[:, :, :, :2, np.newaxis],
+        caldata_obj.data_visibilities[:, :, :, :2],
+        caldata_obj.visibility_weights[:, :, :, :2],
+        caldata_obj.ant1_inds,
+        caldata_obj.ant2_inds,
+        caldata_obj.lambda_val,
+        ddcal_max_source_offset_deg=None,
+    )
+    print(cost_skycal)
+    print(cost_ddcal)
+
+    caldata_obj_copy = caldata_obj.copy()
+    caldata_obj_copy.sky_based_calibration()
+
+    caldata_obj_copy = caldata_obj.copy()
+    caldata_obj_copy.direction_dependent_calibration()
+
 
 if __name__ == "__main__":
     fn_name = sys.argv[1]
