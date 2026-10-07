@@ -4,6 +4,8 @@ import pyuvdata
 import os
 import numpy as np
 import sys
+import time
+import pathlib
 
 
 def calibrate_Apr17():
@@ -1428,10 +1430,10 @@ def ddcal_modeling_Aug19():
 def test_ddcal_Aug19():
 
     data_peeled, uvcal_list = calibration_wrappers.peeling_wrapper(
-        "/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir/20260419_055641-055832_44MHz_wsclean_selfcal_calibrated_1freq.ms",
+        "/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_calibrated.ms",
         [
-            "/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir/20260419_055641-055832_44MHz_VirA_sim_1freq.ms",
-            "/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir/20260419_055641-055832_44MHz_CasA_sim_1freq.ms",
+            "/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir/20260419_055641-055832_44MHz_VirA_sim.ms",
+            "/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir/20260419_055641-055832_44MHz_CasA_sim.ms",
             # "/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir/20260419_055641-055832_44MHz_CygA_sim.ms",
         ],
         data_use_column="DATA",
@@ -1535,6 +1537,454 @@ def compare_ddcal_and_skycal_Aug20():
 
     caldata_obj_copy = caldata_obj.copy()
     caldata_obj_copy.direction_dependent_calibration()
+
+
+def applycal_Sep29():
+
+    subprocess.run(
+        [
+            "cp",
+            "-r",
+            "/lustre/pipeline/cosmology/concatenated_data/44MHz/2026-04-19/05/20260419_055641-055832_44MHz.ms",
+            "/fast/rbyrne/pipeline_tmp",
+        ],
+        check=True,
+    )
+    subprocess.run(
+        [
+            "cp",
+            "-r",
+            "/lustre/pipeline/calibration/results/2026-04-19/17h/successful/20260430_233320/tables/calibration_2026-04-19_17h.B.flagged",
+            "/fast/rbyrne/pipeline_tmp",
+        ],
+        check=True,
+    )
+
+    flag_antenna_list = [
+        "LWA-266B",
+        "LWA-269B",
+        "LWA-282B",
+        "LWA-310B",
+        "LWA-341A",
+        "LWA-341B",
+        "LWA-255B",
+        "LWA-263A",
+        "LWA-263B",
+        "LWA-272A",
+        "LWA-272B",
+        "LWA-283A",
+        "LWA-280A",
+        "LWA-280B",
+        "LWA-288B",
+        "LWA-284A",
+        "LWA-292B",
+        "LWA-336A",
+        "LWA-336B",
+        "LWA-335A",
+        "LWA-004B",
+        "LWA-005B",
+        "LWA-040A",
+        "LWA-302A",
+        "LWA-302B",
+        "LWA-013B",
+        "LWA-016B",
+        "LWA-015A",
+        "LWA-015B",
+        "LWA-014A",
+        "LWA-014B",
+        "LWA-025A",
+        "LWA-348B",
+        "LWA-365A",
+        "LWA-365B",
+        "LWA-364A",
+        "LWA-364B",
+        "LWA-086A",
+        "LWA-086B",
+        "LWA-122A",
+        "LWA-334A",
+        "LWA-361A",
+        "LWA-068B",
+        "LWA-069A",
+        "LWA-252A",
+        "LWA-252B",
+        "LWA-289A",
+        "LWA-299B",
+        "LWA-107A",
+        "LWA-110A",
+        "LWA-112A",
+        "LWA-112B",
+        "LWA-111A",
+        "LWA-143B",
+        "LWA-124A",
+        "LWA-159A",
+        "LWA-224A",
+        "LWA-347A",
+        "LWA-167B",
+        "LWA-227B",
+        "LWA-329A",
+        "LWA-234A",
+        "LWA-206A",
+        "LWA-206B",
+        "LWA-210A",
+        "LWA-235B",
+        "LWA-342B",
+        "LWA-214B",
+        "LWA-221B",
+        "LWA-315A",
+    ]
+
+    # Apply pipeline calibration
+    apply_cal_start = time.time()
+    calibration_pipeline(
+        "/fast/rbyrne/pipeline_tmp/20260419_055641-055832_44MHz.ms",
+        output_dir="/fast/rbyrne/pipeline_tmp",
+        tmp_dir=None,
+        cal_trial_name="17h_cal",
+        apply_cal_path="/fast/rbyrne/pipeline_tmp/calibration_2026-04-19_17h.B.flagged",
+        run_aoflagger=True,
+        aoflagger_strategy_file="/lustre/ghellbourg/AOFlagger_strat_opt/LWA_opt_GH1.lua",
+        flag_antennas_from_autocorrs=False,
+        flag_antenna_list=flag_antenna_list,
+        refresh_flags=True,
+        flip_gain_conj=True,
+        plot_gains=False,
+        apply_calibration=True,
+        smooth_cal=True,
+        plot_images=True,
+        peel=False,
+    )
+    with open("/fast/rbyrne/pipeline_tmp/timing_documentation.txt", "w") as f:
+        print(
+            f"Apply calibration time {(time.time() - apply_cal_start)/60.} minutes.",
+            file=f,
+        )
+
+
+def selfcal_Sept29():
+
+    selfcal_start = time.time()
+
+    data = pyuvdata.UVData()
+    data.read(
+        "/fast/rbyrne/pipeline_tmp/20260419_055641-055832_44MHz.ms", data_column="DATA"
+    )
+
+    model = pyuvdata.UVData()
+    model.read(
+        "/fast/rbyrne/pipeline_tmp/20260419_055641-055832_44MHz_17h_cal_calibrated.ms",
+        data_column="MODEL_DATA",
+    )
+
+    uvcal = calibration_wrappers.sky_based_calibration_wrapper(
+        data,
+        model,
+        min_cal_baseline_lambda=10,
+        max_cal_baseline_lambda=125,
+        gains_multiply_model=True,
+        verbose=True,
+        get_crosspol_phase=False,
+        xtol=1e-6,
+        maxiter=200,
+        antenna_flagging_iterations=0,
+        parallel=True,
+        lambda_val=0,
+    )
+    uvcal.write_calfits(
+        f"/fast/rbyrne/pipeline_tmp/20260419_055641-055832_44MHz_selfcal.calfits",
+        clobber=True,
+    )
+    with open("/fast/rbyrne/pipeline_tmp/timing_documentation.txt", "a") as f:
+        print(f"Selfcal time {(time.time() - selfcal_start)/60.} minutes.", file=f)
+
+
+def apply_selfcal_Sept29():
+
+    # Apply selfcal solution
+    apply_cal_start = time.time()
+    calibration_pipeline(
+        "/fast/rbyrne/pipeline_tmp/20260419_055641-055832_44MHz.ms",
+        output_dir="/fast/rbyrne/pipeline_tmp",
+        tmp_dir=None,
+        cal_trial_name="selfcal",
+        apply_cal_path="/fast/rbyrne/pipeline_tmp/20260419_055641-055832_44MHz_selfcal.calfits",
+        run_aoflagger=False,
+        flag_antennas_from_autocorrs=False,
+        refresh_flags=False,
+        flip_gain_conj=False,
+        plot_gains=False,
+        apply_calibration=True,
+        smooth_cal=True,
+        plot_images=True,
+        peel=True,
+    )
+    with open("/fast/rbyrne/pipeline_tmp/timing_documentation.txt", "a") as f:
+        print(
+            f"Apply selfcal and peel time {(time.time() - apply_cal_start)/60.} minutes.",
+            file=f,
+        )
+
+
+def process_Apr19_data_Oct7():
+
+    pipeline_calibration_path = "/fast/rbyrne/calibration_2026-04-19_17h.B.flagged"
+    flag_antenna_list = [
+        "LWA-266B",
+        "LWA-269B",
+        "LWA-282B",
+        "LWA-310B",
+        "LWA-341A",
+        "LWA-341B",
+        "LWA-255B",
+        "LWA-263A",
+        "LWA-263B",
+        "LWA-272A",
+        "LWA-272B",
+        "LWA-283A",
+        "LWA-280A",
+        "LWA-280B",
+        "LWA-288B",
+        "LWA-284A",
+        "LWA-292B",
+        "LWA-336A",
+        "LWA-336B",
+        "LWA-335A",
+        "LWA-004B",
+        "LWA-005B",
+        "LWA-040A",
+        "LWA-302A",
+        "LWA-302B",
+        "LWA-013B",
+        "LWA-016B",
+        "LWA-015A",
+        "LWA-015B",
+        "LWA-014A",
+        "LWA-014B",
+        "LWA-025A",
+        "LWA-348B",
+        "LWA-365A",
+        "LWA-365B",
+        "LWA-364A",
+        "LWA-364B",
+        "LWA-086A",
+        "LWA-086B",
+        "LWA-122A",
+        "LWA-334A",
+        "LWA-361A",
+        "LWA-068B",
+        "LWA-069A",
+        "LWA-252A",
+        "LWA-252B",
+        "LWA-289A",
+        "LWA-299B",
+        "LWA-107A",
+        "LWA-110A",
+        "LWA-112A",
+        "LWA-112B",
+        "LWA-111A",
+        "LWA-143B",
+        "LWA-124A",
+        "LWA-159A",
+        "LWA-224A",
+        "LWA-347A",
+        "LWA-167B",
+        "LWA-227B",
+        "LWA-329A",
+        "LWA-234A",
+        "LWA-206A",
+        "LWA-206B",
+        "LWA-210A",
+        "LWA-235B",
+        "LWA-342B",
+        "LWA-214B",
+        "LWA-221B",
+        "LWA-315A",
+    ]
+    use_frequencies = [
+        "34",
+        "44",
+        "52",
+        "62",
+        "72",
+        "79",
+        "83",
+    ]
+    date = "2026-04-19"
+    fhd_version = "rlb_process_LWA_modified_kernel_Jun2026"
+
+    filepaths = []
+    for use_freq in use_frequencies:
+        for use_hour in os.listdir(
+            f"/lustre/pipeline/cosmology/concatenated_data/{use_freq}MHz/{date}"
+        ):
+            for filename in os.listdir(
+                f"/lustre/pipeline/cosmology/concatenated_data/{use_freq}MHz/{date}/{use_hour}"
+            ):
+                filepaths.append(
+                    f"/lustre/pipeline/cosmology/concatenated_data/{use_freq}MHz/{date}/{use_hour}/{filename}"
+                )
+
+    for filepath in filepaths:
+        subprocess.run(
+            [
+                "cp",
+                "-r",
+                filepath,
+                "/fast/rbyrne/pipeline_tmp",
+            ],
+            check=True,
+        )
+        filename = os.path.basename(filepath)
+        filename_start = filename.split(".")[0]
+        new_filepath = f"/fast/rbyrne/pipeline_tmp/{filename}"
+
+        # Apply pipeline calibration
+        apply_cal_start = time.time()
+        calibration_pipeline(
+            new_filepath,
+            output_dir="/fast/rbyrne/pipeline_tmp",
+            tmp_dir=None,
+            cal_trial_name="17h_cal",
+            apply_cal_path=pipeline_calibration_path,
+            run_aoflagger=True,
+            aoflagger_strategy_file="/lustre/ghellbourg/AOFlagger_strat_opt/LWA_opt_GH1.lua",
+            flag_antennas_from_autocorrs=False,
+            flag_antenna_list=flag_antenna_list,
+            refresh_flags=True,
+            flip_gain_conj=True,
+            plot_gains=False,
+            apply_calibration=True,
+            smooth_cal=False,
+            plot_images=True,
+            peel=False,
+        )
+
+        # Run selfcal
+        data = pyuvdata.UVData()
+        data.read(new_filepath, data_column="DATA")
+        model = pyuvdata.UVData()
+        model.read(
+            f"/fast/rbyrne/pipeline_tmp/{filename_start}_17h_cal_calibrated.ms",
+            data_column="MODEL_DATA",
+        )
+        uvcal = calibration_wrappers.sky_based_calibration_wrapper(
+            data,
+            model,
+            min_cal_baseline_lambda=10,
+            max_cal_baseline_lambda=125,
+            gains_multiply_model=True,
+            verbose=True,
+            get_crosspol_phase=False,
+            xtol=1e-6,
+            maxiter=200,
+            antenna_flagging_iterations=0,
+            parallel=True,
+            lambda_val=0,
+        )
+        uvcal.write_calfits(
+            f"/fast/rbyrne/pipeline_tmp/{filename_start}_selfcal.calfits",
+            clobber=True,
+        )
+
+        # Apply selfcal
+        apply_cal_start = time.time()
+        calibration_pipeline(
+            new_filepath,
+            output_dir="/fast/rbyrne/pipeline_tmp",
+            tmp_dir=None,
+            cal_trial_name="selfcal",
+            apply_cal_path=f"/fast/rbyrne/pipeline_tmp/{filename_start}_selfcal.calfits",
+            run_aoflagger=False,
+            flag_antennas_from_autocorrs=False,
+            refresh_flags=False,
+            flip_gain_conj=False,
+            plot_gains=False,
+            apply_calibration=True,
+            smooth_cal=True,
+            plot_images=True,
+            peel=True,
+        )
+
+        uv = pyuvdata.UVData()
+        uv.read(f"/fast/rbyrne/pipeline_tmp/{filename_start}_selfcal_peeled.ms")
+        uv.write_uvfits(
+            f"/fast/rbyrne/pipeline_tmp/{filename_start}_selfcal_peeled.uvfits",
+            uvw_double=False,
+        )
+
+        # Run FHD and eppsilon
+        # Create directories
+        if not os.path.isdir(f"/fast/rbyrne/pipeline_tmp/fhd_{fhd_version}"):
+            pathlib.Path(f"/fast/rbyrne/pipeline_tmp/fhd_{fhd_version}").mkdir(
+                parents=True, exist_ok=True
+            )
+        if not os.path.isdir(f"/fast/rbyrne/pipeline_tmp/fhd_{fhd_version}/logs"):
+            pathlib.Path(f"/fast/rbyrne/pipeline_tmp/fhd_{fhd_version}/logs").mkdir(
+                parents=True, exist_ok=True
+            )
+        obsid = f"{filename_start}_selfcal_peeled"
+        use_outdir = use_uvfits_path = "/fast/rbyrne/pipeline_tmp"
+
+        # Define wrappers
+        fhd_versions_script = "fhd_versions_calim"
+        eppsilon_script = "ps_single_obs_wrapper"
+
+        # Set eppsilon options
+        refresh_ps = 1
+        uvf_input = 1
+        no_evenodd = 0  # Use this option if only one time step is present
+        xx_only = 0
+        float_colorbar = 1
+
+        try:
+            # Run FHD
+            if run_fhd:
+                with open(
+                    f"{outdir}/fhd_{fhd_version}/logs/{obsid}_fhd_stdout.txt", "wb"
+                ) as out, open(
+                    f"{outdir}/fhd_{fhd_version}/logs/{obsid}_fhd_stderr.txt", "wb"
+                ) as err:
+                    process = subprocess.Popen(
+                        shlex.split(
+                            f"/opt/devel/rbyrne/harris/idl88/bin/idl -e {fhd_versions_script} -args {use_outdir} {fhd_version} {use_uvfits_path}/{obsid}.uvfits"
+                        ),
+                        stdout=out,
+                        stderr=err,
+                    )
+                stdout, stderr = process.communicate()
+
+            # Run eppsilon
+            if run_eppsilon:
+                with open(
+                    f"{outdir}/fhd_{fhd_version}/logs/{obsid}_eppsilon_stdout.txt", "wb"
+                ) as out, open(
+                    f"{outdir}/fhd_{fhd_version}/logs/{obsid}_eppsilon_stderr.txt", "wb"
+                ) as err:
+                    process = subprocess.Popen(
+                        shlex.split(
+                            f"/opt/devel/rbyrne/harris/idl88/bin/idl -e {eppsilon_script} -args {obsid} {use_outdir} {fhd_version} {refresh_ps} {uvf_input} {no_evenodd} {xx_only} {float_colorbar}"
+                        ),
+                        stdout=out,
+                        stderr=err,
+                    )
+                stdout, stderr = process.communicate()
+        except:
+            pass
+
+        subprocess.run(
+            [
+                "sudo",
+                "rsync",
+                "-a",
+                "--remove-source-files",
+                "/fast/rbyrne/pipeline_tmp/",
+                "/lustre/21cmpipe/2026-04-19",
+            ],
+            check=True,
+        )
+        subprocess.run(
+            ["find", "/fast/rbyrne/pipeline_tmp/", "-type", "d", "-empty", "-delete"],
+            check=True,
+        )
 
 
 if __name__ == "__main__":
