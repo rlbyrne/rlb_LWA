@@ -4,10 +4,10 @@ import os
 import pathlib
 import numpy as np
 
-obsids_list = ["20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_peeled"]
-versions_list = ["rlb_modified_kernel_freq_avg_Aug2026"]
-uvfits_path = "/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir"
-outdir = "/fast/rbyrne/fhd_outputs"
+obsids_list = ["20260419_055641-055832_44MHz_selfcal_peeled", "20260419_055641-055832_44MHz_selfcal_horizon_peeled", ]
+versions_list = ["rlb_process_LWA_modified_kernel_Jun2026"]
+uvfits_path = "/fast/rbyrne/pipeline_tmp"
+outdir = "/fast/rbyrne/pipeline_tmp/fhd_outputs"
 tmp_dir = None
 run_fhd = True
 run_eppsilon = True

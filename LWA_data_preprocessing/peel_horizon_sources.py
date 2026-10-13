@@ -4,6 +4,7 @@ import bdsf
 from calico import calibration_wrappers
 from astropy.io import fits
 from astropy.wcs import WCS
+import time
 
 
 def get_pixel_az_za(x_pix, y_pix, header):
@@ -93,27 +94,43 @@ def peel_sources(uv, source_sim_list):
     data_peeled, uvcal_list = calibration_wrappers.peeling_wrapper(
         uv,
         source_sim_list,
+        check_vis_ordering=False,
         gain_init_to_vis_ratio=False,
-        gain_init_stddev=0.1,
-        min_cal_baseline_lambda=10,
-        max_cal_baseline_lambda=125,
+        gain_init_stddev=0,
+        min_cal_baseline_lambda=None,
+        max_cal_baseline_lambda=None,
         verbose=True,
-        max_source_offset_deg=None,
-        source_offset_taper_deg=0.25,
+        max_source_offset_deg=2,
+        source_offset_taper_deg=5,
         parallel=True,
-        n_workers=5,
+        n_workers=10,
         lambda_val=0,
+        multiscale_peel=True,
+        xtol=1e-5,
     )
     return data_peeled
 
 if __name__ == "__main__":
 
-    data_path = "/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir/20260419_055641-055832_calico_peeled.ms"
-    fits_path = "/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir/20260419_055641-055832_calico_peeled-dirty.fits"
-    output_path = "/fast/rbyrne/20260419_055641-055832_44MHz_wsclean_selfcal_deep_flagging_tmp_dir/20260419_055641-055832_calico_horizon_peeled.ms"
+    data_path = "/fast/rbyrne/pipeline_tmp/20260419_055641-055832_44MHz_selfcal_peeled.ms"
+    fits_path = "/fast/rbyrne/pipeline_tmp/20260419_055641-055832_44MHz_selfcal_peeled-dirty.fits"
+    output_path = "/fast/rbyrne/pipeline_tmp/20260419_055641-055832_44MHz_selfcal_horizon_peeled.ms"
+    extract_source_start = time.time()
     source_azimuths, source_fluxes = get_horizon_sources(fits_path)
+    with open("/fast/rbyrne/pipeline_tmp/timing_documentation.txt", "a") as f:
+        print(f"Get horizon sources time {(time.time() - extract_source_start)/60.} minutes.", file=f)
+    N_use_sources = 5
+    use_source_inds = np.argsort(source_fluxes)[::-1][:N_use_sources]
+
     uv = pyuvdata.UVData()
     uv.read(data_path, ignore_single_chan=False)
-    uv_list = simulate_horizon_sources(uv, source_azimuths, source_fluxes)
-    data_peeled = peel_sources(uv, uv_list)
-    data_peeled.write_ms(output_path)
+    for iter_ind, source_ind in enumerate(use_source_inds):
+        peel_source_start = time.time()
+        use_source_fluxes = source_fluxes[[source_ind]]
+        use_source_azimuths = source_azimuths[[source_ind]]
+        uv_list = simulate_horizon_sources(uv, use_source_azimuths, use_source_fluxes)
+        data_peeled = peel_sources(uv, uv_list)
+        data_peeled.write_ms(f"/fast/rbyrne/pipeline_tmp/20260419_055641-055832_44MHz_selfcal_horizon_peeled_iter{iter_ind}.ms", fix_autos=True, clobber=True)
+        uv = data_peeled
+        with open("/fast/rbyrne/pipeline_tmp/timing_documentation.txt", "a") as f:
+            print(f"Horizon source {iter_ind} peeling time {(time.time() - extract_source_start)/60.} minutes.", file=f)
