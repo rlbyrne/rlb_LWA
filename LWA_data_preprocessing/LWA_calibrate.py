@@ -547,7 +547,7 @@ def peel_sources(
     orig_ms_path,
     julia_path="/opt/devel/pipeline/envs/julia060/bin/julia",
     ttcal_path="/opt/devel/pipeline/envs/julia060/bin/ttcal.jl",
-    peel_sources_path="/home/pipeline/sources.json",
+    peel_sources_path="/home/gh/sources.json",
     peel_mode="peel",  # Options include "peel", "zest"
     beam="sine",  # Options include "sine", "constant"
     maxiter=5,
@@ -568,7 +568,7 @@ def peel_sources(
             filepath = f"{out_ms_path.strip('.ms')}_time{time_ind}.ms"
             uv_single_time = uv.select(times=time, inplace=False)
             uv_single_time.phase_to_time(time)
-            uv_single_time.write_ms(filepath, clobber=True)
+            uv_single_time.write_ms(filepath, clobber=True, fix_autos=True)
             ms_file_list.append(filepath)
     else:
         if out_ms_path != orig_ms_path:
@@ -605,7 +605,7 @@ def peel_sources(
             else:
                 uv.fast_concat(uv_new, "blt", inplace=True)
         uv.phase_to_time(np.mean(uv.time_array))
-        uv.write_ms(out_ms_path, clobber=True)
+        uv.write_ms(out_ms_path, clobber=True, fix_autos=True)
 
         # Delete temporary files
         if os.path.isdir(out_ms_path):
@@ -934,7 +934,7 @@ def calibration_pipeline(
         uv = pyuvdata.UVData()
         uv.read(use_datafile_path)
         uv.flag_array[:, :, :] = False
-        uv.write_ms(use_datafile_path, clobber=True)
+        uv.write_ms(use_datafile_path, clobber=True, fix_autos=True)
         uv = None
 
     if run_aoflagger:

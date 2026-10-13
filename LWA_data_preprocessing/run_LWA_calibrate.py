@@ -1726,6 +1726,7 @@ def apply_selfcal_Sept29():
 
 def process_Apr19_data_Oct7():
 
+    processing_path = "/fast/rbyrne/pipeline_tmp"
     pipeline_calibration_path = "/fast/rbyrne/calibration_2026-04-19_17h.B.flagged"
     flag_antenna_list = [
         "LWA-266B",
@@ -1824,24 +1825,37 @@ def process_Apr19_data_Oct7():
                 )
 
     for filepath in filepaths:
+
+        filename = os.path.basename(filepath)
+        filename_start = filename.split(".")[0]
+        new_filepath = f"/fast/rbyrne/pipeline_tmp/{filename}"
+        if os.path.isdir(
+            f"/lustre/21cmpipe/2026-04-19/{filename_start}_selfcal_peeled.ms"
+        ):  # Already run
+            continue
+        if not os.path.isdir(f"{processing_path}/"):
+            subprocess.run(
+                [
+                    "mkdir",
+                    f"{processing_path}/",
+                ],
+                check=True,
+            )
         subprocess.run(
             [
                 "cp",
                 "-r",
                 filepath,
-                "/fast/rbyrne/pipeline_tmp",
+                f"{processing_path}/",
             ],
             check=True,
         )
-        filename = os.path.basename(filepath)
-        filename_start = filename.split(".")[0]
-        new_filepath = f"/fast/rbyrne/pipeline_tmp/{filename}"
 
         # Apply pipeline calibration
         apply_cal_start = time.time()
         calibration_pipeline(
             new_filepath,
-            output_dir="/fast/rbyrne/pipeline_tmp",
+            output_dir=None,
             tmp_dir=None,
             cal_trial_name="17h_cal",
             apply_cal_path=pipeline_calibration_path,
@@ -1863,7 +1877,7 @@ def process_Apr19_data_Oct7():
         data.read(new_filepath, data_column="DATA")
         model = pyuvdata.UVData()
         model.read(
-            f"/fast/rbyrne/pipeline_tmp/{filename_start}_17h_cal_calibrated.ms",
+            f"{processing_path}/{filename_start}_17h_cal_calibrated.ms",
             data_column="MODEL_DATA",
         )
         uvcal = calibration_wrappers.sky_based_calibration_wrapper(
@@ -1881,7 +1895,7 @@ def process_Apr19_data_Oct7():
             lambda_val=0,
         )
         uvcal.write_calfits(
-            f"/fast/rbyrne/pipeline_tmp/{filename_start}_selfcal.calfits",
+            f"{processing_path}/{filename_start}_selfcal.calfits",
             clobber=True,
         )
 
@@ -1889,10 +1903,10 @@ def process_Apr19_data_Oct7():
         apply_cal_start = time.time()
         calibration_pipeline(
             new_filepath,
-            output_dir="/fast/rbyrne/pipeline_tmp",
+            output_dir=processing_path,
             tmp_dir=None,
             cal_trial_name="selfcal",
-            apply_cal_path=f"/fast/rbyrne/pipeline_tmp/{filename_start}_selfcal.calfits",
+            apply_cal_path=f"{processing_path}/{filename_start}_selfcal.calfits",
             run_aoflagger=False,
             flag_antennas_from_autocorrs=False,
             refresh_flags=False,
@@ -1905,24 +1919,24 @@ def process_Apr19_data_Oct7():
         )
 
         uv = pyuvdata.UVData()
-        uv.read(f"/fast/rbyrne/pipeline_tmp/{filename_start}_selfcal_peeled.ms")
+        uv.read(f"{processing_path}/{filename_start}_selfcal_peeled.ms")
         uv.write_uvfits(
-            f"/fast/rbyrne/pipeline_tmp/{filename_start}_selfcal_peeled.uvfits",
+            f"{processing_path}/{filename_start}_selfcal_peeled.uvfits",
             uvw_double=False,
         )
 
         # Run FHD and eppsilon
         # Create directories
-        if not os.path.isdir(f"/fast/rbyrne/pipeline_tmp/fhd_{fhd_version}"):
-            pathlib.Path(f"/fast/rbyrne/pipeline_tmp/fhd_{fhd_version}").mkdir(
+        if not os.path.isdir(f"{processing_path}/fhd_{fhd_version}"):
+            pathlib.Path(f"{processing_path}/fhd_{fhd_version}").mkdir(
                 parents=True, exist_ok=True
             )
-        if not os.path.isdir(f"/fast/rbyrne/pipeline_tmp/fhd_{fhd_version}/logs"):
-            pathlib.Path(f"/fast/rbyrne/pipeline_tmp/fhd_{fhd_version}/logs").mkdir(
+        if not os.path.isdir(f"{processing_path}/fhd_{fhd_version}/logs"):
+            pathlib.Path(f"{processing_path}/fhd_{fhd_version}/logs").mkdir(
                 parents=True, exist_ok=True
             )
         obsid = f"{filename_start}_selfcal_peeled"
-        use_outdir = use_uvfits_path = "/fast/rbyrne/pipeline_tmp"
+        use_outdir = use_uvfits_path = f"{processing_path}"
 
         # Define wrappers
         fhd_versions_script = "fhd_versions_calim"
@@ -1935,40 +1949,35 @@ def process_Apr19_data_Oct7():
         xx_only = 0
         float_colorbar = 1
 
-        try:
-            # Run FHD
-            if run_fhd:
-                with open(
-                    f"{outdir}/fhd_{fhd_version}/logs/{obsid}_fhd_stdout.txt", "wb"
-                ) as out, open(
-                    f"{outdir}/fhd_{fhd_version}/logs/{obsid}_fhd_stderr.txt", "wb"
-                ) as err:
-                    process = subprocess.Popen(
-                        shlex.split(
-                            f"/opt/devel/rbyrne/harris/idl88/bin/idl -e {fhd_versions_script} -args {use_outdir} {fhd_version} {use_uvfits_path}/{obsid}.uvfits"
-                        ),
-                        stdout=out,
-                        stderr=err,
-                    )
-                stdout, stderr = process.communicate()
+        # Run FHD
+        with open(
+            f"{outdir}/fhd_{fhd_version}/logs/{obsid}_fhd_stdout.txt", "wb"
+        ) as out, open(
+            f"{outdir}/fhd_{fhd_version}/logs/{obsid}_fhd_stderr.txt", "wb"
+        ) as err:
+            process = subprocess.Popen(
+                shlex.split(
+                    f"/opt/devel/rbyrne/harris/idl88/bin/idl -e {fhd_versions_script} -args {use_outdir} {fhd_version} {use_uvfits_path}/{obsid}.uvfits"
+                ),
+                stdout=out,
+                stderr=err,
+            )
+        stdout, stderr = process.communicate()
 
-            # Run eppsilon
-            if run_eppsilon:
-                with open(
-                    f"{outdir}/fhd_{fhd_version}/logs/{obsid}_eppsilon_stdout.txt", "wb"
-                ) as out, open(
-                    f"{outdir}/fhd_{fhd_version}/logs/{obsid}_eppsilon_stderr.txt", "wb"
-                ) as err:
-                    process = subprocess.Popen(
-                        shlex.split(
-                            f"/opt/devel/rbyrne/harris/idl88/bin/idl -e {eppsilon_script} -args {obsid} {use_outdir} {fhd_version} {refresh_ps} {uvf_input} {no_evenodd} {xx_only} {float_colorbar}"
-                        ),
-                        stdout=out,
-                        stderr=err,
-                    )
-                stdout, stderr = process.communicate()
-        except:
-            pass
+        # Run eppsilon
+        with open(
+            f"{outdir}/fhd_{fhd_version}/logs/{obsid}_eppsilon_stdout.txt", "wb"
+        ) as out, open(
+            f"{outdir}/fhd_{fhd_version}/logs/{obsid}_eppsilon_stderr.txt", "wb"
+        ) as err:
+            process = subprocess.Popen(
+                shlex.split(
+                    f"/opt/devel/rbyrne/harris/idl88/bin/idl -e {eppsilon_script} -args {obsid} {use_outdir} {fhd_version} {refresh_ps} {uvf_input} {no_evenodd} {xx_only} {float_colorbar}"
+                ),
+                stdout=out,
+                stderr=err,
+            )
+        stdout, stderr = process.communicate()
 
         subprocess.run(
             [
@@ -1976,13 +1985,13 @@ def process_Apr19_data_Oct7():
                 "rsync",
                 "-a",
                 "--remove-source-files",
-                "/fast/rbyrne/pipeline_tmp/",
+                f"{processing_path}/",
                 "/lustre/21cmpipe/2026-04-19",
             ],
             check=True,
         )
         subprocess.run(
-            ["find", "/fast/rbyrne/pipeline_tmp/", "-type", "d", "-empty", "-delete"],
+            ["find", f"{processing_path}/", "-type", "d", "-empty", "-delete"],
             check=True,
         )
 
