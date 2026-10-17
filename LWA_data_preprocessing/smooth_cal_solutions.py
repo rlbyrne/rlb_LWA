@@ -10,7 +10,7 @@ def gain_phase_res_func(x, gain_phases, freq_array):
     dot_prod = np.cos(fit_value) * np.cos(gain_phases) + np.sin(fit_value) * np.sin(
         gain_phases
     )
-    res = np.sum(np.abs(np.arccos(dot_prod)) ** 2)
+    res = np.nansum(np.abs(np.arccos(dot_prod)) ** 2)
     return res
 
 
@@ -77,6 +77,8 @@ def calculate_smoothed_solutions(cal, freq_array_hz, amp_deg=2, phase_deg=1):
         phase_fit = None
     else:
         phase_fit = np.zeros((phase_deg + 1, cal.Nants_data, cal.Ntimes, cal.Njones))
+
+    cal.flag_array[np.where(~np.isfinite(cal.gain_array))] = True
 
     for ant_ind in range(cal.Nants_data):
         for time_ind in range(cal.Ntimes):
