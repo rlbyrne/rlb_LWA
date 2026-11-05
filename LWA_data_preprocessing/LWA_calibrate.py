@@ -547,7 +547,7 @@ def peel_sources(
     orig_ms_path,
     julia_path="/opt/devel/pipeline/envs/julia060/bin/julia",
     ttcal_path="/opt/devel/pipeline/envs/julia060/bin/ttcal.jl",
-    peel_sources_path="/home/gh/sources.json",
+    peel_sources_path="/home/pipeline/sources.json", # Also tried "/home/gh/sources.json" but it crashed
     peel_mode="peel",  # Options include "peel", "zest"
     beam="sine",  # Options include "sine", "constant"
     maxiter=5,
@@ -561,9 +561,9 @@ def peel_sources(
         uv.read(orig_ms_path)
         Ntimes = uv.Ntimes
 
+    ms_file_list = []
     if Ntimes != 1:  # Need to split file into individual times
         time_array = list(set(uv.time_array))
-        ms_file_list = []
         for time_ind, time in enumerate(time_array):
             filepath = f"{out_ms_path.strip('.ms')}_time{time_ind}.ms"
             uv_single_time = uv.select(times=time, inplace=False)

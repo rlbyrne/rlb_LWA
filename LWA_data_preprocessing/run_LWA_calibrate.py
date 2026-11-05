@@ -6,6 +6,7 @@ import numpy as np
 import sys
 import time
 import pathlib
+import shlex
 
 
 def calibrate_Apr17():
@@ -1951,9 +1952,9 @@ def process_Apr19_data_Oct7():
 
         # Run FHD
         with open(
-            f"{outdir}/fhd_{fhd_version}/logs/{obsid}_fhd_stdout.txt", "wb"
+            f"{use_outdir}/fhd_{fhd_version}/logs/{obsid}_fhd_stdout.txt", "wb"
         ) as out, open(
-            f"{outdir}/fhd_{fhd_version}/logs/{obsid}_fhd_stderr.txt", "wb"
+            f"{use_outdir}/fhd_{fhd_version}/logs/{obsid}_fhd_stderr.txt", "wb"
         ) as err:
             process = subprocess.Popen(
                 shlex.split(
@@ -1966,9 +1967,9 @@ def process_Apr19_data_Oct7():
 
         # Run eppsilon
         with open(
-            f"{outdir}/fhd_{fhd_version}/logs/{obsid}_eppsilon_stdout.txt", "wb"
+            f"{use_outdir}/fhd_{fhd_version}/logs/{obsid}_eppsilon_stdout.txt", "wb"
         ) as out, open(
-            f"{outdir}/fhd_{fhd_version}/logs/{obsid}_eppsilon_stderr.txt", "wb"
+            f"{use_outdir}/fhd_{fhd_version}/logs/{obsid}_eppsilon_stderr.txt", "wb"
         ) as err:
             process = subprocess.Popen(
                 shlex.split(
@@ -1994,6 +1995,35 @@ def process_Apr19_data_Oct7():
             ["find", f"{processing_path}/", "-type", "d", "-empty", "-delete"],
             check=True,
         )
+
+def check_Oct22_data_Nov4():
+
+    calibration_pipeline(
+        "/fast/rbyrne/20261022_120001_64MHz.ms",
+        output_dir="/fast/rbyrne",
+        cal_trial_name="04h_cal",
+        run_aoflagger=True,
+        flag_antennas_from_autocorrs=True,
+        apply_cal_path="/lustre/pipeline/calibration/results/2026-10-22/04h/successful/20261022_101503/tables/calibration_2026-10-22_04h.B.flagged",
+        flip_gain_conj=True,
+        apply_calibration=True,
+        smooth_cal=False,
+        plot_images=True,
+        peel=True,
+    )
+    calibration_pipeline(
+        "/fast/rbyrne/20261022_120001_64MHz.ms",
+        output_dir="/fast/rbyrne",
+        cal_trial_name="05h_cal",
+        run_aoflagger=True,
+        flag_antennas_from_autocorrs=True,
+        apply_cal_path="/lustre/pipeline/calibration/results/2026-10-22/05h/successful/20261022_132848/tables/calibration_2026-10-22_05h.B.flagged",
+        flip_gain_conj=True,
+        apply_calibration=True,
+        smooth_cal=False,
+        plot_images=True,
+        peel=True,
+    )
 
 
 if __name__ == "__main__":

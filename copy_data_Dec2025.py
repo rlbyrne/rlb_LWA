@@ -95,13 +95,15 @@ def copy_data(
         "78",
         "82",
     ],
-    lst_ranges=[
-        #[11.88, 14.88],  # 3 hours of cosmology data
-        #[17.38, 17.88],  # half an hour of calibration data
-        [12.88, 15.88],  # 3 hours of cosmology data
-        [20.38, 20.88],  # half an hour of calibration data
-    ],
-    use_dates=None,
+    #lst_ranges=[
+    #    #[11.88, 14.88],  # 3 hours of cosmology data
+    #    #[17.38, 17.88],  # half an hour of calibration data
+    #    [12.88, 15.88],  # 3 hours of cosmology data
+    #    [20.38, 20.88],  # half an hour of calibration data
+    #],
+    lst_ranges=None,
+    utc_ranges=[["110000", "140000"]],
+    use_dates="2026-10-22",
 ):
 
     copy_paths = []
@@ -111,8 +113,10 @@ def copy_data(
             dates = [date for date in dates if date in use_dates]
         for date in dates:
 
-            # Convert from LST to UTC
-            time_ranges = get_utc_from_lst(lst_ranges, date, longitude_deg=-118.3)
+            if lst_ranges is None:
+                time_ranges = utc_ranges
+            else:  # Convert from LST to UTC
+                time_ranges = get_utc_from_lst(lst_ranges, date, longitude_deg=-118.3)
 
             hours = np.sort(os.listdir(f"{source_dir}/{freq}MHz/{date}"))
             for hour in hours:
@@ -140,11 +144,11 @@ def copy_data(
     )
 
 
-schedule.every().hour.do(copy_data)
+#schedule.every().hour.do(copy_data)
 
-while True:
-    schedule.run_pending()
-    time.sleep(60) # wait one minute
+#while True:
+#    schedule.run_pending()
+#    time.sleep(60) # wait one minute
 
-#if __name__=="__main__":
-#    copy_data()
+if __name__=="__main__":
+    copy_data()
