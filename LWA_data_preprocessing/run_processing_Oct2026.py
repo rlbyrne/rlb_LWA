@@ -138,12 +138,12 @@ def process_data():
     ]
     use_frequencies = [
         "34",
-        "44",
-        "52",
-        "62",
-        "72",
-        "79",
-        "83",
+        #"44",
+        #"52",
+        #"62",
+        #"72",
+        #"79",
+        #"83",
     ]
     date = "2026-10-22"
     fhd_version = "rlb_process_LWA_modified_kernel_Jun2026"
