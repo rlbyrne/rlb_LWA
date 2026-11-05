@@ -54,6 +54,43 @@ def ensure_dir(path):
         subprocess.run(["sudo", "chmod", "a+w", path], check=True)
 
 
+REQUIRED_MS_TABLES = (
+    "ANTENNA",
+    "DATA_DESCRIPTION",
+    "FIELD",
+    "OBSERVATION",
+    "POLARIZATION",
+    "SPECTRAL_WINDOW",
+)
+
+
+def missing_ms_tables(path):
+    """Return the tables missing from an MS directory (empty list if it looks complete)."""
+    missing = []
+    if not os.path.isfile(os.path.join(path, "table.dat")):
+        missing.append("main table")
+    for name in REQUIRED_MS_TABLES:
+        if not os.path.isfile(os.path.join(path, name, "table.dat")):
+            missing.append(name)
+    return missing
+
+
+def ms_problem(path):
+    """Return a description of what is wrong with an MS, or None if it looks fine.
+
+    Checks that the expected tables exist, then reads the metadata with pyuvdata
+    (the same code path that fails when you open the file later).
+    """
+    missing = missing_ms_tables(path)
+    if missing:
+        return f"missing {missing}"
+    try:
+        pyuvdata.UVData().read(path, read_data=False)
+    except Exception as e:
+        return f"not readable by pyuvdata: {e!r}"
+    return None
+
+
 def find_data_paths(orig_dir, freq_labels, date):
     """Find .ms directories and .ms.tar files under {orig_dir}/{freq}MHz/{date}.
 
@@ -236,15 +273,24 @@ def concatenate_files(
 ):
     output_filename = get_output_filename(data_dict, use_inds, output_freq, output_dir)
 
-    if not refresh and os.path.isdir(output_filename):
-        print(f"File {output_filename} already exists. Skipping.")
-        return STATUS_EXISTS
+    if os.path.isdir(output_filename):
+        problem = ms_problem(output_filename)
+        if problem:
+            print(
+                f"WARNING: Existing {output_filename} is bad ({problem}). "
+                "It will be rewritten."
+            )
+            refresh = True
+        elif not refresh:
+            print(f"File {output_filename} already exists. Skipping.")
+            return STATUS_EXISTS
 
     filepaths = [data_dict["paths"][ind] for ind in use_inds]
     frequencies = data_dict["freqs"][use_inds]
     times = data_dict["times"][use_inds]
 
     work_dir = None  # Private per-call directory; removed in the finally block
+    keep_work_dir = False  # Set when a bad output should be kept for inspection
     try:
         if tmp_dir is None:
             use_filepaths = filepaths
@@ -302,25 +348,46 @@ def concatenate_files(
         if tmp_dir is None:
             ensure_dir(outdir)
             uv.write_ms(output_filename, clobber=True)
-            if not os.path.isdir(output_filename):
-                print(f"Error writing file {output_filename}.")
+            problem = ms_problem(output_filename)
+            if problem:
+                print(f"Error writing file {output_filename}: {problem}.")
                 return STATUS_ERROR
         else:
             tmp_output = get_output_filename(
                 data_dict, use_inds, output_freq, work_dir, is_tmp_dir=True
             )
             uv.write_ms(tmp_output, clobber=True)
-            if not os.path.isdir(tmp_output):
-                print(f"Error writing file {tmp_output}.")
+            problem = ms_problem(tmp_output)
+            if problem:
+                # Keep the bad file so it can be inspected
+                keep_work_dir = True
+                print(f"Error: just-written {tmp_output} is bad ({problem}). Kept for inspection.")
                 return STATUS_ERROR
 
             ensure_dir(outdir)
-            if refresh and os.path.isdir(output_filename):
-                subprocess.run(["sudo", "rm", "-r", output_filename], check=True)
-            subprocess.run(["mv", tmp_output, outdir], check=True)
-            if not os.path.isdir(output_filename):
-                print(f"Error moving file to {output_filename}.")
-                return STATUS_ERROR
+            # A cross-filesystem mv is copy-then-delete and is not atomic. Move to a
+            # hidden temporary name on the destination filesystem, verify it, then
+            # rename into place (atomic within one filesystem), so the final name
+            # never refers to a half-copied MS.
+            partial = os.path.join(outdir, f".{os.path.basename(output_filename)}.partial")
+            try:
+                if os.path.isdir(partial):
+                    shutil.rmtree(partial)
+                subprocess.run(["mv", tmp_output, partial], check=True)
+                problem = ms_problem(partial)
+                if problem:
+                    keep_work_dir = True
+                    print(
+                        f"Error: {tmp_output} was fine but the copy at {partial} "
+                        f"is bad ({problem})."
+                    )
+                    return STATUS_ERROR
+                if os.path.isdir(output_filename):
+                    subprocess.run(["sudo", "rm", "-r", output_filename], check=True)
+                os.rename(partial, output_filename)
+            finally:
+                if os.path.isdir(partial):
+                    shutil.rmtree(partial, ignore_errors=True)
 
         print(f"New file written to {output_filename}")
         return STATUS_SUCCESS
@@ -330,7 +397,7 @@ def concatenate_files(
         return STATUS_ERROR
     finally:
         # Removes the copied inputs and any partial output, however we exit
-        if work_dir is not None:
+        if work_dir is not None and not keep_work_dir:
             shutil.rmtree(work_dir, ignore_errors=True)
 
 
