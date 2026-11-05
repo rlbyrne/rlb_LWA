@@ -572,7 +572,9 @@ def peel_sources(
             ms_file_list.append(filepath)
     else:
         if out_ms_path != orig_ms_path:
-            subprocess.run(["cp", "-r", orig_ms_path, out_ms_path], check=True)
+            if os.path.isdir(out_ms_path):  # Replace ms file
+                subprocess.run(["sudo", "rm", "-rf", out_ms_path], check=True)
+            subprocess.run(["cp", "-r", orig_ms_path, out_ms_path], check=True)  # Initialized peeled file
         ms_file_list.append(out_ms_path)
 
     for filepath in ms_file_list:
@@ -595,6 +597,10 @@ def peel_sources(
             ],
             check=True,
         )
+        subprocess.run(
+            ["sudo", "chown", "-R", f"{os.getuid()}:{os.getgid()}", filepath],
+            check=True,
+        )  # Fix file ownership
 
     if Ntimes != 1:
         for file_ind, filepath in enumerate(ms_file_list):
