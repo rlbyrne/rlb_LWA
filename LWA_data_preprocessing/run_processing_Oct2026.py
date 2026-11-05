@@ -15,7 +15,7 @@ import pyuvdata
 #   calibration_pipeline, calibration_wrappers
 
 PROCESSING_PATH = "/fast/rbyrne/pipeline_tmp"
-FINAL_PATH = "/lustre/21cmpipe/2026-04-19"
+FINAL_PATH = "/lustre/21cmpipe/2026-10-22"
 IDL_BIN = "/opt/devel/rbyrne/harris/idl88/bin/idl"
 
 
@@ -57,12 +57,13 @@ def run_idl_logged(command, stdout_path, stderr_path):
     return process.returncode
 
 
-def process_Apr19_data_Oct7():
+def process_data():
 
     processing_path = PROCESSING_PATH
     final_path = FINAL_PATH
     search_roots = [processing_path, final_path]
-    pipeline_calibration_path = "/fast/rbyrne/calibration_2026-04-19_17h.B.flagged"
+    #pipeline_calibration_path = "/fast/rbyrne/calibration_2026-04-19_17h.B.flagged"
+    pipeline_calibration_path = "/lustre/pipeline/calibration/results/2026-10-22/05h/successful/20261022_132848/tables/calibration_2026-10-22_05h.B.flagged"
     flag_antenna_list = [
         "LWA-266B",
         "LWA-269B",
@@ -144,7 +145,7 @@ def process_Apr19_data_Oct7():
         "79",
         "83",
     ]
-    date = "2026-04-19"
+    date = "2026-10-22"
     fhd_version = "rlb_process_LWA_modified_kernel_Jun2026"
 
     # Collect input files
@@ -172,7 +173,7 @@ def process_Apr19_data_Oct7():
         # NOTE: the FHD and eppsilon patterns are my best guess at the usual
         # output layout; adjust them if your outputs are named differently.
         # ------------------------------------------------------------------
-        cal_ms_rel = f"{filename_start}_17h_cal_calibrated.ms"
+        cal_ms_rel = f"{filename_start}_05h_cal_calibrated.ms"
         selfcal_calfits_rel = f"{filename_start}_selfcal.calfits"
         peeled_ms_rel = f"{obsid}.ms"
         uvfits_rel = f"{obsid}.uvfits"
@@ -229,8 +230,8 @@ def process_Apr19_data_Oct7():
                     apply_cal_path=pipeline_calibration_path,
                     run_aoflagger=True,
                     aoflagger_strategy_file="/lustre/ghellbourg/AOFlagger_strat_opt/LWA_opt_GH1.lua",
-                    flag_antennas_from_autocorrs=False,
-                    flag_antenna_list=flag_antenna_list,
+                    flag_antennas_from_autocorrs=True,
+                    #flag_antenna_list=flag_antenna_list,
                     refresh_flags=True,
                     flip_gain_conj=True,
                     plot_gains=False,
@@ -294,7 +295,7 @@ def process_Apr19_data_Oct7():
                     cal_trial_name="selfcal",
                     apply_cal_path=selfcal_calfits,
                     run_aoflagger=False,
-                    flag_antennas_from_autocorrs=False,
+                    flag_antennas_from_autocorrs=True,
                     refresh_flags=False,
                     flip_gain_conj=False,
                     plot_gains=False,
@@ -417,4 +418,4 @@ def process_Apr19_data_Oct7():
 
 
 if __name__ == "__main__":
-    process_Apr19_data_Oct7()
+    process_data()
