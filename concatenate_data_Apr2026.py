@@ -4,6 +4,7 @@ import datetime
 import pyuvdata
 import os
 import sys
+import subprocess
 
 
 def populate_data_dict(data_paths):
@@ -116,12 +117,17 @@ def get_contributing_freqs(new_freq_interval_dict, orig_freq_interval_dict):
 def copy_files_to_tmp(filepaths, tmp_dir):
 
     if not os.path.isdir(tmp_dir):
-        os.system(f"sudo mkdir -p {tmp_dir}; sudo chmod a+w {tmp_dir}")
+        subprocess.run(["sudo", "mkdir", "-p", tmp_dir], check=True)
+        subprocess.run(["sudo", "chmod", "a+w", tmp_dir], check=True)
 
     tmp_filepaths = []
     for filename in filepaths:
-        os.system(f"cp -r {filename} {tmp_dir}")
+        subprocess.run(["cp", "-r", filename, tmp_dir], check=True)
         new_filename = f"{tmp_dir}/{filename.split('/')[-1]}"
+        if new_filename.endswith(".tar"):
+            subprocess.run(["tar", "-xf", new_filename, "-C", tmp_dir], check=True)
+            subprocess.run(["rm", new_filename], check=True)
+            new_filename = new_filename.removesuffix(".tar")  # Python 3.9+
         if os.path.isdir(new_filename):
             tmp_filepaths.append(new_filename)
         else:
@@ -146,7 +152,7 @@ def get_output_filename(data_dict, use_inds, output_freq, output_dir, is_tmp_dir
 def clean_up_tmp_files(orig_filepaths, tmp_filepaths):
     for filename in tmp_filepaths:
         if not np.isin(filename, orig_filepaths):  # Confirm that the file is a copy
-            os.system(f"rm -r {filename}")  # Delete temporary files
+            subprocess.run(["rm", "-r", filename], check=True)  # Delete temporary files
 
 
 def concatenate_files(
@@ -225,7 +231,8 @@ def concatenate_files(
     # Create output directory if needed
     outdir = "/".join(use_output_filename.split("/")[:-1])
     if not os.path.isdir(outdir):
-        os.system(f"sudo mkdir -p {outdir}; sudo chmod a+w {outdir}")
+        subprocess.run(["sudo", "mkdir", "-p", outdir], check=True)
+        subprocess.run(["sudo", "chmod", "a+w", outdir], check=True)
 
     uv.write_ms(use_output_filename, clobber=True)
     if not os.path.isdir(use_output_filename):
@@ -238,10 +245,11 @@ def concatenate_files(
         # Create output directory if needed
         outdir = "/".join(output_filename.split("/")[:-1])
         if not os.path.isdir(outdir):
-            os.system(f"sudo mkdir -p {outdir}; sudo chmod a+w {outdir}")
+            subprocess.run(["sudo", "mkdir", "-p", outdir], check=True)
+            subprocess.run(["sudo", "chmod", "a+w", outdir], check=True)
 
         # Move concatenated data
-        os.system(f"mv {use_output_filename} {outdir}")
+        subprocess.run(["mv", use_output_filename, outdir], check=True)
         if not os.path.isdir(output_filename):
             print(f"Error moving file to {output_filename}.")
             if tmp_dir is not None:
@@ -270,10 +278,32 @@ def delete_empty_directories(directory, date, freqs):
 
     for freq in freqs:
         if os.path.isdir(f"{directory}/{freq}MHz/{date}"):
-            os.system(
-                f"sudo find {directory}/{freq}MHz/{date}/* -type d -empty -delete"
+            subprocess.run(
+                [
+                    "sudo",
+                    "find",
+                    f"{directory}/{freq}MHz/{date}",
+                    "-mindepth",
+                    "1",
+                    "-type",
+                    "d",
+                    "-empty",
+                    "-delete",
+                ],
+                check=True,
             )
-            os.system(f"sudo find {directory}/{freq}MHz/{date} -type d -empty -delete")
+            subprocess.run(
+                [
+                    "sudo",
+                    "find",
+                    f"{directory}/{freq}MHz/{date}",
+                    "-type",
+                    "d",
+                    "-empty",
+                    "-delete",
+                ],
+                check=True,
+            )
 
 
 def run_concatenate_data(
@@ -300,6 +330,13 @@ def run_concatenate_data(
                 if p.is_dir()
             ]
         )
+        data_paths.extend(
+            [
+                str(p)
+                for p in pathlib.Path(f"{orig_dir}/{freq}MHz/{date}").rglob("*.ms.tar")
+                if p.is_file()
+            ]
+        )
         # Get files outside nested structure
         data_paths.extend(
             [
@@ -308,7 +345,15 @@ def run_concatenate_data(
                 if os.path.isdir(os.path.join(orig_dir, d)) and d.endswith(".ms")
             ]
         )
+        data_paths.extend(
+            [
+                d
+                for d in os.listdir(orig_dir)
+                if os.path.isdir(os.path.join(orig_dir, d)) and d.endswith(".ms.tar")
+            ]
+        )
 
+    print(data_paths)
     data_dict = populate_data_dict(data_paths)
     if len(data_dict["times"]) == 0:
         print("No files found.")
@@ -371,11 +416,11 @@ def run_concatenate_data(
                 for file_ind in file_inds_time_match:
                     filename = data_dict["paths"][file_ind]
                     print(f"Deleting {filename}")
-                    os.system(f"sudo rm -r {filename}")
+                    subprocess.run(["sudo", "rm", "-r", filename], check=True)
 
     # Delete empty directories
     delete_empty_directories(orig_dir, date, orig_freq_interval_dict.keys())
 
 
 if __name__ == "__main__":
-    run_concatenate_data("2026-01-11", delete_files=True)
+    run_concatenate_data("2026-10-22", delete_files=False)
