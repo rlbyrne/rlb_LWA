@@ -326,6 +326,7 @@ pro fhd_versions_calim
         ps_nfreq_avg = 1
         n_avg = 1
         kernel_window = "Blackman-Harris^2"
+        snapshot_healpix_export = 0  ;don't save Healpix cubes
     end
 
     'rlb_modified_kernel_freq_avg_Aug2026': begin

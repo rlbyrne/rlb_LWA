@@ -1999,7 +1999,7 @@ def process_Apr19_data_Oct7():
 def check_Oct22_data_Nov4():
 
     calibration_pipeline(
-        "/fast/rbyrne/20261022_120001_64MHz.ms",
+        "/fast/rbyrne/20261022_120001_36MHz.ms",
         output_dir="/fast/rbyrne",
         cal_trial_name="04h_cal",
         run_aoflagger=True,
@@ -2012,7 +2012,7 @@ def check_Oct22_data_Nov4():
         peel=True,
     )
     calibration_pipeline(
-        "/fast/rbyrne/20261022_120001_64MHz.ms",
+        "/fast/rbyrne/20261022_120001_36MHz.ms",
         output_dir="/fast/rbyrne",
         cal_trial_name="05h_cal",
         run_aoflagger=True,
