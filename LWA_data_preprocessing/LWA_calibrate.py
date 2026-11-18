@@ -3,6 +3,7 @@ import os
 import subprocess
 import sys
 import shutil
+import warnings
 import numpy as np
 import pyuvdata
 import datetime
@@ -65,50 +66,126 @@ def flag_antennas(
     inplace=False,
 ):
 
-    if inplace:
-        flag_arr = uvd.flag_array
-    else:
-        flag_arr = np.copy(uvd.flag_array)
+    # Map telescope antenna names (format "LWA###") to antenna numbers
+    tel_ant_nums = dict(
+        zip(uvd.telescope.antenna_names, uvd.telescope.antenna_numbers)
+    )
 
+    # Collect antenna numbers to flag for each feed
+    x_ants = []  # Polarization A
+    y_ants = []  # Polarization B
+    all_ants = []  # No polarization given: flag all polarizations
     for ant_name in antenna_names:
         ant_name_number_comp = ant_name.strip("LWA").strip("-").strip("A").strip("B")
-        ant_ind = np.array(uvd.telescope.antenna_numbers)[
-            np.where(
-                np.array(uvd.telescope.antenna_names) == f"LWA{ant_name_number_comp}"
-            )[0][0]
-        ]  # uvd.telescope.antenna_names format is "LWA###"
-        if np.size(ant_ind) == 0:
-            print(f"WARNING: Antenna {ant_name} not found in antenna_names.")
+        ant_num = tel_ant_nums.get(f"LWA{ant_name_number_comp}")
+        if ant_num is None:
+            warnings.warn(f"Antenna {ant_name} not found in antenna_names. Skipping.")
             continue
-        flag_bls_1 = np.where(uvd.ant_1_array == ant_ind)[0]
-        flag_bls_2 = np.where(uvd.ant_2_array == ant_ind)[0]
         if ant_name.endswith("A"):
-            for pol in [-5, -7]:  # XX, XY
-                flag_pol_ind = np.where(uvd.polarization_array == pol)[0]
-                if len(flag_pol_ind) > 0:
-                    flag_arr[flag_bls_1, :, flag_pol_ind] = True
-            for pol in [-5, -8]:  # XX, YX
-                flag_pol_ind = np.where(uvd.polarization_array == pol)[0]
-                if len(flag_pol_ind) > 0:
-                    flag_arr[flag_bls_2, :, flag_pol_ind] = True
+            x_ants.append(ant_num)
         elif ant_name.endswith("B"):
-            for pol in [-6, -8]:  # YY, YX
-                flag_pol_ind = np.where(uvd.polarization_array == pol)[0]
-                if len(flag_pol_ind) > 0:
-                    flag_arr[flag_bls_1, :, flag_pol_ind] = True
-            for pol in [-6, -7]:  # YY, XY
-                flag_pol_ind = np.where(uvd.polarization_array == pol)[0]
-                if len(flag_pol_ind) > 0:
-                    flag_arr[flag_bls_2, :, flag_pol_ind] = True
-        else:  # Flag all polarizations
-            flag_bls = np.unique(np.concatenate((flag_bls_1, flag_bls_2)))
-            flag_arr[flag_bls, :, :] = True
+            y_ants.append(ant_num)
+        else:
+            all_ants.append(ant_num)
+    x_ants = x_ants + all_ants
+    y_ants = y_ants + all_ants
+
+    # Baselines whose first or second antenna is flagged, for each feed
+    ant1_x = np.isin(uvd.ant_1_array, x_ants)
+    ant2_x = np.isin(uvd.ant_2_array, x_ants)
+    ant1_y = np.isin(uvd.ant_1_array, y_ants)
+    ant2_y = np.isin(uvd.ant_2_array, y_ants)
+    pol_flag_bls = {
+        -5: ant1_x | ant2_x,  # XX
+        -6: ant1_y | ant2_y,  # YY
+        -7: ant1_x | ant2_y,  # XY
+        -8: ant1_y | ant2_x,  # YX
+    }
+    # Any other polarizations are flagged only for antennas with no polarization given
+    other_flag_bls = np.isin(uvd.ant_1_array, all_ants) | np.isin(
+        uvd.ant_2_array, all_ants
+    )
 
     if inplace:
-        uvd.flag_array = flag_arr
+        uvd_new = uvd
     else:
         uvd_new = uvd.copy()
-        uvd_new.flag_array = flag_arr
+
+    for pol_ind, pol in enumerate(uvd_new.polarization_array):
+        flag_bls = pol_flag_bls.get(pol, other_flag_bls)
+        uvd_new.flag_array[flag_bls, :, pol_ind] = True
+
+    if not inplace:
+        return uvd_new
+
+
+def flag_outriggers(
+    uvd,
+    core_center_coords=None,
+    core_radius_m=130.0,
+    remove_outriggers=False,
+    inplace=False,
+):
+    """
+    Flag (and optionally remove) all baselines that include an outrigger antenna.
+
+    Parameters
+    ----------
+    uvd : pyuvdata.UVData
+        Data to flag.
+    core_center_coords : list of float or None
+        [East, North] position of the core center in meters, relative to the
+        telescope location. If None, the median antenna position (over all
+        antennas in uvd.telescope, including outriggers) is used. Default None.
+    core_radius_m : float
+        Antennas farther than this horizontal distance from the core center are
+        treated as outriggers. Default 130.
+    remove_outriggers : bool
+        If True, baselines including outriggers are removed from the data rather
+        than only flagged. Default False.
+    inplace : bool
+        If True, modify uvd in place. Otherwise return a modified copy. Default False.
+
+    Returns
+    -------
+    pyuvdata.UVData or None
+        The flagged copy if inplace=False, otherwise None.
+    """
+
+    # Antenna positions in topocentric (East, North, Up) coordinates
+    antpos = uvd.telescope.get_enu_antpos()
+
+    if core_center_coords is None:
+        core_center_coords = [np.median(antpos[:, 0]), np.median(antpos[:, 1])]
+    outrigger_ant_inds = np.where(
+        np.sqrt(
+            (antpos[:, 0] - core_center_coords[0]) ** 2.0
+            + (antpos[:, 1] - core_center_coords[1]) ** 2.0
+        )
+        > core_radius_m
+    )[0]
+    outrigger_ants = np.asarray(uvd.telescope.antenna_numbers)[outrigger_ant_inds]
+
+    if inplace:
+        uvd_new = uvd
+    else:
+        uvd_new = uvd.copy()
+
+    # Flag all baselines with an outrigger on either end
+    flag_bls = np.isin(uvd_new.ant_1_array, outrigger_ants) | np.isin(
+        uvd_new.ant_2_array, outrigger_ants
+    )
+    uvd_new.flag_array[flag_bls, :, :] = True
+
+    if remove_outriggers:
+        # Keep only antennas that are present in the data
+        data_ants = np.unique(
+            np.concatenate((uvd_new.ant_1_array, uvd_new.ant_2_array))
+        )
+        keep_ants = data_ants[~np.isin(data_ants, outrigger_ants)]
+        uvd_new.select(antenna_nums=keep_ants)
+
+    if not inplace:
         return uvd_new
 
 
@@ -545,15 +622,16 @@ def read_caltable(input_path, use_freqs=None):
 def peel_sources(
     out_ms_path,
     orig_ms_path,
-    julia_path="/opt/devel/pipeline/envs/julia060/bin/julia",
-    ttcal_path="/opt/devel/pipeline/envs/julia060/bin/ttcal.jl",
-    peel_sources_path="/home/pipeline/sources.json", # Also tried "/home/gh/sources.json" but it crashed
-    peel_mode="peel",  # Options include "peel", "zest"
-    beam="sine",  # Options include "sine", "constant"
+    julia_path="/opt/devel/nkosogor/nkosogor/julia-1.10.4/bin/julia",
+    ttcal_path="/opt/devel/nkosogor/nkosogor/TTCalX",  # TTCalX install directory
+    peel_sources_path="/home/pipeline/sources.json",
+    peel_mode="peel",  # Options include "peel", "zest", "shave", "prune"
     maxiter=5,
     tolerance=1e-4,
     minuvw=10,
     Ntimes=None,
+    column="DATA",
+    use_gpu=True,
 ) -> None:
 
     if Ntimes != 1:
@@ -574,33 +652,50 @@ def peel_sources(
         if out_ms_path != orig_ms_path:
             if os.path.isdir(out_ms_path):  # Replace ms file
                 subprocess.run(["sudo", "rm", "-rf", out_ms_path], check=True)
-            subprocess.run(["cp", "-r", orig_ms_path, out_ms_path], check=True)  # Initialized peeled file
+            subprocess.run(
+                ["cp", "-r", orig_ms_path, out_ms_path], check=True
+            )  # Initialized peeled file
         ms_file_list.append(out_ms_path)
 
-    for filepath in ms_file_list:
-        subprocess.run(
-            [
-                "sudo",
-                julia_path,
-                ttcal_path,
-                peel_mode,
-                filepath,
-                peel_sources_path,
-                "--beam",
-                beam,
-                "--maxiter",
-                str(maxiter),
-                "--tolerance",
-                str(tolerance),
-                "--minuvw",
-                str(minuvw),
-            ],
-            check=True,
-        )
-        subprocess.run(
-            ["sudo", "chown", "-R", f"{os.getuid()}:{os.getgid()}", filepath],
-            check=True,
-        )  # Fix file ownership
+    # Run TTCalX (https://github.com/nkosogor/TTCalX) on all files in one call
+    # to pay the Julia compilation cost only once
+    julia_env = os.environ.copy()
+    julia_env["JULIA_DEPOT_PATH"] = (
+        f"/tmp/julia_{os.environ.get('USER', 'user')}:/opt/devel/nkosogor/nkosogor/julia_depot"
+    )
+    if use_gpu:
+        ttcal_args = [
+            julia_path,
+            f"--project={ttcal_path}",
+            f"{ttcal_path}/bin/ttcal_gpu.jl",
+            peel_mode,
+        ]
+    else:  # CPU mode uses zest_sky_rfi.jl, which uses a different solver
+        if peel_mode not in ["peel", "zest"]:
+            raise ValueError("CPU peeling supports only peel_mode 'peel' or 'zest'.")
+        ttcal_args = [
+            julia_path,
+            "-t",
+            "auto",
+            f"--project={ttcal_path}",
+            f"{ttcal_path}/bin/zest_sky_rfi.jl",
+            "--cpu",
+        ]
+        if peel_mode == "peel":
+            ttcal_args.append("--peel")
+    subprocess.run(
+        [
+            *ttcal_args,
+            f"--maxiter={maxiter}",
+            f"--tolerance={tolerance}",
+            f"--minuvw={minuvw}",
+            f"--column={column}",
+            peel_sources_path,
+            *ms_file_list,
+        ],
+        check=True,
+        env=julia_env,
+    )
 
     if Ntimes != 1:
         for file_ind, filepath in enumerate(ms_file_list):
@@ -619,6 +714,28 @@ def peel_sources(
                 subprocess.run(["rm", "-rf", filepath], check=True)
         else:
             print(f"ERROR: File {out_ms_path} not written.")
+
+
+def run_aoflagger_on_file(datafile_path: str, strategy_file: Optional[str] = None):
+    """
+    Run AOFlagger on a measurement set. Modifies the file in place.
+
+    Parameters
+    ----------
+    datafile_path : str
+        Path to the .ms file.
+    strategy_file : str or None
+        Path to an AOFlagger strategy file. If None, the default strategy is used.
+    """
+    if strategy_file is None:
+        subprocess.run(["aoflagger", datafile_path], check=True)
+    else:
+        subprocess.run(["aoquality", "remove", datafile_path], check=True)
+        subprocess.run(["aoquality", "collect", datafile_path], check=True)
+        subprocess.run(
+            ["aoflagger", "--strategy", strategy_file, datafile_path],
+            check=True,
+        )
 
 
 def image_data(
@@ -753,9 +870,11 @@ def calibration_pipeline(
     smooth_cal: bool = False,
     plot_images: bool = True,
     peel: bool = False,
-    julia_path: str = "/opt/devel/pipeline/envs/julia060/bin/julia",
-    ttcal_path: str = "/opt/devel/pipeline/envs/julia060/bin/ttcal.jl",
+    julia_path: str = "/opt/devel/nkosogor/nkosogor/julia-1.10.4/bin/julia",
+    ttcal_path: str = "/opt/devel/nkosogor/nkosogor/TTCalX",
     peel_sources_path: str = "/home/pipeline/sources.json",
+    reflag: bool = False,
+    peel_use_gpu: bool = True,
 ) -> None:
     """
     Parameters
@@ -852,20 +971,34 @@ def calibration_pipeline(
         minus model). If apply_calibration=False, images will be generated of the
         model only. Default True.
     peel : bool
-        If True, images will be peeled with TTCal. Requires that apply_calibration=True.
+        If True, images will be peeled with TTCalX. Requires that apply_calibration=True.
     julia_path: str
         Path to julia installation. Used only if peel=True. Default
-        "/opt/devel/pipeline/envs/julia060/bin/julia".
+        "/opt/devel/nkosogor/nkosogor/julia-1.10.4/bin/julia".
     ttcal_path : str
-        Path to TTCal. Used only if peel=True. Default
-        "/opt/devel/pipeline/envs/julia060/bin/ttcal.jl".
+        Path to the TTCalX install directory. Used only if peel=True. Default
+        "/opt/devel/nkosogor/nkosogor/TTCalX".
     peel_sources_path : str
         Path to sources for peeling. Used only if peel=True. Default "/home/pipeline/sources.json".
+    reflag : bool
+        If True, AOFlagger is run again after peeling (on the peeled file) or,
+        if peel=False, after calibration is applied (on the calibrated file).
+        Uses aoflagger_strategy_file. Requires that apply_calibration=True.
+        Default False.
+    peel_use_gpu : bool
+        If True, peel on a GPU with TTCalX's ttcal_gpu.jl. If False, peel on CPU
+        threads with TTCalX's zest_sky_rfi.jl, which uses a different solver and
+        supports only peel_mode "peel" or "zest". Used only if peel=True. Default True.
     """
 
     if peel and not apply_calibration:
-        print("WARNING: Peeling requires apply_calibration=True. Setting peel=False.")
+        warnings.warn("Peeling requires apply_calibration=True. Setting peel=False.")
         peel = False
+    if reflag and not apply_calibration:
+        warnings.warn(
+            "Reflagging requires apply_calibration=True. Setting reflag=False."
+        )
+        reflag = False
 
     # Define output filenames
     output_file_prefix = os.path.splitext(os.path.basename(datafile_path))[0]
@@ -944,15 +1077,7 @@ def calibration_pipeline(
         uv = None
 
     if run_aoflagger:
-        if aoflagger_strategy_file is None:
-            subprocess.run(["aoflagger", "use_datafile_path"])
-        else:
-            subprocess.run(["aoquality", "remove", use_datafile_path], check=True)
-            subprocess.run(["aoquality", "collect", use_datafile_path], check=True)
-            subprocess.run(
-                ["aoflagger", "--strategy", aoflagger_strategy_file, use_datafile_path],
-                check=True,
-            )
+        run_aoflagger_on_file(use_datafile_path, strategy_file=aoflagger_strategy_file)
 
     if apply_cal_path is not None:  # Restore calibration solution
         print(f"Restoring calibration table {apply_cal_path}")
@@ -1111,7 +1236,18 @@ def calibration_pipeline(
                 ttcal_path=ttcal_path,
                 peel_sources_path=peel_sources_path,
                 Ntimes=uv.Ntimes,
+                use_gpu=peel_use_gpu,
             )
+
+        if (
+            reflag
+        ):  # Rerun AOFlagger on the peeled data, or calibrated data if not peeled
+            if peel:
+                reflag_ms = f"{use_output_dir}/{peeled_ms}"
+            else:
+                reflag_ms = f"{use_output_dir}/{calibrated_data_ms}"
+            print(f"Reflagging {reflag_ms} with AOFlagger.")
+            run_aoflagger_on_file(reflag_ms, strategy_file=aoflagger_strategy_file)
 
         if apply_cal_path is None:  # Subtract model from data
 

@@ -62,79 +62,111 @@ def process_data():
     # pipeline_calibration_path = "/fast/rbyrne/calibration_2026-04-19_17h.B.flagged"
     pipeline_calibration_path = "/lustre/pipeline/calibration/results/2026-10-22/05h/successful/20261022_132848/tables/calibration_2026-10-22_05h.B.flagged"
     flag_antenna_list = [
-        "LWA-266B",
-        "LWA-269B",
-        "LWA-282B",
-        "LWA-310B",
-        "LWA-341A",
-        "LWA-341B",
-        "LWA-255B",
-        "LWA-263A",
-        "LWA-263B",
-        "LWA-272A",
-        "LWA-272B",
-        "LWA-283A",
-        "LWA-280A",
-        "LWA-280B",
-        "LWA-288B",
-        "LWA-284A",
-        "LWA-292B",
-        "LWA-336A",
-        "LWA-336B",
-        "LWA-335A",
-        "LWA-004B",
-        "LWA-005B",
-        "LWA-040A",
-        "LWA-302A",
-        "LWA-302B",
-        "LWA-013B",
-        "LWA-016B",
-        "LWA-015A",
-        "LWA-015B",
-        "LWA-014A",
-        "LWA-014B",
+        "LWA-002B",
+        "LWA-024B",
         "LWA-025A",
-        "LWA-348B",
-        "LWA-365A",
-        "LWA-365B",
-        "LWA-364A",
-        "LWA-364B",
-        "LWA-086A",
-        "LWA-086B",
-        "LWA-122A",
-        "LWA-334A",
-        "LWA-361A",
+        "LWA-032B",
+        "LWA-036B",
+        "LWA-040A",
+        "LWA-042B",
+        "LWA-046A",
+        "LWA-048B",
+        "LWA-050B",
+        "LWA-067A",
         "LWA-068B",
-        "LWA-069A",
-        "LWA-252A",
-        "LWA-252B",
-        "LWA-289A",
-        "LWA-299B",
+        "LWA-074B",
+        "LWA-086B",
+        "LWA-090B",
+        "LWA-095A",
         "LWA-107A",
         "LWA-110A",
         "LWA-112A",
-        "LWA-112B",
-        "LWA-111A",
-        "LWA-143B",
+        "LWA-122A",
         "LWA-124A",
+        "LWA-143B",
+        "LWA-149B",
         "LWA-159A",
-        "LWA-224A",
-        "LWA-347A",
+        "LWA-160A",
+        "LWA-160B",
+        "LWA-166A",
         "LWA-167B",
-        "LWA-227B",
-        "LWA-329A",
-        "LWA-234A",
+        "LWA-173B",
+        "LWA-190B",
+        "LWA-191A",
+        "LWA-199A",
+        "LWA-199B",
+        "LWA-205B",
         "LWA-206A",
         "LWA-206B",
         "LWA-210A",
-        "LWA-235B",
-        "LWA-342B",
-        "LWA-214B",
+        "LWA-213A",
         "LWA-221B",
-        "LWA-315A",
+        "LWA-224A",
+        "LWA-227B",
+        "LWA-234A",
+        "LWA-235B",
+        "LWA-252A",
+        "LWA-252B",
+        "LWA-255B",
+        "LWA-259A",
+        "LWA-263A",
+        "LWA-263B",
+        "LWA-266B",
+        "LWA-272B",
+        "LWA-280A",
+        "LWA-280B",
+        "LWA-285B",
+        "LWA-286A",
+        "LWA-288B",
+        "LWA-289A",
+        "LWA-289B",
+        "LWA-292A",
+        "LWA-292B",
+        "LWA-302A",
+        "LWA-302B",
+        "LWA-325A",
+        "LWA-329A",
+        "LWA-336A",
+        "LWA-336B",
+        "LWA-341A",
+        "LWA-341B",
+        "LWA-345A",
+        "LWA-349A",
+        "LWA-360A",
+        "LWA-360B",
+        "LWA-364A",
+        "LWA-364B",
+        "LWA-365A",
+        "LWA-365B",
+        # "Deviant sky" antennas (labeled green in Andreas metric):
+        "LWA-281A",
+        "LWA-308A",
+        "LWA-272A",
+        "LWA-086A",
+        "LWA-325A",
+        "LWA-162A",
+        "LWA-300A",
+        "LWA-303B",
+        "LWA-005B",
+        "LWA-044B",
+        "LWA-286B",
+        "LWA-058B",
+        "LWA-089B",
+        "LWA-069B",
+        "LWA-289B",
+        "LWA-147B",
+        "LWA-326B",
+        "LWA-135B",
+        "LWA-162B",
+        "LWA-169B",
+        "LWA-238B",
+        "LWA-342B",
+        "LWA-180B",
+        "LWA-223B",
+        "LWA-256B",
     ]
     use_frequencies = [
-        # "34",
+        "34",
         "44",
         "52",
         "62",
@@ -144,6 +176,8 @@ def process_data():
     ]
     date = "2026-10-22"
     fhd_version = "rlb_process_LWA_modified_kernel_Jun2026"
+    run_name = "ttcalx_reflag"
+    run_suffix = f"_{run_name}" if run_name else ""
 
     # Collect input files
     filepaths = []
@@ -163,15 +197,15 @@ def process_data():
         filename = os.path.basename(filepath)
         filename_start = filename.split(".")[0]
         new_filepath = f"{processing_path}/{filename}"
-        obsid = f"{filename_start}_selfcal_peeled"
+        obsid = f"{filename_start}_selfcal{run_suffix}_peeled"
 
         # ------------------------------------------------------------------
         # Expected outputs of each step (relative to processing/final dirs).
         # NOTE: the FHD and eppsilon patterns are my best guess at the usual
         # output layout; adjust them if your outputs are named differently.
         # ------------------------------------------------------------------
-        cal_ms_rel = f"{filename_start}_05h_cal_calibrated.ms"
-        selfcal_calfits_rel = f"{filename_start}_selfcal.calfits"
+        cal_ms_rel = f"{filename_start}_05h_cal{run_suffix}_calibrated.ms"
+        selfcal_calfits_rel = f"{filename_start}_selfcal{run_suffix}.calfits"
         peeled_ms_rel = f"{obsid}.ms"
         uvfits_rel = f"{obsid}.uvfits"
         fhd_output_rels = [
@@ -223,12 +257,12 @@ def process_data():
                     new_filepath,
                     output_dir=None,
                     tmp_dir=None,
-                    cal_trial_name="05h_cal",
+                    cal_trial_name=f"05h_cal{run_suffix}",
                     apply_cal_path=pipeline_calibration_path,
                     run_aoflagger=True,
                     aoflagger_strategy_file="/lustre/ghellbourg/AOFlagger_strat_opt/LWA_opt_GH1.lua",
-                    flag_antennas_from_autocorrs=True,
-                    # flag_antenna_list=flag_antenna_list,
+                    flag_antennas_from_autocorrs=False,
+                    flag_antenna_list=flag_antenna_list,
                     refresh_flags=True,
                     flip_gain_conj=True,
                     plot_gains=False,
@@ -236,6 +270,7 @@ def process_data():
                     smooth_cal=False,
                     plot_images=True,
                     peel=False,
+                    reflag=True,
                 )
                 cal_ms = find_output(cal_ms_rel, search_roots)
                 if cal_ms is None:
@@ -289,7 +324,7 @@ def process_data():
                     new_filepath,
                     output_dir=processing_path,
                     tmp_dir=None,
-                    cal_trial_name="selfcal",
+                    cal_trial_name=f"selfcal{run_suffix}",
                     apply_cal_path=selfcal_calfits,
                     run_aoflagger=False,
                     flag_antennas_from_autocorrs=True,
@@ -299,7 +334,10 @@ def process_data():
                     apply_calibration=True,
                     smooth_cal=True,
                     plot_images=True,
-                    peel=True,
+                    peel=True,  # Peels with TTCalX
+                    peel_use_gpu=False,  # Set False to peel on CPU threads
+                    reflag=True,  # Rerun AOFlagger on the peeled data
+                    aoflagger_strategy_file="/lustre/ghellbourg/AOFlagger_strat_opt/LWA_opt_GH1.lua",
                 )
                 peeled_ms = find_output(peeled_ms_rel, search_roots)
                 if peeled_ms is None:
@@ -316,6 +354,8 @@ def process_data():
                 print(f"{filename_start}: writing uvfits")
                 uv = pyuvdata.UVData()
                 uv.read(peeled_ms)
+                # Remove outrigger antennas to reduce file size
+                flag_outriggers(uv, remove_outriggers=True, inplace=True)
                 uv.write_uvfits(
                     f"{processing_path}/{uvfits_rel}",
                     uvw_double=False,
@@ -399,7 +439,6 @@ def process_data():
         if os.path.isdir(processing_path) and os.listdir(processing_path):
             subprocess.run(
                 [
-                    "sudo",
                     "rsync",
                     "-a",
                     "--remove-source-files",

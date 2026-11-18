@@ -328,7 +328,6 @@ def peel_horizon_sources_May15():
         ttcal_path="/opt/devel/pipeline/envs/ttcal_dev/bin/ttcal.jl",
         peel_sources_path="/lustre/gh/calibration/pipeline/reference/sources/rfi_43.2_ver20251101.json",
         peel_mode="zest",
-        beam="constant",
         maxiter=5,
         tolerance=1e-4,
         minuvw=5,
