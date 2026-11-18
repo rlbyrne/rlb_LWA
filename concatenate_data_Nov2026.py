@@ -22,6 +22,12 @@ STATUS_ERROR = 4  # Unknown error
 DELETE_OK_STATUSES = (STATUS_SUCCESS, STATUS_EXISTS)
 
 FILES_PER_FREQ_PER_CHUNK = 12
+
+
+class OutputDiskFullError(RuntimeError):
+    """The output filesystem is out of space or over quota. Aborts the whole run."""
+
+
 FILENAME_RE = re.compile(r"^(\d{8}_\d{6})_(\d{2})MHz\.ms(?:\.tar)?$")
 
 
@@ -144,7 +150,9 @@ def populate_data_dict(data_paths):
         if key in entries:
             existing_path, existing_is_tar = entries[key]
             if existing_is_tar and not is_tar:
-                print(f"WARNING: Duplicate for {key}; using {path} over {existing_path}.")
+                print(
+                    f"WARNING: Duplicate for {key}; using {path} over {existing_path}."
+                )
                 entries[key] = (path, is_tar)
             else:
                 print(f"WARNING: Duplicate for {key}; ignoring {path}.")
@@ -181,7 +189,21 @@ def get_time_inds(data_dict, time_interval_minutes=2, time_integration_s=10):
 
 
 def get_orig_freq_intervals():
-    labels = ["27", "32", "36", "41", "46", "50", "55", "59", "64", "69", "73", "78", "82"]
+    labels = [
+        "27",
+        "32",
+        "36",
+        "41",
+        "46",
+        "50",
+        "55",
+        "59",
+        "64",
+        "69",
+        "73",
+        "78",
+        "82",
+    ]
     start0, step, width = 27179687.5, 4593750.0, 4569824.21875
     return {
         label: np.array([start0 + i * step, start0 + i * step + width])
@@ -361,7 +383,9 @@ def concatenate_files(
             if problem:
                 # Keep the bad file so it can be inspected
                 keep_work_dir = True
-                print(f"Error: just-written {tmp_output} is bad ({problem}). Kept for inspection.")
+                print(
+                    f"Error: just-written {tmp_output} is bad ({problem}). Kept for inspection."
+                )
                 return STATUS_ERROR
 
             ensure_dir(outdir)
@@ -369,17 +393,33 @@ def concatenate_files(
             # hidden temporary name on the destination filesystem, verify it, then
             # rename into place (atomic within one filesystem), so the final name
             # never refers to a half-copied MS.
-            partial = os.path.join(outdir, f".{os.path.basename(output_filename)}.partial")
+            partial = os.path.join(
+                outdir, f".{os.path.basename(output_filename)}.partial"
+            )
             try:
                 if os.path.isdir(partial):
                     shutil.rmtree(partial)
-                subprocess.run(["mv", tmp_output, partial], check=True)
+                mv = subprocess.run(
+                    ["mv", tmp_output, partial], capture_output=True, text=True
+                )
+                if mv.returncode != 0:
+                    msg = mv.stderr.strip()
+                    if "quota" in msg.lower() or "no space" in msg.lower():
+                        raise OutputDiskFullError(
+                            f"Output filesystem is full or over quota: {msg}"
+                        )
+                    raise subprocess.CalledProcessError(
+                        mv.returncode, mv.args, output=mv.stdout, stderr=msg
+                    )
                 problem = ms_problem(partial)
                 if problem:
-                    keep_work_dir = True
+                    # Keep the bad copy under a visible name instead of deleting it
+                    bad = output_filename + ".bad"
+                    shutil.rmtree(bad, ignore_errors=True)
+                    os.rename(partial, bad)
                     print(
-                        f"Error: {tmp_output} was fine but the copy at {partial} "
-                        f"is bad ({problem})."
+                        f"Error: the written MS was fine in {tmp_output} but the copy "
+                        f"on the destination is bad ({problem}). Kept at {bad}."
                     )
                     return STATUS_ERROR
                 if os.path.isdir(output_filename):
@@ -392,6 +432,8 @@ def concatenate_files(
         print(f"New file written to {output_filename}")
         return STATUS_SUCCESS
 
+    except OutputDiskFullError:
+        raise  # Do not continue with further chunks; cleanup still runs in finally
     except Exception as e:
         print(f"ERROR: Failed to produce {output_filename}: {e!r}")
         return STATUS_ERROR
@@ -432,8 +474,7 @@ def run_concatenate_data(
 
     # Which files can contribute to each output band (computed once)
     band_masks = [
-        np.isin(data_dict["freqs"], contributing)
-        for contributing in contributing_freqs
+        np.isin(data_dict["freqs"], contributing) for contributing in contributing_freqs
     ]
 
     for time_ind in np.unique(data_dict["time_inds"]):  # Chronological order

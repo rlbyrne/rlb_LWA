@@ -11,9 +11,6 @@ import glob
 import subprocess
 import pyuvdata
 
-# Assumed to already be imported/defined in your module, as in the original:
-#   calibration_pipeline, calibration_wrappers
-
 PROCESSING_PATH = "/fast/rbyrne/pipeline_tmp"
 FINAL_PATH = "/lustre/21cmpipe/2026-10-22"
 IDL_BIN = "/opt/devel/rbyrne/harris/idl88/bin/idl"
@@ -62,7 +59,7 @@ def process_data():
     processing_path = PROCESSING_PATH
     final_path = FINAL_PATH
     search_roots = [processing_path, final_path]
-    #pipeline_calibration_path = "/fast/rbyrne/calibration_2026-04-19_17h.B.flagged"
+    # pipeline_calibration_path = "/fast/rbyrne/calibration_2026-04-19_17h.B.flagged"
     pipeline_calibration_path = "/lustre/pipeline/calibration/results/2026-10-22/05h/successful/20261022_132848/tables/calibration_2026-10-22_05h.B.flagged"
     flag_antenna_list = [
         "LWA-266B",
@@ -137,13 +134,13 @@ def process_data():
         "LWA-315A",
     ]
     use_frequencies = [
-        "34",
-        #"44",
-        #"52",
-        #"62",
-        #"72",
-        #"79",
-        #"83",
+        # "34",
+        "44",
+        "52",
+        "62",
+        "72",
+        "79",
+        "83",
     ]
     date = "2026-10-22"
     fhd_version = "rlb_process_LWA_modified_kernel_Jun2026"
@@ -226,12 +223,12 @@ def process_data():
                     new_filepath,
                     output_dir=None,
                     tmp_dir=None,
-                    cal_trial_name="17h_cal",
+                    cal_trial_name="05h_cal",
                     apply_cal_path=pipeline_calibration_path,
                     run_aoflagger=True,
                     aoflagger_strategy_file="/lustre/ghellbourg/AOFlagger_strat_opt/LWA_opt_GH1.lua",
                     flag_antennas_from_autocorrs=True,
-                    #flag_antenna_list=flag_antenna_list,
+                    # flag_antenna_list=flag_antenna_list,
                     refresh_flags=True,
                     flip_gain_conj=True,
                     plot_gains=False,

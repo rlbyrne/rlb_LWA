@@ -9,24 +9,34 @@ from astropy.coordinates import EarthLocation
 
 # Needs to be run as pipeline user
 
+
 def get_utc_from_lst(
-    target_lst_hrs,
-    date_str,  # Format "YYYY-MM-DD"
-    longitude_deg=-118.3
+    target_lst_hrs, date_str, longitude_deg=-118.3  # Format "YYYY-MM-DD"
 ):
 
     loc = EarthLocation.from_geodetic(lon=longitude_deg * u.deg, lat=0 * u.deg)
-    reference_time = astropy.time.Time(f"{date_str[:4]}-{date_str[5:7]}-{date_str[8:10]} 12:00:00", scale='utc', location=loc)
-    reference_lst = reference_time.sidereal_time('mean').hour
+    reference_time = astropy.time.Time(
+        f"{date_str[:4]}-{date_str[5:7]}-{date_str[8:10]} 12:00:00",
+        scale="utc",
+        location=loc,
+    )
+    reference_lst = reference_time.sidereal_time("mean").hour
     lst_diff = (target_lst_hrs - reference_lst + 12) % 24 - 12
     utc = reference_time + (lst_diff * 0.99726958) * u.hour
     if isinstance(utc.datetime, (list, np.ndarray)):
         array_shape = np.shape(utc)
-        utc_str = np.array([f"{use_utc.datetime.hour:02d}{use_utc.datetime.minute:02d}{use_utc.datetime.second:02d}" for use_utc in utc.flatten()])
+        utc_str = np.array(
+            [
+                f"{use_utc.datetime.hour:02d}{use_utc.datetime.minute:02d}{use_utc.datetime.second:02d}"
+                for use_utc in utc.flatten()
+            ]
+        )
         utc_str = np.reshape(utc_str, shape=array_shape)
     else:
-        utc_str = f"{utc.datetime.hour:02d}{utc.datetime.minute:02d}{utc.datetime.second:02d}"
-    
+        utc_str = (
+            f"{utc.datetime.hour:02d}{utc.datetime.minute:02d}{utc.datetime.second:02d}"
+        )
+
     return utc_str
 
 
@@ -42,7 +52,7 @@ def copy_data_with_tar(
             intermediate_dirs = "/".join(path_split[-4:-1])
             filename = path_split[-1]
             # copy_command = f"sudo mkdir -p {target_dir}/{freq}MHz/{date}/{hour} && sudo cp -r {source_dir}/{freq}MHz/{date}/{hour}/{filename} {target_dir}/{freq}MHz/{date}/{hour}"
-            #copy_command = f"tar -czf {source_dir}/{intermediate_dirs}/{filename}.tar.gz {source_dir}/{intermediate_dirs}/{filename} && mkdir -p {target_dir}/{intermediate_dirs} && mv {source_dir}/{intermediate_dirs}/{filename}.tar.gz {target_dir}/{intermediate_dirs} && tar -xzvf {target_dir}/{intermediate_dirs}/{filename}.tar.gz"
+            # copy_command = f"tar -czf {source_dir}/{intermediate_dirs}/{filename}.tar.gz {source_dir}/{intermediate_dirs}/{filename} && mkdir -p {target_dir}/{intermediate_dirs} && mv {source_dir}/{intermediate_dirs}/{filename}.tar.gz {target_dir}/{intermediate_dirs} && tar -xzvf {target_dir}/{intermediate_dirs}/{filename}.tar.gz"
             print(f"Moving {filename}")
             tar_command = f"tar -czf {source_dir}/{intermediate_dirs}/{filename}.tar.gz -C {source_dir}/{intermediate_dirs} {filename} --strip-components=6"
             makedir_command = f"mkdir -p {target_dir}/{intermediate_dirs}"
@@ -95,15 +105,15 @@ def copy_data(
         "78",
         "82",
     ],
-    #lst_ranges=[
+    # lst_ranges=[
     #    #[11.88, 14.88],  # 3 hours of cosmology data
     #    #[17.38, 17.88],  # half an hour of calibration data
     #    [12.88, 15.88],  # 3 hours of cosmology data
     #    [20.38, 20.88],  # half an hour of calibration data
-    #],
+    # ],
     lst_ranges=None,
     utc_ranges=[["110000", "140000"]],
-    use_dates="2026-10-22",
+    use_dates="2026-11-14",
 ):
 
     copy_paths = []
@@ -120,9 +130,7 @@ def copy_data(
 
             hours = np.sort(os.listdir(f"{source_dir}/{freq}MHz/{date}"))
             for hour in hours:
-                filenames = np.sort(
-                    os.listdir(f"{source_dir}/{freq}MHz/{date}/{hour}")
-                )
+                filenames = np.sort(os.listdir(f"{source_dir}/{freq}MHz/{date}/{hour}"))
                 for filename in filenames:
                     timestamp = filename[9:15]
                     copy_file = False
@@ -130,13 +138,17 @@ def copy_data(
                         if int(time_range[0]) < int(timestamp) < int(time_range[1]):
                             copy_file = True
                             break
-                    if not filename.endswith(".ms.tar") and not filename.endswith(".ms"):
+                    if not filename.endswith(".ms.tar") and not filename.endswith(
+                        ".ms"
+                    ):
                         copy_file = False
                     if copy_file:
                         filename = f"{filename[:16]}{freq}{filename[18:]}"
-                        copy_paths.append(f"{source_dir}/{freq}MHz/{date}/{hour}/{filename}")
+                        copy_paths.append(
+                            f"{source_dir}/{freq}MHz/{date}/{hour}/{filename}"
+                        )
 
-    time.sleep(120) # wait 2 minutes to prevent moving files mid-write
+    time.sleep(120)  # wait 2 minutes to prevent moving files mid-write
     copy_data_no_tar(
         copy_paths,
         target_dir=target_dir,
@@ -144,11 +156,11 @@ def copy_data(
     )
 
 
-#schedule.every().hour.do(copy_data)
+# schedule.every().hour.do(copy_data)
 
-#while True:
+# while True:
 #    schedule.run_pending()
 #    time.sleep(60) # wait one minute
 
-if __name__=="__main__":
+if __name__ == "__main__":
     copy_data()
